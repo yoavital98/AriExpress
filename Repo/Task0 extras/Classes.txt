@@ -1,0 +1,88 @@
+Facade:
+	-HashMap<int UserID, User> users
+	-HashMap<int StoreID, Store> stores
+	-ExternalService externalManagement
+	-TransactionHistory transactionHistory
+	-MessageController messageController
+
+
+
+User:
+	-int entranceID
+	-Cart cart
+
+Guest(User):
+
+Member(User):
+	-int userID
+	-Date birthday
+	-Accesses accesses
+
+Admin(User):
+	-int userID
+	-Date birthday
+		
+=================================================================================
+
+Cart:
+	-int userID
+	-List<Basket> baskets
+
+Basket:
+	-int CartID
+	-Store store
+	-List<Product> products
+
+Product:
+	-int productID
+	-int StoreID
+	-int quantity
+	-int price
+		
+=================================================================================
+
+Accesses:
+	-HashMap<String StoreID, Access Details> AccessesByStore
+	-HashMap<String UserID, Access Details> AccessesByUser
+=================================================================================
+	
+Store:
+	-int storeID
+	-List<Product> products
+	-List<Policy> policies
+=================================================================================
+
+=================================================================================
+
+MessageController:
+	-List<Messages> messages
+
+Message:
+	-Date sent
+	-Date received
+	-Boolean arrived
+	-String headLine
+	-String content
+	-int storeID
+
+Notification(Message):	[STORE TO USER]
+	-int receiverID
+
+Request(Message):  [USER TO STORE]
+	-int senderID
+
+=================================================================================
+
+TransactionHistory:
+	-HashMap<String StoreID, Transaction Details> storeTransactions
+	-HashMap<String UserID, Transaction Details> userTransactions
+
+
+Transaction:
+	-int userID
+	-int storeID
+	-int dateOfPurchase
+	-int productID
+	-int quantity
+
+=================================================================================
