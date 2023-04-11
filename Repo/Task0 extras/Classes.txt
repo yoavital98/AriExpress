@@ -1,53 +1,69 @@
+Databases:
+	Accesses:
+		pkey int USER
+		pkey int STORE
+		boolean StoreManager
+		boolean StoreFounder
+		boolean StoreOwner
+
+=================================================================================
+
 Facade:
 	-HashMap<int UserID, User> users
 	-HashMap<int StoreID, Store> stores
 	-ExternalService externalManagement
 	-TransactionHistory transactionHistory
 	-MessageController messageController
+	(opt)-HashMap<tuple(int,int), Access> \ List<Access> : accesses
+
 
 
 
 User:
-	-int entranceID
+	-String entranceID
 	-Cart cart
 
 Guest(User):
 
 Member(User):
-	-int userID
+	-String userID
 	-Date birthday
-	-Accesses accesses
+	-HashMap<storeID, Access> accesses
 
 Admin(User):
-	-int userID
+	-String userID
 	-Date birthday
 		
 =================================================================================
 
 Cart:
-	-int userID
+	-String userID
 	-List<Basket> baskets
 
 Basket:
-	-int CartID
+	-String CartID
 	-Store store
 	-List<Product> products
 
 Product:
-	-int productID
-	-int StoreID
+	-String productID
+	-String StoreID
 	-int quantity
 	-int price
 		
 =================================================================================
-
-Accesses:
-	-HashMap<String StoreID, Access Details> AccessesByStore
-	-HashMap<String UserID, Access Details> AccessesByUser
-=================================================================================
 	
+Access:
+	-User user
+	-Store store
+	-boolean isStoreManager
+	-boolean isStoreFounder
+	-boolean isStoreOwner  [got nominated by founder or special-owner]
+
+=================================================================================
+
 Store:
-	-int storeID
+	-String storeID
 	-List<Product> products
 	-List<Policy> policies
 =================================================================================
@@ -55,7 +71,9 @@ Store:
 =================================================================================
 
 MessageController:
-	-List<Messages> messages
+	-Hashmap<receiverID, List<Message>> unreadMessages
+	-Hashmap<receiverID, List<Message>> readMessages
+
 
 Message:
 	-Date sent
@@ -63,13 +81,13 @@ Message:
 	-Boolean arrived
 	-String headLine
 	-String content
-	-int storeID
+	-String storeID
 
 Notification(Message):	[STORE TO USER]
-	-int receiverID
+	-String receiverID
 
 Request(Message):  [USER TO STORE]
-	-int senderID
+	-String senderID
 
 =================================================================================
 
@@ -79,10 +97,10 @@ TransactionHistory:
 
 
 Transaction:
-	-int userID
-	-int storeID
-	-int dateOfPurchase
-	-int productID
+	-String userID
+	-String storeID
+	-Date dateOfPurchase
+	-String productID
 	-int quantity
 
 =================================================================================
