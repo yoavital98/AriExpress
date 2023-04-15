@@ -64,6 +64,7 @@ Access:
 
 Store:
 	-String storeID
+	-Boolean active
 	-List<Product> products
 	-List<Policy> policies
 =================================================================================

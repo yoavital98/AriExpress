@@ -1,3 +1,3 @@
 class User:
     def __init__(self, enteranceID):
-        self.enteranceID = enteranceID
+        self.enterance_ID = enteranceID
