@@ -6,6 +6,8 @@ class Service:  # TODO change ValueError to relevant ones
     def __init__(self, logging):
         self.admins = self.loadAdminsFromDB()
         self.store_facade = None # StoreFacade() TODO decide how we want to open teh facade
+        self.error_log = logging.getLogger()
+        self.event_log = logging.getLogger()
 
 
 
@@ -18,7 +20,7 @@ class Service:  # TODO change ValueError to relevant ones
             else:
                 raise SystemError("open-the-system requester isn't admin")
         except SystemError:
-            logging.getLogger().error(SystemError)
+            pass
 
     def addAdmin(self, requesterID, newAdminID, newPassword, newEmail):  # TODO we will assume the requesting admin fills himself the new admin details
         try:
@@ -26,7 +28,7 @@ class Service:  # TODO change ValueError to relevant ones
                 self.admins[newAdminID] = Admin(newAdminID, newPassword, newEmail)
             raise SystemError("add-admin requester isn't admin")
         except SystemError:
-            logging.getLogger().error(SystemError)
+            pass
 
     def loadAdminsFromDB(self):
         try:
@@ -67,7 +69,7 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def getMemberPurchaseHistory(self,username):
+    def getMemberPurchaseHistory(self,requesterID):
         try:
             self.store_facade.getMemberPurchaseHistory()
         except ValueError:
@@ -105,55 +107,55 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def productFilterByFeatures(self):#TODO: need to think of a functionality
+    def productFilterByFeatures(self, featuresDict):# TODO (opt) we will assume there's a dict that can say which features will be searched
         try:
             self.store_facade.productFilterByFeatures()
         except ValueError:
             pass
 
-    def getBasket(self,username, storename):
+    def getBasket(self,requesterID, storename):
         try:
             self.store_facade.getBasket()
         except ValueError:
             pass
 
-    def getCart(self,username):
+    def getCart(self,requesterID):
         try:
             self.store_facade.getCart()
         except ValueError:
             pass
 
-    def addToBasket(self,username, storename, productname, quantity):
+    def addToBasket(self,requesterID, storename, productname, quantity):
         try:
             self.store_facade.addToBasket()
         except ValueError:
             pass
 
-    def removeFromBasket(self,username, storename, productname):
+    def removeFromBasket(self,requesterID, storename, productname):
         try:
             self.store_facade.removeFromBasket()
         except ValueError:
             pass
 
-    def editBasketQuantity(self,username, storename, productname, quantity):
+    def editBasketQuantity(self,requesterID, storename, productname, quantity):
         try:
             self.store_facade.editBasketQuantity()
         except ValueError:
             pass
 
-    def purchaseCart(self, username, cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, requesterID, cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
         try:
             self.store_facade.purchaseCart()
         except ValueError:
             pass
 
-    def placeBid(self,username, storename, productname, bid):
+    def placeBid(self,requesterID, storename, productname, bid):
         try:
             self.store_facade.placeBid()
         except ValueError:
             pass
 
-    def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
+    def getStorePurchaseHistory(self, requesterID, storename):#TODO: username is demanded for validation of the request
         try:
             self.store_facade.getStorePurchaseHistory()
         except ValueError:
@@ -161,67 +163,67 @@ class Service:  # TODO change ValueError to relevant ones
 
     # ------  Management  ------ #
 
-    def openStore(self,username):
+    def openStore(self,requesterID):
         try:
             self.store_facade.openStore()
         except ValueError:
             pass
 
-    def addNewProductToStore(self,username, storename , productname, productcategory, productquantity, productprice):
-        try:
+    def addNewProductToStore(self,requesterID, storename , productname, productcategory, productquantity, productprice):
+        try:  # TODO check whether this product details are needed
             self.store_facade.addNewProductToStore()
         except ValueError:
             pass
 
-    def removeProductFromStore(self):
+    def removeProductFromStore(self,requesterID, storename , productname):
         try:
             self.store_facade.removeProductFromStore()
         except ValueError:
             pass
 
-    def editProductOfStore(self):
+    def editProductOfStore(self,requesterID, storename , productname, changesDict):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
             self.store_facade.editProductOfStore()
         except ValueError:
             pass
 
-    def nominateStoreOwner(self):
+    def nominateStoreOwner(self, requesterID, nominatedID):
         try:
             self.store_facade.nominateStoreOwner()
         except ValueError:
             pass
 
-    def nominateStoreManager(self):
+    def nominateStoreManager(self, requesterID, nominatedID):
         try:
             self.store_facade.nominateStoreManager()
         except ValueError:
             pass
 
-    def addPermissionsForManager(self):
+    def addPermissionForManager(self, requesterID, nominatedID, permission):
         try:
             self.store_facade.addPermissionsForManager()
         except ValueError:
             pass
 
-    def editPermissionsForManager(self):
+    def editPermissionsForManager(self, requesterID, nominatedID, permission):  # TODO still don't know the implementation
         try:
             self.store_facade.editPermissionsForManager()
         except ValueError:
             pass
 
-    def closeStore(self):
+    def closeStore(self, requesterID, storeName):
         try:
             self.store_facade.closeStore()
         except ValueError:
             pass
 
-    def getStaffInfo(self):
+    def getStaffInfo(self, requesterID, storeName):
         try:
             self.store_facade.getStaffInfo()
         except ValueError:
             pass
 
-    def getStoreManagerPermissions(self):
+    def getStoreManagerPermissions(self, requesterID, storeName):
         try:
             self.store_facade.getStoreManagerPermissions()
         except ValueError:
