@@ -1,8 +1,12 @@
+
 from ProjectCode.Domain.Objects.Cart import Cart
 from abc import ABC, abstractmethod
 
 
 class User(ABC):
+    @abstractmethod
+    def __init__(self, enteranceID):
+        self.enterance_ID = enteranceID
 
     @abstractmethod
     def get_cart(self):
