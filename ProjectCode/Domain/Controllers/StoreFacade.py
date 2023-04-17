@@ -4,6 +4,7 @@ from ExternalServices import *
 from MessageController import *
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects import User, Store, Access
+from ProjectCode.Domain.Objects.Cart import Cart
 from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from TransactionHistory import *
@@ -36,18 +37,50 @@ class StoreFacade:
         pass
 
     #  Members
-    def register(self, userName, password, email, birthDate, address):
-        new_member = Member(userName, password, email, birthDate, address)
+    def register(self, username, password, email):
+        if not self.members.keys().__contains__(str(username)):
+            password_validator = PasswordValidation()
+            if password_validator.ValidatePassword(password):
+                new_member = Member(username, password, email) #TODO:why Member is not callable?
+                self.members[str(username)] = new_member
+                return new_member
+        else:
+            pass
+
+
 
     def logInAsGuest(self):
-        new_guest = Guest()
+        new_guest = Guest(self.nextEntranceID) #TODO: why guest isnt callable?
+        self.onlineGuests[str(self.nextEntranceID)] = new_guest
+        self.nextEntranceID += 1
+        return new_guest
 
-    def logInAsMember(self):
-        pass
+    def leaveAsGuest(self, EntranceID):
+        if self.onlineGuests.keys().__contains__(str(EntranceID)):
+            self.onlineGuests.__delitem__(EntranceID)
+        else:
+            pass
 
-    def logOut(self):
-        pass
 
+    def logInAsMember(self, username , password):
+        if self.members.keys().__contains__(username):
+            existing_member:Member = self.members[username]
+            password_validator = PasswordValidation()
+            if password_validator.ConfirmePassword(password, existing_member.get_password()):
+                existing_member.logInAsMember()
+                return existing_member
+            else:
+                raise SystemError("username or password does not match")
+        else:
+            raise SystemError("username or password does not match")
+
+
+    def logOut(self,username):
+        if self.members.keys().__contains__(username):
+            existing_member: Member = self.members[username]
+            existing_member.logOff()
+        else:
+            pass
     def getMemberPurchaseHistory(self):
         pass
 
@@ -129,3 +162,4 @@ class StoreFacade:
 
     def getStoreManagerPermissions(self):
         pass
+

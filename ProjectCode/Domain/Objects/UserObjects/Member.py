@@ -7,13 +7,13 @@ from ProjectCode.Domain.Objects.User import User
 class Member(User):
     def __init__(self, user_name, password, email):  # TODO need to choose whether registeration requires address and
                                                      # TODO birthdate
-        super().__init__()
         self.user_name = user_name
         self.password = password
         self.email = email
         # self.address = address
         # self.birthDate = birthDate
         self.cart = Cart(user_name)
+        self.logged_In = False
 
     def get_cart(self):
         # Return the user's shopping cart
@@ -26,3 +26,26 @@ class Member(User):
     def purchase(self):
         # purchasing process
         pass
+    def logInAsMember(self):
+        self.logged_In = True
+
+    def logOff(self):
+        self.logged_In = False
+
+    def get_username(self):
+        return self._username
+
+    def set_username(self, username):
+        self._username = username
+
+    def get_password(self):
+        return self._password
+
+    def set_password(self, password):
+        self._password = password
+
+    def get_email(self):
+        return self._email
+
+    def set_email(self, email):
+        self._email = email
