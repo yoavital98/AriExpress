@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 
 class User(ABC):
+
     @abstractmethod
     def get_cart(self):
         # Return the user's shopping cart
