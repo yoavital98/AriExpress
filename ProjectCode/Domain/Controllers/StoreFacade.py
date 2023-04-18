@@ -9,6 +9,8 @@ from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import Passwo
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from TransactionHistory import *
 from ExternalServices import *
+from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
+from ProjectCode.Domain.Objects.UserObjects.Member import Member
 
 
 class StoreFacade:
@@ -41,7 +43,7 @@ class StoreFacade:
         if not self.members.keys().__contains__(str(username)):
             password_validator = PasswordValidation()
             if password_validator.ValidatePassword(password):
-                new_member = Member(username, password, email) #TODO:why Member is not callable?
+                new_member = Member(username, password, email)
                 self.members[str(username)] = new_member
                 return new_member
         else:
@@ -50,7 +52,7 @@ class StoreFacade:
 
 
     def logInAsGuest(self):
-        new_guest = Guest(self.nextEntranceID) #TODO: why guest isnt callable?
+        new_guest = Guest(self.nextEntranceID)
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
         return new_guest
@@ -64,7 +66,7 @@ class StoreFacade:
 
     def logInAsMember(self, username , password):
         if self.members.keys().__contains__(username):
-            existing_member:Member = self.members[username]
+            existing_member: Member = self.members[username]
             password_validator = PasswordValidation()
             if password_validator.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
