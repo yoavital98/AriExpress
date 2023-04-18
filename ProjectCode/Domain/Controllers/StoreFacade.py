@@ -1,14 +1,13 @@
 import string
 
-from ExternalServices import *
-from MessageController import *
-from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+import ProjectCode
+from ProjectCode.Domain.Controllers.ExternalServices import *
+from ProjectCode.Domain.Controllers.MessageController import *
 from ProjectCode.Domain.Objects import User, Store, Access
-from ProjectCode.Domain.Objects.Cart import Cart
 from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
-from TransactionHistory import *
-from ExternalServices import *
+from ProjectCode.Domain.Controllers.TransactionHistory import *
+from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
 
