@@ -1,15 +1,29 @@
+import unittest
 from unittest import TestCase
+from unittest.mock import MagicMock
+from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
+
+
 
 
 class TestStoreFacade(TestCase):
+
+    def setUp(self):
+        self.store_facade = StoreFacade()
+
     def test_load_data(self):
         self.fail()
 
     def test_exit_the_system(self):
         self.fail()
 
-    def test_register(self):
-        self.fail()
+    def test_register_new_member(self):
+        username = "test_user"
+        password = "test_password"
+        email = "test_email@example.com"
+        self.store_facade.passwordValidator.ValidatePassword = MagicMock(return_value=True)
+        member = self.store_facade.register(username, password, email)
+        self.assertEqual(self.store_facade.members[username], member)
 
     def test_log_in_as_guest(self):
         self.fail()
@@ -97,3 +111,7 @@ class TestStoreFacade(TestCase):
 
     def test_get_store_manager_permissions(self):
         self.fail()
+
+
+if __name__ == '__main__':
+    unittest.main()
