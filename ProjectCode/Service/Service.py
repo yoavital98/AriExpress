@@ -53,25 +53,25 @@ class Service:  # TODO change ValueError to relevant ones
     #  Members
     def register(self, user_name, password, email):
         try:
-            self.store_facade.register()
+            self.store_facade.register(user_name, password, email)
         except ValueError:
             pass
 
     def logIn(self,username, password):
         try:
-            self.store_facade.logIn()
+            self.store_facade.logIn(username, password)
         except ValueError:
             pass
 
     def logOut(self,username):
         try:
-            self.store_facade.logOut()
+            self.store_facade.logOut(username)
         except ValueError:
             pass
 
-    def getMemberPurchaseHistory(self,requesterID):
+    def getMemberPurchaseHistory(self, username):
         try:
-            self.store_facade.getMemberPurchaseHistory()
+            self.store_facade.getMemberPurchaseHistory(username)
         except ValueError:
             pass
 
@@ -113,13 +113,13 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def getBasket(self,requesterID, storename):
+    def getBasket(self, username, storename):
         try:
             self.store_facade.getBasket()
         except ValueError:
             pass
 
-    def getCart(self,requesterID):
+    def getCart(self, username):
         try:
             self.store_facade.getCart()
         except ValueError:

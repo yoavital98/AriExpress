@@ -9,8 +9,8 @@ from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import Passwo
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from TransactionHistory import *
 from ExternalServices import *
-from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
+from ProjectCode.Domain.Objects.UserObjects.Guest import *
+from ProjectCode.Domain.Objects.UserObjects.Member import *
 
 
 class StoreFacade:
@@ -23,7 +23,8 @@ class StoreFacade:
         self.message_controller = MessageController()
         self.transaction_history = TransactionHistory()
         self.accesses = TypedDict(string, Access)  # optional TODO check key type
-        self.nextEntranceID = 0
+        self.nextEntranceID = 0  # guest ID counter
+        self.cart_ID_Counter = 0  # cart counter
         self.loadData()
         self.passwordValidator = PasswordValidation()
 
@@ -39,6 +40,13 @@ class StoreFacade:
         pass
 
     #  Members
+    def __checkIfUserIsLoggedIn(self, username):
+        if self.members.keys().__contains__(username):
+            existing_member: Member = self.members[username]
+            return existing_member.get_logged()
+        else: #should never get here usually
+            raise SystemError("user is not logged in")
+
     def register(self, username, password, email):
         if not self.members.keys().__contains__(str(username)):
             password_validator = PasswordValidation()
@@ -83,15 +91,20 @@ class StoreFacade:
             existing_member.logOff()
         else:
             pass
-    def getMemberPurchaseHistory(self):
-        pass
-    def getBasket(self):
+    def getMemberPurchaseHistory(self, username):
+        if self.__checkIfUserIsLoggedIn(username):
+            return TransactionHistory.get_User_Transactions(username)
+
+
+    def getBasket(self,username, storename):
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            existing_member.get_cart()
+
+    def getCart(self,username):
         pass
 
-    def getCart(self):
-        pass
-
-    def addToBasket(self):
+    def addToBasket(self): # this function should first go to the store and check if we can even add to the basket
         pass
 
     def removeFromBasket(self):
