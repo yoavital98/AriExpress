@@ -4,8 +4,6 @@ from unittest.mock import MagicMock
 from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
 
 
-
-
 class TestStoreFacade(TestCase):
 
     def setUp(self):
