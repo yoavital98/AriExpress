@@ -150,7 +150,6 @@ class StoreFacade:
         cur_member: Member = self.members.get(username)
         if cur_member is None:
             raise Exception("The user is not a member")
-        self.next_store_id += 1
         cur_store = Store(store_name)
         new_access = Access(cur_member, cur_store)
         cur_member.accesses[store_name] = new_access
@@ -234,8 +233,12 @@ class StoreFacade:
         return store_name
 
 
-    def getStaffInfo(self):
-        pass
+    def getStaffInfo(self, username, store_name):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        accesses_dict = cur_store.getStaffInfo(username)
+        return accesses_dict
 
     def getStoreManagerPermissions(self):
         pass
