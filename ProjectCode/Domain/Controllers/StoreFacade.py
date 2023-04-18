@@ -9,7 +9,7 @@ from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import Passwo
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from TransactionHistory import *
 from ExternalServices import *
-
+from ProjectCode.Domain.Objects.Store import *
 
 class StoreFacade:
     def __init__(self):
@@ -22,6 +22,7 @@ class StoreFacade:
         self.transaction_history = TransactionHistory()
         self.accesses = TypedDict(string, Access)  # optional TODO check key type
         self.nextEntranceID = 0
+        self.next_store_id = 0
         self.loadData()
         self.passwordValidator = PasswordValidation()
 
@@ -131,11 +132,24 @@ class StoreFacade:
 
     # ------  Management  ------ #
 
-    def openStore(self):
-        pass
+    def openStore(self, username, store_name):
+        cur_memeber = self.members.get(username)
+        if cur_memeber is None:
+            raise Exception("The user is not a member")
+        self.next_store_id += 1
+        cur_store = Store(store_name)
+        # TODO: verify that member have a accesses field and add the access to it
+        new_access = Access(cur_memeber, cur_store)
+        cur_store.setFounder(cur_memeber.user_name, new_access)
+        self.stores[store_name] = cur_store
+        return cur_store
 
-    def addNewProductToStore(self):
-        pass
+
+    def addNewProductToStore(self, requester_id, store_name, name, quantity, price, categories):
+        cur_store: Store = self.stores[store_name]
+        #cur_member: Member = self.members[str(requester_id)]
+        new_product = cur_store.addProduct(requester_id, name, quantity, price, categories)
+        return new_product
 
     def removeProductFromStore(self):
         pass
