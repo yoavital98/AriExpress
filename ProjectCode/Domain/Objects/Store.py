@@ -1,6 +1,6 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
-from StoreObjects.Product import *
-from Access import *
+from ProjectCode.Domain.Objects.StoreObjects.Product import *
+from ProjectCode.Domain.Objects.Access import *
 import string
 
 
@@ -19,12 +19,14 @@ class Store:
         self.accesses[username] = access
 
 
-    def setAccess(self, requester_id, nominated_id, **kwargs):
-        #TODO: add to access in user at the Facade
-        requester_access:Access = self.accesses[requester_id]
-        nominated_access = self.accesses[nominated_id]
+    def setAccess(self, nominated_access, requester_username, nominated_username, **kwargs):
+        self.accesses[nominated_username] = nominated_access
+        requester_access = self.accesses[requester_username]
+        if requester_access is None:
+            raise Exception("The member doesn't have the appropriate permission for that store")
         if requester_access.isOwner or requester_access.isManager or requester_access.isFounder:#TODO: change according to permission policy
-            self.modify_attributes(nominated_access, **kwargs)
+            modified_access = self.modify_attributes(nominated_access, **kwargs)
+            return modified_access
         else:
             raise Exception("Member doesn't have the permission in this store")
 
@@ -74,3 +76,13 @@ class Store:
                 raise Exception("No such attribute exists")
             setattr(object_to_modify, k, v)
         return object_to_modify
+
+
+    def closeStore(self, requester_username):
+        cur_access = self.accesses[requester_username]
+        if cur_access.isFounder:
+
+            return True
+        else:
+            raise Exception("Member isn't the founder of the store")
+
