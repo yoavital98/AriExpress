@@ -83,6 +83,23 @@ class StoreFacade:
             pass
     def getMemberPurchaseHistory(self):
         pass
+    def getBasket(self):
+        pass
+
+    def getCart(self):
+        pass
+
+    def addToBasket(self):
+        pass
+
+    def removeFromBasket(self):
+        pass
+
+    def editBasketQuantity(self):
+        pass
+
+    def purchaseCart(self):
+        pass
 
     # ------  stores  ------ #
 
@@ -104,23 +121,7 @@ class StoreFacade:
     def productFilterByFeatures(self):
         pass
 
-    def getBasket(self):
-        pass
 
-    def getCart(self):
-        pass
-
-    def addToBasket(self):
-        pass
-
-    def removeFromBasket(self):
-        pass
-
-    def editBasketQuantity(self):
-        pass
-
-    def purchaseCart(self):
-        pass
 
     def placeBid(self):
         pass
