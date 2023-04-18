@@ -163,41 +163,54 @@ class Service:  # TODO change ValueError to relevant ones
 
     # ------  Management  ------ #
 
-    def openStore(self,requesterID):
+    def openStore(self, username, store_name):
         try:
-            self.store_facade.openStore()
-        except ValueError:
-            pass
+            cur_store = self.store_facade.openStore(username, store_name)
+            return cur_store
+        except Exception as e:
+            self.error_log.error(f"Opening a store by {username} has failed.")
+            return e
 
-    def addNewProductToStore(self,requesterID, storename , productname, productcategory, productquantity, productprice):
+    def addNewProductToStore(self, username, storename , productname, categories, quantity, price):
         try:  # TODO check whether this product details are needed
-            self.store_facade.addNewProductToStore()
-        except ValueError:
-            pass
+            added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price, categories)
+            return added_product
+        except Exception as e:
+            self.error_log.error(f"Adding a product by {username} has failed.")
+            return e
 
-    def removeProductFromStore(self,requesterID, storename , productname):
+    def removeProductFromStore(self, username, storename, product_id):
         try:
-            self.store_facade.removeProductFromStore()
-        except ValueError:
-            pass
+            deleted_product_id = self.store_facade.removeProductFromStore(username, storename, product_id)
+            return deleted_product_id
+        except Exception as e:
+            self.error_log.error(f"Removing a product by {username} has failed.")
+            return e
 
-    def editProductOfStore(self,requesterID, storename , productname, changesDict):  # TODO (opt) we will assume there's a dict that can say which features will change
-        try:
-            self.store_facade.editProductOfStore()
-        except ValueError:
-            pass
 
-    def nominateStoreOwner(self, requesterID, nominatedID):
+    def editProductOfStore(self, username, storename, **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
-            self.store_facade.nominateStoreOwner()
-        except ValueError:
-            pass
+            changed_product = self.store_facade.editProductOfStore(username, storename, **kwargs)
+            return changed_product
+        except Exception as e:
+            self.error_log.error(f"Changing a product by {username} has failed.")
+            return e
 
-    def nominateStoreManager(self, requesterID, nominatedID):
+    def nominateStoreOwner(self, username, nominate_username, store_name):
         try:
-            self.store_facade.nominateStoreManager()
-        except ValueError:
-            pass
+            new_access = self.store_facade.nominateStoreOwner(username, nominate_username, store_name)
+            return new_access
+        except Exception as e:
+            self.error_log.error(f"Nominating a store owner by {username} has failed.")
+            return e
+
+    def nominateStoreManager(self, username, nominate_username, store_name):
+        try:
+            new_access = self.store_facade.nominateStoreManager(username, nominate_username, store_name)
+            return new_access
+        except Exception as e:
+            self.error_log.error(f"Nominating a store manager by {username} has failed.")
+            return e
 
     def addPermissionForManager(self, requesterID, nominatedID, permission):
         try:
@@ -211,17 +224,21 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def closeStore(self, requesterID, storeName):
+    def closeStore(self, username, storeName):
         try:
-            self.store_facade.closeStore()
-        except ValueError:
-            pass
+            closed_store_name = self.store_facade.closeStore(username, storeName)
+            return closed_store_name
+        except Exception as e:
+            self.error_log.error(f"Closing a store by {username} has failed.")
+            return e
 
-    def getStaffInfo(self, requesterID, storeName):
+    def getStaffInfo(self, username, storeName):
         try:
-            self.store_facade.getStaffInfo()
-        except ValueError:
-            pass
+            store_accesses_dict = self.store_facade.getStaffInfo(username, storeName)
+            return store_accesses_dict
+        except Exception as e:
+            self.error_log.error(f"Fetching store staff by {username} has failed.")
+            return e
 
     def getStoreManagerPermissions(self, requesterID, storeName):
         try:

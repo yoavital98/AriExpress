@@ -86,3 +86,13 @@ class Store:
         else:
             raise Exception("Member isn't the founder of the store")
 
+
+    def getStaffInfo(self, username):
+        cur_access = self.accesses[username]
+        if cur_access is None:
+            raise Exception("Member has no access for that store")
+        if cur_access.isFounder or cur_access.isOwner or cur_access.isManager:
+            return self.accesses
+        else:
+            raise Exception("Member has no access for that action")
+
