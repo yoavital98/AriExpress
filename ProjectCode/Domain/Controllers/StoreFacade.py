@@ -39,7 +39,7 @@ class StoreFacade:
         pass
 
     #  Members
-    def __checkIfUserIsLoggedIn(self, username):
+    def checkIfUserIsLoggedIn(self, username):  # public for testing
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             return existing_member.get_logged()
