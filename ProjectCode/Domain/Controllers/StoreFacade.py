@@ -10,6 +10,7 @@ from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
+from ProjectCode.Domain.Objects.Cart import *
 
 
 class StoreFacade:
@@ -44,7 +45,7 @@ class StoreFacade:
             existing_member: Member = self.members[username]
             return existing_member.get_logged()
         else: #should never get here usually
-            raise SystemError("user is not logged in")
+            raise Exception("user is not logged in")
 
     def register(self, username, password, email):
         if not self.members.keys().__contains__(str(username)):
@@ -79,9 +80,9 @@ class StoreFacade:
                 existing_member.logInAsMember()
                 return existing_member
             else:
-                raise SystemError("username or password does not match")
+                raise Exception("username or password does not match")
         else:
-            raise SystemError("username or password does not match")
+            raise Exception("username or password does not match")
 
 
     def logOut(self,username):
@@ -98,13 +99,26 @@ class StoreFacade:
     def getBasket(self,username, storename):
         if self.__checkIfUserIsLoggedIn(username):
             existing_member: Member = self.members[username]
-            existing_member.get_cart()
+            requested_basket = existing_member.get_cart().get_Basket(storename)
+            return requested_basket
+        else:
+            raise Exception("user is not logged in")
 
     def getCart(self,username):
-        pass
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            requested_cart = existing_member.get_cart()
+            return requested_cart
+        else:
+            raise Exception("user is not logged in")
 
-    def addToBasket(self): # this function should first go to the store and check if we can even add to the basket
-        pass
+    def addToBasket(self,username, storename, productname, quantity): # this function should first go to the store and check if we can even add to the basket
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            # TODO: amiel this is where you use your logic to give me the item ID and the product!!!
+            existing_member.add_to_cart(storename, 0, 0, quantity) #TODO: chage the 0, 0 to the productID and to the product itself
+        else:
+            raise Exception("user is not logged in")
 
     def removeFromBasket(self):
         pass

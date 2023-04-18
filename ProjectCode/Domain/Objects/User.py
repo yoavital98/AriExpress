@@ -11,7 +11,7 @@ class User(ABC):
         pass
 
     @abstractmethod
-    def add_to_cart(self, item):
+    def add_to_cart(self, storename, productID, product, quantity):
         # Add an item to the user's shopping cart
         pass
 

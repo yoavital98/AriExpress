@@ -125,53 +125,53 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def addToBasket(self,requesterID, storename, productname, quantity):
+    def addToBasket(self, username, storename, productname, quantity):
         try:
-            self.store_facade.addToBasket()
+            self.store_facade.addToBasket(username, storename, productname, quantity)
         except ValueError:
             pass
 
-    def removeFromBasket(self,requesterID, storename, productname):
+    def removeFromBasket(self, username, storename, productname):
         try:
-            self.store_facade.removeFromBasket()
+            self.store_facade.removeFromBasket(username, storename, productname)
         except ValueError:
             pass
 
-    def editBasketQuantity(self,requesterID, storename, productname, quantity):
+    def editBasketQuantity(self, username, storename, productname, quantity):
         try:
-            self.store_facade.editBasketQuantity()
+            self.store_facade.editBasketQuantity(username, storename, productname, quantity)
         except ValueError:
             pass
 
-    def purchaseCart(self, requesterID, cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, username, cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
         try:
-            self.store_facade.purchaseCart()
+            self.store_facade.purchaseCart(username, cardnumber, cardusername, carduserID, carddate, backnumber)
         except ValueError:
             pass
 
-    def placeBid(self,requesterID, storename, productname, bid):
+    def placeBid(self, username, storename, productname, bid):
         try:
-            self.store_facade.placeBid()
+            self.store_facade.placeBid(username, storename, productname, bid)
         except ValueError:
             pass
 
-    def getStorePurchaseHistory(self, requesterID, storename):#TODO: username is demanded for validation of the request
+    def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
         try:
-            self.store_facade.getStorePurchaseHistory()
+            self.store_facade.getStorePurchaseHistory(username, storename)
         except ValueError:
             pass
 
     # ------  Management  ------ #
 
-    def openStore(self,requesterID):
+    def openStore(self, username):
         try:
-            self.store_facade.openStore()
+            self.store_facade.openStore(username)
         except ValueError:
             pass
 
-    def addNewProductToStore(self,requesterID, storename , productname, productcategory, productquantity, productprice):
+    def addNewProductToStore(self, username, storename , productname, productcategory, productquantity, productprice):
         try:  # TODO check whether this product details are needed
-            self.store_facade.addNewProductToStore()
+            self.store_facade.addNewProductToStore(username, storename, productname, productcategory, productquantity, productprice)
         except ValueError:
             pass
 
