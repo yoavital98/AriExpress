@@ -1,17 +1,27 @@
+
+
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Store import Store
+from ProjectCode.Domain.Objects.StoreObjects.Product import Product
 
 
 class Basket:
     def __init__(self, cart_id, store):
         self.cart_id = cart_id
         self.store: Store = store
-        self.products = set()
+        self.products = TypedDict(int, tuple)
 
-    def add_Product(self, product):
-        self.products.add(product)
+    def add_Product(self,productID, product, quantity):
+        if not self.products.keys().__contains__(productID):
+            self.products[productID] = (product, quantity)
+        else:
+            raise Exception ("product already exists in the basket")
 
-    def remove_Product(self, product):
-        self.products.remove(product)
+    def remove_Product(self, productID):
+        if self.products.keys().__contains__(productID):
+            self.products.__delitem__(productID)
+        else:
+            raise Exception("product does not exists in the basket")
 
     def get_Cart_Id(self):
         return self.cart_id

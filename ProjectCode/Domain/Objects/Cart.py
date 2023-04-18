@@ -1,7 +1,7 @@
 import string
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Basket import Basket
+from ProjectCode.Domain.Objects.Basket import *
 
 
 class Cart:
@@ -10,12 +10,16 @@ class Cart:
         self.username = username
         self.baskets = TypedDict(string, Basket)
 
-    def add_basket(self, store, basket):
-        self.baskets[store.name] = basket
 
-    def remove_basket(self, store):
-        del self.baskets[store.name]
+    def get_Basket(self,storename):
+        if self.baskets.keys().__contains__(storename):
+            return self.baskets[storename]
+        else:
+            raise SystemError("Basket does not exists")
 
+    def add_Product(self, storename, productID, product, quantity):
+        basket = self.baskets[storename]
+        basket.add_Product(productID, product, quantity)
     def get_username(self):
         return self.username
 
