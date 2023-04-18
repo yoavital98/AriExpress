@@ -22,8 +22,8 @@ class StoreFacade:
         self.message_controller = MessageController()
         self.transaction_history = TransactionHistory()
         self.accesses = TypedDict(string, Access)  # optional TODO check key type
-        self.nextEntranceID = 0
-        self.next_store_id = 0
+        self.nextEntranceID = 0  # guest ID counter
+        self.cart_ID_Counter = 0  # cart counter
         self.loadData()
         self.passwordValidator = PasswordValidation()
 
@@ -39,11 +39,18 @@ class StoreFacade:
         pass
 
     #  Members
+    def __checkIfUserIsLoggedIn(self, username):
+        if self.members.keys().__contains__(username):
+            existing_member: Member = self.members[username]
+            return existing_member.get_logged()
+        else: #should never get here usually
+            raise SystemError("user is not logged in")
+
     def register(self, username, password, email):
         if not self.members.keys().__contains__(str(username)):
             password_validator = PasswordValidation()
             if password_validator.ValidatePassword(password):
-                new_member = Member(username, password, email) #TODO:why Member is not callable?
+                new_member = Member(username, password, email)
                 self.members[str(username)] = new_member
                 return new_member
         else:
@@ -52,7 +59,7 @@ class StoreFacade:
 
 
     def logInAsGuest(self):
-        new_guest = Guest(self.nextEntranceID) #TODO: why guest isnt callable?
+        new_guest = Guest(self.nextEntranceID)
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
         return new_guest
@@ -66,7 +73,7 @@ class StoreFacade:
 
     def logInAsMember(self, username , password):
         if self.members.keys().__contains__(username):
-            existing_member:Member = self.members[username]
+            existing_member: Member = self.members[username]
             password_validator = PasswordValidation()
             if password_validator.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
@@ -83,15 +90,20 @@ class StoreFacade:
             existing_member.logOff()
         else:
             pass
-    def getMemberPurchaseHistory(self):
-        pass
-    def getBasket(self):
+    def getMemberPurchaseHistory(self, username):
+        if self.__checkIfUserIsLoggedIn(username):
+            return TransactionHistory.get_User_Transactions(username)
+
+
+    def getBasket(self,username, storename):
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            existing_member.get_cart()
+
+    def getCart(self,username):
         pass
 
-    def getCart(self):
-        pass
-
-    def addToBasket(self):
+    def addToBasket(self): # this function should first go to the store and check if we can even add to the basket
         pass
 
     def removeFromBasket(self):
@@ -133,24 +145,11 @@ class StoreFacade:
 
     # ------  Management  ------ #
 
-    def openStore(self, username, store_name):
-        cur_memeber = self.members.get(username)
-        if cur_memeber is None:
-            raise Exception("The user is not a member")
-        self.next_store_id += 1
-        cur_store = Store(store_name)
-        # TODO: verify that member have a accesses field and add the access to it
-        new_access = Access(cur_memeber, cur_store)
-        cur_store.setFounder(cur_memeber.user_name, new_access)
-        self.stores[store_name] = cur_store
-        return cur_store
+    def openStore(self):
+        pass
 
-
-    def addNewProductToStore(self, requester_id, store_name, name, quantity, price, categories):
-        cur_store: Store = self.stores[store_name]
-        #cur_member: Member = self.members[str(requester_id)]
-        new_product = cur_store.addProduct(requester_id, name, quantity, price, categories)
-        return new_product
+    def addNewProductToStore(self):
+        pass
 
     def removeProductFromStore(self):
         pass
