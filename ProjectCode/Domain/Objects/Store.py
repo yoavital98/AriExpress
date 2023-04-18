@@ -1,6 +1,6 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
-from StoreObjects.Product import *
-from Access import *
+from ProjectCode.Domain.Objects.StoreObjects.Product import *
+from ProjectCode.Domain.Objects.Access import *
 import string
 
 
