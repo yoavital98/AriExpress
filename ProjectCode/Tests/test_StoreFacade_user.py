@@ -141,6 +141,81 @@ class TestStoreFacade(TestCase):
         basket = self.store_facade.getBasket("JohnDoe", "Store1")
         self.assertIsInstance(basket, Cart)
 
+    def test_get_basket_with_invalid_storename(self):
+        # test with invalid storename, should raise an error
+        with self.assertRaises(SystemError):
+            self.store_facade.getBasket("JohnDoe", "invalid_storename")
+
+    # (self,username):
+    def test_get_cart(self):
+        # test with invalid username, should return None
+        self.assertIsNone(self.store_facade.getCart("invalid_username"))
+
+        # test with valid username, should return a Cart object
+        cart = self.store_facade.getCart("JohnDoe")
+        self.assertIsInstance(cart, Cart)
+
+
+    def test_addToBasket_valid_input(self):
+        pass
+
+    def test_addToBasket_invalid_quantity(self):
+        pass
+
+    def test_addToBasket_invalid_product(self):
+        pass
+
+    def test_addToBasket_invalid_store(self):
+        pass
+
+    def test_addToBasket_invalid_username(self):
+        pass
+
+    def test_removeFromBasket_valid_input(self):
+        pass
+
+    def test_removeFromBasket_invalid_quantity(self):
+        pass
+
+    def test_removeFromBasket_invalid_product(self):
+        pass
+
+    def test_removeFromBasket_invalid_store(self):
+        pass
+
+    def test_removeFromBasket_invalid_username(self):
+        pass
+
+    def test_removeFromBasket_empty_cart(self):
+        pass
+    
+    def test_removeFromBasket_empty_basket(self):
+        pass
+
+    def test_editBasketQuantity_valid_input(self):
+        pass
+
+    def test_editBasketQuantity_invalid_quantity(self):
+        pass
+
+    def test_editBasketQuantity_invalid_product(self):
+        pass
+
+    def test_editBasketQuantity_invalid_store(self):
+        pass
+
+    def test_editBasketQuantity_invalid_username(self):
+        pass
+
+    def test_editBasketQuantity_empty_cart(self):
+        pass
+
+    def test_editBasketQuantity_empty_basket(self):
+        pass
+
+    def test_purchaseCart_valid_input(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
