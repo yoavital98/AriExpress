@@ -11,7 +11,7 @@ from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
 from ProjectCode.Domain.Objects.Cart import *
-
+from typing import List
 
 class StoreFacade:
     def __init__(self):
@@ -132,19 +132,38 @@ class StoreFacade:
     # ------  stores  ------ #
 
     def getStores(self):
-        pass
+        return self.stores
 
-    def getProductsByStore(self):
-        pass
+    def getProductsByStore(self, store_name):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.products
 
-    def getProduct(self):
-        pass
+    def getProduct(self, store_name, product_id):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        cur_product = cur_store.products[product_id]
+        return cur_product
 
-    def productSearchByName(self):  # and keywords
-        pass
+    def productSearchByName(self, keywords):  # and keywords
+        splitted_keywords = keywords.split(" ")
+        search_results = TypedDict(Store, List[Product])
+        for keyword in splitted_keywords:
+            for cur_store in self.stores.values():
+                product_list = cur_store.searchProductByName(keyword)
+                if len(product_list) > 0:
+                    search_results[cur_store] = product_list
+        return search_results
 
-    def productSearchByCategory(self):
-        pass
+    def productSearchByCategory(self, category):
+        search_results = TypedDict(Store, List[Product])
+        for cur_store in self.stores.values():
+            product_list = cur_store.searchProductByCategory(category)
+            if len(product_list) > 0:
+                search_results[cur_store] = product_list
+        return search_results
 
     def productFilterByFeatures(self):
         pass
@@ -158,7 +177,7 @@ class StoreFacade:
         pass
 
     # ------  Management  ------ #
-
+    #TODO: add check if user is loggedin to each function
 
     def openStore(self, username, store_name):
         cur_member: Member = self.members.get(username)
