@@ -11,6 +11,7 @@ from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
 from ProjectCode.Domain.Objects.Cart import *
+from ProjectCode.Domain.Objects.Basket import *
 
 
 class StoreFacade:
@@ -49,8 +50,7 @@ class StoreFacade:
 
     def register(self, username, password, email):
         if not self.members.keys().__contains__(str(username)):
-            password_validator = PasswordValidation()
-            if password_validator.ValidatePassword(password):
+            if ExternalServices.ValidatePassword(password):
                 new_member = Member(username, password, email)
                 self.members[str(username)] = new_member
                 return new_member
@@ -75,8 +75,7 @@ class StoreFacade:
     def logInAsMember(self, username , password):
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
-            password_validator = PasswordValidation()
-            if password_validator.ConfirmePassword(password, existing_member.get_password()):
+            if ExternalServices.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
                 return existing_member
             else:
@@ -112,22 +111,68 @@ class StoreFacade:
         else:
             raise Exception("user is not logged in")
 
-    def addToBasket(self,username, storename, productname, quantity): # this function should first go to the store and check if we can even add to the basket
+    def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
         if self.__checkIfUserIsLoggedIn(username):
             existing_member: Member = self.members[username]
-            # TODO: amiel this is where you use your logic to give me the item ID and the product!!!
-            existing_member.add_to_cart(storename, 0, 0, quantity) #TODO: chage the 0, 0 to the productID and to the product itself
+            store: Store = self.stores[storename]
+            product = store.checkProductAvailability(productID, quantity)  #TODO: amiel needs to implement that method
+            if product is not None:
+              existing_member.get_cart().add_Product(storename, productID, product, quantity)
+            else:
+               raise Exception("Product is not available or quantity is higher than the stock")
+
+
+            existing_member.add_to_cart(storename, 0, 0, quantity)
         else:
             raise Exception("user is not logged in")
 
-    def removeFromBasket(self):
-        pass
+    def removeFromBasket(self, username, storename, productID):
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            remove_success = existing_member.get_cart().removeFromBasket(storename, productID)
+            if remove_success:
+                return remove_success
+            else:
+                raise Exception("there was a problem with removing the item or either the item doesnt exists in the basket")
+        else:
+            raise Exception("user is not logged in")
+    def editBasketQuantity(self, username, storename, productID, quantity):
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            answer = existing_member.get_cart().checkProductExistance(storename, productID) #answer is boolean
+            if answer:
+                store: Store = self.stores[storename]
+                product = store.checkProductAvailability(productID, quantity)
+                if product is not None:
+                    existing_member.get_cart().add_Product(storename, productID, product, quantity)
+                else:
+                    raise Exception("Product is not available or quantity is higher than the stock")
+            else:
+                raise Exception("product does not exists in the basket")
+        else:
+            raise Exception("user is not logged in")
 
-    def editBasketQuantity(self):
-        pass
 
-    def purchaseCart(self):
-        pass
+    def purchaseCart(self, username, cardnumber, cardusername, carduserID, carddate, backnumber):
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            #TODO:  need to implement a lock system in here, so other users cant purchase at the same time.
+            answer = existing_member.get_cart().checkAllItemsInCart()  # answer = set of baskets or none
+            if answer is not None:
+                for basket in answer:
+                    price = basket.store.purchaseBasket(basket.products) # price of a single basket  #TODO:amiel
+                    ExternalServices.pay(basket.store, cardnumber, cardusername, carduserID, carddate, backnumber, price) #TODO: Ari
+            else:
+                raise Exception("There is a problem with the items quantity or existance in the store")
+        else:
+            raise Exception("user is not logged in")
+
+
+
+
+
+
+
 
     # ------  stores  ------ #
 

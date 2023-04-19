@@ -31,3 +31,14 @@ class Cart:
 
     def set_baskets(self, baskets):
         self.baskets = baskets
+
+    def removeFromBasket(self, storename, productID):
+        basket = self.baskets[storename]
+        answer = basket.remove_Product(productID) # answer = true if item is successfully removed
+        if basket.getBasketSize() == 0:
+            self.baskets.__delitem__(storename)
+        return answer
+
+    def checkProductExistance(self, storename, productID):
+        basket = self.baskets[storename]
+        return basket.checkProductExistance(productID)
