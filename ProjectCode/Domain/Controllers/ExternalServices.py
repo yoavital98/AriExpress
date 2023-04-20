@@ -11,4 +11,9 @@ class ExternalServices:
 
     def fakeResponse(self):
         return "Geburtstag"
-    
+
+    def ValidatePassword(self, password):
+        return self.passwordValidator.ValidatePassword(password)
+
+    def ConfirmePassword(self, password_1, password_2):
+        return self.passwordValidator(password_1, password_2)

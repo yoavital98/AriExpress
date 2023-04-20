@@ -9,19 +9,28 @@ class Basket:
     def __init__(self, cart_id, store):
         self.cart_id = cart_id
         self.store: Store = store
-        self.products = TypedDict(int, tuple)
+        self.products = TypedDict(int, tuple)#  (product, quantity)
 
-    def add_Product(self,productID, product, quantity):
+    def add_Product(self, productID, product, quantity):
+        if quantity <= 0:
+            raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(productID):
             self.products[productID] = (product, quantity)
         else:
             raise Exception ("product already exists in the basket")
 
+    def edit_Product_Quantity(self, productID, quantity):
+        if quantity <= 0:
+            raise Exception("quantity cannot be set to 0 or negative number")
+        product: tuple = self.products[productID]
+        product[1] = quantity
+
     def remove_Product(self, productID):
         if self.products.keys().__contains__(productID):
             self.products.__delitem__(productID)
+            return True
         else:
-            raise Exception("product does not exists in the basket")
+            return False
 
     def get_Cart_Id(self):
         return self.cart_id
@@ -37,3 +46,8 @@ class Basket:
 
     def get_Products(self):
         return self.products
+    def checkProductExistance(self, productID):
+        return self.products.keys().__contains__(productID)
+
+    def getBasketSize(self):
+        return self.products.__sizeof__()
