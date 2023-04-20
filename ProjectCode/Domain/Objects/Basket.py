@@ -11,11 +11,19 @@ class Basket:
         self.store: Store = store
         self.products = TypedDict(int, tuple)#  (product, quantity)
 
-    def add_Product(self,productID, product, quantity):
+    def add_Product(self, productID, product, quantity):
+        if quantity <= 0:
+            raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(productID):
             self.products[productID] = (product, quantity)
         else:
             raise Exception ("product already exists in the basket")
+
+    def edit_Product_Quantity(self, productID, quantity):
+        if quantity <= 0:
+            raise Exception("quantity cannot be set to 0 or negative number")
+        product: tuple = self.products[productID]
+        product[1] = quantity
 
     def remove_Product(self, productID):
         if self.products.keys().__contains__(productID):

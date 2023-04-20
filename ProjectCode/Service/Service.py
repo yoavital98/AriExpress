@@ -3,14 +3,14 @@ from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
 
-class Service:  # TODO change ValueError to relevant ones
+class Service:
     def __init__(self, logging):
         self.admins = self.loadAdminsFromDB()
-        self.store_facade = None # StoreFacade() TODO decide how we want to open teh facade
+        self.store_facade = None # StoreFacade() TODO: decide how we want to open teh facade
         self.error_log = logging.getLogger()
         self.event_log = logging.getLogger()
 
-
+    #TODO: consult with everyone how they want to open the system!!
 
 
     # ------  admin  ------ #
