@@ -44,7 +44,7 @@ class StoreFacade:
             existing_member: Member = self.members[username]
             return existing_member.get_logged()
         else: #should never get here usually
-            raise SystemError("user is not logged in")
+            raise SystemError("user does not exists")
 
     def register(self, username, password, email):
         if not self.members.keys().__contains__(str(username)):
