@@ -258,6 +258,15 @@ class StoreFacade:
     def productFilterByFeatures(self):
         pass
 
+
+
+    def placeBid(self, username, store_name, offer):
+        cur_member = self.members[username]
+        self.__checkIfUserIsLoggedIn(username)
+
+
+
+
     def getStorePurchaseHistory(self):
         pass
     # ------  Management  ------ #
