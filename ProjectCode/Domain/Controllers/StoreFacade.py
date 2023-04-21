@@ -28,7 +28,6 @@ class StoreFacade:
         self.transaction_history = TransactionHistory()  # Transactions log
         self.accesses = TypedDict(string, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
-        self.cart_ID_Counter = 0  # cart counter
         self.bid_id_counter = 0  # bid counter
         self.loadData()
         self.SystemStatus = False  # True = System on, False = System off
@@ -82,8 +81,8 @@ class StoreFacade:
         self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
             if ExternalServices.ValidatePassword(password):
-                new_member = Member(user_name, password, email, self.cart_ID_Counter)
-                self.cart_ID_Counter += 1
+                new_member = Member(user_name, password, email)
+
                 self.members[str(user_name)] = new_member
 
                 return new_member
@@ -93,10 +92,9 @@ class StoreFacade:
     # only guests
     def logInAsGuest(self):
         self.__systemCheck()
-        new_guest = Guest(self.nextEntranceID, self.cart_ID_Counter)
+        new_guest = Guest(self.nextEntranceID)
         self.cart_ID_Counter += 1
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
-        self.nextEntranceID += 1
         return new_guest
 
     # only guests
@@ -381,10 +379,10 @@ class StoreFacade:
         else:
             raise Exception("admin name or password does not match")
 
-    def logInAsAdmin(self, user_name):
+    def logOutAsAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
             existing_admin: Admin = self.members[user_name]
-            existing_admin.logOff()
+            existing_admin.logOffAsAdmin()
 
     def openSystem(self, admin_name):
         existing_admin: Admin = self.__getAdmin(admin_name)
@@ -396,3 +394,12 @@ class StoreFacade:
 
     def closeStoreAsAdmin(self, admin_name, store_name):
         pass
+
+    def addAdmin(self, username, newAdminName, newPassword, newEmail):
+        new_admin = None
+        if self.admins.keys().__contains__(username):
+            if self.external_services.passwordValidator.ValidatePassword(newPassword):
+                new_admin = Admin(newAdminName, newPassword, newEmail)
+            else:
+                raise Exception("password is too weak")
+        self.admins[newAdminName] = new_admin
