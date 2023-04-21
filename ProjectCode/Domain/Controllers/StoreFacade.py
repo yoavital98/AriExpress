@@ -93,7 +93,6 @@ class StoreFacade:
     def logInAsGuest(self):
         self.__systemCheck()
         new_guest = Guest(self.nextEntranceID)
-        self.cart_ID_Counter += 1
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         return new_guest
 
@@ -154,7 +153,7 @@ class StoreFacade:
         store: Store = self.stores[storename]
         product = store.checkProductAvailability(productID, quantity)
         if product is not None:
-            user.add_to_cart(storename, productID, product, quantity)
+            user.add_to_cart(username, storename, productID, product, quantity)
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 
@@ -203,22 +202,37 @@ class StoreFacade:
                 TransactionHistory.addNewUserTransaction(user_name,stores_to_products, overall_price)
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
-
-    def placeBid(self,username, storename, offer, productID, quantity):
-        existing_member = None
+    # Bids! -------------------------------------- Bids are for members only --------------------------------------
+    def placeBid(self, username, storename, offer, productID, quantity):
         if self.members.keys().__contains__(username):
-            existing_member: Member = self.members[username]
-            if not existing_member.get_logged():
-                raise Exception("user isnt logged in")
+            self.__checkIfUserIsLoggedIn(username)
+            existing_member: Member= self.members[username]
         else:
             raise Exception("user is not valid")
         bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
         self.bid_id_counter += 1
-        existing_member.addBidToBasket(bid)  #TODO:Ari
+        existing_member.addBidToBasket(username, bid)
         store: Store = self.stores[storename]
         store.requestBid(bid)  #TODO:amiel!!
 
+    def getAllBids(self, username):
+        existing_member: Member = None
+        if self.members.keys().__contains__(username):
+            self.__checkIfUserIsLoggedIn(username)
+            existing_member = self.members[username]
+        else:
+            raise Exception("user is not valid")
+        bids_set = existing_member.getAllBids()  # returns set of bids
+        return bids_set
 
+    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_id, card_date, back_number, price):
+        existing_member: Member = None
+        if self.members.keys().__contains__(username):
+            self.__checkIfUserIsLoggedIn(username)
+            existing_member = self.members[username]
+        else:
+            raise Exception("user is not valid")
+        bid = existing_member.get_cart().getBid(storename, bid_id)
 
     # ------  stores  ------ #
 

@@ -1,15 +1,17 @@
 
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Bid import Bid
 from ProjectCode.Domain.Objects.Store import Store
 from ProjectCode.Domain.Objects.StoreObjects.Product import Product
 
 
 class Basket:
-    def __init__(self, cart_id, store):
-        self.cart_id = cart_id
+    def __init__(self, username, store):
+        self.username = username
         self.store: Store = store
         self.products = TypedDict(int, tuple)  # product id -> (product_name, quantity)
+        self.bids = TypedDict(int, Bid)
 
     def add_Product(self, product_ID, product_name, quantity):
         if quantity <= 0:
@@ -32,12 +34,6 @@ class Basket:
         else:
             return False
 
-    def get_Cart_Id(self):
-        return self.cart_id
-
-    def set_Cart_Id(self, cart_id):
-        self.cart_id = cart_id
-
     def get_Store(self):
         return self.store
 
@@ -54,4 +50,10 @@ class Basket:
         return self.products.__sizeof__()
 
     def getProductsAsTuples(self):
-        self.products.values()
+        return self.products.values()
+
+    def addBidToBasket(self, bid: Bid):
+        self.bids[bid.get_bid_id()] = bid
+
+    def get_bids(self):
+        return self.bids

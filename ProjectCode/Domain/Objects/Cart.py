@@ -16,8 +16,11 @@ class Cart:
         else:
             raise SystemError("Basket does not exists")
 
-    def add_Product(self, storename, productID, product, quantity):
-        basket: Basket= self.get_Baskets(storename)
+    def add_Product(self,username, storename, productID, product, quantity):
+        if not self.baskets.keys().__contains__(storename):
+                basket = Basket(username, storename)
+                self.baskets[storename] = basket
+        basket: Basket = self.get_Baskets(storename)
         basket.add_Product(productID, product, quantity)
 
     def removeFromBasket(self, storename, productID):
@@ -50,3 +53,24 @@ class Cart:
     def getProductsAsTuples(self, storename):
         basket: Basket = self.get_Baskets(storename)
         return basket.getProductsAsTuples()
+
+    def addBidToBasket(self, username: str, bid: Bid):
+        if not self.baskets.keys().__contains__(bid.get_storename()):
+            basket = Basket(username, bid.get_storename())
+            self.baskets[bid.get_storename()] = basket
+        basket_to_place_bid: Basket = self.baskets[bid.get_storename()]
+        basket_to_place_bid.addBidToBasket(bid)
+
+    def getAllBids(self):
+        output = set() #set of bids
+        for basket in self.baskets:
+            bids: TypedDict[int, Bid] = basket.get_bids()
+            for bid in bids:
+                output.add(bid)
+        return output
+
+    def getBid(self, storename, bid_id):
+        if not self.baskets.keys().__contains__(storename):
+            raise Exception("Basket does not exists")
+        basket: Basket = self.baskets[storename]
+        return basket.get_bids()[bid_id]
