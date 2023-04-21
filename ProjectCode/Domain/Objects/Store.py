@@ -11,7 +11,7 @@ class Store:
         self.products = TypedDict(int, Product)
         #TODO: policies
         self.active: bool = True
-        self.accesses = TypedDict(string, Access)
+        self.accesses = TypedDict(str, Access)
         self.product_id_counter = 0
 
     def setFounder(self, username, access):

@@ -18,6 +18,7 @@ from typing import List
 
 class StoreFacade:
     def __init__(self):
+
         self.admins = TypedDict(string, Admin)  # dict of admins
         self.members = TypedDict(string, Member)    # dict of members
         self.onlineGuests = TypedDict(string, Guest)  # dict of users
@@ -57,6 +58,7 @@ class StoreFacade:
             raise Exception("admin does not exists")
 
     #  Members
+
     def __checkIfUserIsLoggedIn(self, user_name):
             existing_member: Member = self.members[user_name]
             if existing_member.get_logged():
@@ -83,9 +85,10 @@ class StoreFacade:
                 new_member = Member(user_name, password, email, self.cart_ID_Counter)
                 self.cart_ID_Counter += 1
                 self.members[str(user_name)] = new_member
+
                 return new_member
         else:
-            pass
+            raise SystemError("This username is already in the system")
 
     # only guests
     def logInAsGuest(self):

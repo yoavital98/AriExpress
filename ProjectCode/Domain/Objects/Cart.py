@@ -5,10 +5,11 @@ from ProjectCode.Domain.Objects.Basket import *
 
 
 class Cart:
+
     def __init__(self, cartID, username):  # TODO: remove cartID from the system
         self.cartID = cartID
         self.username = username
-        self.baskets = TypedDict(string, Basket)
+        self.baskets = TypedDict(str, Basket)
 
     def get_Baskets(self, storename):
         if self.baskets.keys().__contains__(storename):

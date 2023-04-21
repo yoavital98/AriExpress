@@ -32,7 +32,7 @@ class Service:
 
     def loadAdminsFromDB(self):
         try:
-            admins = TypedDict(string, Admin)
+            admins = TypedDict(str, Admin)
             ### let's assume we tried to take all the admins from the database
             if len(admins) == 0:#TODO: just for this version so we will have an Admin
                 admins["007"] = Admin("JamesBond", "TATAKAE", "yoavital98@gmail.com")
