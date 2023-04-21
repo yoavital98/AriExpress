@@ -3,12 +3,12 @@ import logging
 
 
 class Service:  # TODO change ValueError to relevant ones
+
     def __init__(self, logging):
         self.admins = self.loadAdminsFromDB()
         self.store_facade = None # StoreFacade() TODO decide how we want to open teh facade
         self.error_log = logging.getLogger()
-        self.event_log = logging.getLogger()
-
+        self.event_log = logging.getLogger()\
 
 
 

@@ -13,9 +13,10 @@ class TestStoreFacade(TestCase):
 
     def setUp(self):
         # TODO: fill me
-        self.Service = Mock(spec=Service)
-        self.Admin = Mock()
-        self.Store = Mock()
+
+        self.Service = Mock(spec= Service)
+        self.Admin = Mock(spec=Admin)
+
 
     # ----------------------sysyem functionality tests----------------------
 
@@ -78,8 +79,55 @@ class TestStoreFacade(TestCase):
     #   else:
     #       The system returns an appropriate error.
     def test_registration_to_the_system_success(self):
-        member = self.Service.register("username", "legit_password", "email")
+        member = self.Service.register("username", "password", "email")
         self.assertIsInstance(member, Member)
+
+    def test_registration_to_the_system_failure(self):
+        try:
+            self.Service.register("username", "password", "email")
+            self.Service.register("username", "password", "email")
+        except SystemError:
+            pass
+
+
+    #Pre-conditions: User is defined as a guest and has already registered to the system.
+    #Post- conditions: The User status is changed from Guest to Member.
+    #Flow:
+    #   The user enters the market system.
+    #   The user logs-in with a username and a password.
+    #   The system checks if the type of the current user is Guest.
+    #   The system uses an external service for password validation.
+    #   If OK:
+    #       The system checks that the type of the user is Member.
+    #       The system return an confirmation that the operation succeed.
+    #   Else:
+    #       The system sends an error message that the log-in failed.
+    def test_logging_in_the_system_success(self):
+        self.Service.register("username", "password", "email")
+        member = self.Service.login("username", "password")
+        self.assertTrue(member.get_logged(member))
+
+    def test_logging_in_the_system_failure(self):
+        try:
+            self.Service.register("username", "password", "email")
+            self.Service.login("username", "password")
+            self.Service.login("username", "password")
+        except SystemError:
+            pass
+
+    #Pre-conditions: User defined as a guest.
+    #Post-conditions: User gets the information about the stores and products.
+    #Flow:
+    #   User enters a store in the market.
+    #   The system fetches the requested store.
+    #   If OK:
+    #       The system returns to the user all the products information.
+    #   Else:
+    #       The system returns an error that no such store exists.
+
+    def test_guest_information_fetching(self):
+
+
 
 
 if __name__ == '__main__':
