@@ -50,6 +50,12 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
+    def loginAsGuest(self):
+        try:
+            self.store_facade.loginAsGuest()
+        except ValueError:
+            pass
+
     #  Members
     def register(self, user_name, password, email):
         try:
