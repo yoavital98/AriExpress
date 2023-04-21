@@ -57,24 +57,35 @@ class TestStoreFacade(TestCase):
     def test_getProductsByStore_returnsProducts_multiple(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
-        self.product2 = self.store.addProduct("Product2", 10, 10)
-        self.assertEqual(self.store_facade.getProductsByStore("Store1"), [self.product, self.product2])
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
+        self.product2 = self.store.addProduct(self.access, "Product2", 10, 10, "category1")
+        self.assertEqual(self.store_facade.getProductsByStore("Store1"), [self.product1, self.product2])
+
+    #TODO: maybe return error and not empty list
 
     def test_getProductsByStore_storeNotFound(self):
-        self.assertEqual(self.store_facade.getProductsByStore("Store1"), [])
-
-    def test_getProduct_returnsProduct_found(self):
-        self.store = Store("Store1")
-        self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
-        self.assertEqual(self.store_facade.getProduct("Store1", "Product1"), self.product)
+        self.assertEqual(self.store_facade.getProductsByStore("Store1"), [])    
     
     def test_getProduct_returnsProduct_notFound(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.getProduct("Store1", "Product2"), None)
+
+    def test_getProduct_returnsProduct_found(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
+        self.assertEqual(self.store_facade.getProduct("Store1", "Product1"), self.product)
 
     def test_productSearchByName_returnsProducts_empty(self):
         self.assertEqual(self.store_facade.productSearchByName("Product1"), [])
@@ -82,125 +93,183 @@ class TestStoreFacade(TestCase):
     def test_productSearchByName_returnsProducts_single(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.productSearchByName("Product1"), [self.product])
     
     def test_productSearchByName_returnsProducts_multiple(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
-        self.product2 = self.store.addProduct("Product2", 10, 10)
-        self.assertEqual(self.store_facade.productSearchByName("Product1"), [self.product])
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "category1")
+        self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "category1")
+        self.assertEqual(self.store_facade.productSearchByName("Product1"), [self.product1, self.product2])
 
     def test_productSearchByCategory_returnsProducts_empty(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [])
     
     def test_productSearchByCategory_returnsProducts_single(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10, "Category1")
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product])
     
     def test_productSearchByCategory_returnsProducts_multipleProducts(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10, "Category1")
-        self.product2 = self.store.addProduct("Product2", 10, 10, "Category1")
-        self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product, self.product2])
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
+        self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category1")
+        self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product1, self.product2])
     
     def test_productSearchByCategory_returnsProducts_multipleCategories(self):
-        # TODO: should be only 1 category with the same name so assert fail
-        # self.store = Store("Store1")
-        # self.store_facade.stores["Store1"] = self.store
-        # self.product = self.store.addProduct("Product1", 10, 10, "Category1")
-        # self.product2 = self.store.addProduct("Product2", 10, 10, "Category2")
-        # self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product])
-        pass
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
+        self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
+        self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product1])
 
 
     # ------------------------- Keyword: like name but can be in desc -------------------------
+    # TODO: turn off those tests, there is no product description and features for now
 
     def test_productSearchByKeyword_returnsProducts_empty(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.productSearchByName("Keyword1"), [])
     
     def test_productSearchByKeyword_returnsProducts_single(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10, "Category1", "Keyword1")
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
+        # add description to product
         self.assertEqual(self.store_facade.productSearchByName("Keyword1"), [self.product])
     
     def test_productSearchByKeyword_returnsProducts_multipleProducts(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10, "Category1", "Keyword1")
-        self.product2 = self.store.addProduct("Product2", 10, 10, "Category1", "Keyword1")
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
+        self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
+        # add description to products
         self.assertEqual(self.store_facade.productSearchByName("Keyword1"), [self.product, self.product2])
     
-    # ----------------------------------------------------------------------------------------
-
     def test_productFilterByFeatures_returnsProducts_empty(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [])
     
     def test_productFilterByFeatures_returnsProducts_single(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10, "Category1", "Keyword1")
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
+        # add feature to product
         self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [self.product])
     
     def test_productFilterByFeatures_returnsProducts_multipleProducts(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10, "Category1", "Keyword1")
-        self.product2 = self.store.addProduct("Product2", 10, 10, "Category1", "Keyword1")
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
+        self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
+        # add features to products
         self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [self.product, self.product2])
     
+    # ----------------------------------------------------------------------------------------
+
     def test_placeBid_success(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
-        self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 10), True)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
+        self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 20), True)
     
     def test_placeBid_badStore_failure(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store2", "Product1", 10), False)
     
     def test_placeBid_badProduct_failure(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store1", "Product2", 10), False)
     
     def test_placeBid_badPrice_failure(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 9), False)
     
     def test_placeBid_badProductPurchasePolicy_failure(self):
         pass
 
     def test_getStorePurchaseHistory_returnsHistory_empty(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.getStorePurchaseHistory("Store1"), [])
     
     def test_getStorePurchaseHistory_returnsHistory_single(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.store_facade.placeBid("Store1", "Product1", 10)
         self.assertEqual(self.store_facade.getStorePurchaseHistory("Store1"), [self.product])
 
     def test_getStorePurchaseHistory_returnsHistory_multiple(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
-        self.product2 = self.store.addProduct("Product2", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product1 = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
+        self.product2 = self.store.addProduct(self.access, "Product2", 10, 10, "Category1")
         self.store_facade.placeBid("Store1", "Product1", 10)
         self.store_facade.placeBid("Store1", "Product2", 10)
-        self.assertEqual(self.store_facade.getStorePurchaseHistory("Store1"), [self.product, self.product2])
+        self.assertEqual(self.store_facade.getStorePurchaseHistory("Store1"), [self.product1, self.product2])
     
     def test_getStorePurchaseHistory_badStore_returnsEmpty(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.getStorePurchaseHistory("Store2"), [])
     
 
