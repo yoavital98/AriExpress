@@ -1,6 +1,6 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
 from ProjectCode.Domain.Objects.StoreObjects.Product import *
-from ProjectCode.Domain.Objects.Access import *
+from ProjectCode.Domain.Objects.AccessControl import *
 import string
 
 
@@ -11,7 +11,7 @@ class Store:
         self.product = TypedDict(int, Product)
         #TODO: policies
         self.active: bool = True
-        self.accesses = TypedDict(str, Access)
+        self.accesses = TypedDict(str, AccessControl)
         self.product_id_counter = 0
 
     def setFounder(self, username, access):

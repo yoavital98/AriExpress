@@ -5,7 +5,7 @@ class Basket:
     def __init__(self, cart_id, store):
         self.cart_id = cart_id
         self.store: Store = store
-        self.products = set()
+        self.products = []
 
     def add_Product(self, product):
         self.products.add(product)

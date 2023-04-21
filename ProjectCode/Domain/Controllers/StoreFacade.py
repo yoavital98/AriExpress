@@ -3,13 +3,14 @@ import string
 import ProjectCode
 from ProjectCode.Domain.Controllers.ExternalServices import *
 from ProjectCode.Domain.Controllers.MessageController import *
-from ProjectCode.Domain.Objects import User, Store, Access
+from ProjectCode.Domain.Objects.UserObjects.Admin import *
 from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
+from ProjectCode.Domain.Objects.AccessControl import *
 
 
 class StoreFacade:
@@ -21,7 +22,7 @@ class StoreFacade:
         self.external_services = ExternalServices()
         self.message_controller = MessageController()
         self.transaction_history = TransactionHistory()
-        self.accesses = TypedDict(str, Access)  # optional TODO check key type
+        self.accesses = TypedDict(str, AccessControl)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
         self.cart_ID_Counter = 0  # cart counter
         self.loadData()
@@ -66,9 +67,9 @@ class StoreFacade:
 
     def leaveAsGuest(self, EntranceID):
         if self.onlineGuests.keys().__contains__(str(EntranceID)):
-            self.onlineGuests.__delitem__(EntranceID)
+            self.onlineGuests.__delitem__(str(EntranceID))
         else:
-            pass
+            raise SystemError("This entrance id doesn't belong to the online guests list")
 
 
     def logInAsMember(self, username , password):
@@ -93,27 +94,77 @@ class StoreFacade:
     def getMemberPurchaseHistory(self, username):
         if self.__checkIfUserIsLoggedIn(username):
             return TransactionHistory.get_User_Transactions(username)
+        else:
+            raise SystemError("username isn't logged in")
 
 
     def getBasket(self,username, storename):
-        if self.__checkIfUserIsLoggedIn(username):
-            existing_member: Member = self.members[username]
-            existing_member.get_cart()
+        existing_member: Member = self.members[username]
+        return existing_member.get_cart(username).get_baskets()[storename]
 
     def getCart(self,username):
-        pass
+        if self.__checkIfUserIsLoggedIn(username):
+            existing_member: Member = self.members[username]
+            return existing_member.get_cart()
+        else:
+            raise SystemError("username isn't logged in")
 
-    def addToBasket(self): # this function should first go to the store and check if we can even add to the basket
-        pass
+# guest and member
+    def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
+        self.__systemCheck()
+        user: User = self.__getUserOrMember(username)
+        store: Store = self.stores[storename]
+        product = store.checkProductAvailability(productID, quantity)
+        if product is not None:
+            user.add_to_cart(username, storename, productID, product, quantity)
+        else:
+            raise Exception("Product is not available or quantity is higher than the stock")
 
-    def removeFromBasket(self):
-        pass
+    # guest and member
+    def removeFromBasket(self, username, storename, productID):
+        self.__systemCheck()
+        user: User = self.__getUserOrMember(username)
+        remove_success = user.removeFromBasket(storename, productID)
+        if remove_success:
+            return remove_success
+        else:
+            raise Exception("there was a problem with removing the item or either the item doesnt exists in the basket")
 
-    def editBasketQuantity(self):
-        pass
+    # guest and member
+    def editBasketQuantity(self, username, storename, productID, quantity):
+        self.__systemCheck()
+        user: User = self.__getUserOrMember(username)
+        answer = user.checkProductExistance(storename, productID) #answer is boolean
+        if answer:
+            store: Store = self.stores[storename]
+            product = store.checkProductAvailability(productID, quantity)
+            if product is not None:
+                user.edit_Product_Quantity(storename, productID, quantity)
+            else:
+                raise Exception("Product is not available or quantity is higher than the stock")
+        else:
+            raise Exception("product does not exists in the basket")
 
-    def purchaseCart(self):
-        pass
+    # guest and member
+    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):
+        self.__systemCheck()
+        overall_price = 0  # overall price for the user
+        user: User = self.__getUserOrMember(user_name)  # getting the user
+        stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
+        # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
+        answer = user.get_cart().checkAllItemsInCart()  # answer = set of baskets or none
+        if answer is not None:
+            for basket in answer:
+                products: set = basket.getProductsAsTuples()
+                price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
+                ExternalServices.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
+                TransactionHistory.addNewStoreTransaction(user_name,) #make a new transaction and add it to the store history and user history
+                stores_to_products[basket.store.store_name] = products  # gets the
+                overall_price += price
+            if self.members.keys().__contains__(user_name):
+                TransactionHistory.addNewUserTransaction(user_name,stores_to_products, overall_price)
+        else:
+            raise Exception("There is a problem with the items quantity or existance in the store")
 
     # ------  stores  ------ #
 
@@ -148,12 +199,12 @@ class StoreFacade:
 
     def openStore(self, username, store_name):
         cur_member: Member = self.members.get(username)
-        if cur_member is None:
+        if not cur_member:
             raise Exception("The user is not a member")
         cur_store = Store(store_name)
-        new_access = Access(cur_member, cur_store)
+        new_access = AccessControl(cur_member, cur_store)
         cur_member.accesses[store_name] = new_access
-        cur_store.setFounder(cur_member.user_name, new_access)
+        cur_store.setFounder(cur_member.get_username(), new_access)
         self.stores[store_name] = cur_store
         return cur_store
 
@@ -163,7 +214,8 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         #cur_member: Member = self.members[str(requester_id)]
-        new_product = cur_store.addProduct(username, name, quantity, price, categories)
+        access = None # todo what
+        new_product = cur_store.addProduct(access, name, quantity, price, categories)
         return new_product
 
 
@@ -193,7 +245,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         nominated_access = self.members[nominated_username].accesses[store_name]
         if nominated_access is None:
-            nominated_access = Access(cur_store,self.members[nominated_username])
+            nominated_access = AccessControl(cur_store,self.members[nominated_username])
             self.members[nominated_access].accesses[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isOwner=True)
         return nominated_modified_access
@@ -204,7 +256,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         nominated_access = self.members[nominated_username].accesses[store_name]
         if nominated_access is None:
-            nominated_access = Access(cur_store, self.members[nominated_username])
+            nominated_access = AccessControl(cur_store, self.members[nominated_username])
             self.members[nominated_access].accesses[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         isManager=True)
