@@ -189,20 +189,21 @@ class StoreFacade:
         user: User = self.__getUserOrMember(user_name)  # getting the user
         stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
         # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
-        answer = user.get_cart().checkAllItemsInCart()  # answer = set of baskets or none
-        if answer is not None:
-            for basket in answer:
+        answer = user.get_cart().checkAllItemsInCart()  # answer = True or False
+        if answer is True:
+            for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
                 ExternalServices.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
                 TransactionHistory.addNewStoreTransaction(user_name,) #make a new transaction and add it to the store history and user history
-                stores_to_products[basket.store.store_name] = products  # gets the
+                stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
             if self.members.keys().__contains__(user_name):
                 TransactionHistory.addNewUserTransaction(user_name,stores_to_products, overall_price)
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
+
     def placeBid(self, username, storename, offer, productID, quantity):
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
@@ -216,23 +217,27 @@ class StoreFacade:
         store.requestBid(bid)  #TODO:amiel!!
 
     def getAllBids(self, username):
-        existing_member: Member = None
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
-            existing_member = self.members[username]
+            existing_member: Member = self.members[username]
         else:
             raise Exception("user is not valid")
         bids_set = existing_member.getAllBids()  # returns set of bids
         return bids_set
 
     def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_id, card_date, back_number, price):
-        existing_member: Member = None
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
-            existing_member = self.members[username]
+            existing_member: Member = self.members[username]
         else:
             raise Exception("user is not valid")
-        bid = existing_member.get_cart().getBid(storename, bid_id)
+        bid: Bid = existing_member.get_cart().getBid(storename, bid_id)
+        answer = existing_member.cart.checkItemInCart(storename, bid.get_product())
+        if answer:
+            pass
+            # TODO: unfinished function Ari
+
+
 
     # ------  stores  ------ #
 
