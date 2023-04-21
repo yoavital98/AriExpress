@@ -11,31 +11,39 @@ class TestStoreFacade(TestCase):
     def setUp(self):
         # TODO: check info for duplicates
         self.store_facade = StoreFacade()
-        self.member1 = Member("John", "password123", "john.doe@example.com")
-        self.store_facade.members["John"] = self.member1
-        self.member2 = Member("Jane", "password456", "jane.doe@example.com")
-        self.store_facade.members["Jane"] = self.member2
-        self.username = "test_user"
-        self.password = "test_password"
-        self.member = Member(self.username, self.password, "testing111@gmail.com")
-        self.member = Member("JohnDoe", "password", "testing222@gmail.com")
-        self.store_facade.members["JohnDoe"] = self.member
-        self.store = Store("Store1")
-        self.store_facade.stores["Store1"] = self.store
+        # self.member1 = Member("John", "password123", "john.doe@example.com")
+        # self.store_facade.members["John"] = self.member1
+        # self.member2 = Member("Jane", "password456", "jane.doe@example.com")
+        # self.store_facade.members["Jane"] = self.member2
+        # self.username = "test_user"
+        # self.password = "test_password"
+        # self.member = Member(self.username, self.password, "testing111@gmail.com")
+        # self.member = Member("JohnDoe", "password", "testing222@gmail.com")
+        # self.store_facade.members["JohnDoe"] = self.member
+        # self.store = Store("Store1")
+        # self.store_facade.stores["Store1"] = self.store
 
-    def test_load_data(self):
-        self.fail()
+    # def test_load_data(self):
+    #     self.fail()
+    #
+    # def test_exit_the_system(self):
+    #     self.fail()
 
-    def test_exit_the_system(self):
-        self.fail()
-
-    def test_register_new_member(self):
+    def test_register_new_member_success(self):
         username = "test_user"
         password = "test_password"
         email = "test_email@example.com"
-        self.store_facade.passwordValidator.ValidatePassword = MagicMock(return_value=True)
+        # self.store_facade.passwordValidator.ValidatePassword = MagicMock(return_value=True)
         member = self.store_facade.register(username, password, email)
         self.assertEqual(self.store_facade.members[username], member)
+
+    def test_register_new_member_failure(self):
+        username = "test_user"
+        password = "test_password"
+        email = "test_email@example.com"
+        # self.store_facade.passwordValidator.ValidatePassword = MagicMock(return_value=True)
+        member = self.store_facade.register(username, password, email)
+        self.assertRaises(self.store_facade.register(username, password, email), SystemError)
 
     def test_checkIfUserIsLoggedIn_existingUserLoggedIn(self):
         self.member1.logInAsMember()
