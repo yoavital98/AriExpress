@@ -9,7 +9,7 @@ from ProjectCode.Domain.Objects import Access
 
 class Member(User):
     def __init__(self, user_name, password, email):  # TODO need to choose whether registeration requires address and
-        self.accesses = TypedDict(string, Access)   # storename to Access                                          # TODO birthdate
+        self.accesses = TypedDict(str, Access)   # storename to Access                                          # TODO birthdate
         self.user_name = user_name #username
         self.password = password #password
         self.email = email #email

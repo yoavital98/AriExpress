@@ -3,8 +3,8 @@ import string
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 class TransactionHistory:
     def __init__(self):
-        self.user_transactions = TypedDict(string, set)
-        self.store_transactions = TypedDict(string, set)
+        self.user_transactions = TypedDict(str, set)
+        self.store_transactions = TypedDict(str, set)
 
     def addUserTransaction(self, transaction):
         if transaction.username in self.user_transactions:

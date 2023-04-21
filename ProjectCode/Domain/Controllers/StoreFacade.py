@@ -14,14 +14,14 @@ from ProjectCode.Domain.Objects.UserObjects.Member import *
 
 class StoreFacade:
     def __init__(self):
-        self.members = TypedDict(string, Member)    # dict of
-        self.stores = TypedDict(string, Store)  # by id
-        self.onlineGuests = TypedDict(string, Guest)
-        # self.onlineUsers = TypedDict(string, Guest) --optional instead of onlineGuests--
+        self.members = TypedDict(str, Member)    # dict of
+        self.stores = TypedDict(str, Store)  # by id
+        self.onlineGuests = TypedDict(str, Guest)
+        # self.onlineUsers = TypedDict(str, Guest) --optional instead of onlineGuests--
         self.external_services = ExternalServices()
         self.message_controller = MessageController()
         self.transaction_history = TransactionHistory()
-        self.accesses = TypedDict(string, Access)  # optional TODO check key type
+        self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
         self.cart_ID_Counter = 0  # cart counter
         self.loadData()
@@ -54,7 +54,7 @@ class StoreFacade:
                 self.members[str(username)] = new_member
                 return new_member
         else:
-            pass
+            raise SystemError("This username is already in the system")
 
 
 

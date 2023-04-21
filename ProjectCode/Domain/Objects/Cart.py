@@ -5,10 +5,9 @@ from ProjectCode.Domain.Objects.Basket import Basket
 
 
 class Cart:
-    def __init__(self, cartID, username):
-        self.cartID = cartID
+    def __init__(self, username):
         self.username = username
-        self.baskets = TypedDict(string, Basket)
+        self.baskets = TypedDict(str, Basket)
 
     def add_basket(self, store, basket):
         self.baskets[store.name] = basket
