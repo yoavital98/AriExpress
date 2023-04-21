@@ -27,12 +27,12 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.getStores(), [self.store])
     
-    def test_getStores_returnsStores_single1(self):  # duplicate test, might need to delete
-        stores = self.store_facade.getStores()
-        self.assertIsInstance(stores, list)
-        self.assertGreater(len(stores), 0)
-        for store in stores:
-            self.assertIsInstance(store, Store)
+    # def test_getStores_returnsStores_single1(self):  # duplicate test, might need to delete
+    #     stores = self.store_facade.getStores()
+    #     self.assertIsInstance(stores, list)
+    #     self.assertGreater(len(stores), 0)
+    #     for store in stores:
+    #         self.assertIsInstance(store, Store)
 
     def test_getStores_returnsStores_multiple(self):
         self.store = Store("Store1")
@@ -147,31 +147,31 @@ class TestStoreFacade(TestCase):
         self.product2 = self.store.addProduct("Product2", 10, 10, "Category1", "Keyword1")
         self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [self.product, self.product2])
     
-    def test_placeBid_returnsTrue(self):
+    def test_placeBid_success(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.product = self.store.addProduct("Product1", 10, 10)
         self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 10), True)
     
-    def test_placeBid_badStore_returnsFalse(self):
+    def test_placeBid_badStore_failure(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.product = self.store.addProduct("Product1", 10, 10)
         self.assertEqual(self.store_facade.placeBid("Store2", "Product1", 10), False)
     
-    def test_placeBid_badProduct_returnsFalse(self):
+    def test_placeBid_badProduct_failure(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.product = self.store.addProduct("Product1", 10, 10)
         self.assertEqual(self.store_facade.placeBid("Store1", "Product2", 10), False)
     
-    def test_placeBid_badPrice_returnsFalse(self):
+    def test_placeBid_badPrice_failure(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.product = self.store.addProduct("Product1", 10, 10)
         self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 9), False)
     
-    def test_placeBid_badProductPurchasePolicy_returnsFalse(self):
+    def test_placeBid_badProductPurchasePolicy_failure(self):
         pass
 
     def test_getStorePurchaseHistory_returnsHistory_empty(self):

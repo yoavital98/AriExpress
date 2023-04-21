@@ -232,8 +232,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.changeProductPrice("Store1", "John", "Product1", 20)
         self.assertEqual(self.store_facade.stores["Store1"].products["Product1"].price, 10)
     
-
-
+    
 
     
 
