@@ -4,44 +4,24 @@ import logging
 
 
 class Service:
-    def __init__(self, logging):
-        self.admins = self.loadAdminsFromDB()
-        self.store_facade = None  # StoreFacade() TODO: decide how we want to open the facade
-        self.error_log = logging.getLogger()
-        self.event_log = logging.getLogger()
+    def __init__(self):
 
-    #TODO: consult with everyone how they want to open the system!!
+        self.store_facade = StoreFacade()
 
     # ------  admin  ------ #
-    def openTheSystem(self, requesterID):
+    def openTheSystem(self, username):
         try:
-            if self.admins.keys().__contains__(requesterID):  # check if admin
-                self.store_facade = StoreFacade()  # activates loadData in constructor
-            else:
-                raise SystemError("open-the-system requester isn't admin")
+            self.store_facade.openSystem(username)
         except SystemError:
             pass
 
-    def addAdmin(self, requesterID, newAdminID, newPassword, newEmail):  # TODO we will assume the requesting admin fills himself the new admin details
+    def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
-            if self.admins.keys().__contains__(requesterID):  # check if admin
-                self.admins[newAdminID] = Admin(newAdminID, newPassword, newEmail)
-            raise SystemError("add-admin requester isn't admin")
+            self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
         except SystemError:
-            pass
-
-    def loadAdminsFromDB(self):
-        try:
-            admins = TypedDict(string, Admin)
-            ### let's assume we tried to take all the admins from the database
-            if len(admins) == 0:#TODO: just for this version so we will have an Admin
-                admins["007"] = Admin("JamesBond", "TATAKAE", "yoavital98@gmail.com")
-            return admins
-        except ValueError:
             pass
 
     # ------  users  ------ #
-
     #  Guests
 
     def exitTheSystem(self):
