@@ -14,8 +14,6 @@ class TestStoreFacade(TestCase):
         self.store_facade = StoreFacade()
         self.member1 = Member("Ari", "password123", "ari@gmail.com")
         self.store_facade.members["Ari"] = self.member1
-        self.member2 = Member("Feliks", "password456", "feliks@gmail.com")
-        self.store_facade.members["Feliks"] = self.member2
 
 
     def test_getStores_returnsStores_empty(self):

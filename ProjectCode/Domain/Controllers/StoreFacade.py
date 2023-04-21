@@ -19,14 +19,14 @@ from typing import List
 class StoreFacade:
     def __init__(self):
 
-        self.admins = TypedDict(string, Admin)  # dict of admins
-        self.members = TypedDict(string, Member)    # dict of members
-        self.onlineGuests = TypedDict(string, Guest)  # dict of users
-        self.stores = TypedDict(string, Store)  # dict of stores
+        self.admins = TypedDict(str, Admin)  # dict of admins
+        self.members = TypedDict(str, Member)    # dict of members
+        self.onlineGuests = TypedDict(str, Guest)  # dict of users
+        self.stores = TypedDict(str, Store)  # dict of stores
         self.external_services = ExternalServices()  # external services
         self.message_controller = MessageController()  # Messanger
         self.transaction_history = TransactionHistory()  # Transactions log
-        self.accesses = TypedDict(string, Access)  # optional TODO check key type
+        self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
         self.cart_ID_Counter = 0  # cart counter
         self.bid_id_counter = 0  # bid counter
