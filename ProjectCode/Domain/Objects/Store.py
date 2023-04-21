@@ -11,7 +11,7 @@ class Store:
         self.products = TypedDict(int, Product)
         #TODO: policies
         self.active: bool = True
-        self.accesses = TypedDict(string, Access)
+        self.accesses = TypedDict(str, Access)
         self.product_id_counter = 0
 
     def setFounder(self, username, access):
@@ -120,3 +120,16 @@ class Store:
                 product_list.append(prod)
         return product_list
 
+
+    def purchaseBasket(self, products_dict): #tup(product,qunaiity)
+        overall_price = 0
+        for product_id, product_tuple in products_dict.items():
+            cur_product = self.products[product_id]
+            if cur_product is None:
+                raise Exception("No such product exists")
+            cur_product.quantity -= product_tuple[1]
+            overall_price += cur_product.price * product_tuple[1]
+        return overall_price
+
+    def bidRequest(self, product_id, offer):
+        pass
