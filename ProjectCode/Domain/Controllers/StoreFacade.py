@@ -4,6 +4,7 @@ import ProjectCode
 from ProjectCode.Domain.Controllers.ExternalServices import *
 from ProjectCode.Domain.Controllers.MessageController import *
 from ProjectCode.Domain.Objects import User, Store, Access
+from ProjectCode.Domain.Objects.Bid import *
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
@@ -27,6 +28,7 @@ class StoreFacade:
         self.accesses = TypedDict(string, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
         self.cart_ID_Counter = 0  # cart counter
+        self.bid_id_counter = 0  # bid counter
         self.loadData()
         self.SystemStatus = False  # True = System on, False = System off
         first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
@@ -201,6 +203,22 @@ class StoreFacade:
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
 
+    def placeBid(self,username, storename, offer, productID, quantity):
+        existing_member = None
+        if self.members.keys().__contains__(username):
+            existing_member: Member = self.members[username]
+            if not existing_member.get_logged():
+                raise Exception("user isnt logged in")
+        else:
+            raise Exception("user is not valid")
+        bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
+        self.bid_id_counter += 1
+        existing_member.addBidToBasket(bid)  #TODO:Ari
+        store: Store = self.stores[storename]
+        store.requestBid(bid)  #TODO:amiel!!
+
+
+
     # ------  stores  ------ #
 
     def getStores(self):
@@ -238,9 +256,6 @@ class StoreFacade:
         return search_results
 
     def productFilterByFeatures(self):
-        pass
-
-    def placeBid(self):
         pass
 
     def getStorePurchaseHistory(self):
