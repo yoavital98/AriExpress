@@ -8,6 +8,9 @@ class Bid:
         self._quantity = quantity
         self._approved = approved
 
+    def get_bid_id(self):
+        return self.bid_id
+
     # Getter and setter for username
     def get_username(self):
         return self._username

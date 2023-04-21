@@ -20,6 +20,4 @@ class Guest(User):
     def removeFromBasket(self, storename, productID):
         super().removeFromBasket(storename, productID)
 
-    def purchase(self):
-        # purchasing process
-        pass
+

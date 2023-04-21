@@ -12,13 +12,10 @@ class User(ABC):
         return self.cart
         pass
 
-    def add_to_cart(self, storename, productID, product, quantity):
-        self.cart.add_Product(storename, productID, product, quantity)
+    def add_to_cart(self,username, storename, productID, product, quantity):
+        self.cart.add_Product(username, storename, productID, product, quantity)
         pass
 
-    def purchase(self):
-        # purchasing process
-        pass
 
     def get_Basket(self, storename):
         return self.cart.get_Basket(storename)
