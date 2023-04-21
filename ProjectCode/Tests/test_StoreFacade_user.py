@@ -29,66 +29,40 @@ class TestStoreFacade(TestCase):
     # def test_exit_the_system(self):
     #     self.fail()
 
-
-    def test_register_success(self):
-
-    def test_register_new_member_success(self):
+    ########################### TEST REGISTER ###############################
+    def test_register_new_member_newUser(self):
         # check a new register signup
-
         username = "test_user"
         password = "test_password"
         email = "test_email@example.com"
         member = self.store_facade.register(username, password, email)
         self.assertEqual(self.store_facade.members[username], member)
 
-
-    def test_register_new_member_failure(self):
+    def test_register_new_member_existingUser(self):
         # trying to register an existing user
         self.assertRaises(self.store_facade.register("John", "password123", "john.doe@example.com"), SystemError)
 
-
-    def test_checkIfUserIsLoggedIn_existingUserLoggedIn_success(self):
+    ############################### TEST LOGIN CHECK ###############################
+    def test_checkIfMemberIsLoggedIn_existingUserLoggedIn(self):
         self.member1.logInAsMember()
-        result = self.store_facade.checkIfUserIsLoggedIn("John")
-        self.assertEqual(result, True)
+        self.assertTrue(self.store_facade.checkIfUserIsLoggedIn("John"))
 
-
-    def test_checkIfUserIsLoggedIn_existingUserNotLoggedIn_success(self):  #success but returns false
-
-    def test_checkIfUserIsLoggedIn_existingUserLoggedIn_failure(self):
-        self.member1.logInAsMember()
-        result = self.store_facade.checkIfUserIsLoggedIn("John")
-        self.assertEqual(result, True)
-
-    def test_checkIfUserIsLoggedIn_existingUserNotLoggedIn_success(self):
+    def test_checkIfMemberIsLoggedIn_existingUserLoggedOut(self):
         self.member1.logOff()
-        result = self.store_facade.checkIfUserIsLoggedIn("John")
-        self.assertEqual(result, False)
-    def test_checkIfUserIsLoggedIn_existingUserNotLoggedIn_failure(self):
-        self.member1.logOff()
-        result = self.store_facade.checkIfUserIsLoggedIn("John")
-        self.assertEqual(result, False)
+        self.assertFalse(self.store_facade.checkIfUserIsLoggedIn("John"))
 
+    def test_checkIfMemberIsLoggedIn_UserNotExists(self):
+        self.assertRaises(self.store_facade.checkIfUserIsLoggedIn("Amiel"), SystemError)
 
-    def test_checkIfUserIsLoggedIn_nonExistingUser_success(self):
-        with self.assertRaises(SystemError):
-            self.store_facade.checkIfUserIsLoggedIn("NonExistingUser")
+    ############################### TEST GUESTS LOGIN-OUT ###############################
 
-    def test_checkIfUserIsLoggedIn_nonExistingUser_failure(self):
-        with self.assertRaises(SystemError):
-            self.store_facade.checkIfUserIsLoggedIn("NonExistingUser")
-
-    def test_logInAsGuest_success(self):
-        entrance_id = self.store_facade.nextEntranceID
+    def test_logInAsGuest_checkIDAndOnlineGuests(self):
+        previous_last_entrance_id = self.store_facade.nextEntranceID
         guest = self.store_facade.logInAsGuest()
-        self.assertEqual(guest.id, entrance_id)
-        self.assertIn(str(entrance_id), self.store_facade.onlineGuests)
-        
-    def test_logInAsGuest_failure(self):
-        entrance_id = self.store_facade.nextEntranceID
-        guest = self.store_facade.logInAsGuest()
-        self.assertEqual(guest.id, entrance_id)
-        self.assertIn(str(entrance_id), self.store_facade.onlineGuests)
+        new_last_entrance_id = self.store_facade.nextEntranceID
+        self.assertEqual(guest.entrance_id, previous_last_entrance_id)
+        self.assertNotEqual(guest.entrance_id, new_last_entrance_id)
+        self.assertIn(str(previous_last_entrance_id), self.store_facade.onlineGuests)
 
     def test_leaveAsGuest_success(self):
         entrance_id = self.store_facade.nextEntranceID
@@ -117,25 +91,23 @@ class TestStoreFacade(TestCase):
         self.store_facade.members[self.username] = self.member
         # call login function
         logged_in_member = self.store_facade.logInAsMember(self.username, self.password)
-
+        pass
 
     def test_logInAsMember_userNotLoggedIn_success(self):
         pass
-        # check that the member is logged in
-        self.assertTrue(logged_in_member.get_logged())
-   
-   def test_logInAsMember_existing_user_failure(self):
-        # add member to members dictionary
-        self.store_facade.members[self.username] = self.member
+
+    def test_logInAsMember_existing_user_failure(self):
+        pass
 
     def test_logInAsMember_userLoggedIn_success(self):
         pass
-    
+
     def test_logInAsMember_userLoggedIn_failure(self):
         pass
-        
+
     def test_logInAsMember_userNotRegistered_success(self):
         pass
+
     def test_logInAsMember_userNotRegistered_failure(self):
         pass
 
@@ -159,6 +131,7 @@ class TestStoreFacade(TestCase):
         pass
 
     def test_logOut_userNotRegistered_failure(self):
+        pass
 
     def test_logInAsMember_non_existing_user_success(self):
         # call login function for non-existing user
@@ -215,6 +188,7 @@ class TestStoreFacade(TestCase):
 
 
     def test_getMemberPurchaseHistory_guestLoggedIn_failure(self):
+        pass
 
     def test_getMemberPurchaseHistory_returns_transaction_history_for_valid_username_success(self):
         # Arrange
@@ -370,6 +344,7 @@ class TestStoreFacade(TestCase):
         pass
 
     def test_purchaseCart_basketIsEmpty_failure(self):
+        pass
 
     def test_get_basket_with_invalid_storename_success(self):
         # test with invalid storename, should raise an error
