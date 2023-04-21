@@ -8,7 +8,7 @@ class Store:
 
     def __init__(self, store_name):
         self.store_name = store_name
-        self.product = TypedDict(int, Product)
+        self.products = TypedDict(int, Product)
         #TODO: policies
         self.active: bool = True
         self.accesses = TypedDict(str, Access)
@@ -34,20 +34,20 @@ class Store:
         self.hasForProductAccess(access)
         self.product_id_counter += 1
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
-        self.product.__setitem__(self.product_id_counter,product_to_add)
+        self.products.__setitem__(self.product_id_counter, product_to_add)
         return product_to_add
 
     def deleteProduct(self, access, product_id):
         self.hasForProductAccess(access)
-        if self.product.get(product_id) is None:
+        if self.products.get(product_id) is None:
             raise Exception("Product doesn't exists")
         else:
-            self.product.__delitem__(product_id)
+            self.products.__delitem__(product_id)
             return product_id
 
     def changeProduct(self, access, product_id, **kwargs):
         self.hasForProductAccess(access)
-        cur_product = self.product.get(product_id)
+        cur_product = self.products.get(product_id)
         if cur_product is None:
             raise Exception("Product doesn't exists")
         for k, v in kwargs.items():
@@ -96,3 +96,40 @@ class Store:
         else:
             raise Exception("Member has no access for that action")
 
+
+    def checkProductAvailability(self, product_id, quantity):
+        cur_product = self.products[int(product_id)]
+        if cur_product is None:
+            raise Exception("No such product exists")
+        if cur_product.quantity - quantity >= 0:
+            return cur_product
+        else:
+            raise Exception("There isn't enough quantity")
+    def searchProductByName(self, keyword):
+        product_list = []
+        for prod in self.products.values():
+            if keyword in prod.name:
+                product_list.append(prod)
+        return product_list
+
+
+    def searchProductByCategory(self, category):
+        product_list = []
+        for prod in self.products.values():
+            if category in prod.categories:
+                product_list.append(prod)
+        return product_list
+
+
+    def purchaseBasket(self, products_dict): #tup(product,qunaiity)
+        overall_price = 0
+        for product_id, product_tuple in products_dict.items():
+            cur_product = self.products[product_id]
+            if cur_product is None:
+                raise Exception("No such product exists")
+            cur_product.quantity -= product_tuple[1]
+            overall_price += cur_product.price * product_tuple[1]
+        return overall_price
+
+    def bidRequest(self, product_id, offer):
+        pass
