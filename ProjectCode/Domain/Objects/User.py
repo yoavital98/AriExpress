@@ -4,17 +4,30 @@ from abc import ABC, abstractmethod
 
 
 class User(ABC):
+    def __init__(self, username, cart_id):
+        self.username = username
+        self.cart = Cart(cart_id, username)
 
-    @abstractmethod
     def get_cart(self):
-        # Return the user's shopping cart
+        return self.cart
         pass
 
-    @abstractmethod
-    def add_to_cart(self, item):
-        # Add an item to the user's shopping cart
+    def add_to_cart(self, storename, productID, product, quantity):
+        self.cart.add_Product(storename, productID, product, quantity)
         pass
 
     def purchase(self):
         # purchasing process
         pass
+
+    def get_Basket(self, storename):
+        return self.cart.get_Basket(storename)
+
+    def removeFromBasket(self, storename, productID):
+        self.cart.removeFromBasket(storename, productID)
+
+    def checkProductExistance(self, storename, productID):
+        return self.cart.checkProductExistance(storename, productID)
+
+    def edit_Product_Quantity(self, storename, productID, quantity):
+        self.cart.edit_Product_Quantity(storename, productID, quantity)

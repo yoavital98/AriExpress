@@ -2,7 +2,7 @@ import unittest
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade, Cart
-from ProjectCode.Domain.Objects.Store import Store
+from ProjectCode.Domain.Objects.Store import Store, Access
 from ProjectCode.Domain.Objects.UserObjects.Member import Member
 
 
@@ -12,12 +12,11 @@ class TestStoreFacade(TestCase):
         # TODO: check info for duplicates
         # TODO: check implementations of tests
         self.store_facade = StoreFacade()
-        self.member1 = Member("John", "password123", "john.doe@example.com")
-        self.store_facade.members["John"] = self.member1
-        self.member2 = Member("Jane", "password456", "jane.doe@example.com")
-        self.store_facade.members["Jane"] = self.member2
-        # self.store = Store("Store1")
-        # self.store_facade.stores["Store1"] = self.store
+        self.member1 = Member("Ari", "password123", "ari@gmail.com")
+        self.store_facade.members["Ari"] = self.member1
+        self.member2 = Member("Feliks", "password456", "feliks@gmail.com")
+        self.store_facade.members["Feliks"] = self.member2
+
 
     def test_getStores_returnsStores_empty(self):
         self.assertEqual(self.store_facade.getStores(), [])
@@ -42,12 +41,17 @@ class TestStoreFacade(TestCase):
         self.assertEqual(self.store_facade.getStores(), [self.store, self.store2])
 
     def test_getProductsByStore_returnsProducts_empty(self):
+        self.store = Store("Store1")
+        self.store_facade.stores["Store1"] = self.store
         self.assertEqual(self.store_facade.getProductsByStore("Store1"), [])
 
     def test_getProductsByStore_returnsProducts_single(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.product = self.store.addProduct("Product1", 10, 10)
+        self.access = Access(self.store, self.member1)
+        self.access.setFounder(True)
+        self.store.accesses[self.member1.get_username()] = self.access
+        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.getProductsByStore("Store1"), [self.product])
     
     def test_getProductsByStore_returnsProducts_multiple(self):
@@ -56,6 +60,9 @@ class TestStoreFacade(TestCase):
         self.product = self.store.addProduct("Product1", 10, 10)
         self.product2 = self.store.addProduct("Product2", 10, 10)
         self.assertEqual(self.store_facade.getProductsByStore("Store1"), [self.product, self.product2])
+
+    def test_getProductsByStore_storeNotFound(self):
+        self.assertEqual(self.store_facade.getProductsByStore("Store1"), [])
 
     def test_getProduct_returnsProduct_found(self):
         self.store = Store("Store1")

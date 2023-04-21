@@ -1,34 +1,26 @@
 from ProjectCode.Domain.Controllers.StoreFacade import *
+from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
 
-class Service:  # TODO change ValueError to relevant ones
 
-    def __init__(self, logging):
-        self.admins = self.loadAdminsFromDB()
-        self.store_facade = None # StoreFacade() TODO decide how we want to open teh facade
-        self.error_log = logging.getLogger()
-        self.event_log = logging.getLogger()\
-
-
+class Service:
+    def __init__(self):
+        self.store_facade = StoreFacade()
 
     # ------  admin  ------ #
-    def openTheSystem(self, requesterID):
+    def openTheSystem(self, username):
         try:
-            if self.admins.keys().__contains__(requesterID):  # check if admin
-                self.store_facade = StoreFacade()  # activates loadData in constructor
-            else:
-                raise SystemError("open-the-system requester isn't admin")
+            self.store_facade.openSystem(username)
         except SystemError:
             pass
 
-    def addAdmin(self, requesterID, newAdminID, newPassword, newEmail):  # TODO we will assume the requesting admin fills himself the new admin details
+    def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
-            if self.admins.keys().__contains__(requesterID):  # check if admin
-                self.admins[newAdminID] = Admin(newAdminID, newPassword, newEmail)
-            raise SystemError("add-admin requester isn't admin")
+            self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
         except SystemError:
             pass
+
 
     def loadAdminsFromDB(self):
         try:
@@ -40,8 +32,8 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    # ------  users  ------ #
 
+    # ------  users  ------ #
     #  Guests
 
     def exitTheSystem(self):
@@ -69,7 +61,7 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def logOut(self,username):
+    def logOut(self, username):
         try:
             self.store_facade.logOut(username)
         except ValueError:
@@ -131,39 +123,39 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def addToBasket(self,requesterID, storename, productname, quantity):
+    def addToBasket(self, username, storename, productID, quantity):
         try:
-            self.store_facade.addToBasket()
+            self.store_facade.addToBasket(username, storename, productID, quantity)
         except ValueError:
             pass
 
-    def removeFromBasket(self,requesterID, storename, productname):
+    def removeFromBasket(self, username, storename, productID):
         try:
-            self.store_facade.removeFromBasket()
+            self.store_facade.removeFromBasket(username, storename, productID)
         except ValueError:
             pass
 
-    def editBasketQuantity(self,requesterID, storename, productname, quantity):
+    def editBasketQuantity(self, username, storename, productname, quantity):
         try:
-            self.store_facade.editBasketQuantity()
+            self.store_facade.editBasketQuantity(username, storename, productname, quantity)
         except ValueError:
             pass
 
-    def purchaseCart(self, requesterID, cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, username, storename,  cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
         try:
-            self.store_facade.purchaseCart()
+            self.store_facade.purchaseCart(username, storename, cardnumber, cardusername, carduserID, carddate, backnumber)
         except ValueError:
             pass
 
-    def placeBid(self,requesterID, storename, productname, bid):
+    def placeBid(self, username, storename, productname, bid):
         try:
-            self.store_facade.placeBid()
+            self.store_facade.placeBid(username, storename, productname, bid)
         except ValueError:
             pass
 
-    def getStorePurchaseHistory(self, requesterID, storename):#TODO: username is demanded for validation of the request
+    def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
         try:
-            self.store_facade.getStorePurchaseHistory()
+            self.store_facade.getStorePurchaseHistory(username, storename)
         except ValueError:
             pass
 
@@ -184,6 +176,7 @@ class Service:  # TODO change ValueError to relevant ones
         except Exception as e:
             self.error_log.error(f"Adding a product by {username} has failed.")
             return e
+
 
     def removeProductFromStore(self, username, storename, product_id):
         try:
