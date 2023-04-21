@@ -40,7 +40,7 @@ class Member(User):
     def logInAsMember(self):
         self.logged_In = True
 
-    def logOff(self):
+    def logOut(self):
         self.logged_In = False
 
     def get_username(self):
