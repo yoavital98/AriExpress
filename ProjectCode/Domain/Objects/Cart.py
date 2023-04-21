@@ -10,24 +10,39 @@ class Cart:
         self.username = username
         self.baskets = TypedDict(string, Basket)
 
-
-    def get_Basket(self,storename):
+    def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):
             return self.baskets[storename]
         else:
             raise SystemError("Basket does not exists")
 
     def add_Product(self, storename, productID, product, quantity):
-        basket = self.baskets[storename]
+        basket: Basket= self.get_Basket(storename)
         basket.add_Product(productID, product, quantity)
-    def get_username(self):
-        return self.username
 
-    def set_username(self, username):
-        self.username = username
+    def removeFromBasket(self, storename, productID):
+        basket = self.baskets[storename]
+        answer = basket.remove_Product(productID) # answer = true if item is successfully removed
+        if basket.getBasketSize() == 0:
+            self.baskets.__delitem__(storename)
+        return answer
 
-    def get_baskets(self):
-        return self.baskets
+    def checkProductExistance(self, storename, productID):
+        basket = self.baskets[storename]
+        return basket.checkProductExistance(productID)
 
-    def set_baskets(self, baskets):
-        self.baskets = baskets
+    def edit_Product_Quantity(self, storename, productID, quantity):
+        basket: Basket = self.get_baskets(storename)
+        basket.edit_Product_Quantity(productID, quantity)
+
+        def get_username(self):
+            return self.username
+
+        def set_username(self, username):
+            self.username = username
+
+        def get_baskets(self):
+            return self.baskets
+
+        def set_baskets(self, baskets):
+            self.baskets = baskets

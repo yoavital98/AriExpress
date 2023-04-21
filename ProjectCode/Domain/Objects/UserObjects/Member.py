@@ -9,24 +9,30 @@ from ProjectCode.Domain.Objects import Access
 
 
 class Member(User):
-    def __init__(self, user_name, password, email, cartID):  # TODO need to choose whether registeration requires address and
-        self.accesses = TypedDict(string,
-                                  Access)  # storename to Access                                          # TODO birthdate
-        self.user_name = user_name  # username
+    def __init__(self, username, password, email, cartID):
+        super().__init__(username, cartID)
+        self.accesses = TypedDict(string, Access)  #Accesses
         self.password = password  # password
         self.email = email  # email
-        # self.address = address
-        # self.birthDate = birthDate
-        self.cart = Cart(cartID, user_name)  # userCart
         self.logged_In = False  # login
 
+    # -------------------------Methods from User--------------------------------
     def get_cart(self):
-        return self.cart
+        super().get_cart()
 
     def add_to_cart(self, storename, productID, product, quantity):
-        self.cart.add_Product(storename,productID,product,quantity)
+        super().add_to_cart(storename, productID, product, quantity)
 
+    def get_Basket(self, storename):
+        super().get_Basket(storename)
 
+    def removeFromBasket(self, storename, productID):
+        super().removeFromBasket(storename, productID)
+
+    def edit_Product_Quantity(self, storename, productID, quantity):
+        super().edit_Product_Quantity(storename, productID, quantity)
+
+# -------------------------------------------------------------------------------
     def purchase(self):
         # purchasing process
         pass
@@ -38,22 +44,22 @@ class Member(User):
         self.logged_In = False
 
     def get_username(self):
-        return self._username
+        return self.username
 
     def set_username(self, username):
-        self._username = username
+        self.username = username
 
     def get_password(self):
-        return self._password
+        return self.password
 
     def set_password(self, password):
-        self._password = password
+        self.password = password
 
     def get_email(self):
-        return self._email
+        return self.email
 
     def set_email(self, email):
-        self._email = email
+        self.email = email
 
     def get_logged(self):
         return self.logged_In

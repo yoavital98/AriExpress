@@ -3,14 +3,14 @@ from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
 
-class Service:  # TODO change ValueError to relevant ones
+class Service:
     def __init__(self, logging):
         self.admins = self.loadAdminsFromDB()
-        self.store_facade = None # StoreFacade() TODO decide how we want to open teh facade
+        self.store_facade = None # StoreFacade() TODO: decide how we want to open teh facade
         self.error_log = logging.getLogger()
         self.event_log = logging.getLogger()
 
-
+    #TODO: consult with everyone how they want to open the system!!
 
 
     # ------  admin  ------ #
@@ -126,15 +126,15 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def addToBasket(self, username, storename, productname, quantity):
+    def addToBasket(self, username, storename, productID, quantity):
         try:
-            self.store_facade.addToBasket(username, storename, productname, quantity)
+            self.store_facade.addToBasket(username, storename, productID, quantity)
         except ValueError:
             pass
 
-    def removeFromBasket(self, username, storename, productname):
+    def removeFromBasket(self, username, storename, productID):
         try:
-            self.store_facade.removeFromBasket(username, storename, productname)
+            self.store_facade.removeFromBasket(username, storename, productID)
         except ValueError:
             pass
 
@@ -144,9 +144,9 @@ class Service:  # TODO change ValueError to relevant ones
         except ValueError:
             pass
 
-    def purchaseCart(self, username, cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, username, storename,  cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
         try:
-            self.store_facade.purchaseCart(username, cardnumber, cardusername, carduserID, carddate, backnumber)
+            self.store_facade.purchaseCart(username, storename, cardnumber, cardusername, carduserID, carddate, backnumber)
         except ValueError:
             pass
 
