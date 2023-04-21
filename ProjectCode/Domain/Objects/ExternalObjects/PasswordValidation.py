@@ -2,7 +2,11 @@ class PasswordValidation:
     def __init__(self):
         pass
     #External service that will determinate if a password is strong enough
-    def ValidatePassword(self, password):
+
+    @staticmethod
+    def ValidatePassword(password):
         return True
-    def ConfirmePassword(self,userPassword,givenPassword):
+
+    @staticmethod
+    def ConfirmPassword(userPassword, givenPassword):
         return userPassword == givenPassword

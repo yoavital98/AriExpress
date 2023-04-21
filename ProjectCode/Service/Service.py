@@ -6,12 +6,11 @@ import logging
 class Service:
     def __init__(self, logging):
         self.admins = self.loadAdminsFromDB()
-        self.store_facade = None # StoreFacade() TODO: decide how we want to open teh facade
+        self.store_facade = None  # StoreFacade() TODO: decide how we want to open the facade
         self.error_log = logging.getLogger()
         self.event_log = logging.getLogger()
 
     #TODO: consult with everyone how they want to open the system!!
-
 
     # ------  admin  ------ #
     def openTheSystem(self, requesterID):
@@ -64,7 +63,7 @@ class Service:
         except ValueError:
             pass
 
-    def logOut(self,username):
+    def logOut(self, username):
         try:
             self.store_facade.logOut(username)
         except ValueError:

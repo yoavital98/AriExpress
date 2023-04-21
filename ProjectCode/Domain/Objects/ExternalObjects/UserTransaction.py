@@ -1,11 +1,12 @@
 from datetime import datetime
 
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 
-class Transaction:
-    def __init__(self, username, storename, products, overall_price):
+
+class UserTransaction:
+    def __init__(self, username, products, overall_price):
         self._username = username
-        self._storename = storename
-        self._products = products
+        self._products = TypedDict(str, set)  # store_name -> set of tuples (product_name, quantity)
         self._overall_price = overall_price
         self._date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -25,5 +26,5 @@ class Transaction:
         return self._date
 
     def __str__(self):
-        product_list = "\n".join([f"{k}: {v[0]} x {v[1]}" for k, v in self._products.items()])
-        return f"Transaction on {self._date}:\nStore: {self._storename}\nUser: {self._username}\nProducts:\n{product_list}\nOverall Price: {self._overall_price}"
+        def __str__(self):
+            return f"Purchase made by {self._username} at {self._storename} on {self._date}\nProducts: {self._products}\nOverall price: {self._overall_price}"

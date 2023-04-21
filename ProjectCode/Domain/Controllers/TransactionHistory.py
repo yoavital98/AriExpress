@@ -1,10 +1,14 @@
 import string
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.ExternalObjects.StoreTransaction import StoreTransaction
+from ProjectCode.Domain.Objects.ExternalObjects.UserTransaction import UserTransaction
+
+
 class TransactionHistory:
     def __init__(self):
-        self.user_transactions = TypedDict(string, set)
-        self.store_transactions = TypedDict(string, set)
+        self.user_transactions = TypedDict(str, set)
+        self.store_transactions = TypedDict(str, set)
 
     def addUserTransaction(self, transaction):
         if transaction.username in self.user_transactions:
@@ -27,3 +31,12 @@ class TransactionHistory:
     def get_Store_Transactions(self, storename):
         return self.store_transactions[storename]
 
+    def addNewStoreTransaction(self, username, storename, products, overall_price):
+        new_store_transaction = StoreTransaction(username, storename,products, overall_price)
+        store_transactions: set = self.store_transactions[storename]
+        store_transactions.add(new_store_transaction)
+
+    def addNewUserTransaction(self, username, products, overall_price):
+        new_user_transaction = UserTransaction(username, products, overall_price)
+        user_transactions: set = self.store_transactions[username]
+        user_transactions.add(new_user_transaction)
