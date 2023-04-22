@@ -3,7 +3,7 @@ from unittest import TestCase
 from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade, Cart
 from ProjectCode.Domain.Objects.Basket import Basket
 from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
-from ProjectCode.Domain.Objects.AccessControl import *
+from ProjectCode.Domain.Objects.Access import *
 
 
 class TestStoreFacade(TestCase):

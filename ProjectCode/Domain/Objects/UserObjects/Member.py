@@ -6,13 +6,13 @@ from abc import ABC, abstractmethod
 
 from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects.AccessControl import *
+from ProjectCode.Domain.Objects.Access import *
 
 
 class Member(User):
     def __init__(self, username, password, email):
         super().__init__(username)
-        self.accesses = TypedDict(str, AccessControl)  #Accesses
+        self.accesses = TypedDict(str, Access)  #Accesses
         self.password = password  # password
         self.email = email  # email
         self.logged_In = False  # login

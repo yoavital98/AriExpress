@@ -12,8 +12,8 @@ from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
-from ProjectCode.Domain.Objects.AccessControl import *
-from ProjectCode.Domain.Objects.AccessControl import *
+from ProjectCode.Domain.Objects.Access import *
+from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Cart import *
 from ProjectCode.Domain.Objects.Basket import *
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
