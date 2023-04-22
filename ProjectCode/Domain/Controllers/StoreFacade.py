@@ -10,6 +10,7 @@ from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
+from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Cart import *
 from ProjectCode.Domain.Objects.Basket import *
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
@@ -111,7 +112,7 @@ class StoreFacade:
             return self.logInAsAdmin(username, password)
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
-            if ExternalServices.ConfirmePassword(password, existing_member.get_password()):
+            if self.external_services.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
                 return existing_member
             else:
@@ -296,7 +297,7 @@ class StoreFacade:
         if cur_member is None:
             raise Exception("The user is not a member")
         cur_store = Store(store_name)
-        new_access = Access(cur_member, cur_store)
+        new_access = Access(cur_store, cur_member)
         cur_member.accesses[store_name] = new_access
         cur_store.setFounder(cur_member.user_name, new_access)
         self.stores[store_name] = cur_store

@@ -9,9 +9,9 @@ from ProjectCode.Domain.Objects import Access
 
 
 class Member(User):
-    def __init__(self, username, password, email, cartID):
-        super().__init__(username, cartID)
-        self.accesses = TypedDict(string, Access)  #Accesses
+    def __init__(self, username, password, email):
+        super().__init__(username)
+        self.accesses = TypedDict(str, Access)  #Accesses
         self.password = password  # password
         self.email = email  # email
         self.logged_In = False  # login
