@@ -491,6 +491,18 @@ class StoreFacade:
 
 
 
+    def addLottery(self, username, storename, product_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if self.members.get(username) is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        new_lottery = cur_store.startLottery(username, product_id)
+        return new_lottery
 
 
     def addLottery(self, username, storename, product_id):

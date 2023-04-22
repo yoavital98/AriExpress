@@ -196,7 +196,7 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return e
 
-    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, username, storename,  cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
         try:
             flag = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date, back_number)
             logging.info("Successful purchase")
@@ -280,6 +280,7 @@ class Service:
 
     def addLottery(self):
         pass
+
 
     def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
         try:

@@ -1,6 +1,6 @@
 import datetime
 from typing import List
-
+from ProjectCode.Domain.Objects.StoreObjects.Lottery import *
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.Bid import Bid
@@ -12,12 +12,12 @@ import random
 class Store:
 
     def __init__(self, store_name):
-        self.__store_name = store_name
-        self.__products = TypedDict(int, Product)
+        self.store_name = store_name
+        self.products = TypedDict(int, Product)
         #TODO: policies
         self.active: bool = True
         self.closed_by_admin: bool = False
-        self.__accesses = TypedDict(str, Access)
+        self.accesses = TypedDict(str, Access)
         self.product_id_counter = 0
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
@@ -27,11 +27,9 @@ class Store:
         self.__lotteries = TypedDict(int, Lottery)
 
 
-
-
     def setFounder(self, username, access):
         access.setFounder(True)
-        self.__accesses[username] = access
+        self.accesses[username] = access
 
 
     def setAccess(self, nominated_access, requester_username, nominated_username, **kwargs):
@@ -310,6 +308,10 @@ class Store:
 
     def set_auctions(self, value):
         self.__auctions = value
+
+    def get_lottery(self):
+        return self.__lotteries
+
 
     def get_lottery(self):
         return self.__lotteries

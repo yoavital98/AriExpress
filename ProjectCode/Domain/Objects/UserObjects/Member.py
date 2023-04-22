@@ -31,7 +31,6 @@ class Member(User):
 
 # -------------------------------------------------------------------------------
 
-
     def logInAsMember(self):
         self.logged_In = True
 
@@ -60,8 +59,8 @@ class Member(User):
     def get_logged(self):
         return self.logged_In
 
-    def addBidToBasket(self, bid):
-        self.cart.addBidToBasket(bid)
+    def addBidToBasket(self,username, bid):
+        self.cart.addBidToBasket(username, bid)
 
     def getAllBids(self):
         return self.cart.getAllBids()
