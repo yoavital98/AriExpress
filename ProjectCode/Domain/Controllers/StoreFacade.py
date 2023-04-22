@@ -220,7 +220,7 @@ class StoreFacade:
         store.requestBid(bid)
         return bid
 
-    def getAllBids(self, username):
+    def getAllBidsFromUser(self, username):
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
             existing_member: Member = self.members[username]
