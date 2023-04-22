@@ -141,17 +141,70 @@ class Service:
         except ValueError:
             pass
 
-    def purchaseCart(self, username, storename,  cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):#TODO: for now lets assume only credit card(no paypal)
         try:
-            self.store_facade.purchaseCart(username, storename, cardnumber, cardusername, carduserID, carddate, backnumber)
+            self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date, back_number)
         except ValueError:
             pass
 
-    def placeBid(self, username, storename, productname, bid):
+    def placeBid(self, username, storename, offer, productID, quantity):
+        bid = None
         try:
-            self.store_facade.placeBid(username, storename, productname, bid)
+            return self.store_facade.placeBid(username, storename, offer, productID, quantity)
         except ValueError:
             pass
+
+    def getAllBidsFromUser(self, username):
+        try:
+            self.store_facade.getAllBidsFromUser(username)
+        except ValueError:
+            pass
+
+    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
+                             back_number):
+        try:
+            self.store_facade.purchaseConfirmedBid(username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
+                             back_number)
+        except ValueError:
+            pass
+
+    def approveBid(self, username, storename, bid_id):
+        try:
+            approved_bid = self.store_facade.approveBid(username, storename, bid_id)
+            return approved_bid
+        except Exception as e:
+            return e
+
+    def rejectBid(self, username, storename, bid_id):
+        try:
+            rejected_bid = self.store_facade.rejectBid(username, storename, bid_id)
+            return rejected_bid
+        except Exception as e:
+            return e
+    def sendAlternativeOffer(self, username, storename, bid_id, alternate_offer):
+        try:
+            alt_bid = self.store_facade.sendAlternativeBid(username, storename, bid_id, alternate_offer)
+            return alt_bid
+        except Exception as e:
+            return e
+
+
+    def addAuction(self, username, storename, product_id, starting_price, duration):
+        try:
+            new_auc = self.store_facade.addAuction(username, storename, product_id, starting_price, duration)
+            return new_auc
+        except Exception as e:
+            return e
+
+    def placeOfferInAuction(self, username, storename, auction_id, offer):
+        try:
+            auc = self.store_facade.addAuction(username, storename, auction_id, offer)
+            return auc
+        except Exception as e:
+            return e
+
+    def addLottery(self):
+        pass
 
     def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
         try:
