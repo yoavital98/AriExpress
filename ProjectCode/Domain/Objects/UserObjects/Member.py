@@ -81,3 +81,6 @@ class Member(User):
             del self.auctions[auction_id]
         else:
             raise Exception("Member is not participating in the auction")
+
+    def get_accesses(self):
+        return self.accesses

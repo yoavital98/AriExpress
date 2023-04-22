@@ -1,6 +1,10 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Access import Access
+from ProjectCode.Domain.Objects.UserObjects.Member import Member
 
 
 class TestStoreFacade(TestCase):
