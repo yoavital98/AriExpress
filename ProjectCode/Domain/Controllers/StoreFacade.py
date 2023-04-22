@@ -44,7 +44,7 @@ class StoreFacade:
 # ------  users  ------ #
     #  Guests
 
-    def exitTheSystem(self):
+    def exitTheSystem(self): #TODO: @Ari and @Yoav should decide if we need this function
         pass
 
     def __getAdmin(self, user_name):
@@ -52,6 +52,22 @@ class StoreFacade:
             return self.admins[user_name]
         else:
             raise Exception("admin does not exists")
+
+    def logInAsGuest(self):
+        self.__systemCheck()
+        new_guest = Guest(self.nextEntranceID)
+        self.onlineGuests[str(self.nextEntranceID)] = new_guest
+        return new_guest
+
+    # only guests
+
+    def leaveAsGuest(self, EntranceID):
+        self.__systemCheck()
+        if self.onlineGuests.keys().__contains__(str(EntranceID)):
+            self.onlineGuests.__delitem__(str(EntranceID))
+        else:
+            raise Exception("This entrance id doesn't belong to the online guests list")
+
 
     #  Members
 
@@ -62,14 +78,14 @@ class StoreFacade:
             else: #should never get here usually
                 raise Exception("User not logged in")
 
-    def __getUserOrMember(self,user_name):
-        if self.members.keys().__contains__(user_name):
+    def __getUserOrMember(self,user_name):  #TODO: change the if's because checking the keys somehow dosent work
+        if self.members.keys().__contains__(str(user_name)):
             if self.__checkIfUserIsLoggedIn(user_name):
                 return self.members[user_name]
             else:
                 raise Exception("user is not logged in")
         else:
-            if self.onlineGuests.keys().__contains__(user_name):
+            if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(user_name)
             else:
                 raise Exception("user is not guest nor a member")
@@ -91,21 +107,7 @@ class StoreFacade:
         else:
             raise SystemError("This username is already in the system")
 
-    # only guests
-    def logInAsGuest(self):
-        self.__systemCheck()
-        new_guest = Guest(self.nextEntranceID)
-        self.onlineGuests[str(self.nextEntranceID)] = new_guest
-        return new_guest
 
-    # only guests
-
-    def leaveAsGuest(self, EntranceID):
-        self.__systemCheck()
-        if self.onlineGuests.keys().__contains__(str(EntranceID)):
-            self.onlineGuests.__delitem__(str(EntranceID))
-        else:
-            raise Exception("This entrance id doesn't belong to the online guests list")
 
 
 
@@ -195,7 +197,7 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):
         self.__systemCheck()
         overall_price = 0  # overall price for the user
-        user: User = self.__getUserOrMember(user_name)  # getting the user
+        user: User = self.__getUserOrMember(user_name)  # getting the user #TODO: get member or Guest
         stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
         # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
         answer = user.get_cart().checkAllItemsInCart()  # answer = True or False
@@ -236,7 +238,7 @@ class StoreFacade:
             answer = existing_member.cart.checkItemInCartForBid(bid)
             if answer:
                 store: Store = self.stores[storename]
-                product: Product = store.products[bid.get_product()]
+                product: Product = store.get_products()[bid.get_product()]
                 item_name = product.name
                 tuple_for_history = (item_name, bid.get_quantity())
                 self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
@@ -263,6 +265,21 @@ class StoreFacade:
             cur_member.addNewAuction(auction_id, cur_auction)
         return cur_auction
 
+    def participateInLottery(self, storename, username, lottery_id, share):
+        cur_store: Store = self.stores.get(storename)
+        cur_member: Member = self.members.get(username)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if cur_member is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_lottery = cur_store.checkLotteryParticipationShare(lottery_id, share)
+        cur_lottery.add_participant_share(cur_member, share)
+        cur_store.participateInLottery(lottery_id, share)
+        # TODO: Ari: implement payment for the requested share
+        # TODO: Ari: add lottery to member fiields
+
     def ClaimAuctionPurchase(self, username, storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         cur_member: Member = self.__getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(storename)
@@ -273,7 +290,7 @@ class StoreFacade:
             product: Product = cur_store.get_products().get(cur_auction.get_product_id())
             item_name = product.name
             tuple_for_history = (item_name, 1) # name of item and quantity for the history of the store
-            # TODO: amiel! put your line here!
+            # todo amiel! put your line here!
             self.external_services.pay(storename, card_number, card_user_name, card_user_ID, card_date,
                                        back_number, cur_auction.get_current_offer())
             self.transaction_history.addNewStoreTransaction(username, storename, tuple_for_history,
@@ -293,7 +310,7 @@ class StoreFacade:
         return self.stores
 
     def getProductsByStore(self, store_name):
-        cur_store: Store = self.stores.get(store_name)
+        cur_store: Store = self.stores.get(store_name) #TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         return cur_store.get_products()
@@ -312,7 +329,7 @@ class StoreFacade:
             for cur_store in self.stores.values():
                 product_list = cur_store.searchProductByName(keyword)
                 if len(product_list) > 0:
-                    search_results[cur_store] = product_list
+                    search_results[cur_store] = product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
         return search_results
 
     def productSearchByCategory(self, category):
@@ -323,8 +340,9 @@ class StoreFacade:
                 search_results[cur_store] = product_list
         return search_results
 
-    def productFilterByFeatures(self):
-        pass
+    def productFilterByFeatures(self, featuresDict):
+        #TODO: not implemented yet
+        return []
 
 
 
@@ -336,7 +354,7 @@ class StoreFacade:
 
     def openStore(self, username, store_name):
         cur_member: Member = self.members.get(username)
-        if not cur_member:
+        if cur_member is None:
             raise Exception("The user is not a member")
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
@@ -372,34 +390,18 @@ class StoreFacade:
         return deleted_product_id
 
     def editProductOfStore(self, username, store_name, product_id, **kwargs):
-#<<<<<<< tmp_f
-#        cur_store: Store = self.stores.get(store_name)
-#        if cur_store is None:
-#            raise Exception("No such store exists")
-#        cur_access = self.members.get(username).accesses.get(store_name)
-#=======
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
         cur_store: Store = self.stores[store_name]
         if cur_store is None:
             raise Exception("No such store exists")
         cur_access = self.members[username].get_accesses().get(store_name)
-#>>>>>>> final_fix
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
         changed_product = cur_store.changeProduct(cur_access, product_id, **kwargs)
         return changed_product
 
     def nominateStoreOwner(self, requester_username, nominated_username, store_name):
-#<<<<<<< tmp_f
-#        cur_store: Store = self.stores.get(store_name)
-#        if cur_store is None:
-#            raise Exception("No such store exists")
-#        nominated_access = self.members.get(nominated_username).accesses.get(store_name)
-#        if nominated_access is None:
-#            nominated_access = Access(cur_store,self.members[nominated_username])
-#            self.members[nominated_username].accesses[store_name] = nominated_access
-#=======
         if not self.__checkIfUserIsLoggedIn(requester_username):
             raise Exception("User is not logged in")
         cur_store: Store = self.stores[store_name]
@@ -409,21 +411,10 @@ class StoreFacade:
         if nominated_access is None:
             nominated_access = Access(cur_store,self.members[nominated_username])
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
-
-#>>>>>>> final_fix
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isOwner=True)
         return nominated_modified_access
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
-#<<<<<<< tmp_f
-#        cur_store: Store = self.stores.get(store_name)
-#        if cur_store is None:
-#            raise Exception("No such store exists")
-#        nominated_access = self.members.get(nominated_username).accesses.get(store_name)
-#        if nominated_access is None:
-#            nominated_access = Access(cur_store, self.members[nominated_username])
-#            self.members[nominated_username].accesses[store_name] = nominated_access
-#=======
         cur_store: Store = self.stores[store_name]
         if not self.__checkIfUserIsLoggedIn(requester_username):
             raise Exception("User is not logged in")
@@ -433,8 +424,6 @@ class StoreFacade:
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username])
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
-
-#>>>>>>> final_fix
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         isManager=True)
         return nominated_modified_access
@@ -516,6 +505,20 @@ class StoreFacade:
         return new_lottery
 
 
+    def addLottery(self, username, storename, product_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if self.members.get(username) is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        new_lottery = cur_store.startLottery(username, product_id)
+        return new_lottery
+
+
 
     def closeStore(self, username, store_name):
         if not self.__checkIfUserIsLoggedIn(username):
@@ -551,7 +554,7 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if ExternalServices.ConfirmePassword(password, existing_admin.get_password()):
+            if self.external_services.ConfirmePassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return existing_admin
             else:
@@ -577,10 +580,11 @@ class StoreFacade:
             pass #  TODO: logic of closing a store as an admin amiel!
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
-        new_admin = None
         if self.admins.keys().__contains__(username):
             if self.external_services.passwordValidator.ValidatePassword(newPassword):
                 new_admin = Admin(newAdminName, newPassword, newEmail)
+                self.admins[newAdminName] = new_admin
+                return new_admin
             else:
                 raise Exception("password is too weak")
-        self.admins[newAdminName] = new_admin
+

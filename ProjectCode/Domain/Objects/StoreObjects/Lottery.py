@@ -1,5 +1,4 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
-from ProjectCode.Domain.Objects.UserObjects.Member import *
 
 
 class Lottery:
@@ -8,7 +7,7 @@ class Lottery:
         self.__product_id = product_id
         self.__price = price
         self.__accumulated_price = accumulated_price
-        self.__participants = TypedDict(Member, int)
+        self.__participants = TypedDict(str ,int)
         self.__winner = None
 
     # Getters
