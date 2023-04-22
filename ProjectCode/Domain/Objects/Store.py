@@ -2,7 +2,9 @@ from ProjectCode.Domain.Helpers.TypedDict import *
 from ProjectCode.Domain.Objects.StoreObjects.Product import *
 from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Bid import *
+from ProjectCode.Domain.Objects.StoreObjects.Auction import *
 import string
+import datetime
 from typing import List
 
 
@@ -16,8 +18,10 @@ class Store:
         self.closed_by_admin: bool = False
         self.accesses = TypedDict(string, Access)
         self.product_id_counter = 0
+        self.auction_id_counter = 0
         self.bids = TypedDict(int, Bid)
         self.bids_requests = TypedDict(Access, List[Bid])
+        self.auctions = TypedDict(int, Auction)
 
     def setFounder(self, username, access):
         access.setFounder(True)
@@ -186,5 +190,26 @@ class Store:
             raise Exception("No such bid exists in the store")
         cur_bid.set_offer(alternate_offer)
         cur_bid.set_status(3)
+
+    def startAuction(self, username, product_id, starting_price, duration):
+        cur_access = self.accesses[username]
+        cur_product = self.products[int(product_id)]
+        if cur_access is None:
+            raise Exception("The user doesnt have access in this store")
+        if not (cur_access.isFounder or cur_access.isManager or cur_access.isOwner):
+            raise Exception("The user doesnt have the permission for starting an auction")
+        if cur_product is None:
+            raise Exception("No such product exists")
+        self.auction_id_counter += 1
+        start_date = datetime.datetime.now()
+        expiration_date = start_date + datetime.timedelta(days=int(duration))
+        new_auction = Auction(self.auction_id_counter, product_id, starting_price, starting_price, start_date, expiration_date, username)
+        self.auctions[self.auction_id_counter] = new_auction
+        return new_auction
+
+
+
+
+
 
 

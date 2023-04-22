@@ -218,38 +218,7 @@ class StoreFacade:
         store.requestBid(bid)  #TODO:amiel!!
 
 
-    def approveBid(self,username, storename, bid_id):
-        cur_store: Store = self.stores[storename]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        if not self.__checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
-        approved_bid = cur_store.approveBid(username, bid_id)
-        return approved_bid
 
-    def rejectBid(self,username, storename, bid_id):
-        cur_store: Store = self.stores[storename]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        if not self.__checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
-        rejected_bid = cur_store.rejectBid(username,bid_id)
-        return rejected_bid
-
-    def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
-        cur_store: Store = self.stores[storename]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        if not self.__checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
-        alternative_bid = cur_store.sendAlternativeBid(username,bid_id,alternate_offer)
-        return alternative_bid
 
 
 
@@ -369,8 +338,53 @@ class StoreFacade:
     def editPermissionsForManager(self):
         pass
 
-    def addAuction(self):
-        pass
+
+    def approveBid(self,username, storename, bid_id):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        approved_bid = cur_store.approveBid(username, bid_id)
+        return approved_bid
+
+    def rejectBid(self,username, storename, bid_id):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        rejected_bid = cur_store.rejectBid(username,bid_id)
+        return rejected_bid
+
+    def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        alternative_bid = cur_store.sendAlternativeBid(username,bid_id,alternate_offer)
+        return alternative_bid
+
+
+    def addAuction(self, username, storename, product_id, starting_price, duration):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        new_auction = cur_store.startAuction(username,product_id,starting_price,duration)
+        return new_auction
+
+
 
     def addLottery(self):
         pass
