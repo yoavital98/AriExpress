@@ -12,7 +12,7 @@ from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
-from ProjectCode.Domain.Objects.AccessControl import *
+from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Cart import *
 from ProjectCode.Domain.Objects.Basket import *
@@ -91,7 +91,7 @@ class StoreFacade:
 
                 return new_member
         else:
-            raise SystemError("This username is already in the system")
+            raise Exception("This username is already in the system")
 
     # only guests
     def logInAsGuest(self):
@@ -140,7 +140,7 @@ class StoreFacade:
         if self.__checkIfUserIsLoggedIn(username):
             return TransactionHistory.get_User_Transactions(username)
         else:
-            raise SystemError("username isn't logged in")
+            raise Exception("username isn't logged in")
 
     # guest and member
     def getBasket(self, username, storename):
@@ -163,8 +163,9 @@ class StoreFacade:
         user: User = self.__getUserOrMember(username)
         store: Store = self.stores[storename]
         product = store.checkProductAvailability(productID, quantity)
-        if product is not None:
-            user.add_to_cart(username, storename, productID, product, quantity)
+        productName = store.products[productID].name
+        if product:
+            user.add_to_cart(username, storename, productID, productName, quantity)
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 
@@ -347,7 +348,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         nominated_access = self.members[nominated_username].accesses[store_name]
         if nominated_access is None:
-            nominated_access = AccessControl(cur_store,self.members[nominated_username])
+            nominated_access = Access(cur_store,self.members[nominated_username])
             self.members[nominated_access].accesses[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isOwner=True)
         return nominated_modified_access
@@ -358,7 +359,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         nominated_access = self.members[nominated_username].accesses[store_name]
         if nominated_access is None:
-            nominated_access = AccessControl(cur_store, self.members[nominated_username])
+            nominated_access = Access(cur_store, self.members[nominated_username])
             self.members[nominated_access].accesses[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         isManager=True)

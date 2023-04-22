@@ -14,7 +14,7 @@ class Cart:
         if self.baskets.keys().__contains__(storename):
             return self.baskets[storename]
         else:
-            raise SystemError("Basket does not exists")
+            raise Exception("Basket does not exists")
 
     def add_Product(self,username, storename, productID, product, quantity):
         if not self.baskets.keys().__contains__(storename):

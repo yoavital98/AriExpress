@@ -35,7 +35,7 @@ class Member(User):
 
 
     def logInAsMember(self):
-        self._logged_In = True
+        self.logged_In = True
 
 
     def logOut(self):
