@@ -4,7 +4,8 @@ from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Cart import Cart
 from abc import ABC, abstractmethod
 from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects.Access import Access
+# from ProjectCode.Domain.Objects.Access import Access
+from ProjectCode.Domain.Objects.Access import *
 
 
 class Member(User):
