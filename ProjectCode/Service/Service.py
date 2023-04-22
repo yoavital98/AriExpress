@@ -1,5 +1,7 @@
 from ProjectCode.Domain.Controllers.StoreFacade import *
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
+import logging
+
 
 
 class Service:
@@ -15,7 +17,7 @@ class Service:
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
-            self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
+            return self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
         except SystemError:
             pass
 
@@ -34,28 +36,34 @@ class Service:
     # ------  users  ------ #
     #  Guests
 
-    def exitTheSystem(self):
+    def exitTheSystem(self): #TODO: same as in StoreFacade todo task - need to change
         try:
             self.store_facade.exitTheSystem()
         except ValueError:
             pass
 
+    def leaveAsGuest(self, guest):
+        try:
+            self.store_facade.leaveAsGuest(guest)
+        except ValueError:
+            pass
+
     def loginAsGuest(self):
         try:
-            self.store_facade.loginAsGuest()
+            return self.store_facade.logInAsGuest()
         except ValueError:
             pass
 
     #  Members
     def register(self, user_name, password, email):
         try:
-            self.store_facade.register(user_name, password, email)
+            return self.store_facade.register(user_name, password, email)
         except ValueError:
             pass
 
     def logIn(self,username, password):
         try:
-            self.store_facade.logInAsMember(username, password)
+            return self.store_facade.logInAsMember(username, password)
         except ValueError:
             pass
 
@@ -67,7 +75,7 @@ class Service:
 
     def getMemberPurchaseHistory(self, username):
         try:
-            self.store_facade.getMemberPurchaseHistory(username)
+            return self.store_facade.getMemberPurchaseHistory(username)
         except ValueError:
             pass
 
@@ -75,49 +83,49 @@ class Service:
 
     def getStores(self):
         try:
-            self.store_facade.getStores()
+            return self.store_facade.getStores()
         except ValueError:
             pass
 
     def getProductsByStore(self, storename):
         try:
-            self.store_facade.getProductsByStore()
+            return self.store_facade.getProductsByStore(storename)
         except ValueError:
             pass
 
-    def getProduct(self, storename, productName):
+    def getProduct(self, storename, productID):
         try:
-            self.store_facade.getProduct()
+            return self.store_facade.getProduct(storename,productID)
         except ValueError:
             pass
 
     def productSearchByName(self, productName):  # and keywords
         try:
-            self.store_facade.productSearchByName()
+            return self.store_facade.productSearchByName(productName)
         except ValueError:
             pass
 
     def productSearchByCategory(self, categoryName):#TODO: probably each store will have its products catagorized
         try:#TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
-            self.store_facade.productSearchByCategory()
+            return self.store_facade.productSearchByCategory(categoryName)
         except ValueError:
             pass
 
-    def productFilterByFeatures(self, featuresDict):# TODO (opt) we will assume there's a dict that can say which features will be searched
+    def productFilterByFeatures(self, featuresDict):    #TODO (opt) we will assume there's a dict that can say which features will be searched
         try:
-            self.store_facade.productFilterByFeatures()
+            return self.store_facade.productFilterByFeatures(featuresDict)
         except ValueError:
             pass
 
     def getBasket(self, username, storename):
         try:
-            self.store_facade.getBasket()
+            return self.store_facade.getBasket(username, storename)
         except ValueError:
             pass
 
     def getCart(self, username):
         try:
-            self.store_facade.getCart()
+            return self.store_facade.getCart(username)
         except ValueError:
             pass
 
@@ -141,7 +149,7 @@ class Service:
 
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):#TODO: for now lets assume only credit card(no paypal)
         try:
-            self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date, back_number)
+            return self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date, back_number)
         except ValueError:
             pass
 
@@ -154,7 +162,7 @@ class Service:
 
     def getAllBidsFromUser(self, username):
         try:
-            self.store_facade.getAllBidsFromUser(username)
+            return self.store_facade.getAllBidsFromUser(username)
         except ValueError:
             pass
 
@@ -206,7 +214,7 @@ class Service:
 
     def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
         try:
-            self.store_facade.getStorePurchaseHistory(username, storename)
+            return self.store_facade.getStorePurchaseHistory(username, storename)
         except ValueError:
             pass
 

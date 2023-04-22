@@ -28,3 +28,7 @@ class User(ABC):
 
     def edit_Product_Quantity(self, storename, productID, quantity):
         self.cart.edit_Product_Quantity(storename, productID, quantity)
+
+    def get_username(self):
+        return self.username
+        pass
