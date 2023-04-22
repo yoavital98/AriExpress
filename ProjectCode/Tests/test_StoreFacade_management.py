@@ -42,8 +42,8 @@ class TestStoreFacade(TestCase):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
-        self.assertTrue(self.store_facade.stores["Store1"].products.keys().__contains__(self.product.product_id))
-        self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id], self.product)
+        self.assertTrue(self.store_facade.stores["Store1"].__products.keys().__contains__(self.product.product_id))
+        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id], self.product)
 
     def test_addNewProductToStore_userNotLoggedIn_failure(self):
         self.member1.logged_In = False
@@ -189,7 +189,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, price=20)
-        self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].price, 20)
+        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].price, 20)
     
     def test_editProductOfStore_price_negativePrice_failure(self):
         self.member1.logged_In = True
@@ -212,8 +212,8 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, name="Product2")
-        self.assertNotEqual(self.store_facade.stores["Store1"].products[self.product.product_id].name, "Product1")
-        self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].name, "Product2")
+        self.assertNotEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].name, "Product1")
+        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].name, "Product2")
         
     def test_editProductOfStore_name_emptyName_failure(self):
         self.member1.logged_In = True
@@ -228,7 +228,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, quantity=20)
-        self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].quantity, 20)
+        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].quantity, 20)
         
     def test_editProductOfStore_quantity_negativeQuantity_failure(self):
         self.member1.logged_In = True

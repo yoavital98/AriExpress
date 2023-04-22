@@ -3,6 +3,9 @@ import string
 import ProjectCode
 from ProjectCode.Domain.Controllers.ExternalServices import *
 from ProjectCode.Domain.Controllers.MessageController import *
+from ProjectCode.Domain.Objects.UserObjects.Admin import *
+from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
+from ProjectCode.Domain.Objects import User, Store, Access
 from ProjectCode.Domain.Objects import User, Store
 from ProjectCode.Domain.Objects.Bid import *
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
@@ -10,6 +13,7 @@ from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
+from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Cart import *
 from ProjectCode.Domain.Objects.Basket import *
@@ -19,7 +23,6 @@ from typing import List
 
 class StoreFacade:
     def __init__(self):
-
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
@@ -89,7 +92,7 @@ class StoreFacade:
 
                 return new_member
         else:
-            raise SystemError("This username is already in the system")
+            raise Exception("This username is already in the system")
 
     # only guests
     def logInAsGuest(self):
@@ -103,7 +106,11 @@ class StoreFacade:
     def leaveAsGuest(self, EntranceID):
         self.__systemCheck()
         if self.onlineGuests.keys().__contains__(str(EntranceID)):
-            self.onlineGuests.__delitem__(EntranceID)
+            self.onlineGuests.__delitem__(str(EntranceID))
+        else:
+            raise Exception("This entrance id doesn't belong to the online guests list")
+
+
 
     #  only members
     def logInAsMember(self, username , password):
@@ -133,6 +140,8 @@ class StoreFacade:
         self.__systemCheck()
         if self.__checkIfUserIsLoggedIn(username):
             return TransactionHistory.get_User_Transactions(username)
+        else:
+            raise Exception("username isn't logged in")
 
     # guest and member
     def getBasket(self, username, storename):
@@ -140,6 +149,7 @@ class StoreFacade:
         user = self.__getUserOrMember(username)
         requested_basket = user.get_Basket(storename)
         return requested_basket
+
 
     # guest and member
     def getCart(self,username):
@@ -154,8 +164,9 @@ class StoreFacade:
         user: User = self.__getUserOrMember(username)
         store: Store = self.stores[storename]
         product = store.checkProductAvailability(productID, quantity)
-        if product is not None:
-            user.add_to_cart(username, storename, productID, product, quantity)
+        productName = store.products[productID].name
+        if product:
+            user.add_to_cart(username, storename, productID, productName, quantity)
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 
@@ -196,12 +207,13 @@ class StoreFacade:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
-                ExternalServices.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
-                TransactionHistory.addNewStoreTransaction(user_name,) #make a new transaction and add it to the store history and user history
+                self.external_services.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
+                self.transaction_history.addNewStoreTransaction(user_name, basket.store.store_name, products, price) #make a new transaction and add it to the store history and user history
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
             if self.members.keys().__contains__(user_name):
-                TransactionHistory.addNewUserTransaction(user_name,stores_to_products, overall_price)
+                self.transaction_history.addNewUserTransaction(user_name,stores_to_products, overall_price)
+                # TODO: remove the baskets
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
@@ -214,11 +226,12 @@ class StoreFacade:
             raise Exception("user is not valid")
         bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
         self.bid_id_counter += 1
-        existing_member.addBidToBasket(username, bid)
+        existing_member.addBidToBasket(bid)
         store: Store = self.stores[storename]
-        store.requestBid(bid)  #TODO:amiel!!
+        store.requestBid(bid)
+        return bid
 
-    def getAllBids(self, username):
+    def getAllBidsFromUser(self, username):
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
             existing_member: Member = self.members[username]
@@ -227,19 +240,51 @@ class StoreFacade:
         bids_set = existing_member.getAllBids()  # returns set of bids
         return bids_set
 
-    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_id, card_date, back_number, price):
+    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
             existing_member: Member = self.members[username]
         else:
             raise Exception("user is not valid")
         bid: Bid = existing_member.get_cart().getBid(storename, bid_id)
-        answer = existing_member.cart.checkItemInCart(storename, bid.get_product())
-        if answer:
+        if bid.get_status() == 1:
+            answer = existing_member.cart.checkItemInCartForBid(bid)
+            if answer:
+                store: Store = self.stores[storename]
+                product: Product = store.products[bid.get_product()]
+                item_name = product.name
+                tuple_for_history = (item_name, bid.get_quantity())
+                self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
+                store.purchaseBid(bid_id)  # TODO: amiel
+                self.transaction_history.addNewStoreTransaction(username, bid.get_storename(), tuple_for_history, bid.get_offer())
+                if self.members.keys().__contains__(username):
+                    dict_for_history = TypedDict(str, tuple)
+                    dict_for_history[storename] = tuple_for_history
+                    self.transaction_history.addNewUserTransaction(username, dict_for_history, bid.get_offer())
+                    # TODO: remove the bid from the basket
+            else:
+                raise Exception("there was a problem with the Bid or the quantity in the store")
+        else:
+            raise Exception("Bid is not confirmed")
+        
+
+
+
+    def placeOfferInAuction(self, username, storename, auction_id, offer):
+        cur_store: Store = self.stores.get(storename)
+        cur_member: Member = self.members.get(username)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if cur_member is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_auction: Auction = cur_store.placeOfferInAuction(username, auction_id, offer)
+        cur_auction.add_participant(cur_member)
+        if cur_auction:
+            #TODO: Ari needs to add the auction to the user
             pass
-            # TODO: unfinished function Ari
-
-
+        return cur_auction
 
 
 
@@ -254,13 +299,13 @@ class StoreFacade:
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        return cur_store.products
+        return cur_store.get_products()
 
     def getProduct(self, store_name, product_id):
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product = cur_store.products[product_id]
+        cur_product = cur_store.get_products()[product_id]
         return cur_product
 
     def productSearchByName(self, keywords):  # and keywords
@@ -294,8 +339,10 @@ class StoreFacade:
 
     def openStore(self, username, store_name):
         cur_member: Member = self.members.get(username)
-        if cur_member is None:
+        if not cur_member:
             raise Exception("The user is not a member")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         if self.stores.get(store_name) is not None:
             raise Exception("Store already exists")
         cur_store = Store(store_name)
@@ -306,35 +353,45 @@ class StoreFacade:
         return cur_store
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         #cur_member: Member = self.members[str(requester_id)]
         member = self.members[username]
-        new_product = cur_store.addProduct(member.accesses[store_name], name, quantity, price, categories) #TODO: change first atribute to access
+        new_product = cur_store.addProduct(member.__accesses[store_name], name, quantity, price, categories) #TODO: change first atribute to access
         return new_product
 
     def removeProductFromStore(self, username, store_name, product_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         cur_access = self.members.get(username).accesses.get(store_name)
+
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
         deleted_product_id = cur_store.deleteProduct(cur_access, product_id)
         return deleted_product_id
 
     def editProductOfStore(self, username, store_name, product_id, **kwargs):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         cur_access = self.members.get(username).accesses.get(store_name)
+
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
         changed_product = cur_store.changeProduct(cur_access, product_id, **kwargs)
         return changed_product
 
     def nominateStoreOwner(self, requester_username, nominated_username, store_name):
+        if not self.__checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
@@ -347,14 +404,15 @@ class StoreFacade:
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores.get(store_name)
+        if not self.__checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
         nominated_access = self.members.get(nominated_username).accesses.get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username])
             self.members[nominated_username].accesses[store_name] = nominated_access
-        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
-                                                        isManager=True)
+        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isManager=True)
         return nominated_modified_access
 
     def addPermissionsForManager(self):
@@ -365,6 +423,8 @@ class StoreFacade:
 
 
     def approveBid(self,username, storename, bid_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
@@ -375,7 +435,9 @@ class StoreFacade:
         approved_bid = cur_store.approveBid(username, bid_id)
         return approved_bid
 
-    def rejectBid(self,username, storename, bid_id):
+    def rejectBid(self, username, storename, bid_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
@@ -387,6 +449,8 @@ class StoreFacade:
         return rejected_bid
 
     def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
@@ -399,6 +463,8 @@ class StoreFacade:
 
 
     def addAuction(self, username, storename, product_id, starting_price, duration):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
@@ -411,11 +477,16 @@ class StoreFacade:
 
 
 
+
+
+
     def addLottery(self):
         pass
 
 
     def closeStore(self, username, store_name):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores[store_name]
         if cur_store is None:
             raise Exception("No such store exists")
@@ -425,14 +496,18 @@ class StoreFacade:
             #deletes all accesses for that store
             for mem in self.members.values():
                 store_exists = mem.accesses.get(store_name)
+
                 if store_exists is not None:
-                    del mem.accesses[store_name]
+                    del mem.__accesses[store_name]
 
             del self.stores[store_name]
         return store_name
 
     def getStaffInfo(self, username, store_name):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
         cur_store: Store = self.stores.get(store_name)
+
         if cur_store is None:
             raise Exception("No such store exists")
         accesses_dict = cur_store.getStaffInfo(username)
