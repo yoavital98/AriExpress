@@ -260,6 +260,22 @@ class StoreFacade:
 
 
 
+    def participateInLottery(self, storename, username, lottery_id, share ):
+        cur_store: Store = self.stores.get(storename)
+        cur_member: Member = self.members.get(username)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if cur_member is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_lottery = cur_store.checkLotteryParticipationShare(lottery_id, share)
+        cur_lottery.add_participant_share(cur_member, share)
+        cur_store.participateInLottery(lottery_id, share)
+        #TODO: Ari: implement payment for the requested share
+        #TODO: Ari: add lottery to member fiields
+
+
 
     # ------  stores  ------ #
 
@@ -431,8 +447,6 @@ class StoreFacade:
 
 
     def addAuction(self, username, storename, product_id, starting_price, duration):
-        if not self.__checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
@@ -440,22 +454,31 @@ class StoreFacade:
             raise Exception("No such member exists")
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
-        new_auction = cur_store.startAuction(username,product_id,starting_price,duration)
+        new_auction = cur_store.startAuction(username, product_id, starting_price, duration)
         return new_auction
 
 
 
 
+    def addLottery(self, username, storename, product_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if self.members.get(username) is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        new_lottery = cur_store.startLottery(username, product_id)
+        return new_lottery
 
-
-    def addLottery(self):
-        pass
 
 
     def closeStore(self, username, store_name):
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         is_founder = cur_store.closeStore(username)

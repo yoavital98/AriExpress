@@ -1,4 +1,5 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
+from ProjectCode.Domain.Objects.StoreObjects.Lottery import *
 from ProjectCode.Domain.Objects.StoreObjects.Product import *
 from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.Access import *
@@ -7,7 +8,7 @@ from ProjectCode.Domain.Objects.StoreObjects.Auction import *
 import string
 import datetime
 from typing import List
-
+import random
 
 class Store:
 
@@ -20,10 +21,11 @@ class Store:
         self.__accesses = TypedDict(str, Access)
         self.product_id_counter = 0
         self.auction_id_counter = 0
+        self.lottery_id_counter = 0
         self.__bids = TypedDict(int, Bid)
         self.__bids_requests = TypedDict(Access, List[Bid])
         self.__auctions = TypedDict(int, Auction)
-
+        self.__lotteries = TypedDict(int, Lottery)
 
 
 
@@ -66,7 +68,7 @@ class Store:
             raise Exception("Product doesn't exists")
         for k, v in kwargs.items():
             try:
-                getattr(cur_product,k)
+                getattr(cur_product, k)
             except AttributeError:
                 raise Exception("No such attribute exists")
             setattr(cur_product, k, v)
@@ -120,6 +122,7 @@ class Store:
         else:
             answer = True
         return answer
+
     def searchProductByName(self, keyword):
         product_list = []
         for prod in self.__products.values():
@@ -237,6 +240,43 @@ class Store:
             return True
         return False
 
+    def startLottery(self, username, product_id):
+        cur_product: Product = self.__products.get(product_id)
+        if cur_product is None:
+            raise Exception("No such product exists")
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("Member doesnt have access for this store")
+        if not (cur_access.isFounder or cur_access.isManager or cur_access.isOwner):
+            raise Exception("Member doesnt have permission for opening a lottery")
+        self.lottery_id_counter += 1
+        new_lottery = Lottery(self.lottery_id_counter, product_id, cur_product.price, 0)
+        self.__lotteries[self.lottery_id_counter] = new_lottery
+        return new_lottery
+
+    def participateInLottery(self, lottery_id, share):
+        cur_lottery: Lottery = self.__lotteries.get(lottery_id)
+        if cur_lottery is None:
+            raise Exception("No such lottery exists")
+        cur_lottery.set_accumulated_price(cur_lottery.get_accumulated_price() + share)
+        if cur_lottery.get_accumulated_price() == cur_lottery.get_price():
+            weights = [participant[1] for participant in cur_lottery.get_participants()]
+            participants = [participant[0] for participant in cur_lottery.get_participants()]
+            choices = random.choices(participants, weights, k=1)
+            chosen = choices[0]
+            cur_lottery.set_winner(chosen)
+        return cur_lottery
+
+
+    def checkLotteryParticipationShare(self, lottery_id, share):
+        cur_lottery: Lottery = self.__lotteries.get(lottery_id)
+        if cur_lottery is None:
+            raise Exception("No such lottery exists")
+        if cur_lottery.get_price() - cur_lottery.get_accumulated_price() < share:
+            raise Exception("The requested share is too high")
+        return cur_lottery
+
+
     def get_store_name(self):
         return self.__store_name
 
@@ -272,6 +312,9 @@ class Store:
 
     def set_auctions(self, value):
         self.__auctions = value
+
+    def get_lottery(self):
+        return self.__lotteries
 
 
 
