@@ -35,8 +35,13 @@ class Store:
 
 
     def setAccess(self, nominated_access, requester_username, nominated_username, **kwargs):
+#<<<<<<< tmp_f
+#        self.accesses[nominated_username] = nominated_access
+#        requester_access = self.accesses.get(requester_username)
+#=======
         self.__accesses[nominated_username] = nominated_access
         requester_access = self.__accesses[requester_username]
+#>>>>>>> final_fix
         if requester_access is None:
             raise Exception("The member doesn't have the appropriate permission for that store")
         if requester_access.isOwner or requester_access.isManager or requester_access.isFounder:#TODO: change according to permission policy
@@ -103,7 +108,11 @@ class Store:
 
 
     def getStaffInfo(self, username):
+#<<<<<<< tmp_f
+#        cur_access = self.accesses.get(username)
+#=======
         cur_access = self.__accesses[username]
+#>>>>>>> final_fix
         if cur_access is None:
             raise Exception("Member has no access for that store")
         if cur_access.isFounder or cur_access.isOwner or cur_access.isManager:
@@ -122,16 +131,26 @@ class Store:
             answer = True
         return answer
     def searchProductByName(self, keyword):
+#<<<<<<< tmp_f
+#        product_list = list()
+#        for prod in self.products.values():
+#=======
         product_list = []
         for prod in self.__products.values():
+#>>>>>>> final_fix
             if keyword in prod.name:
                 product_list.append(prod)
         return product_list
 
 
     def searchProductByCategory(self, category):
+#<<<<<<< tmp_f
+#        product_list = list()
+#        for prod in self.products.values():
+#=======
         product_list = []
         for prod in self.__products.values():
+#>>>>>>> final_fix
             if category in prod.categories:
                 product_list.append(prod)
         return product_list

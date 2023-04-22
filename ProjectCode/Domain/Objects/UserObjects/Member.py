@@ -6,7 +6,12 @@ from abc import ABC, abstractmethod
 
 from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.Objects.User import User
+#<<<<<<< tmp_f
+## from ProjectCode.Domain.Objects.Access import Access
+#from ProjectCode.Domain.Objects.Access import *
+#=======
 from ProjectCode.Domain.Objects.AccessControl import *
+#>>>>>>> final_fix
 
 
 class Member(User):
