@@ -1,5 +1,6 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
 from ProjectCode.Domain.Objects.StoreObjects.Product import *
+from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Bid import *
 from ProjectCode.Domain.Objects.StoreObjects.Auction import *
@@ -16,7 +17,7 @@ class Store:
         #TODO: policies
         self.active: bool = True
         self.closed_by_admin: bool = False
-        self.accesses = TypedDict(string, Access)
+        self.accesses = TypedDict(str, Access)
         self.product_id_counter = 0
         self.auction_id_counter = 0
         self.bids = TypedDict(int, Bid)

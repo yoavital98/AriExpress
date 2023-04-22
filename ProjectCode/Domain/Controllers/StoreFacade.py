@@ -299,7 +299,7 @@ class StoreFacade:
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member)
         cur_member.accesses[store_name] = new_access
-        cur_store.setFounder(cur_member.user_name, new_access)
+        cur_store.setFounder(cur_member.get_username(), new_access)
         self.stores[store_name] = cur_store
         return cur_store
 
@@ -308,7 +308,8 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         #cur_member: Member = self.members[str(requester_id)]
-        new_product = cur_store.addProduct(username, name, quantity, price, categories)
+        member = self.members[username]
+        new_product = cur_store.addProduct(member.accesses[store_name], name, quantity, price, categories) #TODO: change first atribute to access
         return new_product
 
     def removeProductFromStore(self, username, store_name, product_id):
