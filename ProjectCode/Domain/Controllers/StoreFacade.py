@@ -357,7 +357,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         #cur_member: Member = self.members[str(requester_id)]
         member = self.members[username]
-        new_product = cur_store.addProduct(member.get_accesses()[store_name], name, quantity, price, categories) #TODO: change first atribute to access
+        new_product = cur_store.addProduct(member.get_accesses().get(store_name), name, quantity, price, categories) #TODO: change first atribute to access
         return new_product
 
     def removeProductFromStore(self, username, store_name, product_id):
@@ -372,7 +372,7 @@ class StoreFacade:
         cur_store: Store = self.stores[store_name]
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_access = self.members[username].get_accesses()[store_name]
+        cur_access = self.members[username].get_accesses().get(store_name)
 #>>>>>>> final_fix
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
@@ -391,7 +391,7 @@ class StoreFacade:
         cur_store: Store = self.stores[store_name]
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_access = self.members[username].get_accesses()[store_name]
+        cur_access = self.members[username].get_accesses().get(store_name)
 #>>>>>>> final_fix
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
@@ -413,10 +413,10 @@ class StoreFacade:
         cur_store: Store = self.stores[store_name]
         if cur_store is None:
             raise Exception("No such store exists")
-        nominated_access = self.members[nominated_username].get_accesses()[store_name]
+        nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store,self.members[nominated_username])
-            self.members[nominated_access].get_accesses()[store_name] = nominated_access
+            self.members[nominated_username].get_accesses()[store_name] = nominated_access
 
 #>>>>>>> final_fix
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isOwner=True)
@@ -437,10 +437,10 @@ class StoreFacade:
             raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
-        nominated_access = self.members[nominated_username].get_accesses()[store_name]
+        nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username])
-            self.members[nominated_access].get_accesses()[store_name] = nominated_access
+            self.members[nominated_username].get_accesses()[store_name] = nominated_access
 
 #>>>>>>> final_fix
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
@@ -519,7 +519,7 @@ class StoreFacade:
     def closeStore(self, username, store_name):
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         is_founder = cur_store.closeStore(username)
@@ -527,11 +527,7 @@ class StoreFacade:
         if is_founder:
             #deletes all accesses for that store
             for mem in self.members.values():
-#<<<<<<< tmp_f
-#                store_exists = mem.accesses.get(store_name)
-#=======
-                store_exists = mem.get_accesses()[store_name]
-#>>>>>>> final_fix
+                store_exists = mem.get_accesses().get(store_name)
                 if store_exists is not None:
                     del mem.get_accesses()[store_name]
 

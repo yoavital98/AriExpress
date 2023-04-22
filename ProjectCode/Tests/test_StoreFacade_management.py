@@ -41,12 +41,13 @@ class TestStoreFacade(TestCase):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
-        self.assertTrue(self.store_facade.stores["Store1"].__products.keys().__contains__(self.product.product_id))
-        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id], self.product)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_products().keys().__contains__(self.product.product_id))
+        self.assertEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id), self.product)
 
     def test_addNewProductToStore_userNotLoggedIn_failure(self):
-        self.member1.logged_In = False
+        self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
+        self.member1.logged_In = False
         with self.assertRaises(Exception) as context:
             self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.assertTrue("User not logged in" in str(context.exception))
@@ -60,6 +61,7 @@ class TestStoreFacade(TestCase):
 
     def test_addNewProductToStore_userIsNotFounder_failure(self):
         self.member1.logged_In = True
+        self.member2.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         with self.assertRaises(Exception) as context:
             self.store_facade.addNewProductToStore("Feliks", "Store1", "Product1", 10, 10, "category1")
@@ -68,6 +70,7 @@ class TestStoreFacade(TestCase):
     def test_addNewProductToStore_userIsNotOwner_failure(self):
         # TODO: add owner to store
         self.member1.logged_In = True
+        self.member2.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         with self.assertRaises(Exception) as context:
             self.store_facade.addNewProductToStore("Feliks", "Store1", "Product1", 10, 10,"category1")
@@ -136,7 +139,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.removeProductFromStore("Ari", "Store1", self.product.product_id)
-        self.assertFalse(self.store_facade.stores["Store1"].products.keys().__contains__(self.product.product_id))
+        self.assertFalse(self.store_facade.stores["Store1"].get_products().keys().__contains__(self.product.product_id))
 
 
     def test_removeProductFromStore_userNotLoggedIn_failure(self):
@@ -189,7 +192,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, price=20)
-        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].price, 20)
+        self.assertEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id).price, 20)
     
     def test_editProductOfStore_price_negativePrice_failure(self):
         self.member1.logged_In = True
@@ -212,8 +215,8 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, name="Product2")
-        self.assertNotEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].name, "Product1")
-        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].name, "Product2")
+        self.assertNotEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id).name, "Product1")
+        self.assertEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id).name, "Product2")
         
     def test_editProductOfStore_name_emptyName_failure(self):
         self.member1.logged_In = True
@@ -228,7 +231,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, quantity=20)
-        self.assertEqual(self.store_facade.stores["Store1"].__products[self.product.product_id].quantity, 20)
+        self.assertEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id).quantity, 20)
         
     def test_editProductOfStore_quantity_negativeQuantity_failure(self):
         self.member1.logged_In = True
@@ -251,7 +254,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.openStore("Ari", "Store1")
         self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "Category1")
         self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, categories="Category2")
-        self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].categories, "Category2")
+        self.assertEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id).categories, "Category2")
 
     
     def test_editProductOfStore_category_emptyCategory_failure(self):
@@ -279,7 +282,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.editProductOfStore("Feliks","Store1",  self.product.product_id,price=20)
         self.assertTrue("The member doesn't have a permission" in str(context.exception))
-        # self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].price, 10)
+        # self.assertEqual(self.store_facade.stores.get("Store1").products[self.product.product_id].price, 10)
 
 
     def test_editProductOfStore_usernameNotFounder_failure(self):
@@ -290,7 +293,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.editProductOfStore("Amiel", "Store1", self.product.product_id, price=20)
         self.assertTrue("The member doesn't have a permission" in str(context.exception))
-        # self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].price, 10)
+        # self.assertEqual(self.store_facade.stores.get("Store1").products[self.product.product_id].price, 10)
 
     
     def test_editProductOfStore_storeDoesNotExist_failure(self):
@@ -300,7 +303,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.editProductOfStore("Ari", "Store2", self.product.product_id, price=20)
         self.assertTrue("No such store exists" in str(context.exception))
-        # self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].price, 10)
+        # self.assertEqual(self.store_facade.stores.get("Store1").products[self.product.product_id].price, 10)
 
 
     def test_editProductOfStore_productDoesNotExist_failure(self):
@@ -310,7 +313,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id+1, price=20)
         self.assertTrue("Product doesn't exists" in str(context.exception))
-        # self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].price, 10)
+        # self.assertEqual(self.store_facade.stores.get("Store1").products[self.product.product_id].price, 10)
 
 
     def test_editProductOfStore_storeNotOpen_failure(self):
@@ -321,14 +324,14 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.editProductOfStore("Ari", "Store1", self.product.product_id, price=20)
         self.assertTrue("Store is inactive" in str(context.exception))
-        # self.assertEqual(self.store_facade.stores["Store1"].products[self.product.product_id].price, 10)
+        # self.assertEqual(self.store_facade.stores.get("Store1").products[self.product.product_id].price, 10)
 
     
     def test_nominateStoreOwner_success(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
-        self.assertTrue(self.store_facade.stores["Store1"].accesses["Feliks"].isOwner)
+        self.assertTrue(self.store_facade.stores["Store1"].get_accesses().get("Feliks").isOwner)
 
     
     def test_nominateStoreOwner_requesterNotOwner_failure(self):
@@ -338,7 +341,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Feliks", "Amiel", "Store1")
         self.assertTrue("The member doesn't have the appropriate permission for that store" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Amiel")) #TODO: check if works
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Amiel")) #TODO: check if works
 
     def test_nominateStoreOwner_requesterNotFounder_failure(self):
         self.member1.logged_In = True
@@ -347,7 +350,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Amiel", "Feliks", "Store1")
         self.assertTrue("The member doesn't have the appropriate permission for that store" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     def test_nominateStoreOwner_storeDoesNotExist_failure(self):
@@ -356,7 +359,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store2")
         self.assertTrue("No such store exists" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     def test_nominateStoreOwner_storeNotOpen_failure(self):
@@ -366,24 +369,24 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
         self.assertTrue("Store is inactive" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     def test_nominateStoreOwner_nominatedUserAlreadyOwner_failure(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
-        self.assertTrue(self.store_facade.stores.get("Store1").accesses.get("Feliks").isOwner)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Feliks").isOwner)
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
         self.assertTrue("User already has access" in str(context.exception))
-        # self.assertTrue(self.store_facade.stores.get("Store1").accesses.get("Feliks").isOwner)
+        # self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Feliks").isOwner)
 
 
     def test_nominateStoreOwner_nominatedUserAlreadyFounder_failure(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
-        self.assertTrue(self.store_facade.stores["Store1"].accesses["Ari"].isFounder)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Ari").isFounder)
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Ari", "Ari", "Store1")
         self.assertTrue("User already has access" in str(context.exception))
@@ -395,7 +398,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
         self.assertTrue("User not logged in" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     # ------------------------------------------------------------------------
@@ -404,7 +407,7 @@ class TestStoreFacade(TestCase):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
-        self.assertTrue(self.store_facade.stores.get("Store1").accesses.get("Feliks").isManager)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Feliks").isManager)
 
     def test_nominateStoreManager_requesterNotOwner_failure(self):  # not sure we need this test
         self.member1.logged_In = True
@@ -413,7 +416,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Feliks", "Amiel", "Store1")
         self.assertTrue("The member doesn't have the appropriate permission for that store" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Amiel"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Amiel"))
 
     def test_nominateStoreManager_requesterNotFounder_failure(self):
         self.member1.logged_In = True
@@ -422,7 +425,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Amiel", "Feliks", "Store1")
         self.assertTrue("The member doesn't have the appropriate permission for that store" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     def test_nominateStoreManager_storeDoesNotExist_failure(self):
@@ -431,7 +434,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Ari", "Feliks", "Store2")
         self.assertTrue("No such store exists" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     def test_nominateStoreManager_storeNotOpen_failure(self):
@@ -441,24 +444,24 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
         self.assertTrue("Store is inactive" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     def test_nominateStoreManager_nominatedUserAlreadyOwner_failure(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
-        self.assertTrue(self.store_facade.stores["Store1"].accesses["Feliks"].isOwner)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Feliks").isOwner)
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
         self.assertTrue("" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses["Feliks"].isManager)
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses["Feliks"].isManager)
 
 
     def test_nominateStoreManager_nominatedUserAlreadyFounder_failure(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")        
-        self.assertTrue(self.store_facade.stores["Store1"].accesses["Ari"].isFounder)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Ari").isFounder)
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Ari", "Ari", "Store1")
         self.assertTrue("" in str(context.exception))
@@ -467,11 +470,11 @@ class TestStoreFacade(TestCase):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
-        self.assertTrue(self.store_facade.stores.get("Store1").accesses.get("Feliks").isManager)
+        self.assertTrue(self.store_facade.stores.get("Store1").get_accesses().get("Feliks").isManager)
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
         self.assertTrue("" in str(context.exception))
-        # self.assertTrue(self.store_facade.stores["Store1"].accesses["Feliks"].isManager)
+        # self.assertTrue(self.store_facade.stores.get("Store1").accesses["Feliks"].isManager)
 
 
     def test_nominateStoreManager_requesterNotLoggedIn_failure(self):
@@ -481,7 +484,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
         self.assertTrue("User not logged in" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].accesses.keys().__contains__("Feliks"))
+        # self.assertFalse(self.store_facade.stores.get("Store1").accesses.keys().__contains__("Feliks"))
 
 
     # ----------------------------- Not implemented yet --------------------------------
@@ -514,7 +517,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.closeStore("Amiel", "Store1")
         self.assertTrue("Store is inactive" in str(context.exception))
-        # self.assertTrue(self.store_facade.stores["Store1"].active)
+        # self.assertTrue(self.store_facade.stores.get("Store1").active)
 
     def test_closeStore_storeDoesNotExist_failure(self):
         self.member1.logged_In = True
@@ -529,7 +532,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.closeStore("Ari", "Store1")
         self.assertTrue("Store is inactive" in str(context.exception))
-        # self.assertFalse(self.store_facade.stores["Store1"].active)
+        # self.assertFalse(self.store_facade.stores.get("Store1").active)
 
     def test_closeStore_requesterNotLoggedIn_failure(self):
         self.member1.logged_In = True
@@ -538,14 +541,14 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception) as context:
             self.store_facade.closeStore("Ari", "Store1")
         self.assertTrue("User not logged in" in str(context.exception))
-        # self.assertTrue(self.store_facade.stores["Store1"].active)
+        # self.assertTrue(self.store_facade.stores.get("Store1").active)
 
     def test_getStaffInfo_success(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")
         self.store_facade.nominateStoreManager("Ari", "Feliks", "Store1")
-        self.access1 = self.member1.accesses.get("Store1")
-        self.access2 = self.member2.accesses.get("Store1")
+        self.access1 = self.member1.get_accesses().get("Store1")
+        self.access2 = self.member2.get_accesses().get("Store1")
         self.dict = TypedDict(str, Access)
         self.dict["Ari"] = self.access1
         self.dict["Feliks"] = self.access2
