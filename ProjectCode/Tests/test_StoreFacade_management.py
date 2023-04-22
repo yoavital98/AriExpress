@@ -25,9 +25,10 @@ class TestStoreFacade(TestCase):
     
     def test_openStore_userNotLoggedIn_failure(self):
         self.member1.logged_In = False
-        self.store_facade.openStore("Ari", "Store1")
-        self.assertFalse(self.store_facade.stores.keys().__contains__("Store1"))
-    
+        with self.assertRaises(Exception) as context:
+            self.store_facade.openStore("Ari", "Store1")
+        self.assertTrue("User not logged in" in str(context.exception))
+
     def test_openStore_storeAlreadyExists_failure(self):
         self.member1.logged_In = True
         self.store_facade.openStore("Ari", "Store1")

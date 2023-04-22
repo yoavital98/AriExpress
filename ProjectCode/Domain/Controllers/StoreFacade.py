@@ -60,7 +60,7 @@ class StoreFacade:
             if existing_member.get_logged():
                 return True
             else: #should never get here usually
-                raise Exception("user is not logged in")
+                raise Exception("User not logged in")
 
     def __getUserOrMember(self,user_name):
         if self.members.keys().__contains__(user_name):
