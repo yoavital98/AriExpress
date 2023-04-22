@@ -32,8 +32,8 @@ class StoreFacade:
         self.admins["Ari"] = first_admin
 
 # ------  System  ------ #
-#     def loadData(self):  # todo complete
-#         pass
+    def loadData(self):  # todo complete
+        pass
 
     def __systemCheck(self):
         if self.SystemStatus:
@@ -44,8 +44,8 @@ class StoreFacade:
 # ------  users  ------ #
     #  Guests
 
-    # def exitTheSystem(self): #TODO: @Ari and @Yoav should decide if we need this function
-    #     pass
+    def exitTheSystem(self): #TODO: @Ari and @Yoav should decide if we need this function
+        pass
 
     def __getAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
