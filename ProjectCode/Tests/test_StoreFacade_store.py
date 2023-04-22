@@ -48,7 +48,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.getProductsByStore("Store1"), [self.product])
     
@@ -57,7 +57,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.product2 = self.store.addProduct(self.access, "Product2", 10, 10, "category1")
         self.assertEqual(self.store_facade.getProductsByStore("Store1"), [self.product1, self.product2])
@@ -72,7 +72,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.getProduct("Store1", "Product2"), None)
 
@@ -81,7 +81,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.getProduct("Store1", "Product1"), self.product)
 
@@ -93,7 +93,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.assertEqual(self.store_facade.productSearchByName("Product1"), [self.product])
     
@@ -102,7 +102,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "category1")
         self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "category1")
         self.assertEqual(self.store_facade.productSearchByName("Product1"), [self.product1, self.product2])
@@ -117,7 +117,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product])
     
@@ -126,7 +126,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
         self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category1")
         self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product1, self.product2])
@@ -136,7 +136,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
         self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
         self.assertEqual(self.store_facade.productSearchByCategory("Category1"), [self.product1])
@@ -155,7 +155,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         # add description to product
         self.assertEqual(self.store_facade.productSearchByName("Keyword1"), [self.product])
@@ -165,7 +165,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
         self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
         # add description to products
@@ -181,7 +181,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         # add feature to product
         self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [self.product])
@@ -191,7 +191,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
         self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
         # add features to products
@@ -204,7 +204,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 20), True)
     
@@ -213,7 +213,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store2", "Product1", 10), False)
     
@@ -222,7 +222,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store1", "Product2", 10), False)
     
@@ -231,7 +231,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Store1", "Product1", 9), False)
     
@@ -248,7 +248,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.store_facade.placeBid("Store1", "Product1", 10)
         self.assertEqual(self.store_facade.getStorePurchaseHistory("Store1"), [self.product])
@@ -258,7 +258,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
         self.access.setFounder(True)
-        self.store.accesses[self.member1.get_username()] = self.access
+        self.store.__accesses[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.product2 = self.store.addProduct(self.access, "Product2", 10, 10, "Category1")
         self.store_facade.placeBid("Store1", "Product1", 10)
