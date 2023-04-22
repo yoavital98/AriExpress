@@ -10,11 +10,9 @@ class User(ABC):
 
     def get_cart(self):
         return self.cart
-        pass
 
     def add_to_cart(self,username, storename, productID, product, quantity):
         self.cart.add_Product(username, storename, productID, product, quantity)
-        pass
 
 
     def get_Basket(self, storename):
@@ -31,4 +29,3 @@ class User(ABC):
 
     def get_username(self):
         return self.username
-        pass

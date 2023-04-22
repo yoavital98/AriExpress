@@ -105,7 +105,7 @@ class StoreFacade:
 
                 return new_member
         else:
-            raise SystemError("This username is already in the system")
+            raise Exception("This username is already in the system")
 
 
 
@@ -140,7 +140,7 @@ class StoreFacade:
         if self.__checkIfUserIsLoggedIn(username):
             return TransactionHistory.get_User_Transactions(username)
         else:
-            raise SystemError("username isn't logged in")
+            raise Exception("username isn't logged in")
 
     # guest and member
     def getBasket(self, username, storename):
@@ -161,7 +161,9 @@ class StoreFacade:
     def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
         self.__systemCheck()
         user: User = self.__getUserOrMember(username)
-        store: Store = self.stores[storename]
+        store: Store = self.stores.get(storename)
+        if store is None:
+            raise Exception("Store doesnt exists")
         product = store.checkProductAvailability(productID, quantity)
         if product is not None:
             user.add_to_cart(username, storename, productID, product, quantity)

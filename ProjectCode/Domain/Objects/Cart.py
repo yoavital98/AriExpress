@@ -9,17 +9,17 @@ class Cart:
         self.username = username
         self.baskets = TypedDict(str, Basket)
 
-    def get_Baskets(self, storename):
+    def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):
             return self.baskets[storename]
         else:
-            raise SystemError("Basket does not exists")
+            raise Exception("Basket does not exists")
 
     def add_Product(self,username, storename, productID, product, quantity):
         if not self.baskets.keys().__contains__(storename):
                 basket = Basket(username, storename)
                 self.baskets[storename] = basket
-        basket: Basket = self.get_Baskets(storename)
+        basket: Basket = self.get_Basket(storename)
         basket.add_Product(productID, product, quantity)
 
     def removeFromBasket(self, storename, productID):
@@ -41,7 +41,7 @@ class Cart:
 
     def edit_Product_Quantity(self, storename, productID, quantity):
         if self.baskets.keys().__contains__(storename):
-            basket: Basket = self.get_Baskets(storename)
+            basket: Basket = self.get_Basket(storename)
             basket.edit_Product_Quantity(productID, quantity)
         else:
             raise Exception("Basket was not found")
@@ -59,7 +59,7 @@ class Cart:
         self.baskets = baskets
 
     def getProductsAsTuples(self, storename):
-        basket: Basket = self.get_Baskets(storename)
+        basket: Basket = self.get_Basket(storename)
         return basket.getProductsAsTuples()
 
     def addBidToBasket(self, bid: Bid):
