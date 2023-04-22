@@ -237,8 +237,7 @@ class Store:
         if offer > cur_auction.get_current_offer():
             cur_auction.set_current_offer(offer)
             cur_auction.set_highest_offer_username(username)
-            return True
-        return False
+        return cur_auction
 
     def startLottery(self, username, product_id):
         cur_product: Product = self.__products.get(product_id)

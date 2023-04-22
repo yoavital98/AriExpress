@@ -7,22 +7,26 @@ from abc import ABC, abstractmethod
 from ProjectCode.Domain.Objects.User import User
 # from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.Access import *
+from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.Objects.User import User
+from ProjectCode.Domain.Objects.AccessControl import *
 
 
 class Member(User):
     def __init__(self, username, password, email):
         super().__init__(username)
-        self.accesses = TypedDict(str, Access)  #Accesses
+        self.accesses = TypedDict(str, AccessControl)  #Accesses
         self.password = password  # password
         self.email = email  # email
         self.logged_In = False  # login
+        self.auctions = TypedDict(int, Auction) # auction id to auction
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):
         super().get_cart()
 
-    def add_to_cart(self, storename, productID, product, quantity):
-        super().add_to_cart(storename, productID, product, quantity)
+    def add_to_cart(self, username, storename, productID, product, quantity):
+        super().add_to_cart(username, storename, productID, product, quantity)
 
     def get_Basket(self, storename):
         super().get_Basket(storename)
@@ -67,3 +71,19 @@ class Member(User):
 
     def getAllBids(self):
         return self.cart.getAllBids()
+
+    def addNewAuction(self, auction_id, cur_auction):
+        if not self.auctions.keys().__contains__(auction_id):
+            self.auctions[auction_id] = cur_auction
+
+    def getAuctionById(self,auction_id):
+        if self.auctions.keys().__contains__(auction_id):
+            return self.auctions[auction_id]
+        else:
+            raise Exception("Member is not participating in the auction")
+
+    def removeAuctionById(self, auction_id):
+        if self.auctions.keys().__contains__(auction_id):
+            del self.auctions[auction_id]
+        else:
+            raise Exception("Member is not participating in the auction")

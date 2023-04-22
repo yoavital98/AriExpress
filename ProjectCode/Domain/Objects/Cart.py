@@ -97,3 +97,18 @@ class Cart:
             return basket.checkItemInBasket(product_id)
         else:
             raise Exception("Basket was not found")
+
+    def clearCart(self):
+        for basketKey in self.baskets.keys():
+            basket: Basket = self.baskets[basketKey]
+            if basket.getBasketSize() == 0 and basket.getBasketBidSize() == 0:
+                del self.baskets[basketKey]
+
+    def clearCartFromProducts(self):
+        for basketKey in self.baskets.keys():
+            basket: Basket = self.baskets[basketKey]
+            basket.clearProducts()
+    def clearBidFromBasket(self, storename, bid_id):
+        if self.baskets.keys().__contains__(storename):
+            basket: Basket = self.baskets[storename]
+            basket.clearBidFromBasket(bid_id)
