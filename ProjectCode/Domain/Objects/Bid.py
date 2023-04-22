@@ -1,13 +1,23 @@
 class Bid:
-    def __init__(self,bid_id, username, storename, offer, product, quantity, approved=False):
+    def __init__(self,bid_id, username, storename, offer, product, quantity):
         self.bid_id = bid_id
         self._username = username
         self._storename = storename
         self._offer = offer
         self._product_ID = product
         self._quantity = quantity
-        self._approved = approved
+        self._status = 0 # 0-PENDING 1-APPROVED 2-REJECTED 3-ALTERNATE_OFFER
+        self._left_to_approval = 0 #number of owners that needs to approve this bid
 
+    def approve_by_one(self):
+        self._left_to_approval -= 1
+
+    def increment_left_to_approve(self):
+        self._left_to_approval += 1
+
+    def get_left_to_approval(self):
+        return self._left_to_approval
+        
     # Getter and setter for username
     def get_username(self):
         return self._username
@@ -37,8 +47,8 @@ class Bid:
         self._product = product
 
     # Getter and setter for approved
-    def get_approved(self):
-        return self._approved
+    def get_status(self):
+        return self._status
 
-    def set_approved(self, approved):
-        self._approved = approved
+    def set_status(self, status):
+        self._status = status

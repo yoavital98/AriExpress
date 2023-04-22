@@ -3,32 +3,24 @@ from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
 
-class Service:
-    def __init__(self, logging):
-        self.admins = self.loadAdminsFromDB()
-        self.store_facade = None  # StoreFacade() TODO: decide how we want to open the facade
-        self.error_log = logging.getLogger()
-        self.event_log = logging.getLogger()
 
-    #TODO: consult with everyone how they want to open the system!!
+class Service:
+    def __init__(self):
+        self.store_facade = StoreFacade()
 
     # ------  admin  ------ #
-    def openTheSystem(self, requesterID):
+    def openTheSystem(self, username):
         try:
-            if self.admins.keys().__contains__(requesterID):  # check if admin
-                self.store_facade = StoreFacade()  # activates loadData in constructor
-            else:
-                raise SystemError("open-the-system requester isn't admin")
+            self.store_facade.openSystem(username)
         except SystemError:
             pass
 
-    def addAdmin(self, requesterID, newAdminID, newPassword, newEmail):  # TODO we will assume the requesting admin fills himself the new admin details
+    def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
-            if self.admins.keys().__contains__(requesterID):  # check if admin
-                self.admins[newAdminID] = Admin(newAdminID, newPassword, newEmail)
-            raise SystemError("add-admin requester isn't admin")
+            self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
         except SystemError:
             pass
+
 
     def loadAdminsFromDB(self):
         try:
@@ -40,13 +32,19 @@ class Service:
         except ValueError:
             pass
 
-    # ------  users  ------ #
 
+    # ------  users  ------ #
     #  Guests
 
     def exitTheSystem(self):
         try:
             self.store_facade.exitTheSystem()
+        except ValueError:
+            pass
+
+    def loginAsGuest(self):
+        try:
+            self.store_facade.loginAsGuest()
         except ValueError:
             pass
 
@@ -59,7 +57,7 @@ class Service:
 
     def logIn(self,username, password):
         try:
-            self.store_facade.logIn(username, password)
+            self.store_facade.logInAsMember(username, password)
         except ValueError:
             pass
 

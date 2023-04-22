@@ -33,9 +33,6 @@ class Member(User):
         super().edit_Product_Quantity(storename, productID, quantity)
 
 # -------------------------------------------------------------------------------
-    def purchase(self):
-        # purchasing process
-        pass
 
     def logInAsMember(self):
         self.logged_In = True
@@ -63,3 +60,9 @@ class Member(User):
 
     def get_logged(self):
         return self.logged_In
+
+    def addBidToBasket(self,username, bid):
+        self.cart.addBidToBasket(username, bid)
+
+    def getAllBids(self):
+        return self.cart.getAllBids()
