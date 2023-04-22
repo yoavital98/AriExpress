@@ -1,4 +1,4 @@
-
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 
 
 class Auction:
@@ -10,11 +10,10 @@ class Auction:
         self.__start_date = start_date
         self.__expiration_date = expiration_date
         self.__highest_offer_username = highest_offer_username
-        #self.__participants = TypedDict(str, Member)
+        self.__participants = TypedDict(str, int) #(username,last_offer)
 
-    def add_participant(self, member):
-        if self.__participants.get(member.get_username()) is None:
-            self.__participants[member.get_username()] = member
+    def add_participant(self, username, offer):
+        self.__participants[username] = offer
 
     def get_participants(self):
         return self.__participants

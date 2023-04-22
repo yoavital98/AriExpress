@@ -7,7 +7,7 @@ class Lottery:
         self.__product_id = product_id
         self.__price = price
         self.__accumulated_price = accumulated_price
-        self.__participants = TypedDict(str ,int)
+        self.__participants = TypedDict(str, int)
         self.__winner = None
 
     # Getters
@@ -39,11 +39,11 @@ class Lottery:
     def set_accumulated_price(self, accumulated_price):
         self.__accumulated_price = accumulated_price
 
-    def add_participant_share(self, member, share):
-        if self.__participants.get(member) is None:
-            self.__participants[member] = share
+    def add_participant_share(self, username, share):
+        if self.__participants.get(username) is None:
+            self.__participants[username] = share
         else:
-            self.__participants[member] += share
+            self.__participants[username] += share
 
 
     def get_winner(self):
