@@ -1,4 +1,4 @@
-class Access:
+class AccessControl:
 
     def __init__(self, store, user):
         self.user = user
