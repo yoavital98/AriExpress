@@ -48,6 +48,8 @@ class Basket:
 
     def getBasketSize(self):
         return self.products.__sizeof__()
+    def getBasketBidSize(self):
+        return self.bids.__sizeof__()
 
     def getProductsAsTuples(self):
         return self.products.values()
@@ -74,3 +76,9 @@ class Basket:
 
     def purchaseBasket(self):
         return self.store.purchaseBasket(self.products)
+
+    def clearProducts(self):
+        self.products.clear()
+
+    def clearBidFromBasket(self, bid_id):
+        del self.bids[bid_id]

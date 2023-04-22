@@ -13,7 +13,7 @@ from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
 from ProjectCode.Domain.Objects.AccessControl import *
-from ProjectCode.Domain.Objects.Access import *
+from ProjectCode.Domain.Objects.AccessControl import *
 from ProjectCode.Domain.Objects.Cart import *
 from ProjectCode.Domain.Objects.Basket import *
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
@@ -80,7 +80,12 @@ class StoreFacade:
                 return self.onlineGuests.get(user_name)
             else:
                 raise Exception("user is not guest nor a member")
-
+    def __getOnlineMemberOnly(self, user_name):
+        if self.members.keys().__contains__(user_name):
+            if self.__checkIfUserIsLoggedIn(user_name):
+                return self.members[user_name]
+            else:
+                raise Exception("user is not logged in")
     def register(self, user_name, password, email):
         self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
@@ -210,18 +215,15 @@ class StoreFacade:
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
             if self.members.keys().__contains__(user_name):
-                self.transaction_history.addNewUserTransaction(user_name,stores_to_products, overall_price)
-                # TODO: remove the baskets
+                self.transaction_history.addNewUserTransaction(user_name, stores_to_products, overall_price)
+                user.cart.clearCartFromProducts()  # clearing all the products from all the baskets
+                user.cart.clearCart()  # if there are empty baskets from bids and products - remove them
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
 
     def placeBid(self, username, storename, offer, productID, quantity):
-        if self.members.keys().__contains__(username):
-            self.__checkIfUserIsLoggedIn(username)
-            existing_member: Member= self.members[username]
-        else:
-            raise Exception("user is not valid")
+        existing_member: Member = self.__getOnlineMemberOnly(username)
         bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
         self.bid_id_counter += 1
         existing_member.addBidToBasket(bid)
@@ -230,20 +232,12 @@ class StoreFacade:
         return bid
 
     def getAllBidsFromUser(self, username):
-        if self.members.keys().__contains__(username):
-            self.__checkIfUserIsLoggedIn(username)
-            existing_member: Member = self.members[username]
-        else:
-            raise Exception("user is not valid")
+        existing_member: Member = self.__getOnlineMemberOnly(username)
         bids_set = existing_member.getAllBids()  # returns set of bids
         return bids_set
 
     def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date, back_number):
-        if self.members.keys().__contains__(username):
-            self.__checkIfUserIsLoggedIn(username)
-            existing_member: Member = self.members[username]
-        else:
-            raise Exception("user is not valid")
+        existing_member: Member = self.__getOnlineMemberOnly(username)
         bid: Bid = existing_member.get_cart().getBid(storename, bid_id)
         if bid.get_status() == 1:
             answer = existing_member.cart.checkItemInCartForBid(bid)
@@ -255,36 +249,49 @@ class StoreFacade:
                 self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
                 store.purchaseBid(bid_id)  # TODO: amiel
                 self.transaction_history.addNewStoreTransaction(username, bid.get_storename(), tuple_for_history, bid.get_offer())
-                if self.members.keys().__contains__(username):
-                    dict_for_history = TypedDict(str, tuple)
-                    dict_for_history[storename] = tuple_for_history
-                    self.transaction_history.addNewUserTransaction(username, dict_for_history, bid.get_offer())
-                    # TODO: remove the bid from the basket
+
+                dict_for_history = TypedDict(str, tuple)
+                dict_for_history[storename] = tuple_for_history
+                self.transaction_history.addNewUserTransaction(username, dict_for_history, bid.get_offer())
+                existing_member.cart.clearBidFromBasket(storename, bid_id)
             else:
                 raise Exception("there was a problem with the Bid or the quantity in the store")
         else:
             raise Exception("Bid is not confirmed")
-        
-
-
 
     def placeOfferInAuction(self, username, storename, auction_id, offer):
+        cur_member: Member = self.__getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(storename)
-        cur_member: Member = self.members.get(username)
         if cur_store is None:
             raise Exception("No such store exists")
-        if cur_member is None:
-            raise Exception("No such member exists")
-        if not self.__checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
         cur_auction: Auction = cur_store.placeOfferInAuction(username, auction_id, offer)
         cur_auction.add_participant(cur_member)
         if cur_auction:
-            #TODO: Ari needs to add the auction to the user
+            cur_member.addNewAuction(auction_id, cur_auction)
             pass
         return cur_auction
 
+    def ClaimAuctionPurchase(self, username, storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
+        cur_member: Member = self.__getOnlineMemberOnly(username)
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        cur_auction: Auction = cur_member.getAuctionById(auction_id)
+        if cur_auction.get_highest_offer_username() == cur_member.get_username():
+            product: Product = cur_store.products[cur_auction.get_product_id()]
+            item_name = product.name
+            tuple_for_history = (item_name, 1) # name of item and quantity for the history of the store
+            # TODO: amiel! put your line here!
+            self.external_services.pay(storename, card_number, card_user_name, card_user_ID, card_date,
+                                       back_number, cur_auction.get_current_offer())
+            self.transaction_history.addNewStoreTransaction(username, storename, tuple_for_history,
+                                                            cur_auction.get_current_offer())
 
+            dict_for_history = TypedDict(str, tuple)
+            dict_for_history[storename] = tuple_for_history
+            self.transaction_history.addNewUserTransaction(username, dict_for_history, cur_auction.get_current_offer())
+            for member in cur_auction.get_participants():
+                member.removeAuctionById(auction_id)
 
 
 
@@ -534,10 +541,11 @@ class StoreFacade:
             self.SystemStatus = True
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
-        pass
+        pass # no messanger this version
 
     def closeStoreAsAdmin(self, admin_name, store_name):
-        pass
+        if self.admins.keys().__contains__(admin_name):
+            pass #  TODO: logic of closing a store as an admin amiel!
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         new_admin = None
