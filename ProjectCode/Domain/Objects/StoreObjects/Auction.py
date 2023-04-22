@@ -10,7 +10,7 @@ class Auction:
         self.__start_date = start_date
         self.__expiration_date = expiration_date
         self.__highest_offer_username = highest_offer_username
-        self.__participants = TypedDict(str, Member)
+        #self.__participants = TypedDict(str, Member)
 
     def add_participant(self, member):
         if self.__participants.get(member.get_username()) is None:
