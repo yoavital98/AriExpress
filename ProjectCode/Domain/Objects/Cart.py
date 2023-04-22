@@ -6,7 +6,7 @@ from ProjectCode.Domain.Objects.Basket import *
 
 class Cart:
 
-    def __init__(self, username):  # TODO: remove cartID from the system
+    def __init__(self, username):
         self.username = username
         self.baskets = TypedDict(str, Basket)
 

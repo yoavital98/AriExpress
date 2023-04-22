@@ -5,8 +5,8 @@ from ProjectCode.Domain.Objects.User import User
 
 
 class Guest(User):
-    def __init__(self, username, cart_id):
-        super().__init__(username, cart_id)
+    def __init__(self, username):
+        super().__init__(username)
 
     def get_cart(self):
         super().get_cart()

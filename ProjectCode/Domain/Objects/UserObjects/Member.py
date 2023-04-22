@@ -5,13 +5,13 @@ from ProjectCode.Domain.Objects.Cart import Cart
 from abc import ABC, abstractmethod
 
 from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects import Access
+from ProjectCode.Domain.Objects.Access import Access
 
 
 class Member(User):
-    def __init__(self, username, password, email, cartID):
-        super().__init__(username, cartID)
-        self.accesses = TypedDict(string, Access)  #Accesses
+    def __init__(self, username, password, email):
+        super().__init__(username)
+        self.accesses = TypedDict(str, Access)  #Accesses
         self.password = password  # password
         self.email = email  # email
         self.logged_In = False  # login
