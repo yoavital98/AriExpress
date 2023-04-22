@@ -3,6 +3,8 @@ import string
 import ProjectCode
 from ProjectCode.Domain.Controllers.ExternalServices import *
 from ProjectCode.Domain.Controllers.MessageController import *
+from ProjectCode.Domain.Objects.UserObjects.Admin import *
+from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
 from ProjectCode.Domain.Objects import User, Store, Access
 from ProjectCode.Domain.Objects.Bid import *
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
@@ -10,6 +12,7 @@ from ProjectCode.Domain.Controllers.TransactionHistory import *
 from ProjectCode.Domain.Objects.Store import *
 from ProjectCode.Domain.Objects.UserObjects.Guest import *
 from ProjectCode.Domain.Objects.UserObjects.Member import *
+from ProjectCode.Domain.Objects.AccessControl import *
 from ProjectCode.Domain.Objects.Access import *
 from ProjectCode.Domain.Objects.Cart import *
 from ProjectCode.Domain.Objects.Basket import *
@@ -19,7 +22,6 @@ from typing import List
 
 class StoreFacade:
     def __init__(self):
-
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
@@ -103,7 +105,11 @@ class StoreFacade:
     def leaveAsGuest(self, EntranceID):
         self.__systemCheck()
         if self.onlineGuests.keys().__contains__(str(EntranceID)):
-            self.onlineGuests.__delitem__(EntranceID)
+            self.onlineGuests.__delitem__(str(EntranceID))
+        else:
+            raise Exception("This entrance id doesn't belong to the online guests list")
+
+
 
     #  only members
     def logInAsMember(self, username , password):
@@ -133,6 +139,8 @@ class StoreFacade:
         self.__systemCheck()
         if self.__checkIfUserIsLoggedIn(username):
             return TransactionHistory.get_User_Transactions(username)
+        else:
+            raise SystemError("username isn't logged in")
 
     # guest and member
     def getBasket(self, username, storename):
@@ -140,6 +148,7 @@ class StoreFacade:
         user = self.__getUserOrMember(username)
         requested_basket = user.get_Basket(storename)
         return requested_basket
+
 
     # guest and member
     def getCart(self,username):
@@ -326,7 +335,7 @@ class StoreFacade:
 
     def openStore(self, username, store_name):
         cur_member: Member = self.members.get(username)
-        if cur_member is None:
+        if not cur_member:
             raise Exception("The user is not a member")
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
@@ -382,6 +391,7 @@ class StoreFacade:
         if nominated_access is None:
             nominated_access = Access(cur_store,self.members[nominated_username])
             self.members[nominated_access].__accesses[store_name] = nominated_access
+
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isOwner=True)
         return nominated_modified_access
 
@@ -395,6 +405,7 @@ class StoreFacade:
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username])
             self.members[nominated_access].__accesses[store_name] = nominated_access
+
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         isManager=True)
         return nominated_modified_access
