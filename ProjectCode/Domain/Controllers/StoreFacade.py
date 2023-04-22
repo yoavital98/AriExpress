@@ -3,7 +3,8 @@ import string
 import ProjectCode
 from ProjectCode.Domain.Controllers.ExternalServices import *
 from ProjectCode.Domain.Controllers.MessageController import *
-from ProjectCode.Domain.Objects import User, Store, Access
+from ProjectCode.Domain.Objects import User, Store
+from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.Bid import *
 from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
 from ProjectCode.Domain.Controllers.TransactionHistory import *
@@ -49,7 +50,7 @@ class StoreFacade:
 # ------  users  ------ #
     #  Guests
 
-    def exitTheSystem(self):
+    def exitTheSystem(self): #TODO: @Ari and @Yoav should decide if we need this function
         pass
 
     def __getAdmin(self, user_name):
@@ -57,6 +58,19 @@ class StoreFacade:
             return self.admins[user_name]
         else:
             raise Exception("admin does not exists")
+
+    def logInAsGuest(self):
+        self.__systemCheck()
+        new_guest = Guest(self.nextEntranceID)
+        self.onlineGuests[str(self.nextEntranceID)] = new_guest
+        return new_guest
+
+
+    def leaveAsGuest(self, guest):
+        self.__systemCheck()
+        EntranceID = guest.get_username()
+        if self.onlineGuests.keys().__contains__(str(EntranceID)):
+            self.onlineGuests.__delitem__(str(EntranceID))
 
     #  Members
 
@@ -67,14 +81,14 @@ class StoreFacade:
             else: #should never get here usually
                 raise Exception("user is not logged in")
 
-    def __getUserOrMember(self,user_name):
-        if self.members.keys().__contains__(user_name):
+    def __getUserOrMember(self,user_name):  #TODO: change the if's because checking the keys somehow dosent work
+        if self.members.keys().__contains__(str(user_name)):
             if self.__checkIfUserIsLoggedIn(user_name):
                 return self.members[user_name]
             else:
                 raise Exception("user is not logged in")
         else:
-            if self.onlineGuests.keys().__contains__(user_name):
+            if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(user_name)
             else:
                 raise Exception("user is not guest nor a member")
@@ -91,19 +105,7 @@ class StoreFacade:
         else:
             raise SystemError("This username is already in the system")
 
-    # only guests
-    def logInAsGuest(self):
-        self.__systemCheck()
-        new_guest = Guest(self.nextEntranceID)
-        self.onlineGuests[str(self.nextEntranceID)] = new_guest
-        return new_guest
 
-    # only guests
-
-    def leaveAsGuest(self, EntranceID):
-        self.__systemCheck()
-        if self.onlineGuests.keys().__contains__(str(EntranceID)):
-            self.onlineGuests.__delitem__(EntranceID)
 
     #  only members
     def logInAsMember(self, username , password):
@@ -196,7 +198,7 @@ class StoreFacade:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
-                ExternalServices.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
+                self.external_services.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
                 TransactionHistory.addNewStoreTransaction(user_name,) #make a new transaction and add it to the store history and user history
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
@@ -251,7 +253,7 @@ class StoreFacade:
         return self.stores
 
     def getProductsByStore(self, store_name):
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores[store_name] #TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         return cur_store.products
@@ -270,7 +272,7 @@ class StoreFacade:
             for cur_store in self.stores.values():
                 product_list = cur_store.searchProductByName(keyword)
                 if len(product_list) > 0:
-                    search_results[cur_store] = product_list
+                    search_results[cur_store] = product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
         return search_results
 
     def productSearchByCategory(self, category):
@@ -281,7 +283,9 @@ class StoreFacade:
                 search_results[cur_store] = product_list
         return search_results
 
-    def productFilterByFeatures(self):
+    def productFilterByFeatures(self, featuresDict):
+        #TODO: not implemented yet
+        return []
         pass
 
 
@@ -443,7 +447,7 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if ExternalServices.ConfirmePassword(password, existing_admin.get_password()):
+            if self.external_services.ConfirmePassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return existing_admin
             else:

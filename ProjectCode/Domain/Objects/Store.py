@@ -209,6 +209,9 @@ class Store:
         self.auctions[self.auction_id_counter] = new_auction
         return new_auction
 
+    def get_store_name(self):
+        return self.store_name
+
 
 
 
