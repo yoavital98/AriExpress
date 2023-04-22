@@ -247,7 +247,7 @@ class StoreFacade:
                 item_name = product.name
                 tuple_for_history = (item_name, bid.get_quantity())
                 self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
-                store.purchaseBid(bid_id)  # TODO: amiel
+                store.purchaseBid(bid_id)
                 self.transaction_history.addNewStoreTransaction(username, bid.get_storename(), tuple_for_history, bid.get_offer())
 
                 dict_for_history = TypedDict(str, tuple)
@@ -268,7 +268,6 @@ class StoreFacade:
         cur_auction.add_participant(cur_member)
         if cur_auction:
             cur_member.addNewAuction(auction_id, cur_auction)
-            pass
         return cur_auction
 
     def ClaimAuctionPurchase(self, username, storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
@@ -278,7 +277,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         cur_auction: Auction = cur_member.getAuctionById(auction_id)
         if cur_auction.get_highest_offer_username() == cur_member.get_username():
-            product: Product = cur_store.products[cur_auction.get_product_id()]
+            product: Product = cur_store.get_products().get(cur_auction.get_product_id())
             item_name = product.name
             tuple_for_history = (item_name, 1) # name of item and quantity for the history of the store
             # TODO: amiel! put your line here!
