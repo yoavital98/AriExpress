@@ -5,18 +5,19 @@ from ProjectCode.Domain.Objects.User import User
 
 
 class Guest(User):
-    def __init__(self, entrance_id):
-        self.entrance_id = entrance_id
-        self.cart = Cart(self.entrance_id)
+    def __init__(self, username):
+        super().__init__(username)
 
     def get_cart(self):
-        # Return the user's shopping cart
-        return self.cart
+        super().get_cart()
 
-    def add_to_cart(self, storename, item):
+    def add_to_cart(self, storename, productID, product, quantity):
+        super().add_to_cart(storename, productID, product, quantity)
 
-        pass
+    def get_Basket(self, storename):
+        super().get_Basket(storename)
 
-    def purchase(self):
-        # purchasing process
-        pass
+    def removeFromBasket(self, storename, productID):
+        super().removeFromBasket(storename, productID)
+
+

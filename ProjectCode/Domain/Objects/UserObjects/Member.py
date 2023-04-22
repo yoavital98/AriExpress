@@ -3,62 +3,67 @@ import string
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Cart import Cart
 from abc import ABC, abstractmethod
-
 from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects.AccessControl import AccessControl
+from ProjectCode.Domain.Objects.Access import Access
 
 
 class Member(User):
-    def __init__(self, user_name, password, email):  # TODO need to choose whether registeration requires address and
-        self._accesses = TypedDict(str, AccessControl)  # storename to Access
-        # TODO birthdate
-        self._username = user_name  # username
-        self._password = password  # password
-        self._email = email  # email
-        # self.address = address
-        # self.birthDate = birthDate
-        self._cart = Cart(user_name)  # userCart
-        self._logged_In = False  # login
+    def __init__(self, username, password, email):
+        super().__init__(username)
+        self.accesses = TypedDict(str, Access)  #Accesses
+        self.password = password  # password
+        self.email = email  # email
+        self.logged_In = False  # login
 
+    # -------------------------Methods from User--------------------------------
     def get_cart(self):
-        # Return the user's shopping cart
-        return self._cart
+        super().get_cart()
 
-    def add_to_cart(self, item):
-        # Add an item to the user's shopping cart
-        pass
+    def add_to_cart(self, storename, productID, product, quantity):
+        super().add_to_cart(storename, productID, product, quantity)
 
-    def purchase(self):
-        # purchasing process
-        pass
+    def get_Basket(self, storename):
+        super().get_Basket(storename)
+
+    def removeFromBasket(self, storename, productID):
+        super().removeFromBasket(storename, productID)
+
+    def edit_Product_Quantity(self, storename, productID, quantity):
+        super().edit_Product_Quantity(storename, productID, quantity)
+
+# -------------------------------------------------------------------------------
+
 
     def logInAsMember(self):
         self._logged_In = True
 
-    def logOff(self):
-        self._logged_In = False
+
+    def logOut(self):
+        self.logged_In = False
 
     def get_username(self):
-        return self._username
+        return self.username
 
     def set_username(self, username):
-        self._username = username
+        self.username = username
 
     def get_password(self):
-        return self._password
+        return self.password
 
     def set_password(self, password):
-        self._password = password
+        self.password = password
 
     def get_email(self):
-        return self._email
+        return self.email
 
     def set_email(self, email):
-        self._email = email
+        self.email = email
 
     def get_logged(self):
-        return self._logged_In
+        return self.logged_In
 
-    @property
-    def accesses(self):
-        return self._accesses
+    def addBidToBasket(self,username, bid):
+        self.cart.addBidToBasket(username, bid)
+
+    def getAllBids(self):
+        return self.cart.getAllBids()
