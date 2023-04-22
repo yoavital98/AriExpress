@@ -1,7 +1,5 @@
 from ProjectCode.Domain.Controllers.StoreFacade import *
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
-import logging
-
 
 
 class Service:

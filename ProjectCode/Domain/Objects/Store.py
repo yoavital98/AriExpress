@@ -1,8 +1,11 @@
-from ProjectCode.Domain.Objects.StoreObjects.Product import *
-from ProjectCode.Domain.Objects.Bid import *
-from ProjectCode.Domain.Objects.StoreObjects.Auction import *
 import datetime
 from typing import List
+
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Access import Access
+from ProjectCode.Domain.Objects.Bid import Bid
+from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.Objects.StoreObjects.Product import Product
 
 
 class Store:

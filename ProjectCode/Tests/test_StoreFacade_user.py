@@ -1,9 +1,9 @@
 import unittest
 from unittest import TestCase
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade, Cart
+from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
 from ProjectCode.Domain.Objects.Basket import Basket
+from ProjectCode.Domain.Objects.Cart import Cart
 from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
-from ProjectCode.Domain.Objects.Access import *
 
 
 class TestStoreFacade(TestCase):
@@ -11,11 +11,13 @@ class TestStoreFacade(TestCase):
     def setUp(self):
         # TODO: check info for duplicates
         self.store_facade = StoreFacade()
+        self.store_facade.openSystem("Ari")
         self.member1 = self.store_facade.register("John", "password123", "john.doe@example.com")
         self.member2 = self.store_facade.register("Jane", "password456", "jane.doe@example.com")
+        self.member1.logInAsMember()
+        self.member2.logInAsMember()
         self.store1 = self.store_facade.openStore(self.member1.get_username(), "Dunder Mifflin")
-        self.item_paper = self.store_facade.addNewProductToStore(self.member1.get_username(), self.store1.store_name,
-                                                                 "Paper", 10, 10, ["Office"])
+        self.item_paper = self.store_facade.addNewProductToStore(self.member1.get_username(), self.store1.get_store_name(),"Paper", 10, 10, ["Office"])
 
     # def test_load_data(self):
     #     self.fail()

@@ -1,9 +1,6 @@
-
-
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Bid import Bid
 from ProjectCode.Domain.Objects.Store import Store
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
 
 
 class Basket:

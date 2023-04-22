@@ -1,24 +1,12 @@
-import string
-
-import ProjectCode
-from ProjectCode.Domain.Controllers.ExternalServices import *
-from ProjectCode.Domain.Controllers.MessageController import *
-from ProjectCode.Domain.Objects import User, Store
-from ProjectCode.Domain.Objects.UserObjects.Admin import *
-from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
-from ProjectCode.Domain.Objects import User, Store, Access
-from ProjectCode.Domain.Objects.Bid import *
-from ProjectCode.Domain.Objects.UserObjects import Member, Admin, Guest
-from ProjectCode.Domain.Controllers.TransactionHistory import *
-from ProjectCode.Domain.Objects.Store import *
-from ProjectCode.Domain.Objects.UserObjects.Guest import *
-from ProjectCode.Domain.Objects.UserObjects.Member import *
-from ProjectCode.Domain.Objects.Access import *
-from ProjectCode.Domain.Objects.Access import *
-from ProjectCode.Domain.Objects.Cart import *
-from ProjectCode.Domain.Objects.Basket import *
-from ProjectCode.Domain.Objects.UserObjects.Admin import *
-from typing import List
+from ProjectCode.Domain.Controllers.ExternalServices import ExternalServices
+from ProjectCode.Domain.Controllers.MessageController import MessageController
+from ProjectCode.Domain.Controllers.TransactionHistory import TransactionHistory
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Access import Access
+from ProjectCode.Domain.Objects.Store import Store
+from ProjectCode.Domain.Objects.UserObjects.Admin import Admin
+from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
+from ProjectCode.Domain.Objects.UserObjects.Member import Member
 
 
 class StoreFacade:
@@ -64,7 +52,7 @@ class StoreFacade:
     #  Members
 
     def __checkIfUserIsLoggedIn(self, user_name):
-            existing_member: Member = self.members[user_name]
+            existing_member: Member = self.members.get(user_name)
             if existing_member.get_logged():
                 return True
             else: #should never get here usually
@@ -346,13 +334,8 @@ class StoreFacade:
         cur_member: Member = self.members.get(username)
         if not cur_member:
             raise Exception("The user is not a member")
-#<<<<<<< tmp_f
-#        if self.stores.get(store_name) is not None:
-#            raise Exception("Store already exists")
-#=======
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
-#>>>>>>> final_fix
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member)
         cur_member.accesses[store_name] = new_access
@@ -360,10 +343,8 @@ class StoreFacade:
         self.stores[store_name] = cur_store
         return cur_store
 
-#    def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
-#<<<<<<< tmp_f
-#        cur_store: Store = self.stores.get(store_name)
-#=======
+    def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
+
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
         cur_store: Store = self.stores[store_name]

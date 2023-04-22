@@ -1,5 +1,3 @@
-import string
-
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.ExternalObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.Objects.ExternalObjects.UserTransaction import UserTransaction

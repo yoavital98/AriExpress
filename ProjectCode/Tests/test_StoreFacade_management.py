@@ -1,12 +1,6 @@
 import unittest
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock
 
-import ProjectCode
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade, Cart
-from ProjectCode.Domain.Objects.Access import *
-from ProjectCode.Domain.Objects.Store import Store, TypedDict
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
 
 
 class TestStoreFacade(TestCase):

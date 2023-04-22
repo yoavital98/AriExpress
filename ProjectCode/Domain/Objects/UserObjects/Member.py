@@ -1,7 +1,7 @@
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects.Access import *
 
 
 class Member(User):
@@ -33,7 +33,7 @@ class Member(User):
 
 
     def logInAsMember(self):
-        self._logged_In = True
+        self.logged_In = True
 
 
     def logOut(self):

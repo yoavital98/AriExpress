@@ -1,7 +1,6 @@
-import string
-
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Basket import *
+from ProjectCode.Domain.Objects.Basket import Basket
+from ProjectCode.Domain.Objects.Bid import Bid
 
 
 class Cart:

@@ -1,6 +1,6 @@
+from abc import ABC
 
 from ProjectCode.Domain.Objects.Cart import Cart
-from abc import ABC, abstractmethod
 
 
 class User(ABC):
