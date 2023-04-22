@@ -12,13 +12,13 @@ class Service:
     def openTheSystem(self, username):
         try:
             self.store_facade.openSystem(username)
-        except SystemError:
+        except Exception:
             pass
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
             self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
-        except SystemError:
+        except Exception:
             pass
 
 

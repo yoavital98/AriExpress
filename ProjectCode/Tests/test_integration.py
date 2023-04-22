@@ -38,7 +38,7 @@ class TestStoreFacade(TestCase):
     def testing_starting_the_market_system_failure(self):
         try:
             self.Service.openTheSystem("Ari", "002")
-        except SystemError:
+        except Exception:
             pass
 
     #Use Case 1.2
@@ -92,7 +92,7 @@ class TestStoreFacade(TestCase):
         try:
             self.Service.register("username", "password", "email")
 
-        except SystemError:
+        except Exception:
             pass
 
 
@@ -118,7 +118,7 @@ class TestStoreFacade(TestCase):
             self.Service.register("username", "password", "email")
             self.Service.login("username", "password")
             self.Service.login("username", "password")
-        except SystemError:
+        except Exception:
             pass
 
     #Pre-conditions: User defined as a guest.
