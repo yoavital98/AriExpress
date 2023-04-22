@@ -1,5 +1,6 @@
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
-from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+
+
+
 class Auction:
     def __init__(self, auction_id, product_id, starting_offer, current_offer, start_date, expiration_date, highest_offer_username):
         self.__auction_id = auction_id

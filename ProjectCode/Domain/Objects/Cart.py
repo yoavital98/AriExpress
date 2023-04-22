@@ -62,9 +62,9 @@ class Cart:
         basket: Basket = self.get_Baskets(storename)
         return basket.getProductsAsTuples()
 
-    def addBidToBasket(self, username: str, bid: Bid):
+    def addBidToBasket(self, bid: Bid):
         if not self.baskets.keys().__contains__(bid.get_storename()):
-            basket = Basket(username, bid.get_storename())
+            basket = Basket(bid.get_username(), bid.get_storename())
             self.baskets[bid.get_storename()] = basket
         basket_to_place_bid: Basket = self.baskets[bid.get_storename()]
         basket_to_place_bid.addBidToBasket(bid)
@@ -81,7 +81,7 @@ class Cart:
         if not self.baskets.keys().__contains__(storename):
             raise Exception("Basket does not exists")
         basket: Basket = self.baskets[storename]
-        return basket.get_bids()[bid_id]
+        return basket.get_bids()[bid_id]  # TODO: check if the bid even exists
 
     def checkAllItemsInCart(self):
         answer = None
@@ -90,10 +90,11 @@ class Cart:
             if not answer:
                 return answer
         return answer
-    def checkItemInCart(self,storename , product_id):
-        if self.baskets.keys().__contains__(storename):
-            basket = self.baskets[storename]
-            return basket.checkItemInBasket(product_id)
+
+    def checkItemInCartForBid(self, bid):
+        if self.baskets.keys().__contains__(bid.set_storename()):
+            basket = self.baskets[bid.get_storename()]
+            return basket.checkItemInBasketForBid(bid)
         else:
             raise Exception("Basket was not found")
 
