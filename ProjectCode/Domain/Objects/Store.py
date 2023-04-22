@@ -1,7 +1,9 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
 from ProjectCode.Domain.Objects.StoreObjects.Product import *
 from ProjectCode.Domain.Objects.Access import *
+from ProjectCode.Domain.Objects.Bid import *
 import string
+from typing import List
 
 
 class Store:
@@ -11,8 +13,11 @@ class Store:
         self.products = TypedDict(int, Product)
         #TODO: policies
         self.active: bool = True
+        self.closed_by_admin: bool = False
         self.accesses = TypedDict(string, Access)
         self.product_id_counter = 0
+        self.bids = TypedDict(int, Bid)
+        self.bids_requests = TypedDict(Access, List[Bid])
 
     def setFounder(self, username, access):
         access.setFounder(True)
@@ -131,5 +136,55 @@ class Store:
             overall_price += cur_product.price * product_tuple[1]
         return overall_price
 
-    def bidRequest(self, product_id, offer):
-        pass
+    def requestBid(self, bid: Bid):
+        self.bids[bid.bid_id] = bid
+        for access in self.accesses.values():
+            if access.isOwner or access.isFounder:
+                if self.bids_requests[access] is None:
+                    self.bids_requests[access] = []
+                self.bids_requests[access].append(bid)
+                bid.increment_left_to_approve()
+
+
+
+    def approveBid(self, username, bid_id):
+        cur_access = self.accesses[username]
+        if not (cur_access.isFounder or cur_access.isFounder or cur_access.isManager):
+            raise Exception("User doesn't have the permission for rejecting a bid")
+        cur_bid: Bid = self.bids[bid_id]
+        if cur_bid is None:
+            raise Exception("No such bid exists in the store")
+        if cur_bid not in self.bids_requests[cur_access]:
+            raise Exception("You already approved that bid")
+        cur_bid.approve_by_one()
+        self.bids_requests[cur_access].remove(cur_bid)
+        if cur_bid.get_left_to_approval() == 0:
+            cur_bid.set_status(1)
+        return cur_bid
+
+
+    def rejectBid(self, username, bid_id):
+        cur_access: Access = self.accesses[username]
+        if not (cur_access.isFounder or cur_access.isFounder or cur_access.isManager):
+            raise Exception("User doesn't have the permission for rejecting a bid")
+        cur_bid: Bid = self.bids[bid_id]
+        if cur_bid is None:
+            raise Exception("No such bid exists in the store")
+        for access, bid_list in self.bids_requests.items():
+            if cur_bid in bid_list:
+                bid_list.remove(cur_bid)
+        cur_bid.set_status(2)
+        return cur_bid
+
+
+    def sendAlternativeBid(self, username, bid_id, alternate_offer):
+        cur_access: Access = self.accesses[username]
+        if not (cur_access.isFounder or cur_access.isFounder or cur_access.isManager):
+            raise Exception("User doesn't have the permission for rejecting a bid")
+        cur_bid: Bid = self.bids[bid_id]
+        if cur_bid is None:
+            raise Exception("No such bid exists in the store")
+        cur_bid.set_offer(alternate_offer)
+        cur_bid.set_status(3)
+
+
