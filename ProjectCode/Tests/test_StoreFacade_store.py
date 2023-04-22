@@ -278,7 +278,8 @@ class TestStoreFacade(TestCase):
         self.store.accesses[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Ari", "Store1", 5, self.product.product_id+1, 5), False)
-    
+
+    # ---------------------- Not implemented yet ----------------------
     def test_placeBid_badProductPurchasePolicy_failure(self):
         pass
 
