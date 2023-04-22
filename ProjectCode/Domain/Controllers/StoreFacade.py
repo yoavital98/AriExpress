@@ -19,19 +19,20 @@ from typing import List
 class StoreFacade:
     def __init__(self):
 
-        self.admins = TypedDict(string, Admin)  # dict of admins
-        self.members = TypedDict(string, Member)    # dict of members
-        self.onlineGuests = TypedDict(string, Guest)  # dict of users
-        self.stores = TypedDict(string, Store)  # dict of stores
+        self.admins = TypedDict(str, Admin)  # dict of admins
+        self.members = TypedDict(str, Member)    # dict of members
+        self.onlineGuests = TypedDict(str, Guest)  # dict of users
+        self.stores = TypedDict(str, Store)  # dict of stores
         self.external_services = ExternalServices()  # external services
         self.message_controller = MessageController()  # Messanger
         self.transaction_history = TransactionHistory()  # Transactions log
-        self.accesses = TypedDict(string, Access)  # optional TODO check key type
+        self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
         self.loadData()
         self.SystemStatus = False  # True = System on, False = System off
         first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
+        first_admin.logInAsAdmin() # added by rubin to prevent deadlock
         self.admins["Ari"] = first_admin
 
 # ------  System  ------ #
@@ -80,7 +81,7 @@ class StoreFacade:
     def register(self, user_name, password, email):
         self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
-            if ExternalServices.ValidatePassword(password):
+            if self.external_services.ValidatePassword(password):
                 new_member = Member(user_name, password, email)
 
                 self.members[str(user_name)] = new_member
@@ -239,6 +240,10 @@ class StoreFacade:
 
 
 
+
+
+
+
     # ------  stores  ------ #
 
     def getStores(self):
@@ -277,12 +282,6 @@ class StoreFacade:
 
     def productFilterByFeatures(self):
         pass
-
-
-
-    def placeBid(self, username, store_name, offer):
-        cur_member = self.members[username]
-        self.__checkIfUserIsLoggedIn(username)
 
 
 
@@ -359,6 +358,58 @@ class StoreFacade:
 
     def editPermissionsForManager(self):
         pass
+
+
+    def approveBid(self,username, storename, bid_id):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        approved_bid = cur_store.approveBid(username, bid_id)
+        return approved_bid
+
+    def rejectBid(self,username, storename, bid_id):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        rejected_bid = cur_store.rejectBid(username,bid_id)
+        return rejected_bid
+
+    def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        alternative_bid = cur_store.sendAlternativeBid(username,bid_id,alternate_offer)
+        return alternative_bid
+
+
+    def addAuction(self, username, storename, product_id, starting_price, duration):
+        cur_store: Store = self.stores[storename]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if self.members[username] is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        new_auction = cur_store.startAuction(username,product_id,starting_price,duration)
+        return new_auction
+
+
+
+    def addLottery(self):
+        pass
+
 
     def closeStore(self, username, store_name):
         cur_store: Store = self.stores[store_name]

@@ -3,9 +3,9 @@ from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
 
+
 class Service:
     def __init__(self):
-
         self.store_facade = StoreFacade()
 
     # ------  admin  ------ #
@@ -42,6 +42,12 @@ class Service:
         except ValueError:
             pass
 
+    def loginAsGuest(self):
+        try:
+            self.store_facade.loginAsGuest()
+        except ValueError:
+            pass
+
     #  Members
     def register(self, user_name, password, email):
         try:
@@ -51,7 +57,7 @@ class Service:
 
     def logIn(self,username, password):
         try:
-            self.store_facade.logIn(username, password)
+            self.store_facade.logInAsMember(username, password)
         except ValueError:
             pass
 
