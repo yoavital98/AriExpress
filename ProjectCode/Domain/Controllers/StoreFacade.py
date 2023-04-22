@@ -205,12 +205,13 @@ class StoreFacade:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
-                ExternalServices.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
-                TransactionHistory.addNewStoreTransaction(user_name,) #make a new transaction and add it to the store history and user history
-                stores_to_products[basket.store.get_store_name()] = products  # gets the products for the specific store
+                self.external_services.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
+                self.transaction_history.addNewStoreTransaction(user_name, basket.store.store_name, products, price) #make a new transaction and add it to the store history and user history
+                stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
             if self.members.keys().__contains__(user_name):
-                TransactionHistory.addNewUserTransaction(user_name,stores_to_products, overall_price)
+                self.transaction_history.addNewUserTransaction(user_name,stores_to_products, overall_price)
+                # TODO: remove the baskets
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
@@ -223,11 +224,12 @@ class StoreFacade:
             raise Exception("user is not valid")
         bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
         self.bid_id_counter += 1
-        existing_member.addBidToBasket(username, bid)
+        existing_member.addBidToBasket(bid)
         store: Store = self.stores[storename]
-        store.requestBid(bid)  #TODO:amiel!!
+        store.requestBid(bid)
+        return bid
 
-    def getAllBids(self, username):
+    def getAllBidsFromUser(self, username):
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
             existing_member: Member = self.members[username]
@@ -236,17 +238,33 @@ class StoreFacade:
         bids_set = existing_member.getAllBids()  # returns set of bids
         return bids_set
 
-    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_id, card_date, back_number, price):
+    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         if self.members.keys().__contains__(username):
             self.__checkIfUserIsLoggedIn(username)
             existing_member: Member = self.members[username]
         else:
             raise Exception("user is not valid")
         bid: Bid = existing_member.get_cart().getBid(storename, bid_id)
-        answer = existing_member.cart.checkItemInCart(storename, bid.get_product())
-        if answer:
-            pass
-            # TODO: unfinished function Ari
+        if bid.get_status() == 1:
+            answer = existing_member.cart.checkItemInCartForBid(bid)
+            if answer:
+                store: Store = self.stores[storename]
+                product: Product = store.products[bid.get_product()]
+                item_name = product.name
+                tuple_for_history = (item_name, bid.get_quantity())
+                self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
+                store.purchaseBid(bid_id)  # TODO: amiel
+                self.transaction_history.addNewStoreTransaction(username, bid.get_storename(), tuple_for_history, bid.get_offer())
+                if self.members.keys().__contains__(username):
+                    dict_for_history = TypedDict(str, tuple)
+                    dict_for_history[storename] = tuple_for_history
+                    self.transaction_history.addNewUserTransaction(username, dict_for_history, bid.get_offer())
+                    # TODO: remove the bid from the basket
+            else:
+                raise Exception("there was a problem with the Bid or the quantity in the store")
+        else:
+            raise Exception("Bid is not confirmed")
+        
 
 
 

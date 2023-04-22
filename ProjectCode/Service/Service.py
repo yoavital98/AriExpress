@@ -141,16 +141,30 @@ class Service:
         except ValueError:
             pass
 
-    def purchaseCart(self, username, storename,  cardnumber, cardusername, carduserID, carddate, backnumber):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):#TODO: for now lets assume only credit card(no paypal)
         try:
-            self.store_facade.purchaseCart(username, storename, cardnumber, cardusername, carduserID, carddate, backnumber)
+            self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date, back_number)
         except ValueError:
             pass
 
-    #TODO: Ari update bid functions
-    def placeBid(self, username, storename, productname, bid):
+    def placeBid(self, username, storename, offer, productID, quantity):
+        bid = None
         try:
-            self.store_facade.placeBid(username, storename, productname, bid)
+            return self.store_facade.placeBid(username, storename, offer, productID, quantity)
+        except ValueError:
+            pass
+
+    def getAllBidsFromUser(self, username):
+        try:
+            self.store_facade.getAllBidsFromUser(username)
+        except ValueError:
+            pass
+
+    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
+                             back_number):
+        try:
+            self.store_facade.purchaseConfirmedBid(username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
+                             back_number)
         except ValueError:
             pass
 

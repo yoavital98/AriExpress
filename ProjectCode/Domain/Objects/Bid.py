@@ -52,6 +52,7 @@ class Bid:
 
     def set_status(self, status):
         self._status = status
-
+        
     def get_quantity(self):
         return self._quantity
+
