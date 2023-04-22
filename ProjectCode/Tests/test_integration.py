@@ -6,20 +6,24 @@ from ProjectCode.Domain.Objects.Store import Store
 from ProjectCode.Domain.Objects.UserObjects import Guest
 from ProjectCode.Domain.Objects.UserObjects.Admin import Admin
 from ProjectCode.Domain.Objects.UserObjects.Member import Member
-from ProjectCode.Service import Service
+from ProjectCode.Service.Service import Service
 
 
 class TestStoreFacade(TestCase):
 
     def setUp(self):
-        # TODO: fill me
 
-        self.Service = Mock(spec= Service)
-        self.Admin = Mock(spec=Admin)
+        self.Service = Service()
+        self.Service.openTheSystem("Ari")
+        self.Service.register("username", "password", "email")
+        self.Service.logIn("username", "password")
+        self.Service.openStore("storename", "username")
+        self.Service.addNewProductToStore("storename", "username", "product1", "category", 10, 10)
+        self.Service.addNewProductToStore("storename", "username", "product2", "category", 10, 10)
 
 
     # ----------------------sysyem functionality tests----------------------
-
+    #Use Case 1.1
     # An admin logging into the system using his password and username of a system manager type user
     # The system checks if the user exists in the database
     # The system checks if the user is a system_manager type of user
@@ -27,15 +31,17 @@ class TestStoreFacade(TestCase):
     # a message is being return from those services to the system
     # The system sends a message to the the user that he had connected successfuly.
     def testing_starting_the_market_system_success(self):
-        self.Service.openTheSystem(self.Admin, "001")
+        self.Service.logIn("Ari", "123")
+        self.Service.openTheSystem("Ari")
         self.assertNotEqual(self.Service.store_facade, None, "The system is not open")
 
     def testing_starting_the_market_system_failure(self):
         try:
-            self.Service.openTheSystem(self.Admin, "002")
+            self.Service.openTheSystem("Ari", "002")
         except SystemError:
             pass
 
+    #Use Case 1.2
 
 
     # ----------------------guest functionality tests----------------------
@@ -79,13 +85,13 @@ class TestStoreFacade(TestCase):
     #   else:
     #       The system returns an appropriate error.
     def test_registration_to_the_system_success(self):
-        member = self.Service.register("username", "password", "email")
+        member = self.Service.register("username22", "password", "email")
         self.assertIsInstance(member, Member)
 
     def test_registration_to_the_system_failure(self):
         try:
             self.Service.register("username", "password", "email")
-            self.Service.register("username", "password", "email")
+
         except SystemError:
             pass
 
@@ -125,7 +131,7 @@ class TestStoreFacade(TestCase):
     #   Else:
     #       The system returns an error that no such store exists.
 
-    def test_guest_information_fetching(self):
+    #def test_guest_information_fetching(self):
 
 
 
