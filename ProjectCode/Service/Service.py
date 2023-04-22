@@ -57,7 +57,7 @@ class Service:
 
     def logIn(self,username, password):
         try:
-            self.store_facade.logIn(username, password)
+            self.store_facade.logInAsMember(username, password)
         except ValueError:
             pass
 
