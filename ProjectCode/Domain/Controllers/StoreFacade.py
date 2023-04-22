@@ -197,7 +197,7 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):
         self.__systemCheck()
         overall_price = 0  # overall price for the user
-        user: User = self.__getUserOrMember(user_name)  # getting the user
+        user: User = self.__getUserOrMember(user_name)  # getting the user #TODO: get member or Guest
         stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
         # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
         answer = user.get_cart().checkAllItemsInCart()  # answer = True or False
@@ -238,7 +238,7 @@ class StoreFacade:
             answer = existing_member.cart.checkItemInCartForBid(bid)
             if answer:
                 store: Store = self.stores[storename]
-                product: Product = store.products[bid.get_product()]
+                product: Product = store.get_products()[bid.get_product()]
                 item_name = product.name
                 tuple_for_history = (item_name, bid.get_quantity())
                 self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
@@ -264,6 +264,21 @@ class StoreFacade:
         if cur_auction:
             cur_member.addNewAuction(auction_id, cur_auction)
         return cur_auction
+
+    def participateInLottery(self, storename, username, lottery_id, share):
+        cur_store: Store = self.stores.get(storename)
+        cur_member: Member = self.members.get(username)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if cur_member is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_lottery = cur_store.checkLotteryParticipationShare(lottery_id, share)
+        cur_lottery.add_participant_share(cur_member, share)
+        cur_store.participateInLottery(lottery_id, share)
+        # TODO: Ari: implement payment for the requested share
+        # TODO: Ari: add lottery to member fiields
 
     def ClaimAuctionPurchase(self, username, storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         cur_member: Member = self.__getOnlineMemberOnly(username)
@@ -478,8 +493,19 @@ class StoreFacade:
 
 
 
-    def addLottery(self):
-        pass
+    def addLottery(self, username, storename, product_id):
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if self.members.get(username) is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        new_lottery = cur_store.startLottery(username, product_id)
+        return new_lottery
+
 
 
     def closeStore(self, username, store_name):
@@ -542,10 +568,11 @@ class StoreFacade:
             pass #  TODO: logic of closing a store as an admin amiel!
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
-        new_admin = None
         if self.admins.keys().__contains__(username):
             if self.external_services.passwordValidator.ValidatePassword(newPassword):
                 new_admin = Admin(newAdminName, newPassword, newEmail)
+                self.admins[newAdminName] = new_admin
+                return new_admin
             else:
                 raise Exception("password is too weak")
-        self.admins[newAdminName] = new_admin
+
