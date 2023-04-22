@@ -4,9 +4,9 @@ from abc import ABC, abstractmethod
 
 
 class User(ABC):
-    def __init__(self, username, cart_id):
+    def __init__(self, username):
         self.username = username
-        self.cart = Cart(cart_id, username)
+        self.cart = Cart(username)
 
     def get_cart(self):
         return self.cart

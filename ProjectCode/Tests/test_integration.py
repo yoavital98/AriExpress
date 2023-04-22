@@ -17,9 +17,9 @@ class TestStoreFacade(TestCase):
         self.Service.openTheSystem("Ari")
         self.Service.register("username", "password", "email")
         self.Service.logIn("username", "password")
-        self.Service.openStore("storename", "username")
-        self.Service.addNewProductToStore("storename", "username", "product1", "category", 10, 10)
-        self.Service.addNewProductToStore("storename", "username", "product2", "category", 10, 10)
+        self.Service.openStore("username", "storename")
+        self.Service.addNewProductToStore("username", "storename", "product1", "category", 10, 10)
+        self.Service.addNewProductToStore("username", "storename", "product2", "category", 10, 10)
 
 
     # ----------------------sysyem functionality tests----------------------
