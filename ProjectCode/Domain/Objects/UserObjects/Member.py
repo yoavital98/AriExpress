@@ -3,6 +3,7 @@ import string
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Cart import Cart
 from abc import ABC, abstractmethod
+
 from ProjectCode.Domain.Objects.User import User
 # from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.Access import *
@@ -34,10 +35,8 @@ class Member(User):
 
 # -------------------------------------------------------------------------------
 
-
     def logInAsMember(self):
         self.logged_In = True
-
 
     def logOut(self):
         self.logged_In = False
@@ -63,8 +62,8 @@ class Member(User):
     def get_logged(self):
         return self.logged_In
 
-    def addBidToBasket(self, bid):
-        self.cart.addBidToBasket(bid)
+    def addBidToBasket(self,username, bid):
+        self.cart.addBidToBasket(username, bid)
 
     def getAllBids(self):
         return self.cart.getAllBids()
