@@ -147,11 +147,50 @@ class Service:
         except ValueError:
             pass
 
+    #TODO: Ari update bid functions
     def placeBid(self, username, storename, productname, bid):
         try:
             self.store_facade.placeBid(username, storename, productname, bid)
         except ValueError:
             pass
+
+    def approveBid(self, username, storename, bid_id):
+        try:
+            approved_bid = self.store_facade.approveBid(username, storename, bid_id)
+            return approved_bid
+        except Exception as e:
+            return e
+
+    def rejectBid(self, username, storename, bid_id):
+        try:
+            rejected_bid = self.store_facade.rejectBid(username, storename, bid_id)
+            return rejected_bid
+        except Exception as e:
+            return e
+    def sendAlternativeOffer(self, username, storename, bid_id, alternate_offer):
+        try:
+            alt_bid = self.store_facade.sendAlternativeBid(username, storename, bid_id, alternate_offer)
+            return alt_bid
+        except Exception as e:
+            return e
+
+
+    def addAuction(self, username, storename, product_id, starting_price, duration):
+        try:
+            new_auc = self.store_facade.addAuction(username, storename, product_id, starting_price, duration)
+            return new_auc
+        except Exception as e:
+            return e
+
+    def placeOfferInAuction(self, username, storename, auction_id, offer):
+        try:
+            auc = self.store_facade.addAuction(username, storename, auction_id, offer)
+            return auc
+        except Exception as e:
+            return e
+
+    def addLottery(self):
+        pass
 
     def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
         try:
