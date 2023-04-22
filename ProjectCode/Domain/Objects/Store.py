@@ -105,15 +105,16 @@ class Store:
         else:
             raise Exception("Member has no access for that action")
 
-
     def checkProductAvailability(self, product_id, quantity):
+        answer = True
         cur_product = self.products[int(product_id)]
         if cur_product is None:
-            raise Exception("No such product exists")
-        if cur_product.quantity - quantity >= 0:
-            return cur_product
+            answer = False
+        if cur_product.quantity - quantity < 0:
+            answer = False
         else:
-            raise Exception("There isn't enough quantity")
+            answer = True
+        return answer
     def searchProductByName(self, keyword):
         product_list = []
         for prod in self.products.values():

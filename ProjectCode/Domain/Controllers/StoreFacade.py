@@ -18,6 +18,7 @@ from typing import List
 
 class StoreFacade:
     def __init__(self):
+
         self.admins = TypedDict(string, Admin)  # dict of admins
         self.members = TypedDict(string, Member)    # dict of members
         self.onlineGuests = TypedDict(string, Guest)  # dict of users
@@ -27,7 +28,6 @@ class StoreFacade:
         self.transaction_history = TransactionHistory()  # Transactions log
         self.accesses = TypedDict(string, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
-        self.cart_ID_Counter = 0  # cart counter
         self.bid_id_counter = 0  # bid counter
         self.loadData()
         self.SystemStatus = False  # True = System on, False = System off
@@ -57,6 +57,7 @@ class StoreFacade:
             raise Exception("admin does not exists")
 
     #  Members
+
     def __checkIfUserIsLoggedIn(self, user_name):
             existing_member: Member = self.members[user_name]
             if existing_member.get_logged():
@@ -80,20 +81,19 @@ class StoreFacade:
         self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
             if ExternalServices.ValidatePassword(password):
-                new_member = Member(user_name, password, email, self.cart_ID_Counter)
-                self.cart_ID_Counter += 1
+                new_member = Member(user_name, password, email)
+
                 self.members[str(user_name)] = new_member
+
                 return new_member
         else:
-            pass
+            raise SystemError("This username is already in the system")
 
     # only guests
     def logInAsGuest(self):
         self.__systemCheck()
-        new_guest = Guest(self.nextEntranceID, self.cart_ID_Counter)
-        self.cart_ID_Counter += 1
+        new_guest = Guest(self.nextEntranceID)
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
-        self.nextEntranceID += 1
         return new_guest
 
     # only guests
@@ -153,7 +153,7 @@ class StoreFacade:
         store: Store = self.stores[storename]
         product = store.checkProductAvailability(productID, quantity)
         if product is not None:
-            user.add_to_cart(storename, productID, product, quantity)
+            user.add_to_cart(username, storename, productID, product, quantity)
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 
@@ -189,33 +189,53 @@ class StoreFacade:
         user: User = self.__getUserOrMember(user_name)  # getting the user
         stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
         # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
-        answer = user.get_cart().checkAllItemsInCart()  # answer = set of baskets or none
-        if answer is not None:
-            for basket in answer:
+        answer = user.get_cart().checkAllItemsInCart()  # answer = True or False
+        if answer is True:
+            for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
                 ExternalServices.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
                 TransactionHistory.addNewStoreTransaction(user_name,) #make a new transaction and add it to the store history and user history
-                stores_to_products[basket.store.store_name] = products  # gets the
+                stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
             if self.members.keys().__contains__(user_name):
                 TransactionHistory.addNewUserTransaction(user_name,stores_to_products, overall_price)
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
+    # Bids! -------------------------------------- Bids are for members only --------------------------------------
 
-    def placeBid(self,username, storename, offer, productID, quantity):
-        existing_member = None
+    def placeBid(self, username, storename, offer, productID, quantity):
         if self.members.keys().__contains__(username):
-            existing_member: Member = self.members[username]
-            if not existing_member.get_logged():
-                raise Exception("user isnt logged in")
+            self.__checkIfUserIsLoggedIn(username)
+            existing_member: Member= self.members[username]
         else:
             raise Exception("user is not valid")
         bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
         self.bid_id_counter += 1
-        existing_member.addBidToBasket(bid)  #TODO:Ari
+        existing_member.addBidToBasket(username, bid)
         store: Store = self.stores[storename]
         store.requestBid(bid)  #TODO:amiel!!
+
+    def getAllBids(self, username):
+        if self.members.keys().__contains__(username):
+            self.__checkIfUserIsLoggedIn(username)
+            existing_member: Member = self.members[username]
+        else:
+            raise Exception("user is not valid")
+        bids_set = existing_member.getAllBids()  # returns set of bids
+        return bids_set
+
+    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_id, card_date, back_number, price):
+        if self.members.keys().__contains__(username):
+            self.__checkIfUserIsLoggedIn(username)
+            existing_member: Member = self.members[username]
+        else:
+            raise Exception("user is not valid")
+        bid: Bid = existing_member.get_cart().getBid(storename, bid_id)
+        answer = existing_member.cart.checkItemInCart(storename, bid.get_product())
+        if answer:
+            pass
+            # TODO: unfinished function Ari
 
 
 
@@ -428,10 +448,10 @@ class StoreFacade:
         else:
             raise Exception("admin name or password does not match")
 
-    def logInAsAdmin(self, user_name):
+    def logOutAsAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
             existing_admin: Admin = self.members[user_name]
-            existing_admin.logOff()
+            existing_admin.logOffAsAdmin()
 
     def openSystem(self, admin_name):
         existing_admin: Admin = self.__getAdmin(admin_name)
@@ -443,3 +463,12 @@ class StoreFacade:
 
     def closeStoreAsAdmin(self, admin_name, store_name):
         pass
+
+    def addAdmin(self, username, newAdminName, newPassword, newEmail):
+        new_admin = None
+        if self.admins.keys().__contains__(username):
+            if self.external_services.passwordValidator.ValidatePassword(newPassword):
+                new_admin = Admin(newAdminName, newPassword, newEmail)
+            else:
+                raise Exception("password is too weak")
+        self.admins[newAdminName] = new_admin
