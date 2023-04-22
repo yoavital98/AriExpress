@@ -1,9 +1,6 @@
-
-
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Bid import Bid
 from ProjectCode.Domain.Objects.Store import Store
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
 
 
 class Basket:
@@ -48,6 +45,8 @@ class Basket:
 
     def getBasketSize(self):
         return self.products.__sizeof__()
+    def getBasketBidSize(self):
+        return self.bids.__sizeof__()
 
     def getProductsAsTuples(self):
         return self.products.values()
@@ -71,3 +70,12 @@ class Basket:
             return self.store.checkProductAvailability(product_id, self.products[product_id])
         else:
             Exception("product is not in the Basket")
+
+    def purchaseBasket(self):
+        return self.store.purchaseBasket(self.products)
+
+    def clearProducts(self):
+        self.products.clear()
+
+    def clearBidFromBasket(self, bid_id):
+        del self.bids[bid_id]

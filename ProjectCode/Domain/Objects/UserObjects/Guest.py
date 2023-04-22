@@ -1,6 +1,3 @@
-from ProjectCode.Domain.Objects.Cart import Cart
-from abc import ABC, abstractmethod
-
 from ProjectCode.Domain.Objects.User import User
 
 

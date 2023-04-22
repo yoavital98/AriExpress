@@ -1,7 +1,5 @@
 import unittest
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade, Cart
 from ProjectCode.Domain.Objects.Store import Store
 from ProjectCode.Domain.Objects.UserObjects import Guest
 from ProjectCode.Domain.Objects.UserObjects.Admin import Admin
