@@ -195,7 +195,7 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):
         self.__systemCheck()
         overall_price = 0  # overall price for the user
-        user: User = self.__getUserOrMember(user_name)  # getting the user
+        user: User = self.__getUserOrMember(user_name)  # getting the user #TODO: get member or Guest
         stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
         # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
         answer = user.get_cart().checkAllItemsInCart()  # answer = True or False
@@ -570,10 +570,11 @@ class StoreFacade:
             pass #  TODO: logic of closing a store as an admin amiel!
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
-        new_admin = None
         if self.admins.keys().__contains__(username):
             if self.external_services.passwordValidator.ValidatePassword(newPassword):
                 new_admin = Admin(newAdminName, newPassword, newEmail)
+                self.admins[newAdminName] = new_admin
+                return new_admin
             else:
                 raise Exception("password is too weak")
-        self.admins[newAdminName] = new_admin
+
