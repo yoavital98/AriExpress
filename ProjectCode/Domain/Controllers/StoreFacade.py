@@ -251,13 +251,13 @@ class StoreFacade:
         return self.stores
 
     def getProductsByStore(self, store_name):
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         return cur_store.products
 
     def getProduct(self, store_name, product_id):
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         cur_product = cur_store.products[product_id]
@@ -265,7 +265,7 @@ class StoreFacade:
 
     def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(Store, List[Product])
+        search_results = TypedDict(Store, list)
         for keyword in splitted_keywords:
             for cur_store in self.stores.values():
                 product_list = cur_store.searchProductByName(keyword)
@@ -274,7 +274,7 @@ class StoreFacade:
         return search_results
 
     def productSearchByCategory(self, category):
-        search_results = TypedDict(Store, List[Product])
+        search_results = TypedDict(Store, list)
         for cur_store in self.stores.values():
             product_list = cur_store.searchProductByCategory(category)
             if len(product_list) > 0:

@@ -117,7 +117,7 @@ class Store:
             answer = True
         return answer
     def searchProductByName(self, keyword):
-        product_list = []
+        product_list = list()
         for prod in self.products.values():
             if keyword in prod.name:
                 product_list.append(prod)
@@ -125,7 +125,7 @@ class Store:
 
 
     def searchProductByCategory(self, category):
-        product_list = []
+        product_list = list()
         for prod in self.products.values():
             if category in prod.categories:
                 product_list.append(prod)
