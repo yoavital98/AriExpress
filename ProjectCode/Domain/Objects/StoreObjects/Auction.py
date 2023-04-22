@@ -1,5 +1,5 @@
-from ProjectCode.Domain.Helpers.TypedDict import *
-from ProjectCode.Domain.Objects.UserObjects.Member import *
+
+
 class Auction:
     def __init__(self, auction_id, product_id, starting_offer, current_offer, start_date, expiration_date, highest_offer_username):
         self.__auction_id = auction_id
@@ -9,14 +9,6 @@ class Auction:
         self.__start_date = start_date
         self.__expiration_date = expiration_date
         self.__highest_offer_username = highest_offer_username
-        self.__participants = TypedDict(str, Member)
-
-    def add_participant(self, member):
-        if self.__participants.get(member.get_username()) is None:
-            self.__participants[member.get_username()] = member
-
-    def get_participants(self):
-        return self.__participants
 
     def get_auction_id(self):
         return self.__auction_id
@@ -53,9 +45,3 @@ class Auction:
 
     def set_expiration_date(self, expiration_date):
         self.__expiration_date = expiration_date
-
-    def get_highest_offer_username(self):
-        return self.__highest_offer_username
-
-    def set_highest_offer_username(self, highest_offer_username):
-        self.__expiration_date = highest_offer_username
