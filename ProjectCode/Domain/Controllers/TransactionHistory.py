@@ -32,7 +32,7 @@ class TransactionHistory:
         return self.store_transactions[storename]
 
     def addNewStoreTransaction(self, username, storename, products, overall_price):
-        new_store_transaction = StoreTransaction(username, storename,products, overall_price)
+        new_store_transaction = StoreTransaction(username, storename, products, overall_price)
         store_transactions: set = self.store_transactions[storename]
         store_transactions.add(new_store_transaction)
 
