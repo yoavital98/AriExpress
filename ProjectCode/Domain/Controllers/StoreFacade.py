@@ -81,7 +81,7 @@ class StoreFacade:
     def register(self, user_name, password, email):
         self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
-            if ExternalServices.ValidatePassword(password):
+            if self.external_services.ValidatePassword(password):
                 new_member = Member(user_name, password, email)
 
                 self.members[str(user_name)] = new_member
