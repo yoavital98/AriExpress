@@ -239,8 +239,21 @@ class StoreFacade:
             pass
             # TODO: unfinished function Ari
 
-
-
+    def placeOfferInAuction(self, username, storename, auction_id, offer):
+        cur_store: Store = self.stores.get(storename)
+        cur_member: Member = self.members.get(username)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if cur_member is None:
+            raise Exception("No such member exists")
+        if not self.__checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_auction: Auction = cur_store.placeOfferInAuction(username, auction_id, offer)
+        cur_auction.add_participant(cur_member)
+        if cur_auction:
+            # TODO: Ari needs to add the auction to the user
+            pass
+        return cur_auction
 
 
 
