@@ -161,15 +161,15 @@ class TestStoreFacade(TestCase):
 
     def test_addToBasket_negativeQuantity_failure(self):
         with self.assertRaises(SystemError):
-            self.store_facade.addToBasket(self.member1.get_username(), self.store1.store_name, self.item_paper.name, -5)
+            self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.name, -5)
 
     def test_addToBasket_zeroQuantity_failure(self):
         with self.assertRaises(SystemError):
-            self.store_facade.addToBasket(self.member1.get_username(), self.store1.store_name, self.item_paper.name, 0)
+            self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.name, 0)
 
     def test_addToBasket_productDoesNotExist_failure(self):
         with self.assertRaises(SystemError):
-            self.store_facade.addToBasket(self.member1.get_username(), self.store1.store_name, "UNREAL_PRODUCT", 5)
+            self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), "UNREAL_PRODUCT", 5)
 
     def test_addToBasket_storeDoesNotExist_failure(self):
         with self.assertRaises(SystemError):

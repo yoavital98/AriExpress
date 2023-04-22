@@ -290,7 +290,7 @@ class StoreFacade:
             product: Product = cur_store.get_products().get(cur_auction.get_product_id())
             item_name = product.name
             tuple_for_history = (item_name, 1) # name of item and quantity for the history of the store
-            # TODO: amiel! put your line here!
+            # todo amiel! put your line here!
             self.external_services.pay(storename, card_number, card_user_name, card_user_ID, card_date,
                                        back_number, cur_auction.get_current_offer())
             self.transaction_history.addNewStoreTransaction(username, storename, tuple_for_history,

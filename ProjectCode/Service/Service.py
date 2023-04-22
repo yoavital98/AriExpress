@@ -1,4 +1,4 @@
-from ProjectCode.Domain.Controllers.StoreFacade import *
+from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
