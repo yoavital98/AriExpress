@@ -105,7 +105,7 @@ class StoreFacade:
 
                 return new_member
         else:
-            raise SystemError("This username is already in the system")
+            raise Exception("This username is already in the system")
 
 
 
@@ -140,7 +140,7 @@ class StoreFacade:
         if self.__checkIfUserIsLoggedIn(username):
             return TransactionHistory.get_User_Transactions(username)
         else:
-            raise SystemError("username isn't logged in")
+            raise Exception("username isn't logged in")
 
     # guest and member
     def getBasket(self, username, storename):
@@ -161,7 +161,9 @@ class StoreFacade:
     def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
         self.__systemCheck()
         user: User = self.__getUserOrMember(username)
-        store: Store = self.stores[storename]
+        store: Store = self.stores.get(storename)
+        if store is None:
+            raise Exception("Store doesnt exists")
         product = store.checkProductAvailability(productID, quantity)
         if product is not None:
             user.add_to_cart(username, storename, productID, product, quantity)
@@ -260,9 +262,7 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_auction: Auction = cur_store.placeOfferInAuction(username, auction_id, offer)
-        cur_auction.add_participant(cur_member)
-        if cur_auction:
-            cur_member.addNewAuction(auction_id, cur_auction)
+        cur_member.addNewAuction(auction_id, cur_auction)
         return cur_auction
 
     def participateInLottery(self, storename, username, lottery_id, share):
@@ -290,7 +290,7 @@ class StoreFacade:
             product: Product = cur_store.get_products().get(cur_auction.get_product_id())
             item_name = product.name
             tuple_for_history = (item_name, 1) # name of item and quantity for the history of the store
-            # todo amiel! put your line here!
+            cur_store.purchaseAuctionProduct(auction_id)
             self.external_services.pay(storename, card_number, card_user_name, card_user_ID, card_date,
                                        back_number, cur_auction.get_current_offer())
             self.transaction_history.addNewStoreTransaction(username, storename, tuple_for_history,

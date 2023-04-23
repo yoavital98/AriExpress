@@ -112,15 +112,13 @@ class Store:
             raise Exception("Member has no access for that action")
 
     def checkProductAvailability(self, product_id, quantity):
-        answer = True
+
         cur_product = self.__products[int(product_id)]
         if cur_product is None:
-            answer = False
+            raise Exception("No such product exists")
         if cur_product.quantity - quantity < 0:
-            answer = False
-        else:
-            answer = True
-        return answer
+            raise Exception("There is not enough stock of the requested product")
+        return cur_product
 
     def searchProductByName(self, keyword):
         product_list = []
@@ -227,6 +225,15 @@ class Store:
         self.__auctions[self.auction_id_counter] = new_auction
         return new_auction
 
+
+    def purchaseAuctionProduct(self, auction_id):
+        cur_auction: Auction = self.__auctions[auction_id]
+        if cur_auction.get_expiration_date() < datetime.datetime.now():
+            raise Exception("The auction didn't end yet")
+        cur_product = self.__products[cur_auction.get_product_id()]
+        cur_product.quantity -= 1
+
+
     def placeOfferInAuction(self, username, auction_id, offer):
         cur_auction: Auction = self.__auctions.get(auction_id)
         if cur_auction is None:
@@ -235,6 +242,7 @@ class Store:
             raise Exception("You cannot place an offer in a closed auction")
         if offer > cur_auction.get_current_offer():
             cur_auction.set_current_offer(offer)
+            cur_auction.add_participant(username, offer)
             cur_auction.set_highest_offer_username(username)
         return cur_auction
 
