@@ -7,11 +7,11 @@ from ProjectCode.Domain.Objects.User import User
 class Member(User):
     def __init__(self, username, password, email):
         super().__init__(username)
-        self.accesses = TypedDict(str, Access)  #Accesses
+        self.accesses = TypedDict(str, Access)  # Accesses
         self.password = password  # password
         self.email = email  # email
         self.logged_In = False  # login
-        self.auctions = TypedDict(int, Auction) # auction id to auction
+        self.auctions = TypedDict(int, Auction)  # auction id to auction
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):
@@ -29,14 +29,12 @@ class Member(User):
     def edit_Product_Quantity(self, storename, productID, quantity):
         super().edit_Product_Quantity(storename, productID, quantity)
 
-# -------------------------------------------------------------------------------
-
+    # -------------------------------------------------------------------------------
 
     def logInAsMember(self):
         self.logged_In = True
 
-
-    def logOut(self):
+    def logOut(self):  # TODO need to turn the member to guest
         self.logged_In = False
 
     def get_username(self):
@@ -70,7 +68,7 @@ class Member(User):
         if not self.auctions.keys().__contains__(auction_id):
             self.auctions[auction_id] = cur_auction
 
-    def getAuctionById(self,auction_id):
+    def getAuctionById(self, auction_id):
         if self.auctions.keys().__contains__(auction_id):
             return self.auctions[auction_id]
         else:

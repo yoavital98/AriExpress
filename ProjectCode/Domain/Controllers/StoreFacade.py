@@ -204,7 +204,7 @@ class StoreFacade:
         if answer is True:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
-                price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel
+                price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
                 self.external_services.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
                 self.transaction_history.addNewStoreTransaction(user_name, basket.store.store_name, products, price) #make a new transaction and add it to the store history and user history
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
