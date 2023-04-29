@@ -1,3 +1,5 @@
+import json
+
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.Objects.Access import Access
 from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
@@ -82,3 +84,20 @@ class Member(User):
 
     def get_accesses(self):
         return self.accesses
+
+    # def toJson(self):
+    #     data = {
+    #         "username": self.username
+    #     }
+    #     return json.dumps(data)
+    #
+    # def toJsonAccesses(self):
+    #     data = {
+    #         "username": self.username,
+    #         "accesses": self.accesses,
+    #         "password": self.password,
+    #         "email": self.email,
+    #         "logged_In": self.logged_In,
+    #         "auctions": list(self.auctions.values())
+    #     }
+    #     return json.dumps(data)

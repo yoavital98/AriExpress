@@ -2,6 +2,7 @@ from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
 from ProjectCode.Domain.Objects.UserObjects.Admin import *
 import logging
 
+from ProjectCode.Service.Response import Response
 
 
 class Service:
@@ -72,14 +73,34 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return e
 
-    def logIn(self, username, password):
+    def logIn(self, username, password):  # todo no responses
         try:
             member = self.store_facade.logInAsMember(username, password)
             logging.info(f"Welcome {str(username)}")
-            return member
+            return Smember(member)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return e
+
+    # def logIn(self, username, password):  # todo responses from service to gui
+    #     try:
+    #         member = self.store_facade.logInAsMember(username, password)
+    #         logging.info(f"Welcome {str(username)}")
+    #         return Response(member.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"An error occurred: {str(e)}")
+    #         return Response(e, False)
+    # def logIn(self, username, password):  # todo responses from domain to service
+    #     memberResponse = self.store_facade.logInAsMember(username, password)
+    #     if memberResponse.getStatus():
+    #         member = memberResponse.getReturnValue()
+    #         logging.info(f"Welcome {str(username)}")
+    #         return member.toJson()
+    #     else:
+    #         e = memberResponse.getReturnValue()
+    #         logging.error(f"An error occurred: {str(e)}")
+    #         return e
+
     def logOut(self, username):
         try:
             self.store_facade.logOut(username)
