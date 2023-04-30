@@ -1,6 +1,3 @@
-from ProjectCode.Domain.Helpers.TypedDict import *
-
-
 class Lottery:
     def __init__(self, lottery_id, product_id, price, accumulated_price):
         self.__lottery_id = lottery_id

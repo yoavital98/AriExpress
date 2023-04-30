@@ -1,6 +1,6 @@
-from ProjectCode.Domain.Objects.ExternalObjects.PasswordValidation import PasswordValidation
-from ProjectCode.Domain.Objects.ExternalObjects.Paymet import Payment
-from ProjectCode.Domain.Objects.ExternalObjects.Supply import Supply
+from ariExpressDjango.ProjectCode import PasswordValidation
+from ariExpressDjango.ProjectCode import Payment
+from ariExpressDjango.ProjectCode import Supply
 
 
 class ExternalServices:

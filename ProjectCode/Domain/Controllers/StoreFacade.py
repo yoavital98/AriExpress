@@ -1,16 +1,16 @@
-from ProjectCode.Domain.Controllers.ExternalServices import ExternalServices
-from ProjectCode.Domain.Controllers.MessageController import MessageController
-from ProjectCode.Domain.Controllers.TransactionHistory import TransactionHistory
-from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.Bid import Bid
-from ProjectCode.Domain.Objects.Store import Store
-from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
-from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects.UserObjects.Admin import Admin
-from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
+from ariExpressDjango.ProjectCode.Domain.Controllers import ExternalServices
+from ariExpressDjango.ProjectCode.Domain.Controllers import MessageController
+from ariExpressDjango.ProjectCode.Domain.Controllers import TransactionHistory
+from ariExpressDjango.ProjectCode.Domain.Helpers import TypedDict
+from ariExpressDjango.ProjectCode import Access
+from ariExpressDjango.ProjectCode import Bid
+from ariExpressDjango.ProjectCode import Store
+from ariExpressDjango.ProjectCode.Domain.Objects.StoreObjects import Auction
+from ariExpressDjango.ProjectCode.Domain.Objects.StoreObjects import Product
+from ariExpressDjango.ProjectCode import User
+from ariExpressDjango.ProjectCode.Domain.Objects.UserObjects.Admin import Admin
+from ariExpressDjango.ProjectCode.Domain.Objects.UserObjects import Guest
+from ariExpressDjango.ProjectCode.Domain.Objects.UserObjects import Member
 
 
 class StoreFacade:

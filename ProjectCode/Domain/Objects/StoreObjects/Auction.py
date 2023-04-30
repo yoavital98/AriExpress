@@ -1,4 +1,4 @@
-from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ariExpressDjango.ProjectCode.Domain.Helpers import TypedDict
 
 
 class Auction:

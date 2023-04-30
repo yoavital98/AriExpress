@@ -1,8 +1,5 @@
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
-from ProjectCode.Domain.Objects.UserObjects.Admin import *
+from ariExpressDjango.ProjectCode.Domain.Controllers import StoreFacade
 import logging
-
-from ProjectCode.Service.Response import Response
 
 
 class Service:
@@ -406,4 +403,7 @@ class Service:
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return e
+        
+    def getDjangoTestData(self):
+        return {"Flexus", "flextronics@mail.com", True}
 
