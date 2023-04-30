@@ -15,3 +15,9 @@ class Access:
 
     def setManager(self, flag):
         self.isManager = flag
+
+    def get_user(self):
+        return self.user
+
+    def get_store(self):
+        return self.store

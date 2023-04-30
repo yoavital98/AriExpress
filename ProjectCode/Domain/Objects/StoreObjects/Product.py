@@ -11,4 +11,15 @@ class Product:
     def get_product_id(self):
         return self.product_id
 
+    def get_name(self):
+        return self.name
+
+    def get_quantity(self):
+        return self.quantity
+
+    def get_price(self):
+        return self.price
+
+    def get_categories(self):
+        return self.categories
 
