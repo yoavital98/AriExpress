@@ -2,7 +2,6 @@ from django.http import HttpResponse
 from django.shortcuts import render
 import os
 import sys
-sys.path.append(f"{os.getcwd()}/../../")
 from ProjectCode.Service.Service import Service
 
 
@@ -23,7 +22,7 @@ def member(request):
 
 def memberfound(request):
     service = Service()
-    # service.openTheSystem("Ari")
+    service.openTheSystem("Ari")
     # data = service.getDjangoTestData()
     data = ("flexus", "flexus@gmail.com", "True")
     return render(request, 'member.html', 
