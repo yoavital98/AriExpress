@@ -1,7 +1,23 @@
-from ariExpressDjango.ProjectCode.Domain.Controllers import StoreFacade
 import logging
+import threading
+from ProjectCode.Service.Response import Response
+from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
+from ProjectCode.Domain.Objects.UserObjects.Admin import *
 
+def Singleton(cls):
+    _instance_lock = threading.Lock()
+    _instance = {}
 
+    def _singleton(*args, **kwargs):
+        if cls not in _instance:
+            with _instance_lock:
+                if cls not in _instance:
+                    _instance[cls] = cls(*args, **kwargs)
+        return _instance[cls]
+
+    return _singleton
+
+@Singleton
 class Service:
     def __init__(self):
         self.store_facade = StoreFacade()
@@ -404,6 +420,4 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return e
         
-    def getDjangoTestData(self):
-        return {"Flexus", "flextronics@mail.com", True}
 

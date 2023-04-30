@@ -1,6 +1,6 @@
-from ariExpressDjango.ProjectCode.Domain.Helpers import TypedDict
-from ariExpressDjango.ProjectCode import Bid
-from ariExpressDjango.ProjectCode import Store
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Bid import Bid
+from ProjectCode.Domain.Objects.Store import Store
 
 
 class Basket:

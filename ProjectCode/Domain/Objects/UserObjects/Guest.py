@@ -1,4 +1,4 @@
-from ariExpressDjango.ProjectCode import User
+from ProjectCode.Domain.Objects.User import User
 
 
 class Guest(User):

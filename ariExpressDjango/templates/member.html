@@ -48,9 +48,16 @@
 </head>
 <body>
 		<h1>User Information</h1>
-		<p>Username: {{username}}</p>
+		<p>Username: {{username}}</p>§
 		<p>Email: {{email}}</p>
 		<p>Logged in: {{isLoggedIn}}</p>
-		<button href="{% url 'member' %}" target="_blank">Get member</button>
+	<form action="{% url 'memberfound' %}" method="post">
+		<button type="submit">Get member</button>
+		{% csrf_token %}
+	</form>
+	<form action="{% url 'member' %}" method="post">
+		<button type="submit">Go Back</button>
+		{% csrf_token %}
+	</form>
 </body>
 </html>

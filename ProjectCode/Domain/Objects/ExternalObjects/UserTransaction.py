@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ariExpressDjango.ProjectCode.Domain.Helpers import TypedDict
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 
 
 class UserTransaction:

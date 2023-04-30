@@ -1,7 +1,9 @@
-from ariExpressDjango.ProjectCode.Domain.Helpers import TypedDict
-from ariExpressDjango.ProjectCode import Access
-from ariExpressDjango.ProjectCode.Domain.Objects.StoreObjects import Auction
-from ariExpressDjango.ProjectCode import User
+import json
+
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.Access import Access
+from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.Objects.User import User
 
 
 class Member(User):

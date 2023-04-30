@@ -23,4 +23,5 @@ urlpatterns = [
     path(r'admin/', admin.site.urls),
     path(r'about/', views.about),
     path(r'member/', views.member, name='member'),
+    path(r'member/found', views.memberfound, name='memberfound'),
 ]

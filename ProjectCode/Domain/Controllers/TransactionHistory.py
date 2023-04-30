@@ -1,6 +1,6 @@
-from ariExpressDjango.ProjectCode.Domain.Helpers import TypedDict
-from ariExpressDjango.ProjectCode import StoreTransaction
-from ariExpressDjango.ProjectCode import UserTransaction
+from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Objects.ExternalObjects.StoreTransaction import StoreTransaction
+from ProjectCode.Domain.Objects.ExternalObjects.UserTransaction import UserTransaction
 
 
 class TransactionHistory:
