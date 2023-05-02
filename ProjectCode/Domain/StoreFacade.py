@@ -18,7 +18,7 @@ from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 #-------MarketObjects Imports-------#
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
-from ProjectCode.Domain.ExternalServices.PasswordValidationService import PasswordValidationService
+from ProjectCode.Domain.ExternalServices.PasswordService import PasswordValidationService
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
