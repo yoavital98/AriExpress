@@ -52,6 +52,9 @@ class StoreFacade:
         self.admins["Ari"] = first_admin
         # load data
         self.loadData()
+        # call services
+        self.payment_service.call()  #  todo for now it's doing nothing
+        self.supply_service.call()
 
 # ------  System  ------ #
     def loadData(self):  # todo complete
@@ -230,9 +233,8 @@ class StoreFacade:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
-                # user_address = None  # tmp
-                # shipment_date = None  # tmp
-                # self.supply_service.checkIfAvailable(basket.store, user_address, shipment_date, products) # TODO: Ari, there should be an address
+                user_address = None  # tmp
+                shipment_date = self.supply_service.checkIfAvailable(basket.store, user_address, products) # TODO: Ari, there should be an address probaby
                 self.payment_service.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
                 self.transaction_history.addNewStoreTransaction(user_name, basket.store.store_name, products, price) #make a new transaction and add it to the store history and user history
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
@@ -596,6 +598,7 @@ class StoreFacade:
         existing_admin: Admin = self.__getAdmin(admin_name)
         if existing_admin.get_logged():
             self.SystemStatus = True
+
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
         pass # no messanger this version
