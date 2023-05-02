@@ -2,11 +2,11 @@ import datetime
 from typing import List
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.Bid import Bid
-from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
-from ProjectCode.Domain.Objects.StoreObjects.Lottery import Lottery
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
+from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.Bid import Bid
+from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
 
 class Store:

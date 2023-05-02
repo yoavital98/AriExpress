@@ -1,4 +1,4 @@
-from ProjectCode.Domain.Objects import Bid
+from ProjectCode.Domain.MarketObjects import Bid
 
 class DataBid:
     def __init__(self, bid: Bid):

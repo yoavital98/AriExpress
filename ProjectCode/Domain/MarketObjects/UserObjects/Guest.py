@@ -1,4 +1,4 @@
-from ProjectCode.Domain.Objects.User import User
+from ProjectCode.Domain.MarketObjects.User import User
 
 
 class Guest(User):

@@ -1,9 +1,9 @@
 import json
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
-from ProjectCode.Domain.Objects.User import User
+from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.User import User
 
 
 class Member(User):
