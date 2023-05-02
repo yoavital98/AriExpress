@@ -1,5 +1,5 @@
 from ProjectCode.Domain.DataObjects.DataBasket import DataBasket
-from ProjectCode.Domain.Objects import Cart, Basket
+from ProjectCode.Domain.MarketObjects import Cart, Basket
 
 
 class DataCart:

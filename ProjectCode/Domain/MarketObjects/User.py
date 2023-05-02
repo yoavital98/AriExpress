@@ -1,6 +1,6 @@
 from abc import ABC
 
-from ProjectCode.Domain.Objects.Cart import Cart
+from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 
 class User(ABC):

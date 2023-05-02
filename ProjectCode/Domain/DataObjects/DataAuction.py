@@ -1,4 +1,4 @@
-from ProjectCode.Domain.Objects.StoreObjects import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects import Auction
 
 
 class DataAuction:

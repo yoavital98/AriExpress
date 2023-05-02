@@ -3,7 +3,7 @@ from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 from ProjectCode.Domain.DataObjects.DataBid import DataBid
 from ProjectCode.Domain.DataObjects.DataLottery import DataLottery
 from ProjectCode.Domain.DataObjects.DataProduct import DataProduct
-from ProjectCode.Domain.Objects import Store
+from ProjectCode.Domain.MarketObjects import Store
 
 
 class DataStore:

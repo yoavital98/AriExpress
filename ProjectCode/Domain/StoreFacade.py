@@ -1,8 +1,9 @@
-from ProjectCode.Domain.Controllers.ExternalServices import ExternalServices
-from ProjectCode.Domain.Controllers.MessageController import MessageController
-from ProjectCode.Domain.Controllers.TransactionHistory import TransactionHistory
+from ProjectCode.Domain.ExternalServices.MessageController import MessageController
+from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
+from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
+from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-#-------Data Objects Imports-------#
+#-------Data MarketObjects Imports-------#
 from ProjectCode.Domain.DataObjects.DataBasket import DataBasket
 from ProjectCode.Domain.DataObjects.DataCart import DataCart
 from ProjectCode.Domain.DataObjects.DataGuest import DataGuest
@@ -14,35 +15,43 @@ from ProjectCode.Domain.DataObjects.DataAccess import DataAccess
 from ProjectCode.Domain.DataObjects.DataMember import DataMember
 from ProjectCode.Domain.DataObjects.DataAdmin import DataAdmin
 from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
-#-------Objects Imports-------#
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.Bid import Bid
-from ProjectCode.Domain.Objects.Store import Store
-from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
-from ProjectCode.Domain.Objects.User import User
-from ProjectCode.Domain.Objects.UserObjects.Admin import Admin
-from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
+#-------MarketObjects Imports-------#
+from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.Bid import Bid
+from ProjectCode.Domain.ExternalServices.PasswordValidationService import PasswordValidationService
+from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
+from ProjectCode.Domain.MarketObjects.User import User
+from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
+from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
+from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 
 
 class StoreFacade:
     def __init__(self):
+        # Store Data
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
-        self.external_services = ExternalServices()  # external services
+        # Services
         self.message_controller = MessageController()  # Messanger
         self.transaction_history = TransactionHistory()  # Transactions log
+        self.password_validator = PasswordValidationService()  # Password validator
+        self.payment_service = PaymentService()  # Payment service
+        self.supply_service = SupplyService()  # Transaction service
+        # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
-        self.loadData()
+        # Admin
         self.SystemStatus = False  # True = System on, False = System off
         first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
         first_admin.logInAsAdmin() # added by rubin to prevent deadlock
         self.admins["Ari"] = first_admin
+        # load data
+        self.loadData()
 
 # ------  System  ------ #
     def loadData(self):  # todo complete
@@ -111,7 +120,7 @@ class StoreFacade:
     def register(self, user_name, password, email):
         self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
-            if self.external_services.ValidatePassword(password):
+            if self.password_validator.ValidatePassword(password):
                 new_member = Member(user_name, password, email)
 
                 self.members[str(user_name)] = new_member
@@ -131,7 +140,7 @@ class StoreFacade:
             return self.logInAsAdmin(username, password)
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
-            if self.external_services.ConfirmePassword(password, existing_member.get_password()):
+            if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
                 return DataMember(existing_member)
             else:
@@ -151,7 +160,7 @@ class StoreFacade:
     def getMemberPurchaseHistory(self, username):
         self.__systemCheck()
         if self.__checkIfUserIsLoggedIn(username):
-            return TransactionHistory.get_User_Transactions(username)
+            return self.transaction_history.get_User_Transactions(username)
         else:
             raise Exception("username isn't logged in")
 
@@ -221,7 +230,10 @@ class StoreFacade:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
-                self.external_services.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
+                # user_address = None  # tmp
+                # shipment_date = None  # tmp
+                # self.supply_service.checkIfAvailable(basket.store, user_address, shipment_date, products) # TODO: Ari, there should be an address
+                self.payment_service.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
                 self.transaction_history.addNewStoreTransaction(user_name, basket.store.store_name, products, price) #make a new transaction and add it to the store history and user history
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
@@ -258,7 +270,7 @@ class StoreFacade:
                 product: Product = store.get_products()[bid.get_product()]
                 item_name = product.name
                 tuple_for_history = (item_name, bid.get_quantity())
-                self.external_services.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
+                self.payment_service.pay(bid.get_storename(), card_number, card_user_name, card_user_ID, card_date, back_number, bid.get_offer())
                 store.purchaseBid(bid_id)
                 self.transaction_history.addNewStoreTransaction(username, bid.get_storename(), tuple_for_history, bid.get_offer())
 
@@ -306,7 +318,7 @@ class StoreFacade:
             item_name = product.name
             tuple_for_history = (item_name, 1) # name of item and quantity for the history of the store
             cur_store.purchaseAuctionProduct(auction_id)
-            self.external_services.pay(storename, card_number, card_user_name, card_user_ID, card_date,
+            self.payment_service.pay(storename, card_number, card_user_name, card_user_ID, card_date,
                                        back_number, cur_auction.get_current_offer())
             self.transaction_history.addNewStoreTransaction(username, storename, tuple_for_history,
                                                             cur_auction.get_current_offer())
@@ -368,7 +380,7 @@ class StoreFacade:
 
 
 
-    def getStorePurchaseHistory(self):
+    def getStorePurchaseHistory(self, store_name):
         pass
     # ------  Management  ------ #
     #TODO: add check if user is loggedin to each function
@@ -567,7 +579,7 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if self.external_services.ConfirmePassword(password, existing_admin.get_password()):
+            if self.password_validator.ConfirmePassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return DataAdmin(existing_admin)
             else:
@@ -594,7 +606,7 @@ class StoreFacade:
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         if self.admins.keys().__contains__(username):
-            if self.external_services.passwordValidator.ValidatePassword(newPassword):
+            if self.password_validator.ValidatePassword(newPassword):
                 new_admin = Admin(newAdminName, newPassword, newEmail)
                 self.admins[newAdminName] = new_admin
                 return DataAdmin(new_admin)

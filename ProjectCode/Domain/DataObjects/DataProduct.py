@@ -1,4 +1,4 @@
-from ProjectCode.Domain.Objects.StoreObjects import Product
+from ProjectCode.Domain.MarketObjects.StoreObjects import Product
 
 
 class DataProduct:
