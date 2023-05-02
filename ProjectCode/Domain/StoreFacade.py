@@ -392,7 +392,7 @@ class StoreFacade:
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
         cur_store = Store(store_name)
-        new_access = Access(cur_store, cur_member)
+        new_access = Access(cur_store, cur_member, username)
         cur_member.accesses[store_name] = new_access
         cur_store.setFounder(cur_member.get_username(), new_access)
         self.stores[store_name] = cur_store
@@ -442,9 +442,9 @@ class StoreFacade:
             raise Exception("No such store exists")
         nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
-            nominated_access = Access(cur_store,self.members[nominated_username])
+            nominated_access = Access(cur_store,self.members[nominated_username],requester_username)
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
-        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, isOwner=True)
+        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, "Owner")
         return DataAccess(nominated_modified_access)
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
@@ -455,10 +455,10 @@ class StoreFacade:
             raise Exception("No such store exists")
         nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
-            nominated_access = Access(cur_store, self.members[nominated_username])
+            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
-                                                        isManager=True)
+                                                        "Manager")
         return DataAccess(nominated_modified_access)
 
     def addPermissionsForManager(self):
