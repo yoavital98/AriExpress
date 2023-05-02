@@ -1,3 +1,6 @@
+from sqlite3 import Date
+
+
 class SupplyService:
     _instance = None
 
@@ -8,4 +11,7 @@ class SupplyService:
         return cls._instance
 
     def checkIfAvailable(self, store, user, products):
+        return Date(2023, 12, 12)
+
+    def call(self):
         return True

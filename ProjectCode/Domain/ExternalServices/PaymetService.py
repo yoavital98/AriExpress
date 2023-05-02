@@ -13,3 +13,5 @@ class PaymentService:
         return True
     def pay(self, store, card_number, card_user_name, card_user_ID, card_date, back_number, price): #TODO: Pass all the arguments
         return True
+    def call(self):
+        return True
