@@ -4,9 +4,9 @@ from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 
 class User(ABC):
-    def __init__(self, username):
-        self.username = username
-        self.cart = Cart(username)
+    def __init__(self, entrance_id):
+        self.username = entrance_id
+        self.cart = Cart(entrance_id)
 
     def get_cart(self):
         return self.cart
