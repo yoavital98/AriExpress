@@ -28,6 +28,12 @@ class Store:
 
 
 
+    def setStoreStatus(self, status, requester_username):
+        cur_access: Access = self.__accesses[requester_username]
+        if cur_access is None:
+            raise Exception("No such access exists in the store")
+        cur_access.canChangeStatus()
+        self.active = status
 
     def setFounder(self, username, access):
         access.setFounder()
@@ -88,23 +94,37 @@ class Store:
         return object_to_modify
 
 
-    def closeStore(self, requester_username):
-        cur_access = self.__accesses[requester_username]
-        if cur_access.isFounder:
+    # def closeStore(self, requester_username):
+    #     cur_access = self.__accesses[requester_username]
+    #     if cur_access.isFounder:
+    #         return True
+    #     else:
+    #         raise Exception("Member isn't the founder of the store")
 
-            return True
-        else:
-            raise Exception("Member isn't the founder of the store")
+    def getProducts(self, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active:
+            if (cur_access is not None) and cur_access.hasRole():
+                return self.__products
+            else:
+                raise Exception("Store is inactive")
+        return self.__products
+
+
+    def getProductById(self, product_id, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and (cur_access is None or not cur_access.hasRole()):
+            raise Exception("Store is inactive")
+        return self.__products[product_id]
 
 
     def getStaffInfo(self, username):
-        cur_access = self.__accesses[username]
+        cur_access: Access = self.__accesses[username]
         if cur_access is None:
             raise Exception("Member has no access for that store")
-        if cur_access.isFounder or cur_access.isOwner or cur_access.isManager:
-            return self.__accesses
-        else:
-            raise Exception("Member has no access for that action")
+        cur_access.canViewStaffInformation()
+        return self.__accesses
+
 
     def checkProductAvailability(self, product_id, quantity):
 
@@ -115,7 +135,11 @@ class Store:
             raise Exception("There is not enough stock of the requested product")
         return cur_product
 
-    def searchProductByName(self, keyword):
+    def searchProductByName(self, keyword, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and ( cur_access is None or not cur_access.hasRole()):
+            return {}
+
         product_list = []
         for prod in self.__products.values():
             if keyword in prod.name:
@@ -123,7 +147,10 @@ class Store:
         return product_list
 
 
-    def searchProductByCategory(self, category):
+    def searchProductByCategory(self, category, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and (cur_access is None or not cur_access.hasRole()):
+            return {}
         product_list = []
         for prod in self.__products.values():
             if category in prod.categories:

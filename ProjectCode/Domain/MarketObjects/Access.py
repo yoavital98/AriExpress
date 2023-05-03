@@ -36,6 +36,16 @@ class Access:
         self.access_state = ManagerState()
 
 
+    def hasRole(self, role="Any"):
+        if role is "Any":
+            return True
+        elif role is "Founder":
+            return isinstance(self.access_state,FounderState)
+        elif role is "Owner":
+            return isinstance(self.access_state,OwnerState)
+        elif role is "Manager":
+            return isinstance(self.access_state,ManagerState)
+
     def getAccessState(self):
         return type(self.access_state).__name__[:-5]
 
@@ -51,14 +61,22 @@ class Access:
     def canManageBids(self):
         return self.access_state.checkForPermission("Bid")
 
+    def canManageAuctions(self):
+        return self.access_state.checkForPermission("Auction")
+
+    def canManageLottery(self):
+        return self.access_state.checkForPermission("Lottery")
+
+    def canChangeStatus(self):
+        return self.access_state.checkForPermission("StatusChange")
+
+    def canViewStaffInformation(self):
+        return self.access_state.checkForPermission("StaffInfo")
+
     def get_user(self):
         return self.user
 
     def get_store(self):
         return self.store
 
-    def canManageAuctions(self):
-        return self.access_state.checkForPermission("Auction")
 
-    def canManageLottery(self):
-        return self.access_state.checkForPermission("Lottery")
