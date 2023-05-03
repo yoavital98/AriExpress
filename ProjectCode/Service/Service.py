@@ -138,46 +138,47 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def getProductsByStore(self, storename):
+    def getProductsByStore(self, storename, username):
         try:
-            products = self.store_facade.getProductsByStore(storename)
+            products = self.store_facade.getProductsByStore(storename, username)
             logging.info(f"fetching all products in store {str(storename)}")
             return Response(products, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def getProduct(self, storename, product_id):
+    def getProduct(self, storename, product_id, username):
         try:
-            product = self.store_facade.getProduct(storename, product_id)
+            product = self.store_facade.getProduct(storename, product_id, username)
             logging.info(f"fetching product num {str(product_id)} in store {str(storename)}")
             return Response(product, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def productSearchByName(self, productName):  # and keywords
+    def productSearchByName(self, productName, username):  # and keywords
         try:
-            results = self.store_facade.productSearchByName(productName)
+            results = self.store_facade.productSearchByName(productName, username)
             logging.info(f"fetching all the products with keyname {str(productName)}")
             return Response(results, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def productSearchByCategory(self, categoryName):  # TODO: probably each store will have its products catagorized
-        try:  # TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
-            results = self.store_facade.productSearchByCategory(categoryName)
+
+    def productSearchByCategory(self, categoryName, username):#TODO: probably each store will have its products catagorized
+        try:#TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
+            results = self.store_facade.productSearchByCategory(categoryName, username)
             logging.info(f"fetching all the products within the category {str(categoryName)}")
             return Response(results, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def productFilterByFeatures(self,
-                                featuresDict):  # TODO (opt) we will assume there's a dict that can say which features will be searched
+
+    def productFilterByFeatures(self, featuresDict, username):    #TODO (opt) we will assume there's a dict that can say which features will be searched
         try:
-            products = self.store_facade.productFilterByFeatures(featuresDict)
+            products = self.store_facade.productFilterByFeatures(featuresDict, username)
             logging.info(f"fetching all the products within the feature {str(featuresDict)}")
             return Response(products, True)
         except Exception as e:
