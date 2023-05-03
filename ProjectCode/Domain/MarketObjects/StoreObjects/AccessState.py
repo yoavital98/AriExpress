@@ -11,7 +11,7 @@ class AccessState(ABC):
         self.permissions = dict()
         self.permission_names = {"ProductChange": self.addProductPermit, "Bid":self.addBidPermit,
                                  "ModifyPermissions": self.addModifyPermissionPermit, "Auction": self.addAuctionPermit,
-                                 "Lottery": self.addLotteryPermit}
+                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit()}
 
     def addProductPermit(self):
         return True
@@ -27,6 +27,14 @@ class AccessState(ABC):
 
     def addLotteryPermit(self):
         return True
+
+    def addChangeStatusPermit(self):
+        return True
+
+
+    def addStaffViewPermit(self):
+        return True
+
 
     def addPermission(self,name ,func):
         self.permissions[name] = func
