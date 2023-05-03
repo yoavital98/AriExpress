@@ -59,7 +59,7 @@ class TestStoreFacade(TestCase):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
-        self.access.setFounder(True)
+        self.access.setFounder()
         self.store.get_accesses()[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.products[self.product.product_id] = self.product
@@ -70,7 +70,7 @@ class TestStoreFacade(TestCase):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
-        self.access.setFounder(True)
+        self.access.setFounder()
         self.store.get_accesses()[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.product2 = self.store.addProduct(self.access, "Product2", 10, 10, "category1")
