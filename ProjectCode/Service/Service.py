@@ -3,10 +3,23 @@ import logging
 
 from ProjectCode.Service.Response import Response
 
+logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 class Service:
     def __init__(self):
         self.store_facade = StoreFacade()
+
+    # ------  logger  ------ #
+    def getInfoLogs(self):
+        with open('logger.log', 'r') as f:
+            return [line.strip() for line in f.readlines() if 'INFO' in line]
+
+    def getErrorLogs(self):
+        with open('logger.log', 'r') as f:
+            return [line.strip() for line in f.readlines() if 'ERROR' in line]
+
     # ------  admin  ------ #
     def openTheSystem(self, username):
         try:
@@ -14,18 +27,16 @@ class Service:
             logging.info("AriExpress is now open and running")
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
-
+            return Response(e, False)
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
-            admin =  self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
+            admin = self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
             logging.info("admin has been added successfully")
-            return Response(admin,True)
+            return Response(admin, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
-
+            return Response(e, False)
 
     # def loadAdminsFromDB(self):
     #     try:
@@ -37,11 +48,10 @@ class Service:
     #     except ValueError:
     #         pass
 
-
     # ------  users  ------ #
     #  Guests
 
-    def exitTheSystem(self): #TODO: same as in StoreFacade todo task - need to change
+    def exitTheSystem(self):  # TODO: same as in StoreFacade todo task - need to change
         try:
             self.store_facade.exitTheSystem()
         except ValueError:
@@ -57,29 +67,29 @@ class Service:
         try:
             guest = self.store_facade.loginAsGuest()
             logging.info("logged in as guest successfully")
-            return Response(guest,True)
+            return Response(guest, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
+            return Response(e, False)
 
     #  Members
     def register(self, user_name, password, email):
         try:
             member = self.store_facade.register(user_name, password, email)
             logging.info("user has registered successfully")
-            return Response(member,True)
+            return Response(member, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
+            return Response(e, False)
 
     def logIn(self, username, password):  # todo no responses
         try:
             member = self.store_facade.logInAsMember(username, password)
             logging.info(f"Welcome {str(username)}")
-            return Response(member,True)
+            return Response(member, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
+            return Response(e, False)
 
     # def logIn(self, username, password):  # todo responses from service to gui
     #     try:
@@ -106,16 +116,16 @@ class Service:
             logging.info(f"Logged out successfully, goodbye {str(username)}")
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
+            return Response(e, False)
 
     def getMemberPurchaseHistory(self, username):
         try:
             purchase_history = self.store_facade.getMemberPurchaseHistory(username)
             logging.info(f"fetching {str(username)} purchase history")
-            return Response(purchase_history,True)
+            return Response(purchase_history, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
+            return Response(e, False)
 
     # ------  stores  ------ #
 
@@ -123,50 +133,52 @@ class Service:
         try:
             stores = self.store_facade.getStores()
             logging.info(f"fetching all stores in the system")
-            return Response(stores,True)
+            return Response(stores, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
+            return Response(e, False)
 
-    def getProductsByStore(self, storename):
+    def getProductsByStore(self, storename, username):
         try:
-            products = self.store_facade.getProductsByStore(storename)
+            products = self.store_facade.getProductsByStore(storename, username)
             logging.info(f"fetching all products in store {str(storename)}")
             return Response(products, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def getProduct(self, storename, product_id):
+    def getProduct(self, storename, product_id, username):
         try:
-            product = self.store_facade.getProduct(storename, product_id)
+            product = self.store_facade.getProduct(storename, product_id, username)
             logging.info(f"fetching product num {str(product_id)} in store {str(storename)}")
             return Response(product, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def productSearchByName(self, productName):  # and keywords
+    def productSearchByName(self, productName, username):  # and keywords
         try:
-            results = self.store_facade.productSearchByName(productName)
+            results = self.store_facade.productSearchByName(productName, username)
             logging.info(f"fetching all the products with keyname {str(productName)}")
             return Response(results, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def productSearchByCategory(self, categoryName):#TODO: probably each store will have its products catagorized
+
+    def productSearchByCategory(self, categoryName, username):#TODO: probably each store will have its products catagorized
         try:#TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
-            results = self.store_facade.productSearchByCategory(categoryName)
+            results = self.store_facade.productSearchByCategory(categoryName, username)
             logging.info(f"fetching all the products within the category {str(categoryName)}")
             return Response(results, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def productFilterByFeatures(self, featuresDict):    #TODO (opt) we will assume there's a dict that can say which features will be searched
+
+    def productFilterByFeatures(self, featuresDict, username):    #TODO (opt) we will assume there's a dict that can say which features will be searched
         try:
-            products = self.store_facade.productFilterByFeatures(featuresDict)
+            products = self.store_facade.productFilterByFeatures(featuresDict, username)
             logging.info(f"fetching all the products within the feature {str(featuresDict)}")
             return Response(products, True)
         except Exception as e:
@@ -216,9 +228,11 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):#TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
+                     back_number):  # TODO: for now lets assume only credit card(no paypal)
         try:
-            flag = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date, back_number)
+            flag = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
+                                                  back_number)
             logging.info("Successful purchase")
             return Response(flag, True)
         except Exception as e:
@@ -228,7 +242,8 @@ class Service:
     def placeBid(self, username, storename, offer, productID, quantity):
         try:
             bid = self.store_facade.placeBid(username, storename, offer, productID, quantity)
-            logging.info(f"bid for item number {str(productID)} from the store {str(storename)} has been placed with {str(offer)}")
+            logging.info(
+                f"bid for item number {str(productID)} from the store {str(storename)} has been placed with {str(offer)}")
             return Response(bid, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
@@ -246,8 +261,9 @@ class Service:
     def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
                              back_number):
         try:
-            self.store_facade.purchaseConfirmedBid(username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
-                             back_number)
+            self.store_facade.purchaseConfirmedBid(username, storename, bid_id, card_number, card_user_name,
+                                                   card_user_ID, card_date,
+                                                   back_number)
             logging.info(f"Bid id: {str(bid_id)} has been purchased successfully")
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
@@ -301,7 +317,7 @@ class Service:
     def addLottery(self):
         pass
 
-    def getStorePurchaseHistory(self, username, storename):#TODO: username is demanded for validation of the request
+    def getStorePurchaseHistory(self, username, storename):  # TODO: username is demanded for validation of the request
         try:
             transactions = self.store_facade.getStorePurchaseHistory(username, storename)
             logging.info(f"transactions of stores has been fetched successfully")
@@ -321,15 +337,15 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def addNewProductToStore(self, username, storename , productname, categories, quantity, price):
+    def addNewProductToStore(self, username, storename, productname, categories, quantity, price):
         try:  # TODO check whether this product details are needed
-            added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price, categories)
+            added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price,
+                                                                   categories)
             logging.info(f"product named {str(productname)} has been added to the store {str(storename)} successfully")
             return Response(added_product, True)
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
-
 
     def removeProductFromStore(self, username, storename, product_id):
         try:
@@ -340,8 +356,8 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-
-    def editProductOfStore(self, username, storename, **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
+    def editProductOfStore(self, username, storename,
+                           **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
             changed_product = self.store_facade.editProductOfStore(username, storename, **kwargs)
             return Response(changed_product, True)
@@ -374,7 +390,8 @@ class Service:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
 
-    def editPermissionsForManager(self, requesterID, nominatedID, permission):  # TODO still don't know the implementation
+    def editPermissionsForManager(self, requesterID, nominatedID,
+                                  permission):  # TODO still don't know the implementation
         try:
             self.store_facade.editPermissionsForManager()
         except Exception as e:
@@ -405,4 +422,3 @@ class Service:
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             return Response(e, False)
-

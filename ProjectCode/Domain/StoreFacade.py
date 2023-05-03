@@ -338,44 +338,45 @@ class StoreFacade:
     def getStores(self):
         return self.stores
 
-    def getProductsByStore(self, store_name):
+    def getProductsByStore(self, store_name, username):
         cur_store: Store = self.stores.get(store_name) #TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         #Generate data dict
         data_products = dict()
-        for key, value in cur_store.get_products():
+        product_dict = cur_store.getProducts(username)
+        for key, value in product_dict:
             data_products[key] = DataProduct(value)
         return data_products
 
-    def getProduct(self, store_name, product_id):
+    def getProduct(self, store_name, product_id, username):
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product = cur_store.get_products().get(product_id)
+        cur_product = cur_store.getProductById(product_id, username)
         return DataProduct(cur_product)
 
-    def productSearchByName(self, keywords):  # and keywords
+    def productSearchByName(self, keywords, username):  # and keywords
         splitted_keywords = keywords.split(" ")
         search_results = TypedDict(DataStore, list)
         for keyword in splitted_keywords:
             for cur_store in self.stores.values():
-                product_list = cur_store.searchProductByName(keyword)
+                product_list = cur_store.searchProductByName(keyword, username)
                 if len(product_list) > 0:
                     data_product_list = [DataProduct(prod) for prod in product_list]
                     search_results[DataStore(cur_store)] = data_product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
         return search_results
 
-    def productSearchByCategory(self, category):
+    def productSearchByCategory(self, category, username):
         search_results = TypedDict(DataStore, list)
         for cur_store in self.stores.values():
-            product_list = cur_store.searchProductByCategory(category)
+            product_list = cur_store.searchProductByCategory(category, username)
             if len(product_list) > 0:
                 data_product_list = [DataProduct(prod) for prod in product_list]
                 search_results[DataStore(cur_store)] = data_product_list
         return search_results
 
-    def productFilterByFeatures(self, featuresDict):
+    def productFilterByFeatures(self, featuresDict, username):
         #TODO: not implemented yet
         return []
 
@@ -549,17 +550,16 @@ class StoreFacade:
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        is_founder = cur_store.closeStore(username)
-        #TODO: may need to delete other delegations that relates to Store
-        if is_founder:
-            #deletes all accesses for that store
-            for mem in self.members.values():
-                store_exists = mem.get_accesses().get(store_name)
-                if store_exists is not None:
-                    del mem.get_accesses()[store_name]
-
-            del self.stores[store_name]
-        return DataStore(store_name)
+        cur_store.setStoreStatus(False, username)
+        # if is_founder:
+        #     #deletes all accesses for that store
+        #     for mem in self.members.values():
+        #         store_exists = mem.get_accesses().get(store_name)
+        #         if store_exists is not None:
+        #             del mem.get_accesses()[store_name]
+        #
+        #     del self.stores[store_name]
+        return DataStore(cur_store)
 
     def getStaffInfo(self, username, store_name):
         if not self.__checkIfUserIsLoggedIn(username):
