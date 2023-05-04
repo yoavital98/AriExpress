@@ -26,16 +26,16 @@ class Service:
             self.store_facade.openSystem(username)
             logging.info("AriExpress is now open and running")
         except Exception as e:
-            logging.error(f"An error occurred: {str(e)}")
+            logging.error(f"openTheSystem Error: {str(e)}")
             return Response(e, False)
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
             admin = self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
-            logging.info("admin has been added successfully")
+            logging.info("admin has been added successfully. New Admin username: " + newAdminName + ". Added by: " + username + ".")
             return Response(admin, True)
         except Exception as e:
-            logging.error(f"An error occurred: {str(e)}")
+            logging.error(f"addAdmin Error: {str(e)}")
             return Response(e, False)
 
     # def loadAdminsFromDB(self):
@@ -51,27 +51,30 @@ class Service:
     # ------  users  ------ #
     #  Guests
 
-    def exitTheSystem(self):  # TODO: same as in StoreFacade todo task - need to change
-        try:
-            self.store_facade.exitTheSystem()
-        except ValueError:
-            pass
+    # def exitTheSystem(self):  # TODO: same as in StoreFacade todo task - need to change
+    #     try:
+    #         self.store_facade.exitTheSystem()
+    #     except ValueError:
+    #         pass
 
     def leaveAsGuest(self, guest):
         try:
             self.store_facade.leaveAsGuest(guest)
-        except ValueError:
-            pass
+            logging.info("Guest left successfully. Guest ID: " + str(guest.get_username()))
+            return Response(True, True)
+        except ValueError as e:
+            logging.error(f"leaveAsGuest Error: {str(e)}")
+            return Response(e, False)
 
     def loginAsGuest(self):
         try:
-            guest = self.store_facade.loginAsGuest()
-            logging.info("logged in as guest successfully")
+            guest = self.store_facade.logInAsGuest()
+            logging.info("Logged in as guest successfully. Guest ID: " + str(guest.get_username()))
             return Response(guest, True)
         except Exception as e:
-            logging.error(f"An error occurred: {str(e)}")
+            logging.error(f"logInAsGuest Error: {str(e)}")
             return Response(e, False)
-
+=====================================================================================================================
     #  Members
     def register(self, user_name, password, email):
         try:
