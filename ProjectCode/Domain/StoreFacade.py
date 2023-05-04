@@ -34,7 +34,7 @@ class StoreFacade:
         # Store Data
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
-        self.onlineGuests = TypedDict(str, Guest)  # dict of users
+        self.onlineGuests = TypedDict(int, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member) # dict from username to online members
         # Services
@@ -67,6 +67,11 @@ class StoreFacade:
         else:
             raise Exception("system is not online")
 
+    #returns true username is username, returns false if username is entranceID
+    def checkIfUsernameIsEntranceID(self, to_check):
+        if isinstance(to_check, int):
+            return False
+        return True
 # ------  users  ------ #
     #  Guests
 
@@ -98,10 +103,11 @@ class StoreFacade:
 
     def logInAsGuest(self):
         new_guest = Guest(self.nextEntranceID)
+        self.nextEntranceID += 1
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         return DataGuest(new_guest)
 
-    def returnToGuest(self,entrance_id):
+    def returnToGuest(self, entrance_id):
         guest: Guest = Guest(entrance_id)
         self.onlineGuests[entrance_id] = guest
         return guest
@@ -123,17 +129,19 @@ class StoreFacade:
             else: #should never get here usually
                 raise Exception("User not logged in")
 
-    def __getUserOrMember(self,user_name):  #TODO: change the if's because checking the keys somehow dosent work
-        if self.members.keys().__contains__(str(user_name)):
-            if self.__checkIfUserIsLoggedIn(user_name):
-                return self.members[user_name]
-            else:
-                raise Exception("user is not logged in")
-        else:
+    def __getUserOrMember(self, user_name):  #TODO: change the if's because checking the keys somehow dosent work
+        if self.checkIfUsernameIsEntranceID(user_name): #checks if the user_name is entrance_id
             if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(user_name)
             else:
-                raise Exception("user is not guest nor a member")
+                raise Exception("user is not guest")
+        else:
+            if self.members.keys().__contains__(str(user_name)):
+                if self.__checkIfUserIsLoggedIn(user_name):
+                    return self.members.get(user_name)
+                else:
+                    raise Exception("user is not logged in")
+
     def __getOnlineMemberOnly(self, user_name):
         if self.members.keys().__contains__(user_name):
             if self.__checkIfUserIsLoggedIn(user_name):
@@ -158,14 +166,13 @@ class StoreFacade:
 
     # Login stright to Member and not as guest
     def logInAsMember(self, username , password):
-        self.__systemCheck()
         if self.admins.keys().__contains__(username):
             return self.logInAsAdmin(username, password)
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
-                existing_member.setEntranceId = self.nextEntranceID
+                existing_member.setEntranceId(self.nextEntranceID)
                 self.nextEntranceID += 1
                 return DataMember(existing_member)
             else:
@@ -175,15 +182,17 @@ class StoreFacade:
 
     #  only members
     def logOut(self, username):
-        self.__systemCheck()
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             existing_member.logOut()
+            guest: Guest = self.returnToGuest(self.nextEntranceID)
+            return guest
+        else:
+            raise Exception("Logout is not an option")
 
     #  only members
 
     def getMemberPurchaseHistory(self, username):
-        self.__systemCheck()
         if self.__checkIfUserIsLoggedIn(username):
             return self.transaction_history.get_User_Transactions(username)
         else:
@@ -205,7 +214,6 @@ class StoreFacade:
 
     # guest and member
     def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
-        self.__systemCheck()
         user: User = self.__getUserOrMember(username)
         store: Store = self.stores.get(storename)
         if store is None:
@@ -221,7 +229,6 @@ class StoreFacade:
         self.__systemCheck()
         user: User = self.__getUserOrMember(username)
         remove_success = user.removeFromBasket(storename, productID)
-        #TODO: For Ari: it doesnt return shit
         if remove_success:
             return remove_success
         else:

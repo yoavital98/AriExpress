@@ -5,13 +5,13 @@ from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 class User(ABC):
     def __init__(self, entrance_id):
-        self.username = entrance_id
+        self.entrance_id = entrance_id
         self.cart = Cart(entrance_id)
 
     def get_cart(self):
         return self.cart
 
-    def add_to_cart(self,username, storename, productID, product, quantity):
+    def add_to_cart(self, username, storename, productID, product, quantity):
         self.cart.add_Product(username, storename, productID, product, quantity)
 
 
@@ -19,7 +19,8 @@ class User(ABC):
         return self.cart.get_Basket(storename)
 
     def removeFromBasket(self, storename, productID):
-        self.cart.removeFromBasket(storename, productID)
+        answer: bool = self.cart.removeFromBasket(storename, productID)
+        return answer
 
     def checkProductExistance(self, storename, productID):
         return self.cart.checkProductExistance(storename, productID)
@@ -27,5 +28,5 @@ class User(ABC):
     def edit_Product_Quantity(self, storename, productID, quantity):
         self.cart.edit_Product_Quantity(storename, productID, quantity)
 
-    def get_username(self):
-        return self.username
+    def get_entrance_id(self):
+        return self.entrance_id

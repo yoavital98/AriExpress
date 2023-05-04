@@ -22,24 +22,24 @@ class Member(User):
     def get_cart(self):
         return super().get_cart()
 
-    def add_to_cart(self, username, storename, productID, product, quantity):
-        super().add_to_cart(username, storename, productID, product, quantity)
+    def add_to_cart(self, username, store_name, product_id, product, quantity):
+        super().add_to_cart(username, store_name, product_id, product, quantity)
 
-    def get_Basket(self, storename):
-        return super().get_Basket(storename)
+    def get_Basket(self, store_name):
+        return super().get_Basket(store_name)
 
-    def removeFromBasket(self, storename, productID):
-        super().removeFromBasket(storename, productID)
+    def removeFromBasket(self, store_name, product_id):
+        super().removeFromBasket(store_name, product_id)
 
-    def edit_Product_Quantity(self, storename, productID, quantity):
-        super().edit_Product_Quantity(storename, productID, quantity)
+    def edit_Product_Quantity(self, storename, product_id, quantity):
+        super().edit_Product_Quantity(storename, product_id, quantity)
 
     # -------------------------------------------------------------------------------
 
     def logInAsMember(self):
         self.logged_In = True
 
-    def logOut(self):  # TODO need to turn the member to guest
+    def logOut(self):
         self.logged_In = False
 
     def get_username(self):
@@ -104,3 +104,5 @@ class Member(User):
     #         "auctions": list(self.auctions.values())
     #     }
     #     return json.dumps(data)
+    def setEntranceId(self, new_entrance_id):
+        self.entrance_id = new_entrance_id
