@@ -61,11 +61,6 @@ class StoreFacade:
     def loadData(self):  # todo complete
         pass
 
-    def __systemCheck(self):
-        if self.SystemStatus:
-            pass
-        else:
-            raise Exception("system is not online")
 
 
 # ------  users  ------ #
