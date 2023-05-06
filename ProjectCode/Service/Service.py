@@ -8,13 +8,6 @@ class Service:
     def __init__(self):
         self.store_facade = StoreFacade()
     # ------  admin  ------ #
-    def openTheSystem(self, username):
-        try:
-            self.store_facade.openSystem(username)
-            logging.info("AriExpress is now open and running")
-        except Exception as e:
-            logging.error(f"An error occurred: {str(e)}")
-            return Response(e,False)
 
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):

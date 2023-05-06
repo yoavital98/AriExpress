@@ -224,7 +224,6 @@ class StoreFacade:
         self.__systemCheck()
         user: User = self.__getUserOrMember(username)
         remove_success = user.removeFromBasket(storename, productID)
-        #TODO: For Ari: it doesnt return shit
         if remove_success:
             return remove_success
         else:
@@ -618,10 +617,7 @@ class StoreFacade:
             existing_admin: Admin = self.members[user_name]
             existing_admin.logOffAsAdmin()
 
-    def openSystem(self, admin_name):
-        existing_admin: Admin = self.__getAdmin(admin_name)
-        if existing_admin.get_logged():
-            self.SystemStatus = True
+
 
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
