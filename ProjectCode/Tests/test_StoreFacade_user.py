@@ -1,9 +1,9 @@
 import unittest
 from unittest import TestCase
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
-from ProjectCode.Domain.Objects.Basket import Basket
-from ProjectCode.Domain.Objects.Cart import Cart
-from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
+from ProjectCode.Domain.StoreFacade import StoreFacade
+from ProjectCode.Domain.MarketObjects.Basket import Basket
+from ProjectCode.Domain.MarketObjects.Cart import Cart
+from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 
 
 class TestStoreFacade(TestCase):

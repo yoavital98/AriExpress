@@ -1,9 +1,9 @@
-from ProjectCode.Domain.Objects.User import User
+from ProjectCode.Domain.MarketObjects.User import User
 
 
 class Guest(User):
-    def __init__(self, username):
-        super().__init__(username)
+    def __init__(self, entrance_id):
+        super().__init__(entrance_id)
 
     def get_cart(self):
         return super().get_cart()

@@ -2,12 +2,12 @@ import unittest
 from typing import List
 from unittest import TestCase
 
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
+from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.Store import Store
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
+from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
+from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 
 
 class TestStoreFacade(TestCase):
@@ -59,7 +59,7 @@ class TestStoreFacade(TestCase):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
-        self.access.setFounder(True)
+        self.access.setFounder()
         self.store.get_accesses()[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.products[self.product.product_id] = self.product
@@ -70,7 +70,7 @@ class TestStoreFacade(TestCase):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
         self.access = Access(self.store, self.member1)
-        self.access.setFounder(True)
+        self.access.setFounder()
         self.store.get_accesses()[self.member1.get_username()] = self.access
         self.product1 = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
         self.product2 = self.store.addProduct(self.access, "Product2", 10, 10, "category1")
@@ -216,7 +216,7 @@ class TestStoreFacade(TestCase):
     def test_productFilterByFeatures_returnsProducts_empty(self):
         self.store = Store("Store1")
         self.store_facade.stores["Store1"] = self.store
-        self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [])
+        self.assertEqual(self.store_facade.productFilterByFeatures({"Category1": "Keyword1"}), [])
     
     def test_productFilterByFeatures_returnsProducts_single(self):
         self.store = Store("Store1")
@@ -226,7 +226,7 @@ class TestStoreFacade(TestCase):
         self.store.get_accesses()[self.member1.get_username()] = self.access
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         # add feature to product
-        self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [self.product])
+        self.assertEqual(self.store_facade.productFilterByFeatures({"Category1": "Keyword1"}), [self.product])
     
     def test_productFilterByFeatures_returnsProducts_multipleProducts(self):
         self.store = Store("Store1")
@@ -237,7 +237,7 @@ class TestStoreFacade(TestCase):
         self.product1 = self.store.addProduct(self.access, "Product123", 10, 10, "Category1")
         self.product2 = self.store.addProduct(self.access, "Product145", 10, 10, "Category2")
         # add features to products
-        self.assertEqual(self.store_facade.productFilterByFeatures("Category1", "Keyword1"), [self.product, self.product2])
+        self.assertEqual(self.store_facade.productFilterByFeatures({"Category1": "Keyword1"}), [self.product, self.product2])
     
     # ----------------------------------------------------------------------------------------
 

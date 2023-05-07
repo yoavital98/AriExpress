@@ -1,49 +1,52 @@
 import json
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
-from ProjectCode.Domain.Objects.User import User
+from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.Cart import Cart
+from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.User import User
 
 
 class Member(User):
-    def __init__(self, username, password, email):
-        super().__init__(username)
+    def __init__(self, entrance_id, user_name, password, email):
+        super().__init__(entrance_id)
+        self.cart = Cart(user_name) # TODO: cart will be pulled from database and guest cart will be added to it
         self.accesses = TypedDict(str, Access)  # Accesses
-        self.password = password  # password
-        self.email = email  # email
         self.logged_In = False  # login
         self.auctions = TypedDict(int, Auction)  # auction id to auction
+        self.user_name = user_name  # username
+        self.password = password  # password
+        self.email = email  # email
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):
         return super().get_cart()
 
-    def add_to_cart(self, username, storename, productID, product, quantity):
-        super().add_to_cart(username, storename, productID, product, quantity)
+    def add_to_cart(self, username, store_name, product_id, product, quantity):
+        super().add_to_cart(username, store_name, product_id, product, quantity)
 
-    def get_Basket(self, storename):
-        return super().get_Basket(storename)
+    def get_Basket(self, store_name):
+        return super().get_Basket(store_name)
 
-    def removeFromBasket(self, storename, productID):
-        super().removeFromBasket(storename, productID)
+    def removeFromBasket(self, store_name, product_id):
+        super().removeFromBasket(store_name, product_id)
 
-    def edit_Product_Quantity(self, storename, productID, quantity):
-        super().edit_Product_Quantity(storename, productID, quantity)
+    def edit_Product_Quantity(self, storename, product_id, quantity):
+        super().edit_Product_Quantity(storename, product_id, quantity)
 
     # -------------------------------------------------------------------------------
 
     def logInAsMember(self):
         self.logged_In = True
 
-    def logOut(self):  # TODO need to turn the member to guest
+    def logOut(self):
         self.logged_In = False
 
     def get_username(self):
-        return self.username
+        return self.user_name
 
-    def set_username(self, username):
-        self.username = username
+    def set_username(self, user_name):
+        self.user_name = user_name
 
     def get_password(self):
         return self.password
@@ -101,3 +104,5 @@ class Member(User):
     #         "auctions": list(self.auctions.values())
     #     }
     #     return json.dumps(data)
+    def setEntranceId(self, new_entrance_id):
+        self.entrance_id = new_entrance_id

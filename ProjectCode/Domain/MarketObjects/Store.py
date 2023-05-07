@@ -2,11 +2,11 @@ import datetime
 from typing import List
 
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.Access import Access
-from ProjectCode.Domain.Objects.Bid import Bid
-from ProjectCode.Domain.Objects.StoreObjects.Auction import Auction
-from ProjectCode.Domain.Objects.StoreObjects.Lottery import Lottery
-from ProjectCode.Domain.Objects.StoreObjects.Product import Product
+from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.Bid import Bid
+from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
 
 class Store:
@@ -28,32 +28,39 @@ class Store:
 
 
 
+    def setStoreStatus(self, status, requester_username):
+        cur_access: Access = self.__accesses[requester_username]
+        if cur_access is None:
+            raise Exception("No such access exists in the store")
+        cur_access.canChangeStatus()
+        self.active = status
 
     def setFounder(self, username, access):
-        access.setFounder(True)
+        access.setFounder()
         self.__accesses[username] = access
 
 
-    def setAccess(self, nominated_access, requester_username, nominated_username, **kwargs):
+    def setAccess(self, nominated_access, requester_username, nominated_username, role):
         self.__accesses[nominated_username] = nominated_access
-        requester_access = self.__accesses[requester_username]
+        requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
-            raise Exception("The member doesn't have the appropriate permission for that store")
-        if requester_access.isOwner or requester_access.isManager or requester_access.isFounder:#TODO: change according to permission policy
-            modified_access = self.modify_attributes(nominated_access, **kwargs)
-            return modified_access
+            raise Exception("The member doesn't have the access for that store")
+        if requester_access.canModifyPermissions():#TODO: change according to permission policy
+            nominated_access.setAccess(role)
+            requester_access.addNominatedUsername(nominated_username, self.get_store_name())
+            return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
 
     def addProduct(self, access, name, quantity, price, categories):
-        self.hasForProductAccess(access)
+        access.canChangeProducts()
         self.product_id_counter += 1
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
         self.__products.__setitem__(self.product_id_counter, product_to_add)
         return product_to_add
 
     def deleteProduct(self, access, product_id):
-        self.hasForProductAccess(access)
+        access.canChangeProducts()
         if self.__products.get(product_id) is None:
             raise Exception("Product doesn't exists")
         else:
@@ -61,7 +68,7 @@ class Store:
             return product_id
 
     def changeProduct(self, access, product_id, **kwargs):
-        self.hasForProductAccess(access)
+        access.canChangeProducts()
         cur_product = self.__products.get(product_id)
         if cur_product is None:
             raise Exception("Product doesn't exists")
@@ -74,12 +81,6 @@ class Store:
         return cur_product
 
 
-    def hasForProductAccess(self, access):
-        #TODO: change according to permission policy
-        if access.isOwner or access.isFounder or access.isManager:
-            return True
-        else:
-            raise Exception("The member has no permission for that action")
 
 
     #TODO: may cause problem for unknown reasons
@@ -93,23 +94,37 @@ class Store:
         return object_to_modify
 
 
-    def closeStore(self, requester_username):
-        cur_access = self.__accesses[requester_username]
-        if cur_access.isFounder:
+    # def closeStore(self, requester_username):
+    #     cur_access = self.__accesses[requester_username]
+    #     if cur_access.isFounder:
+    #         return True
+    #     else:
+    #         raise Exception("Member isn't the founder of the store")
 
-            return True
-        else:
-            raise Exception("Member isn't the founder of the store")
+    def getProducts(self, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active:
+            if (cur_access is not None) and cur_access.hasRole():
+                return self.__products
+            else:
+                raise Exception("Store is inactive")
+        return self.__products
+
+
+    def getProductById(self, product_id, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and (cur_access is None or not cur_access.hasRole()):
+            raise Exception("Store is inactive")
+        return self.__products[product_id]
 
 
     def getStaffInfo(self, username):
-        cur_access = self.__accesses[username]
+        cur_access: Access = self.__accesses[username]
         if cur_access is None:
             raise Exception("Member has no access for that store")
-        if cur_access.isFounder or cur_access.isOwner or cur_access.isManager:
-            return self.__accesses
-        else:
-            raise Exception("Member has no access for that action")
+        cur_access.canViewStaffInformation()
+        return self.__accesses
+
 
     def checkProductAvailability(self, product_id, quantity):
 
@@ -120,7 +135,11 @@ class Store:
             raise Exception("There is not enough stock of the requested product")
         return cur_product
 
-    def searchProductByName(self, keyword):
+    def searchProductByName(self, keyword, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and ( cur_access is None or not cur_access.hasRole()):
+            return {}
+
         product_list = []
         for prod in self.__products.values():
             if keyword in prod.name:
@@ -128,7 +147,10 @@ class Store:
         return product_list
 
 
-    def searchProductByCategory(self, category):
+    def searchProductByCategory(self, category, username):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and (cur_access is None or not cur_access.hasRole()):
+            return {}
         product_list = []
         for prod in self.__products.values():
             if category in prod.categories:
@@ -158,9 +180,9 @@ class Store:
 
 
     def approveBid(self, username, bid_id):
-        cur_access = self.__accesses[username]
-        if not (cur_access.isFounder or cur_access.isFounder or cur_access.isManager):
-            raise Exception("User doesn't have the permission for rejecting a bid")
+        cur_access: Access = self.__accesses[username]
+        cur_access.canManageBids()
+
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
@@ -175,8 +197,7 @@ class Store:
 
     def rejectBid(self, username, bid_id):
         cur_access: Access = self.__accesses[username]
-        if not (cur_access.isFounder or cur_access.isFounder or cur_access.isManager):
-            raise Exception("User doesn't have the permission for rejecting a bid")
+        cur_access.canManageBids()
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
@@ -189,8 +210,7 @@ class Store:
 
     def sendAlternativeBid(self, username, bid_id, alternate_offer):
         cur_access: Access = self.__accesses[username]
-        if not (cur_access.isFounder or cur_access.isFounder or cur_access.isManager):
-            raise Exception("User doesn't have the permission for rejecting a bid")
+        cur_access.canManageBids()
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
@@ -210,12 +230,11 @@ class Store:
         del self.__bids[cur_bid]
 
     def startAuction(self, username, product_id, starting_price, duration):
-        cur_access = self.__accesses[username]
+        cur_access: Access = self.__accesses[username]
         cur_product = self.__products[int(product_id)]
         if cur_access is None:
             raise Exception("The user doesnt have access in this store")
-        if not (cur_access.isFounder or cur_access.isManager or cur_access.isOwner):
-            raise Exception("The user doesnt have the permission for starting an auction")
+        cur_access.canManageAuctions()
         if cur_product is None:
             raise Exception("No such product exists")
         self.auction_id_counter += 1
@@ -253,8 +272,7 @@ class Store:
         cur_access: Access = self.__accesses.get(username)
         if cur_access is None:
             raise Exception("Member doesnt have access for this store")
-        if not (cur_access.isFounder or cur_access.isManager or cur_access.isOwner):
-            raise Exception("Member doesnt have permission for opening a lottery")
+        cur_access.canManageLottery()
         self.lottery_id_counter += 1
         new_lottery = Lottery(self.lottery_id_counter, product_id, cur_product.price, 0)
         self.__lotteries[self.lottery_id_counter] = new_lottery

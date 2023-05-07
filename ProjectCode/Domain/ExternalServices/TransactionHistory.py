@@ -1,12 +1,19 @@
+from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
+from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.Objects.ExternalObjects.StoreTransaction import StoreTransaction
-from ProjectCode.Domain.Objects.ExternalObjects.UserTransaction import UserTransaction
 
 
 class TransactionHistory:
-    def __init__(self):
-        self.user_transactions = TypedDict(str, set)
-        self.store_transactions = TypedDict(str, set)
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.user_transactions = TypedDict(str, set)
+            cls._instance.store_transactions = TypedDict(str, set)
+            # Add any initialization code here
+        return cls._instance
 
     def addUserTransaction(self, transaction):
         if transaction.username in self.user_transactions:
