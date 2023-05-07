@@ -2,8 +2,7 @@ from ProjectCode.Domain.StoreFacade import StoreFacade
 import logging
 import threading
 from ProjectCode.Service.Response import Response
-from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
-from ProjectCode.Domain.Objects.UserObjects.Admin import *
+from ProjectCode.Domain.MarketObjects.UserObjects.Admin import *
 
 
 logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,

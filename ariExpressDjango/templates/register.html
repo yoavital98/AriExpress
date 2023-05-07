@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>AriExpress - Register</title>
+	<style>
+		body {
+			background-color: #f8f8f8;
+			color: #333;
+			font-family: Arial, sans-serif;
+		}
+		
+		/* center the login form */
+		.login-form {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			border: 1px solid #ccc;
+			background-color: #fff;
+			padding: 20px;
+			text-align: center;
+			max-width: 400px;
+			width: 100%;
+			box-sizing: border-box;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+		}
+		
+		h1 {
+			position: absolute;
+			top: 5%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
+
+
+		.login-form h2 {
+			margin-top: 0;
+			margin-bottom: 20px;
+			color: #333;
+		}
+		
+		.login-form label {
+			display: block;
+			margin-bottom: 10px;
+			margin-top: 20px;
+			color: #333;
+		}
+		
+		.login-form input[type="text"],
+		.login-form input[type="password"] {
+			padding: 10px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			width: 100%;
+			box-sizing: border-box;
+			color: #333;
+		}
+		
+		.login-form input[type="submit"] {
+			background-color: #007bff;
+			color: #fff;
+			padding: 10px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			width: 100%;
+			box-sizing: border-box;
+			margin-top: 10px;
+			font-weight: bold;
+			transition: background-color 0.2s;
+		}
+		
+		.login-form input[type="submit"]:hover {
+			background-color: #0062cc;
+		}
+		
+		.login-form a {
+			color: #007bff;
+			text-decoration: none;
+			font-weight: bold;
+			transition: color 0.2s;
+		}
+		
+		.login-form a:hover {
+			color: #0056b3;
+		}
+		
+		.login-form .error-message {
+			display: none;
+			color: #dc3545;
+			margin-top: 10px;
+			margin-bottom: 0;
+			font-weight: bold;
+		}
+	</style>
+</head>
+<body>
+	<h1>AriExpress</h1>
+	<!-- login form -->
+	<div class="login-form">
+		<h2>Register</h2>
+		<form>
+			<label for="username">Username:</label><br>
+			<input type="text" id="username" name="username"><br>
+			<label for="password">Password:</label><br>
+			<input type="password" id="password" name="password"><br><br>
+			<input type="submit" value="Register">
+			<br><br>
+			<!-- <a href="{% url 'register_form' %}">Register</a> -->
+			<br>
+			<!-- <a href="{% url 'reset_password' %}">Reset Password</a> -->
+			<p class="error-message">Incorrect username or password.</p>
+		</form>
+	</div>
+</body>
+</html>

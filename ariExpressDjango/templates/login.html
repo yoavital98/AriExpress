@@ -57,14 +57,11 @@
 
 <!-- ------------------------------------------------------------------------------------------------------------ -->
 
-{% extends 'base.html' %}
-{% block content %}
-
 <!DOCTYPE html>
 <html>
 <head>
 	<title>AriExpress - Home</title>
-	<!-- <style>
+	<style>
 		body {
 			background-color: #f8f8f8;
 			color: #333;
@@ -73,7 +70,7 @@
 		
 		/* center the login form */
 		.login-form {
-			position:absolute;
+			position: absolute;
 			top: 50%;
 			left: 50%;
 			transform: translate(-50%, -50%);
@@ -154,18 +151,27 @@
 			margin-bottom: 0;
 			font-weight: bold;
 		}
-	</style> -->
+	</style>
 </head>
 <body>
 	<h1>AriExpress</h1>
 	<!-- login form -->
 	<div class="login-form">
-		<h2>Homepage</h2>
+		<h2>Login</h2>
 		<form>
-			<a href="{% url 'login' %}">login</a>
+			<label for="username">Username:</label><br>
+			<input type="text" id="username" name="username"><br>
+			<label for="password">Password:</label><br>
+			<input type="password" id="password" name="password"><br><br>
+			<input type="submit" value="Login">
+			<br><br>
+			<a href="{% url 'register_form' %}">Register</a>
+			<br>
+			<a href="{% url 'homepage_guest' %}">Continue as Guest</a>
+			<br><br>
+			<a href="{% url 'reset_password' %}">Reset Password</a>
+			<p class="error-message">Incorrect username or password.</p>
 		</form>
 	</div>
-	
 </body>
 </html>
-{% endblock %}
