@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 
+app_name = "mainApp"
+
 urlpatterns = [
     path(r'', views.homepage, name="homepage"),
-    path(r'login', views.login, name='login'),
-    path(r'about/', views.about),
+    path(r'login/', views.login, name="login"),
+    # path(r'about/', views.about),
     path(r'member/', views.member, name='member'),
     path(r'member/found', views.memberfound, name='memberfound'),
     # path(r'register', views.register, name='register_form'),

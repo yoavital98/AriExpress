@@ -11,9 +11,9 @@ def homepage(request):
     return render(request, "homepage.html")
 
 def login(request):
-    service = Service()
     # service.logIn()
     if request.method == 'POST':
+        service = Service()
         form = loginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
