@@ -1,12 +1,30 @@
 from ProjectCode.Domain.StoreFacade import StoreFacade
 import logging
-
+import threading
 from ProjectCode.Service.Response import Response
+from ProjectCode.Domain.Controllers.StoreFacade import StoreFacade
+from ProjectCode.Domain.Objects.UserObjects.Admin import *
+
 
 logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                    
+def Singleton(cls):
+    _instance_lock = threading.Lock()
+    _instance = {}
+
+    def _singleton(*args, **kwargs):
+        if cls not in _instance:
+            with _instance_lock:
+                if cls not in _instance:
+                    _instance[cls] = cls(*args, **kwargs)
+        return _instance[cls]
+    return _singleton
 
 
+
+
+@Singleton
 class Service:
     def __init__(self):
         self.store_facade = StoreFacade()
@@ -21,13 +39,6 @@ class Service:
             return [line.strip() for line in f.readlines() if 'ERROR' in line]
 
     # ------  admin  ------ #
-    def openTheSystem(self, username):
-        try:
-            self.store_facade.openSystem(username)
-            logging.info("AriExpress is now open and running")
-        except Exception as e:
-            logging.error(f"An error occurred: {str(e)}")
-            return Response(e, False)
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:

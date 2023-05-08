@@ -19,6 +19,7 @@ from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.ExternalServices.PasswordService import PasswordValidationService
+from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
@@ -35,6 +36,7 @@ class StoreFacade:
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
+        self.online_members = TypedDict(str, Member) # dict from username to online members
         # Services
         self.message_controller = MessageController()  # Messanger
         self.transaction_history = TransactionHistory()  # Transactions log
@@ -46,7 +48,6 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
         # Admin
-        self.SystemStatus = False  # True = System on, False = System off
         first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
         first_admin.logInAsAdmin() # added by rubin to prevent deadlock
         self.admins["Ari"] = first_admin
@@ -60,14 +61,27 @@ class StoreFacade:
     def loadData(self):  # todo complete
         pass
 
-    def __systemCheck(self):
-        if self.SystemStatus:
-            pass
-        else:
-            raise Exception("system is not online")
+
 
 # ------  users  ------ #
     #  Guests
+
+    # Login from Guest to Member
+    def logInFromGuestToMember(self, entrance_id, user_name, password):
+        guest: Guest = self.onlineGuests.get(entrance_id)
+        guest_cart: Cart = guest.get_cart()
+        if self.members.keys().__contains__(user_name):
+            existing_member: Member = self.members[user_name]
+            if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
+                existing_member.logInAsMember()
+              #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
+                self.online_members[existing_member.get_username()] = existing_member # keeping track who's online
+                self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
+                return DataMember(existing_member)
+            else:
+                raise Exception("username or password does not match")
+        else:
+            raise Exception("username or password does not match")
 
     def exitTheSystem(self): #TODO: @Ari and @Yoav should decide if we need this function
         pass
@@ -79,15 +93,18 @@ class StoreFacade:
             raise Exception("admin does not exists")
 
     def logInAsGuest(self):
-        self.__systemCheck()
         new_guest = Guest(self.nextEntranceID)
+        self.nextEntranceID += 1
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         return DataGuest(new_guest)
 
+    def returnToGuest(self, entrance_id):
+        guest: Guest = Guest(entrance_id)
+        self.onlineGuests[entrance_id] = guest
+        return guest
     # only guests
 
     def leaveAsGuest(self, EntranceID):
-        self.__systemCheck()
         if self.onlineGuests.keys().__contains__(str(EntranceID)):
             self.onlineGuests.__delitem__(str(EntranceID))
         else:
@@ -103,10 +120,10 @@ class StoreFacade:
             else: #should never get here usually
                 raise Exception("User not logged in")
 
-    def __getUserOrMember(self,user_name):  #TODO: change the if's because checking the keys somehow dosent work
+    def __getUserOrMember(self, user_name):  #TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
             if self.__checkIfUserIsLoggedIn(user_name):
-                return self.members[user_name]
+                return self.members.get(user_name)
             else:
                 raise Exception("user is not logged in")
         else:
@@ -121,7 +138,6 @@ class StoreFacade:
             else:
                 raise Exception("user is not logged in")
     def register(self, user_name, password, email):
-        self.__systemCheck()
         if not self.members.keys().__contains__(str(user_name)):
             if self.password_validator.ValidatePassword(password):
                 new_member = Member(user_name, password, email)
@@ -135,16 +151,18 @@ class StoreFacade:
 
 
 
-
     #  only members
+
+    # Login stright to Member and not as guest
     def logInAsMember(self, username , password):
-        self.__systemCheck()
         if self.admins.keys().__contains__(username):
             return self.logInAsAdmin(username, password)
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
+                existing_member.setEntranceId(self.nextEntranceID)
+                self.nextEntranceID += 1
                 return DataMember(existing_member)
             else:
                 raise Exception("username or password does not match")
@@ -153,10 +171,13 @@ class StoreFacade:
 
     #  only members
     def logOut(self, username):
-        self.__systemCheck()
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             existing_member.logOut()
+            guest: Guest = self.returnToGuest(self.nextEntranceID)
+            return guest
+        else:
+            raise Exception("Logout is not an option")
 
     #  only members
 
@@ -174,7 +195,6 @@ class StoreFacade:
         requested_basket = user.get_Basket(storename)
         return DataBasket(requested_basket)
 
-
     # guest and member
     def getCart(self,username):
         self.__systemCheck()
@@ -184,7 +204,6 @@ class StoreFacade:
 
     # guest and member
     def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
-        self.__systemCheck()
         user: User = self.__getUserOrMember(username)
         store: Store = self.stores.get(storename)
         if store is None:
@@ -200,7 +219,6 @@ class StoreFacade:
         self.__systemCheck()
         user: User = self.__getUserOrMember(username)
         remove_success = user.removeFromBasket(storename, productID)
-        #TODO: For Ari: it doesnt return shit
         if remove_success:
             return remove_success
         else:
@@ -594,10 +612,7 @@ class StoreFacade:
             existing_admin: Admin = self.members[user_name]
             existing_admin.logOffAsAdmin()
 
-    def openSystem(self, admin_name):
-        existing_admin: Admin = self.__getAdmin(admin_name)
-        if existing_admin.get_logged():
-            self.SystemStatus = True
+
 
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
