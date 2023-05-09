@@ -166,6 +166,7 @@ class Store:
                 raise Exception("No such product exists")
             cur_product.quantity -= product_tuple[1]
             overall_price += cur_product.price * product_tuple[1]
+
         return overall_price
 
     def requestBid(self, bid: Bid):
