@@ -39,6 +39,13 @@ class Service:
             return [line.strip() for line in f.readlines() if 'ERROR' in line]
 
     # ------  admin  ------ #
+    def getAllOnlineOnline(self, user_name):
+        try:
+            online_members_dict = self.store_facade.getAllOnlineMembers(user_name)
+            return Response(online_members_dict,True)
+        except Exception as e:
+            logging.error(f"An error occurred: {str(e)}")
+            return Response(e, False)
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
