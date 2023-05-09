@@ -140,7 +140,7 @@ class StoreFacade:
     def register(self, user_name, password, email):
         if not self.members.keys().__contains__(str(user_name)):
             if self.password_validator.ValidatePassword(password):
-                new_member = Member(user_name, password, email)
+                new_member = Member(None ,user_name, password, email)
 
                 self.members[str(user_name)] = new_member
 

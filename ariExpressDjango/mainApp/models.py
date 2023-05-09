@@ -2,8 +2,6 @@ from django.db import models
 
 
 
-
-
 class Product(models.Model):
     product_id = models.IntegerField()
     name = models.CharField(max_length=100)
@@ -32,7 +30,7 @@ class Store(models.Model):
 class Cart(models.Model):
     cart_id = models.IntegerField()
     username = models.CharField(max_length=100)
-    baskets = models.ForeignKey('Basket', on_delete=models.CASCADE) # TODO: check cascade
+    baskets = models.ForeignKey('Basket', on_delete=models.CASCADE, null=True, blank=True) # TODO: check cascade
 
     def __str__(self):
         return self.username
@@ -53,6 +51,7 @@ class Member(models.Model):
     email = models.CharField(max_length=100)
     # isLoggedIn = models.BooleanField()
     cart_id = models.ForeignKey(Cart, on_delete=models.DO_NOTHING)
+    password = models.CharField(max_length=100)
 
     def __str__(self):
         return self.username

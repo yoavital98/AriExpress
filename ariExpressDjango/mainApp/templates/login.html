@@ -112,17 +112,26 @@
 	<br>
 	<br>
 	<br>
-	<form>
+	<form method="post" action="{% url 'mainApp:login' %}">
 		<div class="mb-3">
-		  <label for="exampleInputEmail1" class="form-label">Email address</label>
-		  <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+		  <label for="username" class="form-label">Username</label>
+		  <input type="text" class="form-control" id="username" name="username" aria-describedby="emailHelp">
 		</div>
 		<div class="mb-3">
-		  <label for="exampleInputPassword1" class="form-label">Password</label>
-		  <input type="password" class="form-control" id="exampleInputPassword1">
+		  <label for="password" class="form-label">Password</label>
+		  <input type="password" class="form-control" id="password" name="password">
 		</div>
-		<button type="submit" class="btn btn-primary">Login</button>
+			{% csrf_token %}
+			<button type="submit" class="btn btn-primary">Login</button>
+		
+		<a>{{ msg }}</a>
+		{% if showMsg %}
+		<p>{{ msg }}</p>
+		{% endif %}
+		
 	</form>
+	
+
 	
 </body>
 {% endblock %}

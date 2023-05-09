@@ -12,18 +12,28 @@ def homepage(request):
 
 def login(request):
     # service.logIn()
+    msg = ""
+    showMsg = False
     if request.method == 'POST':
         service = Service()
+        reg = service.register('asd', 'asd', 'asd')
+        print(reg.getReturnValue())
         form = loginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            # if username==""
             res = service.logIn(username, password)
-            return HttpResponse(f'{res.getReturnValue}')
+            msg = res.getReturnValue()
     else:
         form = loginForm()
+        msg = ""
+        showMsg = True
 
-    return render(request, 'login.html', {'form': form})
+
+    return render(request, 'login.html', {'form': form,
+                                          'msg': msg,
+                                          'showMsg': showMsg})
     # return render(request, 'login.html')
 
 
