@@ -12,7 +12,6 @@ class Member(User):
         super().__init__(entrance_id)
         self.cart = Cart(user_name) # TODO: cart will be pulled from database and guest cart will be added to it
         self.accesses = TypedDict(str, Access)  # Accesses
-        self.logged_In = False  # login
         self.auctions = TypedDict(int, Auction)  # auction id to auction
         self.user_name = user_name  # username
         self.password = password  # password
@@ -59,9 +58,6 @@ class Member(User):
 
     def set_email(self, email):
         self.email = email
-
-    def get_logged(self):
-        return self.logged_In
 
     def addBidToBasket(self, bid):
         self.cart.addBidToBasket(bid)
