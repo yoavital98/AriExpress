@@ -61,19 +61,18 @@ class StoreFacade:
     def loadData(self):  # todo complete
         pass
 
-
-
 # ------  users  ------ #
     #  Guests
+    # Login from Guest to Member, this login is not from the main login screen. and from the state of a guest to Member
 
-    # Login from Guest to Member
     def logInFromGuestToMember(self, entrance_id, user_name, password):
         guest: Guest = self.onlineGuests.get(entrance_id)
-        guest_cart: Cart = guest.get_cart()
+        # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
             existing_member: Member = self.members[user_name]
             if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
+                existing_member.setEntranceId(guest.entrance_id) # it's the same entrance id
               #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member # keeping track who's online
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
@@ -86,43 +85,44 @@ class StoreFacade:
     def exitTheSystem(self): #TODO: @Ari and @Yoav should decide if we need this function
         pass
 
+    # Getting an admin from the admins
     def __getAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
             return self.admins[user_name]
         else:
             raise Exception("admin does not exists")
 
-    def logInAsGuest(self):
+    # regular guest entrance
+    def loginAsGuest(self):
         new_guest = Guest(self.nextEntranceID)
         self.nextEntranceID += 1
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         return DataGuest(new_guest)
 
+    # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
         guest: Guest = Guest(entrance_id)
         self.onlineGuests[entrance_id] = guest
         return guest
     # only guests
 
-    def leaveAsGuest(self, EntranceID):
-        if self.onlineGuests.keys().__contains__(str(EntranceID)):
-            self.onlineGuests.__delitem__(str(EntranceID))
+    # when a guest leaves the system.
+    def leaveAsGuest(self, entrance_id):
+        if self.onlineGuests.keys().__contains__(str(entrance_id)):
+            self.onlineGuests.__delitem__(str(entrance_id))
         else:
             raise Exception("This entrance id doesn't belong to the online guests list")
 
-
     #  Members
+    # private method, checks if the member is logged in
 
     def __checkIfUserIsLoggedIn(self, user_name):
-            existing_member: Member = self.members.get(user_name)
-            if existing_member.get_logged():
-                return True
-            else: #should never get here usually
-                raise Exception("User not logged in")
+        return self.online_members.__contains__(user_name)
 
+    # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def __getUserOrMember(self, user_name):  #TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
-            if self.__checkIfUserIsLoggedIn(user_name):
+            if self.online_members.__contains__(str(user_name)):
                 return self.members.get(user_name)
             else:
                 raise Exception("user is not logged in")
@@ -131,19 +131,20 @@ class StoreFacade:
                 return self.onlineGuests.get(user_name)
             else:
                 raise Exception("user is not guest nor a member")
+
+    # gets an online member.
     def __getOnlineMemberOnly(self, user_name):
-        if self.members.keys().__contains__(user_name):
-            if self.__checkIfUserIsLoggedIn(user_name):
-                return self.members[user_name]
-            else:
-                raise Exception("user is not logged in")
+        if self.online_members.keys().__contains__(user_name):
+            return self.online_members.get(user_name)
+        else:
+            raise Exception("user is not logged in")
+
+    # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
         if not self.members.keys().__contains__(str(user_name)):
             if self.password_validator.ValidatePassword(password):
-                new_member = Member(user_name, password, email)
-
+                new_member: Member = Member(str(0), user_name, password, email)
                 self.members[str(user_name)] = new_member
-
                 return DataMember(new_member)
         else:
             raise Exception("This username is already in the system")
@@ -153,7 +154,7 @@ class StoreFacade:
 
     #  only members
 
-    # Login stright to Member and not as guest
+    # Login straight to Member and not as guest from the home logging screen.
     def logInAsMember(self, username , password):
         if self.admins.keys().__contains__(username):
             return self.logInAsAdmin(username, password)
@@ -163,6 +164,7 @@ class StoreFacade:
                 existing_member.logInAsMember()
                 existing_member.setEntranceId(self.nextEntranceID)
                 self.nextEntranceID += 1
+                self.online_members[username] = existing_member  # indicates that the user is logged in
                 return DataMember(existing_member)
             else:
                 raise Exception("username or password does not match")
@@ -170,63 +172,65 @@ class StoreFacade:
             raise Exception("username or password does not match")
 
     #  only members
+
+    # logout a member
     def logOut(self, username):
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
-            existing_member.logOut()
-            guest: Guest = self.returnToGuest(self.nextEntranceID)
+            del self.online_members[username] # deletes the user from the online users
+            guest: Guest = self.returnToGuest(existing_member.get_entrance_id())  # returns as a guest
             return guest
         else:
             raise Exception("Logout is not an option")
 
     #  only members
-
+    # getting the user purchase history
     def getMemberPurchaseHistory(self, username):
-        self.__systemCheck()
         if self.__checkIfUserIsLoggedIn(username):
             return self.transaction_history.get_User_Transactions(username)
         else:
             raise Exception("username isn't logged in")
 
     # guest and member
-    def getBasket(self, username, storename):
-        self.__systemCheck()
-        user = self.__getUserOrMember(username)
-        requested_basket = user.get_Basket(storename)
+    # getting a User's basket
+    def getBasket(self, user_name, store_name):
+        user = self.__getUserOrMember(user_name)
+        requested_basket = user.get_Basket(store_name)
         return DataBasket(requested_basket)
 
     # guest and member
-    def getCart(self,username):
-        self.__systemCheck()
+    # getting a Users cart
+    def getCart(self, username):
         user: User = self.__getUserOrMember(username)
         requested_cart = user.get_cart()
         return DataCart(requested_cart)
 
     # guest and member
-    def addToBasket(self, username, storename, productID, quantity): # this function should first go to the store and check if we can even add to the basket
+    # adding a product to basket, checking with store if the item is available
+    def addToBasket(self, username, store_name, product_id, quantity):
         user: User = self.__getUserOrMember(username)
-        store: Store = self.stores.get(storename)
+        store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
-        product = store.checkProductAvailability(productID, quantity)
+        product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
-            user.add_to_cart(username, storename, productID, product, quantity)
+            user.add_to_cart(username, store_name, product_id, product, quantity)
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 
     # guest and member
-    def removeFromBasket(self, username, storename, productID):
-        self.__systemCheck()
+    # deleting an item from a basket, if the item exists there
+    def removeFromBasket(self, username, storename, product_id):
         user: User = self.__getUserOrMember(username)
-        remove_success = user.removeFromBasket(storename, productID)
+        remove_success = user.removeFromBasket(storename, product_id)
         if remove_success:
             return remove_success
         else:
             raise Exception("there was a problem with removing the item or either the item doesnt exists in the basket")
 
     # guest and member
+    # editing aa product quantity from a specific basket
     def editBasketQuantity(self, username, storename, productID, quantity):
-        self.__systemCheck()
         user: User = self.__getUserOrMember(username)
         answer = user.checkProductExistance(storename, productID) #answer is boolean
         if answer:
@@ -240,20 +244,19 @@ class StoreFacade:
             raise Exception("product does not exists in the basket")
 
     # guest and member
-    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date, back_number):
-        self.__systemCheck()
+    # getting all the items in the cart and makes a purchase, adding all the items to the Member history and the store's
+    #TODO: method needs to be sync'd
+    def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         overall_price = 0  # overall price for the user
-        user: User = self.__getUserOrMember(user_name)  # getting the user #TODO: get member or Guest
+        user: User = self.__getUserOrMember(user_name)  # getting the user
         stores_to_products = TypedDict(str, tuple)  # the final dictionary for the UserTransaction
-        # TODO: need to implement a lock system in here, so other users cant purchase at the same time.
         answer = user.get_cart().checkAllItemsInCart()  # answer = True or False
         if answer is True:
             for basket in user.get_cart().get_baskets().values():
                 products: set = basket.getProductsAsTuples()
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
-                user_address = None  # tmp
-                shipment_date = self.supply_service.checkIfAvailable(basket.store, user_address, products) # TODO: Ari, there should be an address probaby
-                self.payment_service.pay(basket.store, card_number, card_user_name, card_user_ID, card_date, back_number, price) # TODO: Ari
+                shipment_date = self.supply_service.checkIfAvailable(basket.store, address, products) # TODO: Ari, there should be an address probaby
+                self.payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date, back_number, price) # TODO: Ari
                 self.transaction_history.addNewStoreTransaction(user_name, basket.store.store_name, products, price) #make a new transaction and add it to the store history and user history
                 stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
                 overall_price += price
@@ -312,15 +315,11 @@ class StoreFacade:
         cur_member.addNewAuction(auction_id, cur_auction)
         return DataAuction(cur_auction)
 
-    def participateInLottery(self, storename, username, lottery_id, share):
-        cur_store: Store = self.stores.get(storename)
-        cur_member: Member = self.members.get(username)
+    def participateInLottery(self, store_name, user_name, lottery_id, share):
+        cur_store: Store = self.stores.get(store_name)
+        cur_member: Member = self.__getOnlineMemberOnly(user_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        if cur_member is None:
-            raise Exception("No such member exists")
-        if not self.__checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
         cur_lottery = cur_store.checkLotteryParticipationShare(lottery_id, share)
         cur_lottery.add_participant_share(cur_member, share)
         cur_store.participateInLottery(lottery_id, share)
@@ -489,7 +488,7 @@ class StoreFacade:
         pass
 
 
-    def approveBid(self,username, storename, bid_id):
+    def approveBid(self, username, storename, bid_id):
         if not self.__checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
         cur_store: Store = self.stores[storename]
@@ -525,7 +524,7 @@ class StoreFacade:
             raise Exception("User is not logged in")
         if self.members[username] is None:
             raise Exception("No such member exists")
-        alternative_bid = cur_store.sendAlternativeBid(username,bid_id,alternate_offer)
+        alternative_bid = cur_store.sendAlternativeBid(username, bid_id, alternate_offer)
         return DataBid(alternative_bid)
 
 
@@ -613,8 +612,6 @@ class StoreFacade:
             existing_admin.logOffAsAdmin()
 
 
-
-
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
         pass # no messanger this version
 
@@ -630,5 +627,15 @@ class StoreFacade:
                 return DataAdmin(new_admin)
             else:
                 raise Exception("password is too weak")
+
+    def getAllOnlineMembers(self, user_name):
+        if self.admins.__contains__(user_name):
+            member_list = []
+            for member in self.online_members.values():
+                member_list.insert(DataMember(member))
+            return member_list
+        else:
+            raise Exception("only admin can get the online members list")
+
 
 
