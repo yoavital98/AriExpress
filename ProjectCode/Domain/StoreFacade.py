@@ -1,3 +1,5 @@
+#from django.core.mail import EmailMessage
+
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
@@ -19,7 +21,6 @@ from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.ExternalServices.PasswordService import PasswordValidationService
-from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
@@ -634,10 +635,37 @@ class StoreFacade:
         if self.admins.__contains__(user_name):
             member_list = []
             for member in self.online_members.values():
-                member_list.insert(DataMember(member))
+                member_list.append(member)
             return member_list
         else:
             raise Exception("only admin can get the online members list")
+
+    def removeMember(self, username, memberName):
+        if self.admins.__contains__(username):
+            if self.members.__contains__(memberName):
+                cur_admin = self.admins[username]
+                cur_user = self.members[memberName]
+                cur_accesses = cur_user.get_accesses()
+                cur_user.logOut()
+                if len(cur_accesses) == 0:
+                    # TODO Add email implementation
+                    # email_subject = 'You have been banned'
+                    # email_body = 'Dear {},\n\nYou have been banned from our platform.'.format(memberName)
+                    # email = EmailMessage(
+                    #     email_subject,
+                    #     email_body,
+                    #     'AriExpressSupport@gmail.com',  # replace with your email address
+                    #     [cur_user.email],  # replace with the member's email address
+                    #     reply_to=['AriExpressSupport@gmail.com']  # replace with your support email address
+                    # )
+                    # email.send()
+                    del self.members[memberName]
+                    # TODO "הסרה של מנוי: שמוטב שתתבצע על ידי הרכיב שעוסק ברישום המנויים ובפרטיותם"
+                    # TODO should remove from database? other extra steps?
+            else:
+                raise Exception("member does not exist")
+        else:
+            raise Exception("only admin can remove a member")
 
 
 
