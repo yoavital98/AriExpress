@@ -45,6 +45,15 @@ class Service:
             logging.error(f"addAdmin Error: {str(e)}")
             return Response(e, False)
 
+    def removeMember(self, username, memberName):
+        try:
+            self.store_facade.removeMember(username, memberName)
+            logging.info("Member has been removed successfully. By username: " + username + ". Removed username: " + memberName + ".")
+            return Response(True, True)
+        except Exception as e:
+            logging.error(f"removeMember Error: {str(e)}")
+            return Response(e, False)
+
     # def loadAdminsFromDB(self):
     #     try:
     #         admins = TypedDict(str, Admin)
