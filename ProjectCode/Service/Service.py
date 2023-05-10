@@ -1,33 +1,22 @@
-from ProjectCode.Domain.StoreFacade import StoreFacade
 import logging
-import threading
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
-from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 
 #TODO check if all functions (new ones) got logging messages
 logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-def Singleton(cls):
-    _instance_lock = threading.Lock()
-    _instance = {}
-
-    def _singleton(*args, **kwargs):
-        if cls not in _instance:
-            with _instance_lock:
-                if cls not in _instance:
-                    _instance[cls] = cls(*args, **kwargs)
-        return _instance[cls]
-    return _singleton
 
 
-
-
-@Singleton
 class Service:
-    def __init__(self):
-        self.store_facade = StoreFacade()
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls.store_facade = StoreFacade()
+        return cls._instance
+
 
     # ------  logger  ------ #
     def getInfoLogs(self):
@@ -39,13 +28,13 @@ class Service:
             return [line.strip() for line in f.readlines() if 'ERROR' in line]
 
     # ------  admin  ------ #
-    def openTheSystem(self, username):
-        try:
-            self.store_facade.openSystem(username)
-            logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
-        except Exception as e:
-            logging.error(f"openTheSystem Error: {str(e)}")
-            return Response(e, False)
+    # def openTheSystem(self, username):
+    #     try:
+    #         self.store_facade.openSystem(username)
+    #         logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
+    #     except Exception as e:
+    #         logging.error(f"openTheSystem Error: {str(e)}")
+    #         return Response(e, False)
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
         try:
@@ -86,7 +75,7 @@ class Service:
 
     def loginAsGuest(self):
         try:
-            guest = self.store_facade.logInAsGuest()
+            guest = self.store_facade.loginAsGuest()
             logging.info("Logged in as guest successfully. Guest Entrance ID: " + str(guest.get_username()))
             return Response(guest, True)
         except Exception as e:
@@ -249,10 +238,10 @@ class Service:
             return Response(e, False)
 
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
-                     back_number):  # TODO: for now lets assume only credit card(no paypal)
+                     back_number, address):  # TODO: for now lets assume only credit card(no paypal)
         try:
             flag = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
-                                                  back_number)
+                                                  back_number, address)
             logging.info("Cart was purchased successfully. By username: " + user_name + ".")
             return Response(flag, True)
         except Exception as e:
@@ -403,22 +392,31 @@ class Service:
             logging.error(f"nominateStoreManager Error: {str(e)}")
             return Response(e, False)
 
-    def addPermissionForManager(self, requesterID, nominated_username, permission):
+    def addPermission(self, requesterID, nominated_username, permission):
         try:
-            self.store_facade.addPermissionsForManager()
+            self.store_facade.addPermissions()
             logging.info("Permission has been added successfully. By username: " + requesterID + ". nominated_username: " + nominated_username + ". permission: " + permission + ".")
         except Exception as e:
-            logging.error(f"addPermissionForManager Error: {str(e)}")
+            logging.error(f"addPermission Error: {str(e)}")
             return Response(e, False)
 
-    def editPermissionsForManager(self, requesterID, nominatedID,
+    def editPermissions(self, requesterID, nominatedID,
                                   permission):  # TODO still don't know the implementation
         try:
-            self.store_facade.editPermissionsForManager()
+            self.store_facade.editPermissions()
             logging.info("Permission has been edited successfully. By username: " + requesterID + ". nominated_username: " + nominatedID + ". permission: " + permission + ".")
             return Response(True, True)
         except Exception as e:
-            logging.error(f"editPermissionsForManager Error: {str(e)}")
+            logging.error(f"editPermissions Error: {str(e)}")
+            return Response(e, False)
+
+    def getPermissions(self, requesterID, nominatedID):  # TODO still don't know the implementation
+        try:
+            permissions = self.store_facade.getPermissions()
+            logging.debug(f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
+            return Response(permissions, True)
+        except Exception as e:
+            logging.error(f"getPermissions Error: {str(e)}")
             return Response(e, False)
 
     def closeStore(self, username, storename):
