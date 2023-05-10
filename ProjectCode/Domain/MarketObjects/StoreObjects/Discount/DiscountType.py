@@ -13,15 +13,19 @@ class DiscountType(ABC):
         self.level_name = level_name
 
     @abstractmethod
-    def calculate(self, product, basket, total_price, category_or_product_id):
+    def calculate(self, product, basket, total_price):
         pass
 
-    def _checkIfRelevant(self, arg):
+    @abstractmethod
+    def parse(self):
+        pass
+
+    def _checkIfRelevant(self, product):
         if self.level == "Store":
             return True
         elif self.level == "Category":
-            return self.level_name == arg
+            return self.level_name in product.get_categories()
         elif self.level == "Product":
-            return self.level_name == arg
+            return self.level_name == product.get_product_id()
         return False
 

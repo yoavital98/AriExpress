@@ -3,7 +3,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.DiscountType import 
 
 class MaxComp(DiscountType):
     def __init__(self):
-        pass
+        super().__init__(0, "", "")
 
-    def calculate(self, product, basket, total_price, category_or_product_id):
+    def calculate(self, product, basket, total_price):
         pass
