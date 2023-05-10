@@ -481,12 +481,14 @@ class StoreFacade:
                                                         "Manager")
         return DataAccess(nominated_modified_access)
 
-    def addPermissionsForManager(self):
+    def addPermissions(self):
         pass
 
-    def editPermissionsForManager(self):
+    def editPermissions(self):
         pass
 
+    def getPermissions(self):
+        pass
 
     def approveBid(self, username, storename, bid_id):
         if not self.__checkIfUserIsLoggedIn(username):
