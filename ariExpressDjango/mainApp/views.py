@@ -102,7 +102,10 @@ def logout(request):
 
     
 
-
+def myshops(request):
+    service = Service()
+    return render(request, 'myshops.html', {})
+    
 
 def reset_password(request):
     pass
