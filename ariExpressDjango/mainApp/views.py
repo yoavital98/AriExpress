@@ -73,3 +73,9 @@ def reset_password(request):
 
 def homepage_guest(request):
     pass
+
+
+
+
+def inbox(request):
+    return render(request, 'inbox.html')
