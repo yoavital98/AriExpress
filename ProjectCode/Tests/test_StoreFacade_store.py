@@ -16,7 +16,7 @@ class TestStoreFacade(TestCase):
         # TODO: check info for duplicates
         # TODO: check implementations of tests
         self.store_facade = StoreFacade()
-        self.member1 = Member("Ari", "password123", "ari@gmail.com")
+        self.member1 = Member(2, "Ari", "password123", "ari@gmail.com")
         self.store_facade.members["Ari"] = self.member1
 
 
@@ -282,6 +282,46 @@ class TestStoreFacade(TestCase):
         self.product = self.store.addProduct(self.access, "Product1", 10, 10, "Category1")
         self.assertEqual(self.store_facade.placeBid("Ari", "Store1", 5, self.product.product_id+1, 5), False)
 
+
+    def test_addDiscount_success(self):
+        self.member1.logInAsMember()
+        self.store_facade.openStore(self.member1.get_username(), "Store1")
+        self.store = self.store_facade.stores["Store1"]
+        self.access = self.store.get_accesses()[self.member1.get_username()]
+        self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
+        self.discount = self.store.addDiscount("Simple", percent=10, level="Product", level_name=self.product.get_product_id())
+        self.added_discount = self.store.getDiscount(1)
+        self.assertEqual(self.discount, self.added_discount)
+
+
+    def test_calculateSimpleDiscount_success(self):
+        self.member1.logInAsMember()
+        self.store_facade.openStore(self.member1.get_username(), "Store1")
+        self.store = self.store_facade.stores["Store1"]
+        self.access = self.store.get_accesses()[self.member1.get_username()]
+        self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
+        self.discount = self.store.addDiscount("Simple", percent=10, level="Product",
+                                               level_name=self.product.get_product_id())
+        self.product_dict = {self.product.get_product_id(): 1}
+        self.price_after_discount = self.store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
+        self.assertEqual(self.price_after_discount, 9)
+
+    def test_calculateConditionedDiscount_success(self):
+        self.member1.logInAsMember()
+        self.store_facade.openStore(self.member1.get_username(), "Store1")
+        self.store = self.store_facade.stores["Store1"]
+        self.access = self.store.get_accesses()[self.member1.get_username()]
+        self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
+        self.product2 = self.store.addProduct(self.access, "Cariot", 10, 10, "Milk")
+        self.sub_rule = {"rule_type": "amount_of_product", "product_id":self.product.get_product_id(),
+                        "operator":">=", "quantity":1,"category":"", "child": {}}
+        self.rule = {"rule_type": "amount_of_product", "product_id":self.product2.get_product_id(),
+                     "operator":">=", "quantity":1,"category":"", "child": {"logic_type":"OR", "rule":self.sub_rule} }
+        self.discount = self.store.addDiscount("Conditioned", percent=10, level="Product",
+                                               level_name=self.product.get_product_id(), rule=self.rule)
+        self.product_dict = {self.product.get_product_id(): 2, self.product2.get_product_id(): 2}
+        self.price_after_discount_1 = self.store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
+        self.assertEqual(9,self.price_after_discount_1)
     # ---------------------- Not implemented yet ----------------------
     def test_placeBid_badProductPurchasePolicy_failure(self):
         pass
