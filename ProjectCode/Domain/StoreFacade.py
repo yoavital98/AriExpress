@@ -1,6 +1,4 @@
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
-from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
-from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 #-------Data MarketObjects Imports-------#
@@ -27,11 +25,13 @@ from ProjectCode.Domain.MarketObjects.User import User
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
+import asyncio
 
 
 class StoreFacade:
     def __init__(self):
         # Store Data
+        self.purchase_lock = asyncio.Lock()
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
@@ -145,13 +145,10 @@ class StoreFacade:
         else:
             raise Exception("This username is already in the system")
 
-
-
-
     #  only members
 
     # Login straight to Member and not as guest from the home logging screen.
-    def logInAsMember(self, username , password):
+    def logInAsMember(self, username, password):
         password_validator = PasswordValidationService()
         if self.admins.keys().__contains__(username):
             return self.logInAsAdmin(username, password)
@@ -243,23 +240,20 @@ class StoreFacade:
 
     # guest and member
     # getting all the items in the cart and makes a purchase, adding all the items to the Member history and the store's
-    #TODO: method needs to be sync'd
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         user: User = self.__getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
-            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True)
+            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True, self.purchase_lock)
         else:
-            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False)
-
+            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False, self.purchase_lock)
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
-
-    def placeBid(self, username, storename, offer, productID, quantity):
+    def placeBid(self, username, store_name, offer, product_id, quantity):
         existing_member: Member = self.__getOnlineMemberOnly(username)
-        bid: Bid = Bid(self.bid_id_counter, username, storename, offer, productID, quantity)
+        bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
         self.bid_id_counter += 1
         existing_member.addBidToBasket(bid)
-        store: Store = self.stores[storename]
+        store: Store = self.stores[store_name]
         store.requestBid(bid)
         return DataBid(bid)
 
@@ -269,9 +263,11 @@ class StoreFacade:
         data_bids_list = [DataBid(bid) for bid in bids_set]
         return data_bids_list
 
-    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date, back_number):
+    def purchaseConfirmedBid(self, username, store_name, bid_id, card_number, card_user_name, card_user_id, card_date,
+                             back_number):
         existing_member: Member = self.__getOnlineMemberOnly(username)
-        existing_member.get_cart().purchaseConfirmedBid(storename, bid_id, card_number, card_user_name, card_user_ID, card_date, back_number)
+        existing_member.get_cart().purchaseConfirmedBid(store_name, bid_id, card_number, card_user_name, card_user_id,
+                                                        card_date, back_number, self.purchase_lock)
 
     def placeOfferInAuction(self, username, storename, auction_id, offer):
         cur_member: Member = self.__getOnlineMemberOnly(username)
@@ -298,6 +294,7 @@ class StoreFacade:
         cur_store: Store = self.stores.get(storename)
         if cur_store is None:
             raise Exception("No such store exists")
+        cur_member.claimAuctionPurchase()
         cur_auction: Auction = cur_member.getAuctionById(auction_id)
         if cur_auction.get_highest_offer_username() == cur_member.get_username():
             product: Product = cur_store.get_products().get(cur_auction.get_product_id())
@@ -364,11 +361,11 @@ class StoreFacade:
         #TODO: not implemented yet
         return []
 
+    def getStorePurchaseHistory(self, user_name, store_name):
+        #TODO: amiel check accesses for the username if he has access to the store
+        transaction_history = TransactionHistory()
+        return transaction_history.get_Store_Transactions(store_name)
 
-
-
-    def getStorePurchaseHistory(self, store_name):
-        pass
     # ------  Management  ------ #
     #TODO: add check if user is loggedin to each function
 

@@ -108,3 +108,7 @@ class Member(User):
     def addNewLottery(self, lottery_id, cur_lottery):
         if not self.lotteries.keys().__contains__(lottery_id):
             self.auctions[lottery_id] = cur_lottery
+
+    def claimAuctionPurchase(self,storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
+        pass
+        #  function will be here
