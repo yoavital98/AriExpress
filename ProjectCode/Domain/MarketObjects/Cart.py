@@ -122,46 +122,46 @@ class Cart:
         transaction_history = TransactionHistory()
         overall_price = 0  # overall price for the user
         stores_to_products = TypedDict(str, list)  # store_name to list of tuples <products,quantities>
-        async with lock:
-            answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
-            if answer is True: # means everything is ok to go
-                for basket in self.get_baskets().values(): # all the baskets
-                    products: list = basket.getProductsAsTuples()
-                    price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
+        #async with lock:
+        answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
+        if answer is True: # means everything is ok to go
+            for basket in self.get_baskets().values(): # all the baskets
+                products: list = basket.getProductsAsTuples()
+                price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
                     #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
-                    payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date,back_number, price)
-                    transaction_history.addNewStoreTransaction(self.username, basket.store.store_name, products, price)  # make a new transaction and add it to the store history and user history
-                    stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
-                    overall_price += price
-                if is_member:
-                    transaction_history.addNewUserTransaction(self.username, stores_to_products, overall_price)
-                self.clearCartFromProducts()  # clearing all the products from all the baskets
-                self.clearCart()  # if there are empty baskets from bids and products - remove them
-            else:
-                raise Exception("There is a problem with the items quantity or existance in the store")
+                payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date,back_number, price)
+                transaction_history.addNewStoreTransaction(self.username, basket.store.store_name, products, price)  # make a new transaction and add it to the store history and user history
+                stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
+                overall_price += price
+            if is_member:
+                transaction_history.addNewUserTransaction(self.username, stores_to_products, overall_price)
+            self.clearCartFromProducts()  # clearing all the products from all the baskets
+            self.clearCart()  # if there are empty baskets from bids and products - remove them
+        else:
+            raise Exception("There is a problem with the items quantity or existance in the store")
 
     def purchaseConfirmedBid(self, store_name, bid_id, card_number, card_user_name, card_user_id, card_date, back_number, lock):
         payment_service = PaymentService()
         transaction_history = TransactionHistory()
         bid: Bid = self.getBid(store_name, bid_id)
         if bid.get_status() == 1:
-            async with lock:
-                answer = self.checkItemInCartForBid(bid)
-                if answer:
-                    basket: Basket = self.baskets.get(store_name)
-                    store: Store = basket.get_Store()
-                    product: Product = store.get_products()[bid.get_product()]
-                    item_name = product.name
-                    tuple_for_history = (item_name, bid.get_quantity())
-                    payment_service.pay(bid.get_storename(), card_number, card_user_name, card_user_id, card_date, back_number, bid.get_offer())
-                    store.purchaseBid(bid_id)
-                    transaction_history.addNewStoreTransaction(self.username, bid.get_storename(), tuple_for_history, bid.get_offer())
+            #async with lock:
+            answer = self.checkItemInCartForBid(bid)
+            if answer:
+                basket: Basket = self.baskets.get(store_name)
+                store: Store = basket.get_Store()
+                product: Product = store.get_products()[bid.get_product()]
+                item_name = product.name
+                tuple_for_history = (item_name, bid.get_quantity())
+                payment_service.pay(bid.get_storename(), card_number, card_user_name, card_user_id, card_date, back_number, bid.get_offer())
+                store.purchaseBid(bid_id)
+                transaction_history.addNewStoreTransaction(self.username, bid.get_storename(), tuple_for_history, bid.get_offer())
 
-                    dict_for_history = TypedDict(str, tuple)
-                    dict_for_history[store_name] = tuple_for_history
-                    transaction_history.addNewUserTransaction(self.username, dict_for_history, bid.get_offer())
-                    self.clearBidFromBasket(store_name, bid_id)
-                else:
-                    raise Exception("there was a problem with the Bid or the quantity in the store")
+                dict_for_history = TypedDict(str, tuple)
+                dict_for_history[store_name] = tuple_for_history
+                transaction_history.addNewUserTransaction(self.username, dict_for_history, bid.get_offer())
+                self.clearBidFromBasket(store_name, bid_id)
+            else:
+                raise Exception("there was a problem with the Bid or the quantity in the store")
         else:
             raise Exception("Bid is not confirmed")

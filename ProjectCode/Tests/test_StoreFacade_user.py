@@ -1,5 +1,7 @@
 import unittest
 from unittest import TestCase
+
+from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
@@ -11,13 +13,11 @@ class TestStoreFacade(TestCase):
     def setUp(self):
         # TODO: check info for duplicates
         self.store_facade = StoreFacade()
-        self.store_facade.openSystem("Ari")
-        self.member1 = self.store_facade.register("John", "password123", "john.doe@example.com")
-        self.member2 = self.store_facade.register("Jane", "password456", "jane.doe@example.com")
-        self.member1.logInAsMember()
-        self.member2.logInAsMember()
-        self.store1 = self.store_facade.openStore(self.member1.get_username(), "Dunder Mifflin")
-        self.item_paper = self.store_facade.addNewProductToStore(self.member1.get_username(), self.store1.get_store_name(),"Paper", 10, 10, ["Office"])
+        self.store_facade.register("John", "password123", "john.doe@example.com")
+        self.store_facade.register("Jane", "password456", "jane.doe@example.com")
+        self.member1: Member = self.store_facade.members.get("John")
+        self.member2: Member = self.store_facade.members.get("Jane")
+
 
     # def test_load_data(self):
     #     self.fail()
@@ -31,8 +31,9 @@ class TestStoreFacade(TestCase):
         username = "test_user"
         password = "test_password"
         email = "test_email@example.com"
-        member = self.store_facade.register(username, password, email)
-        self.assertEqual(self.store_facade.members.get(username), member)
+        self.store_facade.register(username, password, email)
+        member: Member = self.store_facade.members.get("test_user")
+        self.assertEqual(member.get_username(), "test_user")
 
     def test_register_existingUser(self):
         # trying to register an existing user
@@ -41,26 +42,24 @@ class TestStoreFacade(TestCase):
 
     ############################### TEST LOGIN CHECK ###############################
     def test_checkIfMemberIsLoggedIn_existingUserLoggedIn(self):
-        self.member1.logInAsMember()
-        self.assertTrue(self.member1.get_logged())
+        self.store_facade.logInAsMember("John", "password123")
+        member: Member = self.store_facade.online_members.get("John")
+        self.assertTrue(member.get_username(), self.member1.get_username())
 
     def test_checkIfMemberIsLoggedIn_existingUserLoggedOut(self):
         self.member1.logOut()
-        self.assertFalse(self.member1.get_logged())
+        self.assertFalse(self.store_facade.online_members.__contains__(self.member1.get_username()))
 
     def test_checkIfMemberIsLoggedIn_UserNotExists(self):
-        with self.assertRaises(Exception):
-            self.store_facade.checkIfUserIsLoggedIn("Amiel")
+        self.assertFalse(self.store_facade.checkIfUserIsLoggedIn("Amiel"))
 
     ############################### TEST Guests LOGIN-OUT ###############################
 
     def test_logInAsGuest_checkIDAndOnlineGuests(self):
         previous_last_entrance_id = self.store_facade.nextEntranceID
-        guest = self.store_facade.logInAsGuest()
-        new_last_entrance_id = self.store_facade.nextEntranceID
-        self.assertEqual(guest.entrance_id, previous_last_entrance_id)
-        self.assertNotEqual(guest.entrance_id, new_last_entrance_id)
-        self.assertIn(str(previous_last_entrance_id), self.store_facade.onlineGuests)
+        self.store_facade.loginAsGuest()
+        guest: Guest = self.store_facade.onlineGuests.get(str(previous_last_entrance_id))
+        self.assertEqual(guest.get_entrance_id(), previous_last_entrance_id)
 
     def test_leaveAsGuest_success(self):
         entrance_id = self.store_facade.nextEntranceID
@@ -69,7 +68,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.leaveAsGuest(entrance_id)
         self.assertNotIn(str(entrance_id), self.store_facade.onlineGuests)
 
-    def test_leaveAsGuest_failure(self):
+    def test_leaveAsGuest_failure_notTheSameEntranceID(self):
         entrance_id = self.store_facade.nextEntranceID
         with self.assertRaises(Exception):
             self.store_facade.leaveAsGuest(entrance_id + 1)
@@ -77,9 +76,8 @@ class TestStoreFacade(TestCase):
     ############################### TEST MEMBERS LOGIN-OUT ###############################
 
     def test_logInAsMember_success(self):
-        self.assertEqual(self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password()),
-                         self.member1)
-        self.assertTrue(self.member1.get_logged())
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
 
     def test_logInAsMember_failure_unExistingUser(self):
         with self.assertRaises(Exception):
@@ -95,9 +93,9 @@ class TestStoreFacade(TestCase):
 
     def test_logOut(self):
         self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
-        self.assertTrue(self.member1.get_logged())
-        self.member1.logOff()
-        self.assertFalse(self.member1.get_logged())
+        self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
+        self.store_facade.logOut(self.member1.get_username())
+        self.assertFalse(self.store_facade.online_members.__contains__(self.member1.get_username()))
 
     ############################### TEST MEMBERS PURCHASE HISTORY & CARTS & BASKETS ###############################
     # getPurchaseHistory
