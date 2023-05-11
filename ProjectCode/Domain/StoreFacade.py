@@ -70,7 +70,7 @@ class StoreFacade:
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
             existing_member: Member = self.members[user_name]
-            if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
+            if self.password_validator.ConfirmPassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
                 existing_member.setEntranceId(guest.entrance_id) # it's the same entrance id
               #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
@@ -160,7 +160,7 @@ class StoreFacade:
             return self.logInAsAdmin(username, password)
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
-            if self.password_validator.ConfirmePassword(password, existing_member.get_password()):
+            if self.password_validator.ConfirmPassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
                 existing_member.setEntranceId(self.nextEntranceID)
                 self.nextEntranceID += 1
@@ -600,7 +600,7 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if self.password_validator.ConfirmePassword(password, existing_admin.get_password()):
+            if self.password_validator.ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return DataAdmin(existing_admin)
             else:
