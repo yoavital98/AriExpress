@@ -4,6 +4,7 @@ from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.User import User
 
 
@@ -13,6 +14,7 @@ class Member(User):
         self.cart = Cart(user_name) # TODO: cart will be pulled from database and guest cart will be added to it
         self.accesses = TypedDict(str, Access)  # Accesses
         self.auctions = TypedDict(int, Auction)  # auction id to auction
+        self.lotteries = TypedDict(int, Lottery) # Lottery id to lottery
         self.user_name = user_name  # username
         self.password = password  # password
         self.email = email  # email
@@ -102,3 +104,11 @@ class Member(User):
     #     return json.dumps(data)
     def setEntranceId(self, new_entrance_id):
         self.entrance_id = new_entrance_id
+
+    def addNewLottery(self, lottery_id, cur_lottery):
+        if not self.lotteries.keys().__contains__(lottery_id):
+            self.auctions[lottery_id] = cur_lottery
+
+    def claimAuctionPurchase(self,storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
+        pass
+        #  function will be here
