@@ -57,4 +57,3 @@ class Member(models.Model):
         return self.username
 
 
-
