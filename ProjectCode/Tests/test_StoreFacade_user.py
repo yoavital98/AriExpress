@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.MarketObjects import Store
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Domain.MarketObjects.Basket import Basket
@@ -17,6 +18,11 @@ class TestStoreFacade(TestCase):
         self.store_facade.register("Jane", "password456", "jane.doe@example.com")
         self.member1: Member = self.store_facade.members.get("John")
         self.member2: Member = self.store_facade.members.get("Jane")
+        self.store_facade.logInAsMember("John", "password123")
+        self.store_facade.openStore("John", "AriExpress")
+        self.store1: Store = self.store_facade.stores.get("AriExpress")
+        self.store_facade.addNewProductToStore("John", "AriExpress", "paper", 10, 500, "paper")
+        self.item_paper = self.store_facade.getProduct("AriExpress", 0, "John")
 
 
     # def test_load_data(self):
@@ -96,6 +102,18 @@ class TestStoreFacade(TestCase):
         self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
         self.store_facade.logOut(self.member1.get_username())
         self.assertFalse(self.store_facade.online_members.__contains__(self.member1.get_username()))
+    def test_logOutAndBecomeGuest(self):
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
+        entrance_num = str(self.member1.get_entrance_id())
+        self.store_facade.logOut(self.member1.get_username())
+        self.assertIn(entrance_num, self.store_facade.onlineGuests.keys())
+    def test_logOut_fail(self):
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
+        with self.assertRaises(Exception):
+            self.store_facade.logOut("made_up_user_name")
+
 
     ############################### TEST MEMBERS PURCHASE HISTORY & CARTS & BASKETS ###############################
     # getPurchaseHistory
