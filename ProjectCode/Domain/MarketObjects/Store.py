@@ -117,7 +117,7 @@ class Store:
         cur_access: Access = self.__accesses[username]
         if not self.active and (cur_access is None or not cur_access.hasRole()):
             raise Exception("Store is inactive")
-        return self.__products[product_id]
+        return self.__products.get(product_id)
 
 
     def getStaffInfo(self, username):

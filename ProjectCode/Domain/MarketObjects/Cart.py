@@ -26,12 +26,12 @@ class Cart:
         basket: Basket = self.get_Basket(storename)
         basket.add_Product(productID, product, quantity)
 
-    def removeFromBasket(self, storename, productID):
-        if self.baskets.keys().__contains__(storename):
-            basket = self.baskets[storename]
-            answer = basket.remove_Product(productID) # answer = true if item is successfully removed
-            if basket.getBasketSize() == 0:
-                self.baskets.__delitem__(storename)
+    def removeFromBasket(self, store_name, product_id):
+        if self.baskets.keys().__contains__(store_name):
+            basket: Basket = self.baskets[store_name]
+            answer: bool = basket.remove_Product(product_id) # answer = true if item is successfully removed
+            if (basket.getBasketSize() == 0) and (basket.getBasketBidSize() == 0):
+                del self.baskets[store_name]
             return answer
         else:
             raise Exception("Basket was not found")
