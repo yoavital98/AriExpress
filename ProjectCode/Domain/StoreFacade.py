@@ -445,12 +445,14 @@ class StoreFacade:
                                                         "Manager")
         return DataAccess(nominated_modified_access)
 
-    def addPermissionsForManager(self):
+    def addPermissions(self):
         pass
 
-    def editPermissionsForManager(self):
+    def editPermissions(self):
         pass
 
+    def getPermissions(self):
+        pass
 
     def approveBid(self, username, storename, bid_id):
         if not self.__checkIfUserIsLoggedIn(username):
@@ -562,7 +564,7 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if self.password_validator.ConfirmePassword(password, existing_admin.get_password()):
+            if self.password_validator.ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return DataAdmin(existing_admin)
             else:
