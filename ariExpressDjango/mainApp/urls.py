@@ -11,6 +11,9 @@ urlpatterns = [
     path(r'home/', views.mainpage, name="mainpage"),
     path(r'register/', views.registerPage, name='registerPage'),
     path(r'myshops/', views.myshops, name="myshops"),
+    path(r'inbox/', views.inbox, name='inbox'),
+    # path(r'resetpassword', views.reset_password, name='reset_password'),
+
     
     
 ]
