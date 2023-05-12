@@ -461,6 +461,36 @@ class StoreFacade:
     def getPermissions(self):
         pass
 
+    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.checkIfUserIsLoggedIn(username):
+            raise Exception("User isn't logged in")
+        new_discount = cur_store.addDiscount(username, discount_type, percent=percent, level=level, level_name=level_name,
+                              rule=rule, discounts=discounts)
+        return new_discount
+    def getDiscount(self, storename, discount_id):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getDiscount(discount_id)
+
+    def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.checkIfUserIsLoggedIn(username):
+            raise Exception("User isn't logged in")
+        new_policy = cur_store.addDiscount(username, purchase_policy, rule, level=level,level_name=level_name)
+        return new_policy
+
+    def getPurchasePolicy(self, storename, policy_id):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getPolicy(policy_id)
+
     def approveBid(self, username, storename, bid_id):
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")

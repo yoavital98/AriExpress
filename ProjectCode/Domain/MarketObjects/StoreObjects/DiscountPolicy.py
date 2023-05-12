@@ -1,7 +1,7 @@
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
-from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.DiscountType import DiscountType
+from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
 
 
@@ -10,7 +10,7 @@ class DiscountPolicy:
     # IMPORTANT!!: only root discount have an ID
     # for example: child of Add discount wont have an ID
     def __init__(self):
-        self.discounts = TypedDict(int, DiscountType)
+        self.discounts = TypedDict(int, Policy)
         self.discount_id = 0
 
     """
@@ -20,9 +20,11 @@ class DiscountPolicy:
             level := "Store" | "Category" | "Product"
             level_name := product_id | category name | "" blank for store
             rule := RuleComp (optional)
-            discounts := Dict(str, DiscountType)
+            discounts := Dict(str, Policy)
             Example: {"1": {"discount_type": "Simple" ....}, "2": {"discount_type": "Coupon"...} }
     """
+
+    #TODO: add validation for kwargs fields to each discount type
     def addDiscount(self, **kwargs):
         discount = None
         discount_type, percent, level = kwargs["discount_type"], kwargs["percent"], kwargs["level"]

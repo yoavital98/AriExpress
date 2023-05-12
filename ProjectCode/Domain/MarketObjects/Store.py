@@ -10,6 +10,9 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
 
+from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
+
+
 class Store:
 
     def __init__(self, store_name):
@@ -23,10 +26,11 @@ class Store:
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
         self.__bids = TypedDict(int, Bid)
-        self.__bids_requests = TypedDict(Access, List[Bid])
+        self.__bids_requests = TypedDict(str, List[Bid])
         self.__auctions = TypedDict(int, Auction)
         self.__lotteries = TypedDict(int, Lottery)
         self.__discount_policy = DiscountPolicy()
+        self.__purchase_policy = PurchasePolicies()
 
 
 
@@ -161,6 +165,7 @@ class Store:
 
 
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
+        #need to add a user arguments so we will be able to check policies
         new_product_dict = TypedDict(int, int) # (id,quantity)
         for product_id, product_tuple in products_dict.items():
             new_product_dict[product_id] = product_tuple[1]
@@ -184,7 +189,11 @@ class Store:
         cur_percent = self.__discount_policy.calculateDiscountForProduct(product, product_quantity_dict, overall_price)
         return product.get_price() - product.get_price() * (cur_percent / 100)
 
-    def addDiscount(self, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+    def addDiscount(self, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("No such access exists")
+        cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
                                            level_name=level_name, rule=rule, discounts=discounts)
         return new_discount
@@ -192,13 +201,26 @@ class Store:
     def getDiscount(self, discount_id):
         return self.__discount_policy.getDiscount(discount_id)
 
+
+    def addPurchasePolicy(self,username, purchase_policy, rule, level="", level_name=""):
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("No such access exists")
+        cur_access.canManagePolicies()
+        new_policy = self.__purchase_policy.addPurchasePolicy(purchase_policy=purchase_policy, rule=rule,
+                                                 level=level, level_name=level_name)
+        return new_policy
+
+    def getPolicy(self, policy_id):
+        return self.__purchase_policy.getPurchasePolicy(policy_id)
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
         for access in self.__accesses.values():
-            if access.isOwner or access.isFounder:
-                if self.__bids_requests[access] is None:
-                    self.__bids_requests[access] = []
-                self.__bids_requests[access].append(bid)
+            if access.canManageBids():
+                username = access.get_user().get_username()
+                if self.__bids_requests[username] is None:
+                    self.__bids_requests[username] = []
+                self.__bids_requests[username].append(bid)
                 bid.increment_left_to_approve()
 
 
@@ -210,10 +232,10 @@ class Store:
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
-        if cur_bid not in self.__bids_requests[cur_access]:
+        if cur_bid not in self.__bids_requests[username]:
             raise Exception("You already approved that bid")
         cur_bid.approve_by_one()
-        self.__bids_requests[cur_access].remove(cur_bid)
+        self.__bids_requests[username].remove(cur_bid)
         if cur_bid.get_left_to_approval() == 0:
             cur_bid.set_status(1)
         return cur_bid
@@ -225,7 +247,7 @@ class Store:
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
-        for access, bid_list in self.__bids_requests.items():
+        for access_username, bid_list in self.__bids_requests.items():
             if cur_bid in bid_list:
                 bid_list.remove(cur_bid)
         cur_bid.set_status(2)

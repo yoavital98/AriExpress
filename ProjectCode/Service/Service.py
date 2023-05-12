@@ -428,6 +428,34 @@ class Service:
             logging.error(f"getPermissions Error: {str(e)}")
             return Response(e, False)
 
+    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        try:
+            discount = self.store_facade.addDiscount(storename, username, discount_type,
+                                                     percent=percent, level=level, level_name=level_name, rule=rule, discounts=discounts)
+            logging.debug(
+                f"adding discount of type " + discount_type + ".")
+            return Response(discount, True)
+        except Exception as e:
+            logging.error(f"addDiscount Error: {str(e)}")
+            return Response(e, False)
+
+    def getDiscount(self, storename, discount_id):
+        try:
+            discount = self.store_facade.getDiscount(storename, discount_id)
+            return Response(discount, True)
+        except Exception as e:
+            logging.error(f"getDiscount Error: {str(e)}")
+            return Response(e, False)
+
+
+    def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
+        try:
+            policy = self.store_facade.addPurchasePolicy(storename, username, purchase_policy, rule, level, level_name)
+            return Response(policy, True)
+        except Exception as e:
+            logging.error(f"addPurchasePolicy Error: {str(e)}")
+            return Response(e, False)
+
     def closeStore(self, username, storename):
         try:
             closed_store_name = self.store_facade.closeStore(username, storename)
