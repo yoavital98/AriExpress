@@ -105,13 +105,7 @@ class Member(User):
     def setEntranceId(self, new_entrance_id):
         self.entrance_id = new_entrance_id
 
-    def toJson(self):
-        data = {
-            "entrance_id": self.entrance_id,
-            "username": self.user_name,
-            "email": self.email
-        }
-        return json.dumps(data)
+
 
     def addNewLottery(self, lottery_id, cur_lottery):
         if not self.lotteries.keys().__contains__(lottery_id):
@@ -120,3 +114,13 @@ class Member(User):
     def claimAuctionPurchase(self,storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         pass
         #  function will be here
+
+    # =======================JSON=======================#
+
+    def toJson(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email
+        }
+        return json.dumps(data)

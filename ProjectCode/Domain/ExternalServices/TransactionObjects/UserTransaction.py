@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 
 
@@ -27,3 +28,11 @@ class UserTransaction:
             return f"Purchase made by {self._username} at {self._storename} on {self._date}\nProducts: {self._products}\nOverall price: {self._overall_price}"
 
     # =======================JSON=======================#
+
+    def toJson(self):
+        return {
+            "username": self._username,
+            "products": JsonSerialize.toJsonAttributes(self._products),
+            "overall_price": self._overall_price,
+            "date": self._date
+        }

@@ -1,4 +1,5 @@
 from ProjectCode.Domain.Helpers.TypedDict import *
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 
 
 class Lottery:
@@ -51,3 +52,14 @@ class Lottery:
 
     def set_winner(self, value):
         self.__winner = value
+
+# =======================JSON=======================#
+    def toJson(self):
+        return{
+            "lottery_id": self.__lottery_id,
+            "product_id": self.__product_id,
+            "price": self.__price,
+            "accumulated_price": self.__accumulated_price,
+            "participants": self.__participants,
+            "winner": self.__winner
+        }
