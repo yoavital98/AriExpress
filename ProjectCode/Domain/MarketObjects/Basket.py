@@ -79,3 +79,11 @@ class Basket:
 
     def clearBidFromBasket(self, bid_id):
         del self.bids[bid_id]
+
+    def toJson(self):
+        return {
+            "username": self.username,
+            "store": self.store.toJson(),
+            "products": self.products.toJson(),
+            "bids": self.bids.toJson()
+        }

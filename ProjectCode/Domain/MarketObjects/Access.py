@@ -1,3 +1,5 @@
+import json
+
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.StoreObjects.AccessState import AccessState
 from ProjectCode.Domain.MarketObjects.StoreObjects.FounderState import FounderState
@@ -14,6 +16,18 @@ class Access:
         self.store = store
         self.access_state = AccessState()
 
+    def toJson(self):
+        nominations_names = []
+        for nomination_name in self.nominations.values():
+            nominations_names.append({'nominations': nomination_name})
+        data = {
+            'user': self.user,
+            'store': self.store,
+            'nominated_by_username': self.nominated_by_username,
+            'nominations': nominations_names,
+            'access_state': self.access_state.toJson()
+        }
+        return json.dumps(data)
 
     def setAccess(self, role):
         if role is "Owner":

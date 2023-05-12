@@ -105,6 +105,14 @@ class Member(User):
     def setEntranceId(self, new_entrance_id):
         self.entrance_id = new_entrance_id
 
+    def toJson(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email
+        }
+        return json.dumps(data)
+
     def addNewLottery(self, lottery_id, cur_lottery):
         if not self.lotteries.keys().__contains__(lottery_id):
             self.auctions[lottery_id] = cur_lottery

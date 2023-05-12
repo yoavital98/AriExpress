@@ -13,6 +13,8 @@ class AccessState(ABC):
                                  "ModifyPermissions": self.addModifyPermissionPermit, "Auction": self.addAuctionPermit,
                                  "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit()}
 
+    def toJson(self):
+        return self.permissions #todo fix this
     def addProductPermit(self):
         return True
 
