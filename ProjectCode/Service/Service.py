@@ -496,9 +496,9 @@ class Service:
         except Exception as e:
             logging.error(f"removeAccess Error: {str(e)}. By username: '{requester_username}'")
             return Response(e, False)
-    def addPermission(self, requesterID, nominated_username, permission):
+    def addPermission(self, storename, requesterID, nominated_username, permission):
         try:
-            access = self.store_facade.addPermissions()
+            access = self.store_facade.addPermissions(storename, requesterID, nominated_username, permission)
             logging.info(
                 "Permission has been added successfully. By username: " + requesterID + ". nominated_username: " + nominated_username + ". permission: " + permission + ".")
             return Response(access.toJson(), True)
@@ -506,10 +506,10 @@ class Service:
             logging.error(f"addPermission Error: {str(e)}.")
             return Response(e, False)
 
-    def editPermissions(self, requesterID, nominatedID,
+    def removePermissions(self, storename, requesterID, nominatedID,
                         permission):  # TODO still don't know the implementation
         try:
-            access = self.store_facade.editPermissions()
+            access = self.store_facade.removePermissions(storename, requesterID, nominatedID, permission)
             logging.info(
                 "Permission has been edited successfully. By username: " + requesterID + ". nominated_username: " + nominatedID + ". permission: " + permission + ".")
             return Response(access.toJson(), True)
@@ -517,9 +517,9 @@ class Service:
             logging.error(f"editPermissions Error: {str(e)}.")
             return Response(e, False)
 
-    def getPermissions(self, requesterID, nominatedID):  # TODO still don't know the implementation
+    def getPermissions(self, storename, requesterID, nominatedID):  # TODO still don't know the implementation
         try:
-            permissions = self.store_facade.getPermissions()
+            permissions = self.store_facade.getPermissions(storename, requesterID, nominatedID)
             logging.debug(
                 f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
             return Response(json.dumps(permissions.keys()), True)

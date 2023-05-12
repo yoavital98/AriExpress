@@ -43,10 +43,18 @@ class AccessState(ABC):
     def addStaffViewPermit(self):
         return True
 
+    def removePermission(self, name):
+        if self.permissions.get(name) is None:
+            raise Exception("No such permission exists")
+        del self.permissions[name]
+    def addPermission(self,name ,func=None):
+        if func is None:
+            self.permissions[name] = self.permission_names[name]
+        else:
+            self.permissions[name] = func
 
-    def addPermission(self,name ,func):
-        self.permissions[name] = func
-
+    def get_permissions(self):
+        return self.permissions
     def checkForPermission(self, name):
         if self.permissions.get(name) is not None:
             return self.permissions[name]()
