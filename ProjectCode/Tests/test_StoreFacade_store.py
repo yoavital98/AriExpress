@@ -18,6 +18,10 @@ class TestStoreFacade(TestCase):
         self.store_facade = StoreFacade()
         self.store_facade.register("Ari", "password123", "ari@gmail.com")
         self.member1: Member = self.store_facade.members.get("Ari")
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.store_facade.openStore("Ari", "Store1")
+        self.store1: Store = self.store_facade.stores.get("Store1")
+        self.store_facade.logOut("Ari")
 
 
     def test_getStores_returnsStores_empty(self):
@@ -55,15 +59,12 @@ class TestStoreFacade(TestCase):
         self.assertEqual(self.store_facade.getProductsByStore("Store1"), self.products)
 
     def test_getProductsByStore_returnsProducts_single(self):
-        self.products = TypedDict(int, Product)
-        self.store = Store("Store1")
-        self.store_facade.stores["Store1"] = self.store
-        self.access = Access(self.store, self.member1)
-        self.access.setFounder()
-        self.store.get_accesses()[self.member1.get_username()] = self.access
-        self.product = self.store.addProduct(self.access, "Product1", 10, 10, "category1")
-        self.products[self.product.product_id] = self.product
-        self.assertEqual(self.store_facade.getProductsByStore("Store1"), self.products)
+        self.store_facade.logInAsMember("Ari", "password123")
+        products = TypedDict(int, Product)
+        products[0] = Product(0, "Product1", 10, 10, "category1")
+        self.store.addProduct(self.member1.getAccessByStoreName(self.store1.get_store_name()), "Product1", 10, 10, "category1")
+        #product: Product = self.store_facade.getProduct(self.store1.get_store_name(), 0, "Ari")
+        self.assertEqual(self.store1.getProducts("Ari"), products)
     
     def test_getProductsByStore_returnsProducts_multiple(self):
         self.products = TypedDict(int, Product)

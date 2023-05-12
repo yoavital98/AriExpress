@@ -112,3 +112,5 @@ class Member(User):
     def claimAuctionPurchase(self,storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         pass
         #  function will be here
+    def getAccessByStoreName(self,store_name):
+        return self.accesses.get(store_name)
