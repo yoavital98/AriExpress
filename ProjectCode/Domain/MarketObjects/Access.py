@@ -77,6 +77,12 @@ class Access:
     def canViewStaffInformation(self):
         return self.access_state.checkForPermission("StaffInfo")
 
+    def canManagePolicies(self):
+        return self.access_state.checkForPermission("Policies")
+
+    def canManageDiscounts(self):
+        return self.access_state.checkForPermission("Discounts")
+
     def get_user(self):
         return self.user
 
