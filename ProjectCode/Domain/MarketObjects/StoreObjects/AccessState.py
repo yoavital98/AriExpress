@@ -11,7 +11,15 @@ class AccessState(ABC):
         self.permissions = dict()
         self.permission_names = {"ProductChange": self.addProductPermit, "Bid":self.addBidPermit,
                                  "ModifyPermissions": self.addModifyPermissionPermit, "Auction": self.addAuctionPermit,
-                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit()}
+                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit(),
+                                 "Policies":  self.addPolicy, "Discounts": self.addDiscount}
+
+
+    def addPolicy(self):
+        return True
+
+    def addDiscount(self):
+        return True
 
     def addProductPermit(self):
         return True
@@ -44,3 +52,7 @@ class AccessState(ABC):
             return self.permissions[name]()
         else:
             raise Exception("You dont have the permission for that")
+
+    # =======================JSON=======================#
+    def toJson(self):
+        return self.permissions #todo fix this

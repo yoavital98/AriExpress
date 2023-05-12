@@ -26,6 +26,7 @@ class LogicComp(ABC):
     def checkIfSatisfy(self, product, basket, total_price):
         pass
 
+
     def _validateRuleArguments(self):
         if self.rule.get("rule_type") is None or self.rule.get("product_id") is None or self.rule.get("operator") is None or self.rule.get("quantity") is None:
             raise Exception("Missing arguments for adding a rule")

@@ -1,3 +1,5 @@
+import json
+
 
 class Product:
     def __init__(self, product_id, name, quantity, price, categories):
@@ -22,3 +24,13 @@ class Product:
     def get_categories(self):
         return self.categories
 
+    # =======================JSON=======================#
+
+    def toJson(self):
+        return {
+            'product_id': self.product_id,
+            'name': self.name,
+            'quantity': self.quantity,
+            'price': self.price,
+            'categories': json.dumps(self.categories)
+        }

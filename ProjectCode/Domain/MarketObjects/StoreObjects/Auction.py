@@ -1,4 +1,5 @@
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 
 
 class Auction:
@@ -59,3 +60,16 @@ class Auction:
 
     def set_highest_offer_username(self, highest_offer_username):
         self.__expiration_date = highest_offer_username
+
+    # =======================JSON=======================#
+    def toJson(self):
+        return{
+            'auction_id': self.__auction_id,
+            'product_id': self.__product_id,
+            'starting_offer': self.__starting_offer,
+            'current_offer': self.__current_offer,
+            'start_date': self.__start_date,
+            'expiration_date': self.__expiration_date,
+            'highest_offer_username': self.__highest_offer_username,
+            'participants': self.__participants
+        }

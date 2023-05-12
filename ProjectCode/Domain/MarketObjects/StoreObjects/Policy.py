@@ -1,14 +1,16 @@
 from abc import ABC, abstractmethod
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 
-class DiscountType(ABC):
+
+class Policy(ABC):
     """
             percent := percent of the discount
             level := "Store" | "Category" | "Product"
             level_name := name of a category | product id | "" blank for store
     """
-    def __init__(self, percent, level, level_name):
-        self.percent = percent
+    def __init__(self, level, level_name):
+        #self.percent = percent
         self.level = level
         self.level_name = level_name
 
@@ -28,4 +30,6 @@ class DiscountType(ABC):
         elif self.level == "Product":
             return self.level_name == product.get_product_id()
         return False
+
+
 
