@@ -8,6 +8,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.ManagerState import ManagerSt
 from ProjectCode.Domain.MarketObjects.StoreObjects.OwnerState import OwnerState
 
 
+
 class Access:
 
     def __init__(self, store, user, nominated_by_username):
