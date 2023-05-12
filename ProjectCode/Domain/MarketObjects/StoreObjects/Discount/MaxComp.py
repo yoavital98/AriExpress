@@ -1,7 +1,7 @@
-from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.DiscountType import DiscountType
+from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 
 
-class MaxComp(DiscountType):
+class MaxComp(Policy):
     def __init__(self):
         super().__init__(0, "", "")
 

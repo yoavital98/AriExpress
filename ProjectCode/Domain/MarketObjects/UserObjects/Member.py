@@ -30,7 +30,7 @@ class Member(User):
         return super().get_Basket(store_name)
 
     def removeFromBasket(self, store_name, product_id):
-        super().removeFromBasket(store_name, product_id)
+        return super().removeFromBasket(store_name, product_id)
 
     def edit_Product_Quantity(self, storename, product_id, quantity):
         super().edit_Product_Quantity(storename, product_id, quantity)

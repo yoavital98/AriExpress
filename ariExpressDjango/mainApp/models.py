@@ -1,13 +1,15 @@
 from django.db import models
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Product(models.Model):
     product_id = models.IntegerField()
     name = models.CharField(max_length=100)
-    quantity = models.IntegerField()
-    price = models.IntegerField()
-    categories = models.CharField(max_length=100)
+    # store = models.ForeignKey('Store', on_delete=models.CASCADE)
+    quantity = models.IntegerField(null=True)
+    price = models.IntegerField(null=True)
+    categories = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return self.name
@@ -15,7 +17,7 @@ class Product(models.Model):
 
 class Store(models.Model):
     store_name = models.CharField(max_length=100)
-    products = models.ManyToManyField(Product)
+    products = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     active = models.BooleanField()
     # accesses = self.getAcceses(store.get_accesses())
     # bids = self.getBids(store.get_bids())
@@ -26,6 +28,16 @@ class Store(models.Model):
     def __str__(self):
         return self.store_name
 
+# class StoreProduct(models.Model):
+#     store = models.ForeignKey(Store, on_delete=models.CASCADE)
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+#     quantity = models.IntegerField()
+#     price = models.IntegerField()
+#     categories = models.CharField(max_length=100)
+
+#     def __str__(self):
+#         return self.store + ', ' + self.product
+    
 
 class Cart(models.Model):
     cart_id = models.IntegerField()
@@ -55,6 +67,5 @@ class Member(models.Model):
 
     def __str__(self):
         return self.username
-
 
 

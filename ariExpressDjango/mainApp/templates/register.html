@@ -110,10 +110,8 @@
 	<h1>AriExpress</h1>
 	<br>
 	<br>
-	<br>
-	<br>
 	<form method="post" action="{% url 'mainApp:registerPage' %}">
-		<div class="mb-3">
+		<!-- <div class="mb-3">
 		  <label for="username" class="form-label">Username</label>
 		  <input type="text" class="form-control" id="username" name="username">
 		</div>
@@ -124,9 +122,10 @@
 		<div class="mb-3">
 			<label for="email" class="form-label">Email Address</label>
 			<input type="email" class="form-control" id="email" name="email">
-		</div>
-			{% csrf_token %}
-			<button type="submit" class="btn btn-primary">Register</button>
+		</div> -->
+		{% csrf_token %}
+		{{ form.as_p }}
+		<button type="submit" class="btn btn-primary">Register</button>
 
 		<a>{{ msg }}</a>
 		{% if showMsg %}

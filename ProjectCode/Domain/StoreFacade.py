@@ -48,8 +48,8 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
         # Admin
-        first_admin: Admin = Admin("admin", "asdf1233", "a@a.com")
-        first_admin.logInAsAdmin() # added by rubin to prevent deadlock
+        first_admin: Admin = Admin("admin", "12341234", "a@a.com")
+        # first_admin.logInAsAdmin() # added by rubin to prevent deadlock
         self.admins["admin"] = first_admin
         # load data
         self.loadData()
@@ -492,6 +492,36 @@ class StoreFacade:
         permissions: dict = None
         return permissions
 
+    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.checkIfUserIsLoggedIn(username):
+            raise Exception("User isn't logged in")
+        new_discount = cur_store.addDiscount(username, discount_type, percent=percent, level=level, level_name=level_name,
+                              rule=rule, discounts=discounts)
+        return new_discount
+    def getDiscount(self, storename, discount_id):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getDiscount(discount_id)
+
+    def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        if not self.checkIfUserIsLoggedIn(username):
+            raise Exception("User isn't logged in")
+        new_policy = cur_store.addDiscount(username, purchase_policy, rule, level=level,level_name=level_name)
+        return new_policy
+
+    def getPurchasePolicy(self, storename, policy_id):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getPolicy(policy_id)
+
     def approveBid(self, username, storename, bid_id):
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
@@ -609,7 +639,7 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if self.password_validator.ConfirmPassword(password, existing_admin.get_password()):
+            if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return existing_admin
             else:
@@ -643,10 +673,24 @@ class StoreFacade:
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = self.online_members.values()
+            member_list = []
+            for member in self.members:
+                if member in self.online_members:
+                # if member.logged_In:
+                    member_list.append(member)
             return json.dumps(member_list)
         else:
             raise Exception("only admin can get the online members list")
+
+    def getAllOfflineMembers(self, user_name):
+        if self.admins.__contains__(user_name):
+            member_list = []
+            for member in self.members:
+                if member not in self.online_members:
+                    member_list.append(member)
+            return json.dumps(member_list)
+        else:
+            raise Exception("only admin can get the offline members list")
 
     def removeMember(self, username, memberName):
         if self.admins.keys().__contains__(username):
