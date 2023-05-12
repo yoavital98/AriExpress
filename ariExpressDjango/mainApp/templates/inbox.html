@@ -1,0 +1,40 @@
+{% extends 'base.html'%}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Inbox - Internet Market System</title>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    </head>
+<body>
+	<header>
+		<nav>
+			<a href="#">Home</a>
+			<a href="#">Shop</a>
+			<a href="#">Cart</a>
+			<a href="#" class="active">Inbox</a>
+			<a href="#" class="notification"><i class="fas fa-bell"></i></a>
+		</nav>
+	</header>
+	<main>
+		<h1>Inbox</h1>
+		<ul>
+			{% for message in messages %}
+			<li>
+				<p>{{ message.sender }}</p>
+				<p>{{ message.subject }}</p>
+				<p>{{ message.body }}</p>
+				<p>{{ message.date }}</p>
+			</li>
+			{% endfor %}
+		</ul>
+	</main>
+</body>
+</html>
+
+
+
+{% endblock%}
