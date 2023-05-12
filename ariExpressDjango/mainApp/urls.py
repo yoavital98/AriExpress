@@ -15,6 +15,8 @@ urlpatterns = [
     path(r'register/', views.registerPage, name='registerPage'),
     path(r'myshops/', views.myshops, name="myshops"),
     path (r'myshops/<str:shopname>/', views.myshops_specific, name='myshops_specific'),   
+    path (r'nominate/<str:shopname>/', views.nominateUser, name='nominateUser'),   
+    
 ]
 
 # if settings.DEBUG:
