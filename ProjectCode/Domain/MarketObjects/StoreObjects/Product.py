@@ -7,7 +7,6 @@ class Product:
         self.price = price
         self.categories = categories
 
-
     def get_product_id(self):
         return self.product_id
 

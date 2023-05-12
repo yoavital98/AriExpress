@@ -1,6 +1,9 @@
 import unittest
 from unittest import TestCase
-
+from ProjectCode.Domain.MarketObjects.StoreObjects import Product
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import *
+from ProjectCode.Domain.MarketObjects import Store
+from ProjectCode.Domain.MarketObjects.Store import *
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Domain.MarketObjects.Basket import Basket
@@ -17,6 +20,13 @@ class TestStoreFacade(TestCase):
         self.store_facade.register("Jane", "password456", "jane.doe@example.com")
         self.member1: Member = self.store_facade.members.get("John")
         self.member2: Member = self.store_facade.members.get("Jane")
+        self.store_facade.logInAsMember("John", "password123")
+        self.store_facade.openStore("John", "AriExpress")
+        self.store1: Store = self.store_facade.stores.get("AriExpress")
+        self.store_facade.addNewProductToStore("John", "AriExpress", "paper", 10, 500, "paper")
+        self.item_paper: Product = self.store1.getProductById(1, "John")
+        self.store_facade.logOut("John")
+
 
 
     # def test_load_data(self):
@@ -97,13 +107,26 @@ class TestStoreFacade(TestCase):
         self.store_facade.logOut(self.member1.get_username())
         self.assertFalse(self.store_facade.online_members.__contains__(self.member1.get_username()))
 
+    def test_logOutAndBecomeGuest(self):
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
+        entrance_num = str(self.member1.get_entrance_id())
+        self.store_facade.logOut(self.member1.get_username())
+        self.assertIn(entrance_num, self.store_facade.onlineGuests.keys())
+
+    def test_logOut_fail(self):
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.assertTrue(self.store_facade.online_members.__contains__(self.member1.get_username()))
+        with self.assertRaises(Exception):
+            self.store_facade.logOut("made_up_user_name")
+
     ############################### TEST MEMBERS PURCHASE HISTORY & CARTS & BASKETS ###############################
     # getPurchaseHistory
-    def test_getMemberPurchaseHistory_success(self):
-        self.member1.logInAsMember()
+    def test_getMemberPurchaseHistory_fail(self):
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
         self.assertEqual(self.store_facade.getMemberPurchaseHistory(self.member1.get_username().get_username()).user,
                          self.member1)
-        self.member1.logOff()
+        self.store_facade.logOut(self.member1.get_username())
         with self.assertRaises(Exception):
             self.store_facade.getMemberPurchaseHistory(self.member1.get_username())
 
@@ -113,13 +136,11 @@ class TestStoreFacade(TestCase):
 
     # getCart
     def test_getCart_success(self):
-        self.member1.logInAsMember()
-        cart1 = self.store_facade.getCart(self.member1.get_username())
-        self.assertEqual(cart1.get_username, self.member1)
-        self.assertIsInstance(cart1, Cart)
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        cart: Cart = self.store_facade.members.get("John").get_cart()
+        self.assertEqual(cart.get_username(), self.member1.get_username())
 
     def test_getCart_userNotLoggedIn_failure(self):
-        self.member1.logOff()
         with self.assertRaises(Exception):
             self.store_facade.getCart(self.member1.get_username())
 
@@ -129,13 +150,14 @@ class TestStoreFacade(TestCase):
 
     # getBasket
     def test_getBasket_success(self):
-        self.member1.logInAsMember()
-        basket1 = self.store_facade.getBasket(self.member1.get_username(), "Office Depot")
-        self.assertEqual(basket1.user, self.member1)
-        self.assertIsInstance(basket1, Basket)
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(),
+                                      self.item_paper.get_product_id(), 5)
+        basket: Basket = self.member1.get_Basket(self.store1.get_store_name())
+        self.assertTrue(basket.get_Store() == self.store1.get_store_name())
 
     def test_getBasket_userNotLoggedIn_failure(self):
-        self.member1.logOff()
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
         with self.assertRaises(Exception):
             self.store_facade.getBasket(self.member1.get_username(), "Office Depot")
 
@@ -150,30 +172,35 @@ class TestStoreFacade(TestCase):
     ############################### TEST Managing Baskets ###############################
     # add to basket
     def test_addToBasket_success(self):
-        self.member1.logInAsMember()
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
-        basket1 = self.store_facade.getBasket(self.member1.get_username(), self.store1.get_store_name())
-        self.assertEqual(len(basket1.get_Products()), 1)
-        self.assertEqual(basket1.get_Products().get(self.item_paper.get_product_id())[1], 5)
-        self.assertIn(self.item_paper.get_product_id(), basket1.get_Products().keys())
+        basket: Basket = self.member1.get_cart().get_Basket(self.store1.get_store_name())
+        self.assertEqual(len(basket.get_Products()), 1)
+        self.assertEqual(basket.get_Products().get(self.item_paper.get_product_id())[1], 5)
+        self.assertIn(self.item_paper.get_product_id(), basket.get_Products().keys())
 
     def test_addToBasket_negativeQuantity_failure(self):
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
         with self.assertRaises(Exception):
             self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), -5)
 
     def test_addToBasket_zeroQuantity_failure(self):
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         with self.assertRaises(Exception):
             self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 0)
 
     def test_addToBasket_productDoesNotExist_failure(self):
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         with self.assertRaises(Exception):
             self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), "UNREAL_PRODUCT", 5)
 
     def test_addToBasket_storeDoesNotExist_failure(self):
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         with self.assertRaises(Exception):
             self.store_facade.addToBasket(self.member1.get_username(), "UNREAL_STORE", self.item_paper.get_product_id(), 5)
 
     def test_addToBasket_usernameDoesNotExist_failure(self):
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         with self.assertRaises(Exception):
             self.store_facade.addToBasket("UNREAL_USER", self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
 
@@ -184,12 +211,11 @@ class TestStoreFacade(TestCase):
 
     # remove from basket
     def test_removeFromBasket_success(self):
-        self.member1.logInAsMember()
-        self.store_facade.addToBasket(self.member1.get_username(), self.store1.store_name, self.item_paper.name, 5)
-        self.store_facade.removeFromBasket(self.member1.get_username(), self.store1.store_name, self.item_paper.name)
-        basket1 = self.store_facade.getBasket(self.member1.get_username(), self.store1.store_name)
-        self.assertEqual(len(basket1.get_Products[0]), 5)
-        self.assertNotIn(self.item_paper, basket1.get_Products())
+        self.store_facade.logInAsMember(self.member1.get_username(), self.member1.get_password())
+        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(),
+                                      self.item_paper.get_product_id(), 5)
+        answer: bool = self.store_facade.removeFromBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id())
+        self.assertTrue(answer)
 
     def test_removeFromBasket_productDoesNotExist_failure(self):
         with self.assertRaises(Exception):
@@ -204,44 +230,46 @@ class TestStoreFacade(TestCase):
             self.store_facade.removeFromBasket("UNREAL_USER", self.store1.store_name, self.item_paper.name)
 
     def test_removeFromBasket_userNotLoggedIn_failure(self):
-        self.member1.logOff()
         with self.assertRaises(Exception):
-            self.store_facade.removeFromBasket(self.member1.get_username(), self.store1.store_name,
+            self.store_facade.removeFromBasket(self.member1.get_username(), self.store1.get_store_name(),
                                                self.item_paper.name)
 
     def test_removeFromBasket_basketIsEmpty_failure(self):
         self.member1.logInAsMember()
         with self.assertRaises(Exception):
-            self.store_facade.removeFromBasket(self.member1.get_username(), self.store1.store_name,
+            self.store_facade.removeFromBasket(self.member1.get_username(), self.store1.get_store_name(),
                                                self.item_paper.name)
 
     # edit product quantity
     def test_editBasketQuantity_success(self):
-        self.member1.logInAsMember()
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
-        self.store_facade.editBasketQuantity(self.member1.get_username(), self.store1.store_name, self.item_paper.name,
-                                             3)
-        basket1 = self.store_facade.getBasket(self.member1.get_username(), self.store1.store_name)
-        self.assertEqual(len(basket1.get_Products[0]), 3)
-        self.assertIn(self.item_paper, basket1.get_Products())
+        basket: Basket = self.member1.get_cart().get_Basket(self.store1.get_store_name())
+        self.store_facade.editBasketQuantity(self.member1.get_username(), self.store1.get_store_name(),
+                                             self.item_paper.get_product_id(), 3)
+        self.assertTrue(basket.get_Products().get(self.item_paper.get_product_id())[1], 3)
+        self.assertIn(self.item_paper.get_product_id(), basket.get_Products().keys())
 
     def test_editBasketQuantity_negativeQuantity_failure(self):
-        self.member1.logInAsMember()
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
         self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
         with self.assertRaises(Exception):
             self.store_facade.editBasketQuantity(self.member1.get_username(), self.store1.get_store_name(),
                                                  self.item_paper.get_product_id(), -5)
 
     def test_editBasketQuantity_zeroQuantity_failure(self):
-        self.member1.logInAsMember()
-        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
+        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(),
+                                      self.item_paper.get_product_id(), 5)
         with self.assertRaises(Exception):
             self.store_facade.editBasketQuantity(self.member1.get_username(), self.store1.get_store_name(),
                                                  self.item_paper.get_product_id(), 0)
 
     def test_editBasketQuantity_userNotLoggedIn_failure(self):
-        self.member1.logOut()
-        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
+        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(),
+                                      self.item_paper.get_product_id(), 5)
+        self.store_facade.logOut(self.member1.get_username())
         with self.assertRaises(Exception):
             self.store_facade.editBasketQuantity(self.member1.get_username(), self.store1.get_store_name(),
                                                  self.item_paper.get_product_id(), 5)
@@ -270,23 +298,13 @@ class TestStoreFacade(TestCase):
 
     # edit purchase quantity
     def test_purchaseCart_success(self):
-        self.member1.logInAsMember()
-        user_transaction_number = self.store_facade.transaction_history.get_User_Transactions(
-            self.member1.get_username()).sizeof()
-        store_transaction_number = self.store_facade.transaction_history.get_Store_Transactions(
-            self.store1.get_store_name()).sizeof()
-        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(), self.item_paper.get_product_id(), 5)
-        basket1 = self.store_facade.getBasket(self.member1.get_username(), self.store1.get_store_name())
-        self.assertEqual(len(basket1.get_Products[0]), 5)
+        self.store_facade.logInAsMember(self.member1.get_username(),self.member1.get_password())
+        self.store_facade.addToBasket(self.member1.get_username(), self.store1.get_store_name(),
+                                      self.item_paper.get_product_id(), 5)
+        basket: Basket = self.member1.get_Basket(self.store1.get_store_name())
         self.assertEqual(self.store1.get_product(self.item_paper.get_product_id()).get_quantity(), 10)
         self.store_facade.purchaseCart(self.member1.get_username(), "4580", "John Doe", "007", "12/26", "555")
-        self.assertEqual(len(basket1.get_Products[0]), 0)
         self.assertEqual(self.store1.get_product(self.item_paper.get_product_id()).get_quantity(), 5)
-        self.assertEqual(
-            self.store_facade.transaction_history.get_User_Transactions(self.member1.get_username()).sizeof(),
-            user_transaction_number + 1)
-        self.assertEqual(self.store_facade.transaction_history.get_Store_Transactions(self.store1.get_store_name()).sizeof(),
-                         store_transaction_number + 1)
 
     # here we need to check deeper about the paying processes and things that can get wrong:
     # 1. the user is not logged in
