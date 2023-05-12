@@ -6,15 +6,12 @@ from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 class UserTransaction:
     def __init__(self, username, products, overall_price):
         self._username = username
-        self._products = TypedDict(str, set)  # store_name -> set of tuples (product_name, quantity)
+        self._products = products  # TypedDict(str, set): store_name -> set of tuples (product_name, quantity, price)
         self._overall_price = overall_price
         self._date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def get_username(self):
         return self._username
-
-    def get_storename(self):
-        return self._storename
 
     def get_products(self):
         return self._products

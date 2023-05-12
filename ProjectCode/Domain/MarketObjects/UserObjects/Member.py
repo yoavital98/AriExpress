@@ -102,3 +102,11 @@ class Member(User):
     #     return json.dumps(data)
     def setEntranceId(self, new_entrance_id):
         self.entrance_id = new_entrance_id
+
+    def toJson(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email
+        }
+        return json.dumps(data)

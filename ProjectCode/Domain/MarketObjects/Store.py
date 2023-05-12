@@ -27,7 +27,23 @@ class Store:
         self.__lotteries = TypedDict(int, Lottery)
 
 
+    def toJsonInfo(self):
+        return {
+            'store_name': self.__store_name,
+            'active': self.active
+        }
 
+    def toJsonAll(self):
+        return {
+            'store_name': self.__store_name,
+            'products': self.__products,
+            'active': self.active,
+            'accesses': self.__accesses,
+            'bids': self.__bids,
+            'bids_requests': self.__bids_requests,
+            'auctions': self.__auctions,
+            'lotteries': self.__lotteries
+        }
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
@@ -122,7 +138,8 @@ class Store:
         cur_access: Access = self.__accesses[username]
         if cur_access is None:
             raise Exception("Member has no access for that store")
-        cur_access.canViewStaffInformation()
+        if not cur_access.canViewStaffInformation():
+            raise Exception("You have no permission to view staff information")
         return self.__accesses
 
 
