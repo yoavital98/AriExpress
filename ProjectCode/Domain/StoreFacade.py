@@ -616,10 +616,23 @@ class StoreFacade:
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = self.online_members.values()
+            member_list = []
+            for member in self.members:
+                if member.logged_In:
+                    member_list.append(member)
             return json.dumps(member_list)
         else:
             raise Exception("only admin can get the online members list")
+
+    def getAllOfflineMembers(self, user_name):
+        if self.admins.__contains__(user_name):
+            member_list = []
+            for member in self.members:
+                if not member.logged_In:
+                    member_list.append(member)
+            return json.dumps(member_list)
+        else:
+            raise Exception("only admin can get the offline members list")
 
     def removeMember(self, username, memberName):
         if self.admins.keys().__contains__(username):

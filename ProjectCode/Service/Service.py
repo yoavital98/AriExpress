@@ -570,3 +570,23 @@ class Service:
         except Exception as e:
             logging.error(f"getStoreManagerPermissions Error: {str(e)}.")
             return Response(e, False)
+
+    def getAllOnlineMembers(self, requesterID):
+        try:
+            users = self.store_facade.getAllOnlineMembers()
+            logging.debug(
+                f"fetching all the online members. By username: " + requesterID + ".")
+            return Response(users, True)
+        except Exception as e:
+            logging.error(f"getAllOnlineMembers Error: {str(e)}.")
+            return Response(e, False)
+
+    def getAllOfflineMembers(self, requesterID):
+        try:
+            users = self.store_facade.getAllOfflineMembers()
+            logging.debug(
+                f"fetching all the online members. By username: " + requesterID + ".")
+            return Response(users, True)
+        except Exception as e:
+            logging.error(f"getAllOnlineMembers Error: {str(e)}.")
+            return Response(e, False)
