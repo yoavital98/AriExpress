@@ -97,7 +97,7 @@ class StoreFacade:
         new_guest = Guest(self.nextEntranceID)
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
-        return new_guest.get_username()
+        return new_guest.get_entrance_id()
 
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
@@ -225,7 +225,7 @@ class StoreFacade:
             raise Exception("Store doesnt exists")
         product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
-            filled_basket = user.add_to_cart(username, store_name, product_id, product, quantity)
+            filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
             return filled_basket
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
