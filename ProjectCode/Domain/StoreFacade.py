@@ -47,9 +47,9 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
         # Admin
-        first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
-        first_admin.logInAsAdmin() # added by rubin to prevent deadlock
-        self.admins["Ari"] = first_admin
+        first_admin: Admin = Admin("admin", "12341234", "a@a.com")
+        # first_admin.logInAsAdmin() # added by rubin to prevent deadlock
+        self.admins["admin"] = first_admin
         # load data
         self.loadData()
 
@@ -610,9 +610,9 @@ class StoreFacade:
     def logInAsAdmin(self,username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
-            if self.password_validator.ConfirmPassword(password, existing_admin.get_password()):
+            if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
-                return DataAdmin(existing_admin)
+                return existing_admin
             else:
                 raise Exception("admin name or password does not match")
         else:
@@ -642,10 +642,24 @@ class StoreFacade:
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = self.online_members.values()
+            member_list = []
+            for member in self.members:
+                if member in self.online_members:
+                # if member.logged_In:
+                    member_list.append(member)
             return json.dumps(member_list)
         else:
             raise Exception("only admin can get the online members list")
+
+    def getAllOfflineMembers(self, user_name):
+        if self.admins.__contains__(user_name):
+            member_list = []
+            for member in self.members:
+                if member not in self.online_members:
+                    member_list.append(member)
+            return json.dumps(member_list)
+        else:
+            raise Exception("only admin can get the offline members list")
 
     def removeMember(self, username, memberName):
         if self.admins.keys().__contains__(username):
