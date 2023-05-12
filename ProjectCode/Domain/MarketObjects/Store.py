@@ -6,10 +6,10 @@ from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import DiscountPolicy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
-
 
 class Store:
 
@@ -27,6 +27,7 @@ class Store:
         self.__bids_requests = TypedDict(Access, List[Bid])
         self.__auctions = TypedDict(int, Auction)
         self.__lotteries = TypedDict(int, Lottery)
+        self.__discount_policy = DiscountPolicy()
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
@@ -130,7 +131,7 @@ class Store:
 
     def searchProductByName(self, keyword, username):
         cur_access: Access = self.__accesses[username]
-        if not self.active and (cur_access is None or not cur_access.hasRole()):
+        if not self.active and ( cur_access is None or not cur_access.hasRole()):
             return {}
 
         product_list = []
@@ -149,15 +150,38 @@ class Store:
                 product_list.append(prod)
         return product_list
 
-    def purchaseBasket(self, products_dict):  # tup(product,qunaiity)
-        overall_price = 0
+
+    def purchaseBasket(self, products_dict): #tup(product,qunaiity)
+        new_product_dict = TypedDict(int, int) # (id,quantity)
         for product_id, product_tuple in products_dict.items():
+            new_product_dict[product_id] = product_tuple[1]
+
+        overall_price = 0
+        price_after_discounts = 0
+        for product_id, product_quantity in new_product_dict.items():
             cur_product = self.__products[product_id]
             if cur_product is None:
                 raise Exception("No such product exists")
-            cur_product.quantity -= product_tuple[1]
-            overall_price += cur_product.price * product_tuple[1]
-        return overall_price
+            cur_product.quantity -= product_quantity
+            overall_price += cur_product.price * product_quantity
+
+        for product_id, product_quantity in new_product_dict.items():
+            cur_product: Product = self.__products[product_id]
+            price_after_discounts += product_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict, overall_price)
+        return price_after_discounts
+
+
+    def getProductPriceAfterDiscount(self, product, product_quantity_dict, overall_price):
+        cur_percent = self.__discount_policy.calculateDiscountForProduct(product, product_quantity_dict, overall_price)
+        return product.get_price() - product.get_price() * (cur_percent / 100)
+
+    def addDiscount(self, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
+                                           level_name=level_name, rule=rule, discounts=discounts)
+        return new_discount
+
+    def getDiscount(self, discount_id):
+        return self.__discount_policy.getDiscount(discount_id)
 
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
