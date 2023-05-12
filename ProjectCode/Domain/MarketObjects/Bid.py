@@ -56,3 +56,15 @@ class Bid:
     def get_quantity(self):
         return self._quantity
 
+    # =======================JSON=======================#
+    def toJson(self):
+        return{
+            'bid_id': self.bid_id,
+            'username': self._username,
+            'storename': self._storename,
+            'offer': self._offer.toJson(),
+            'product': self._product.toJson(),
+            'quantity': self._quantity,
+            'status': self._status,
+            'left_to_approval': self._left_to_approval
+        }

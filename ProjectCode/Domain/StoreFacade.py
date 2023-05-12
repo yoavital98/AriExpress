@@ -186,11 +186,11 @@ class StoreFacade:
 
     #  only members
     # getting the user purchase history
-    def getMemberPurchaseHistory(self, username):
-        if self.__checkIfUserIsLoggedIn(username):
-            return self.transaction_history
-        else:
-            raise Exception("username isn't logged in")
+    def getMemberPurchaseHistory(self):
+        # if self.__checkIfUserIsLoggedIn(username):
+        return self.transaction_history
+        # else:
+        #     raise Exception("username isn't logged in")
 
     # guest and member
     # getting a User's basket

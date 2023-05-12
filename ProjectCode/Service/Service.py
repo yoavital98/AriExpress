@@ -169,7 +169,7 @@ class Service:
 
     def getMemberPurchaseHistory(self, username):
         try:
-            purchase_history = self.store_facade.getMemberPurchaseHistory(username)
+            purchase_history = self.store_facade.getMemberPurchaseHistory()
             logging.debug(f"fetching purchase history of member {str(username)}.")
             return Response(purchase_history.toJsonMember(username), True)  # TODO should i json those objects?
         except Exception as e:
@@ -188,12 +188,29 @@ class Service:
             logging.error(f"getStoresBasicInfo Error: {str(e)}.")
             return Response(e, False)
 
-    def getStoresMoreInfo(self):
+    def getStoreProductsInfo(self, storename):
         try:
-            stores = self.store_facade.getStores()
-            logging.debug(f"fetching all stores in the system")
-            stores_list = [store.toJsonAll() for store in stores]
-            return Response(json.dumps(stores_list), True)
+            store = self.store_facade.getStores()[storename]
+            logging.debug(f"fetching store: '{storename}' in the system")
+            return Response(store.toJsonProducts(), True)
+        except Exception as e:
+            logging.error(f"getStoresMoreInfo Error: {str(e)}.")
+            return Response(e, False)
+
+    def getStoreAccessesInfo(self, storename):
+        try:
+            store = self.store_facade.getStores()[storename]
+            logging.debug(f"fetching store: '{storename}' in the system")
+            return Response(store.toJsonAccesses(), True)
+        except Exception as e:
+            logging.error(f"getStoresAccessesInfo Error: {str(e)}.")
+            return Response(e, False)
+
+    def getStoreAllInfo(self, storename):
+        try:
+            store = self.store_facade.getStores()[storename]
+            logging.debug(f"fetching store: '{storename}' in the system")
+            return Response(store.toJsonAll(), True)
         except Exception as e:
             logging.error(f"getStoresMoreInfo Error: {str(e)}.")
             return Response(e, False)
@@ -404,6 +421,14 @@ class Service:
         pass
 
     def getStorePurchaseHistory(self, username, storename):  # TODO: username is demanded for validation of the request
+        try:
+            purchase_history = self.store_facade.getMemberPurchaseHistory()
+            logging.debug(f"fetching purchase history of member {str(username)}.")
+            return Response(purchase_history.toJsonMember(username), True)  # TODO should i json those objects?
+        except Exception as e:
+            logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
         try:
             transactions = self.store_facade.getStorePurchaseHistory(storename)
             logging.debug(
