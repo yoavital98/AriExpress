@@ -216,7 +216,7 @@ class StoreFacade:
             raise Exception("Store doesnt exists")
         product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
-            user.add_to_cart(username, store_name, product_id, product, quantity)
+            user.add_to_cart(username, store, product_id, product, quantity)
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 

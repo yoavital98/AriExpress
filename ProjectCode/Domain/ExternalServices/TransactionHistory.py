@@ -1,6 +1,7 @@
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 
 
 class TransactionHistory:
@@ -16,18 +17,22 @@ class TransactionHistory:
         return cls._instance
 
     def addUserTransaction(self, transaction: UserTransaction):
-        if transaction.get_username() in self.user_transactions:
+        if transaction.get_username() in self.user_transactions.keys():
             user_list: list = self.user_transactions[transaction.get_username()]
             user_list.append(transaction)
         else:
-            self.user_transactions[transaction.get_username()] = list().append(transaction)
+            self.user_transactions[transaction.get_username()] = list()
+            new_list: list = self.user_transactions.get(transaction.get_username())
+            new_list.append(transaction)
 
     def addStoreTransaction(self, transaction: StoreTransaction):
-        if transaction.get_storename() in self.store_transactions:
+        if transaction.get_storename() in self.store_transactions.keys():
             store_list: list = self.store_transactions[transaction.get_storename()]
             store_list.append(transaction)
         else:
-            self.store_transactions[transaction.get_storename()] = list().append(transaction)
+            self.store_transactions[transaction.get_storename()] = list()
+            new_list: list = self.store_transactions.get(transaction.get_storename())
+            new_list.append(transaction)
 
     def get_User_Transactions(self, username):
         return self.user_transactions[username]
@@ -36,7 +41,11 @@ class TransactionHistory:
         return self.store_transactions[store_name]
 
     def addNewStoreTransaction(self, username, store_name, products, overall_price):
-        new_store_transaction = StoreTransaction(username, store_name, products, overall_price)
+        product_list: list = list()
+        for product in products:
+            product_to_add: Product = product[0]
+            product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1]))
+        new_store_transaction = StoreTransaction(username, store_name, product_list, overall_price)
         self.addStoreTransaction(new_store_transaction)
 
     def addNewUserTransaction(self, username, products, overall_price):
@@ -54,3 +63,7 @@ class TransactionHistory:
             return self.store_transactions.get(store_name)
         else:
             raise Exception("Store does not have a purchase history")
+
+    def clearAllHistory(self):
+        self.user_transactions.clear()
+        self.store_transactions.clear()
