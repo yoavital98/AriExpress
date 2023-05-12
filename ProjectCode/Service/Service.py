@@ -131,6 +131,7 @@ class Service:
 
     def logIn(self, username, password):  # todo no responses
         try:
+            print(self.store_facade.admins["admin"].get_username())
             member = self.store_facade.logInAsMember(username, password)
             logging.info("Logged in successfully. By username: " + username + ".")
             return Response(member.toJson(), True)

@@ -36,6 +36,7 @@ def login(request):
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
                 res = service.logIn(username, password)
+                print(res.getStatus())
                 msg = res.getStatus()
                 if res.getStatus() == True:
                     user = authenticate(request, username=username, password=password)

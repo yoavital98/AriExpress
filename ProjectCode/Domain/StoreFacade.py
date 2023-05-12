@@ -48,7 +48,7 @@ class StoreFacade:
         self.bid_id_counter = 0  # bid counter
         # Admin
         first_admin: Admin = Admin("admin", "12341234", "a@a.com")
-        first_admin.logInAsAdmin() # added by rubin to prevent deadlock
+        # first_admin.logInAsAdmin() # added by rubin to prevent deadlock
         self.admins["admin"] = first_admin
         # load data
         self.loadData()
@@ -156,6 +156,7 @@ class StoreFacade:
         password_validator = PasswordValidationService()
         # check if the user is an admin
         if self.admins.keys().__contains__(username):
+            print("123")
             return self.logInAsAdmin(username, password)
         # check if the member is an actual user
         if self.members.keys().__contains__(username):
@@ -578,11 +579,14 @@ class StoreFacade:
 
     # ------  Admins  ------ #
     def logInAsAdmin(self,username, password):
+        print("ok0")
         if self.admins.keys().__contains__(username):
+            print("ok1")
             existing_admin: Admin = self.admins[username]
-            if self.password_validator.ConfirmPassword(password, existing_admin.get_password()):
+            if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
+                print("ok2")
                 existing_admin.logInAsAdmin()
-                return DataAdmin(existing_admin)
+                return existing_admin
             else:
                 raise Exception("admin name or password does not match")
         else:
