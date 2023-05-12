@@ -504,6 +504,15 @@ class Service:
             logging.error(f"nominateStoreManager Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
+    def removeAccess(self, requester_username, to_remove_username, store_name):
+        try:
+            removed_usernames = self.store_facade.removeAccess(requester_username, to_remove_username, store_name)
+            logging.info(
+                "Access removal succeed. By username: " + requester_username + ". removed username: " + to_remove_username)
+            return Response(removed_usernames, True)
+        except Exception as e:
+            logging.error(f"removeAccess Error: {str(e)}. By username: '{requester_username}'")
+            return Response(e, False)
     def addPermission(self, requesterID, nominated_username, permission):
         try:
             self.store_facade.addPermissions()

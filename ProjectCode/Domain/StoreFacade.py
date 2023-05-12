@@ -460,6 +460,16 @@ class StoreFacade:
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
+    def removeAccess(self, requester_username, to_remove_username, store_name):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        removed_usernames = cur_store.removeAccess(to_remove_username, requester_username)
+        return  removed_usernames
+
+
     def addPermissions(self):
         pass
 
