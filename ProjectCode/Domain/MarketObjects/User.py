@@ -12,7 +12,7 @@ class User(ABC):
         return self.cart
 
     def add_to_cart(self, username, storename, productID, product, quantity):
-        self.cart.add_Product(username, storename, productID, product, quantity)
+        return self.cart.add_Product(username, storename, productID, product, quantity)
 
 
     def get_Basket(self, storename):
@@ -26,7 +26,7 @@ class User(ABC):
         return self.cart.checkProductExistance(storename, productID)
 
     def edit_Product_Quantity(self, storename, productID, quantity):
-        self.cart.edit_Product_Quantity(storename, productID, quantity)
+        return self.cart.edit_Product_Quantity(storename, productID, quantity)
 
     def get_entrance_id(self):
         return self.entrance_id

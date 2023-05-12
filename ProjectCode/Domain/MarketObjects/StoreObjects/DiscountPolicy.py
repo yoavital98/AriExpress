@@ -1,3 +1,4 @@
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
@@ -10,7 +11,7 @@ class DiscountPolicy:
     # IMPORTANT!!: only root discount have an ID
     # for example: child of Add discount wont have an ID
     def __init__(self):
-        self.discounts = TypedDict(int, Policy)
+        self.discounts = TypedDict(int, DiscountType)  #(discountId, disType)
         self.discount_id = 0
 
     """
@@ -60,4 +61,9 @@ class DiscountPolicy:
         return self.discounts[discount_id]
 
 
+    # =======================JSON=======================#
 
+    def toJson(self):
+        return {
+            "discounts": JsonSerialize.toJsonAttributes(self.discounts)
+        }

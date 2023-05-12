@@ -9,6 +9,7 @@ class Bid:
         self._status = 0 # 0-PENDING 1-APPROVED 2-REJECTED 3-ALTERNATE_OFFER
         self._left_to_approval = 0 #number of owners that needs to approve this bid
 
+
     def approve_by_one(self):
         self._left_to_approval -= 1
 
@@ -19,6 +20,9 @@ class Bid:
         return self._left_to_approval
         
     # Getter and setter for username
+    def get_id(self):
+        return self.bid_id
+
     def get_username(self):
         return self._username
 

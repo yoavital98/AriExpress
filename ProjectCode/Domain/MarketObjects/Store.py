@@ -402,5 +402,6 @@ class Store:
             'bids': JsonSerialize.toJsonAttributes(self.__bids),
             'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
             'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
-            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries)
+            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
+            'discounts': self.__discount_policy.toJson()
         }
