@@ -487,19 +487,31 @@ class StoreFacade:
         return  removed_usernames
 
 
-    def addPermissions(self):
-        #todo return here the updated access
-        access: Access = None
-        return access
+    def addPermissions(self, store_name, requester_username, nominated_username, permission):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="ADD")
+        return modified_access
 
-    def editPermissions(self):
-        # todo return here the updated access
-        access: Access = None
-        return access
+    def removePermissions(self, store_name, requester_username, nominated_username, permission):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="REMOVE")
+        return modified_access
 
-    def getPermissions(self):
-        # todo return here the updated permissions
-        permissions: dict = None
+    def getPermissions(self, store_name, requester_username, nominated_username):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        permissions: dict = cur_store.getPermissions(requester_username, nominated_username)
         return permissions
 
     def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
