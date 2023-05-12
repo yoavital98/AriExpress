@@ -152,9 +152,12 @@ class Service:
 
     def getMemberPurchaseHistory(self, username):
         try:
-            purchase_history = self.store_facade.getMemberPurchaseHistory()
-            logging.debug(f"fetching purchase history of member {str(username)}.")
-            return Response(purchase_history.toJsonMember(username), True)  # TODO should i json those objects?
+            purchase_history = self.store_facade.getMemberPurchaseHistory(username)
+            logging.debug(f"fetching purchase history of user {str(username)}.")
+            data_json = []
+            for transaction in purchase_history:
+                data_json.append(transaction.toJson())
+            return Response(json.dumps(data_json), True)
         except Exception as e:
             logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -326,7 +329,10 @@ class Service:
         try:
             bids = self.store_facade.getAllBidsFromUser(username)
             logging.debug(f"fetching all the user's bids. By username: " + username + ".")
-            return Response(bids.toJson(), True)
+            bids_data = {}
+            for bid in bids:
+                bids_data[bid.get_id()] = bid.toJson()
+            return Response(json.dumps(bids_data), True)
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -391,7 +397,7 @@ class Service:
 
     def placeOfferInAuction(self, username, storename, auction_id, offer):
         try:
-            auc = self.store_facade.addAuction(username, storename, auction_id, offer, None)
+            auc = self.store_facade.placeOfferInAuction(username, storename, auction_id, offer)
             logging.info(
                 "Offer has been placed successfully. By username: " + username + ". storename: " + storename + ". auction_id: " + str(
                     auction_id) + ". offer: " + str(offer) + ".")
@@ -405,18 +411,12 @@ class Service:
 
     def getStorePurchaseHistory(self, username, storename):  # TODO: username is demanded for validation of the request
         try:
-            purchase_history = self.store_facade.getMemberPurchaseHistory()
-            logging.debug(f"fetching purchase history of member {str(username)}.")
-            return Response(purchase_history.toJsonMember(username), True)  # TODO should i json those objects?
-        except Exception as e:
-            logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
-            return Response(e, False)
-
-        try:
-            transactions = self.store_facade.getStorePurchaseHistory(storename)
-            logging.debug(
-                f"fetching all the store's transactions. By username: " + username + ". storename: " + storename + ".")
-            return Response(transactions.toJson(), True)
+            purchase_history = self.store_facade.getStorePurchaseHistory(username, storename)
+            logging.debug(f"fetching purchase history of store {str(storename)}.")
+            data_json = []
+            for transaction in purchase_history:
+                data_json.append(transaction.toJson())
+            return Response(json.dumps(data_json), True)
         except Exception as e:
             logging.error(f"getStorePurchaseHistory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -489,10 +489,10 @@ class Service:
 
     def addPermission(self, requesterID, nominated_username, permission):
         try:
-            self.store_facade.addPermissions()
+            access = self.store_facade.addPermissions()
             logging.info(
                 "Permission has been added successfully. By username: " + requesterID + ". nominated_username: " + nominated_username + ". permission: " + permission + ".")
-            return Response(True, True)
+            return Response(access.toJson(), True)
         except Exception as e:
             logging.error(f"addPermission Error: {str(e)}.")
             return Response(e, False)
@@ -500,10 +500,10 @@ class Service:
     def editPermissions(self, requesterID, nominatedID,
                         permission):  # TODO still don't know the implementation
         try:
-            self.store_facade.editPermissions()
+            access = self.store_facade.editPermissions()
             logging.info(
                 "Permission has been edited successfully. By username: " + requesterID + ". nominated_username: " + nominatedID + ". permission: " + permission + ".")
-            return Response(True, True)
+            return Response(access.toJson(), True)
         except Exception as e:
             logging.error(f"editPermissions Error: {str(e)}.")
             return Response(e, False)
@@ -513,7 +513,7 @@ class Service:
             permissions = self.store_facade.getPermissions()
             logging.debug(
                 f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
-            return Response(permissions.toJson(), True)
+            return Response(json.dumps(permissions.keys()), True)
         except Exception as e:
             logging.error(f"getPermissions Error: {str(e)}.")
             return Response(e, False)
@@ -538,17 +538,8 @@ class Service:
                 data = {'username': username,
                         'access': access.toJson()}
                 store_accesses_json.append(data)
-            return Response(json.dumps(data), True)
+            return Response(json.dumps(store_accesses_json), True)
         except Exception as e:
             logging.error(f"getStaffInfo Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def getStoreManagerPermissions(self, requesterID, storeName):
-        try:
-            self.store_facade.getStoreManagerPermissions()
-            logging.debug(
-                f"fetching all the store's manager permissions. By username: " + requesterID + ". storename: " + storeName + ".")
-            return Response(True, True)
-        except Exception as e:
-            logging.error(f"getStoreManagerPermissions Error: {str(e)}.")
-            return Response(e, False)
