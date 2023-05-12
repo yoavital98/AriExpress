@@ -1,0 +1,40 @@
+
+
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  h1 {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+</style>
+<head>
+    <title>{{ shopname }}</title>
+  </head>
+  <body>
+
+    <h1>{{ shopname }}</h1>
+    <br>
+    <br>
+    <br>
+    {% for context_key, context_data in context.items %}
+      {% if context_data is dict %}
+        <p>{{ context_key }}:</p>
+        <ul>
+          {% for inner_key, inner_data in context_data.items %}
+            <li>{{ inner_key }}: {{ inner_data }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>{{ context_key }}: {{ context_data }}</p>
+      {% endif %}
+    {% endfor %}
+    </body>
+    
+
+
+
+{% endblock %}

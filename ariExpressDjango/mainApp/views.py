@@ -6,10 +6,12 @@ from django.contrib.auth.forms import UserCreationForm
 import os
 import sys
 from ProjectCode.Service.Service import Service
+from .models import *
 from .forms import *
 from ProjectCode.Service.Response import *
 from django.contrib.auth.models import User
-
+import json
+import ast
 
 
 def startpage(request):
@@ -103,12 +105,26 @@ def logout(request):
     
 
 def myshops(request):
-    service = Service()
-    return render(request, 'myshops.html', {})
+    # service = Service()
+    # stores = Store.objects.filter(store_name='')
+    stores = {'store1': {'store_name': "Aqew Store",
+                         'active': True,
+                         'products': {'name': "Banana"}},
+            'store2': {'store_name': "BulBul Store",
+                        'active': False,
+                        'products': {'name': "Apple"}}}
+    # products = Product.objects.all()
+    return render(request, 'myshops.html', {'stores': stores})
     
 
-def reset_password(request):
-    pass
+def myshops_specific(request, shopname):
+    context = None
+    if request.method == 'POST':
+        context = request.POST.get('data') 
+        # print(context)
+        context = ast.literal_eval(context)
 
-def homepage_guest(request):
-    pass
+    else: 
+        return redirect('mainApp:mainpage')
+    return render(request, 'shop_specific.html', {'context': context,
+                                                  'shopname': shopname})
