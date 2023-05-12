@@ -7,8 +7,12 @@ import os
 import sys
 from ProjectCode.Service.Service import Service
 from .forms import *
+from .models import UserMessage
 from ProjectCode.Service.Response import *
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
+from django.contrib import messages # for displaying messages
 
 
 
@@ -118,3 +122,15 @@ def homepage_guest(request):
 
 def inbox(request):
     return render(request, 'inbox.html')
+
+def send_message(request):
+    if request.method == 'POST':
+        #service = Service()
+        form = UserMessagesform(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            #res = service.sendMessage(form.cleaned_data['id'], form.cleaned_data['sender'], form.cleaned_data['receiver'], form.cleaned_data['subject'], form.cleaned_data['content'], form.cleaned_data['creation_date'], form.cleaned_data['file'])
+            return HttpResponseRedirect('/')
+        else:
+            form = UserMessagesform()
+        return render(request, "inbox.html", {'form': form})   

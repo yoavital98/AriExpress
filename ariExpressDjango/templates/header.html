@@ -34,6 +34,7 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
               </li>
+              
               {% else %}
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'mainApp:login' %}">Login</a>
@@ -41,7 +42,13 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'mainApp:registerPage' %}">Register</a>
               </li>
+              <li class= "nav-item">
+                <a class = "nav-link" href="{% url 'mainApp:inbox' %}">
+                  <i class = "fas fa-bell"></i><span class = "pending">2</span>
+                </a>
+              </li>
               {% endif %}
+
               <!-- <li class="nav-item">
                 <a class="nav-link disabled">Disabled</a>
               </li> -->
