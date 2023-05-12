@@ -40,21 +40,51 @@ class Store:
         cur_access.canChangeStatus()
         self.active = status
 
+    #-------------Permissions----------------#
+
     def setFounder(self, username, access):
         access.setFounder()
         self.__accesses[username] = access
 
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
-        self.__accesses[nominated_username] = nominated_access
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
             raise Exception("The member doesn't have the access for that store")
-        if requester_access.canModifyPermissions():  # TODO: change according to permission policy
+        if requester_access.canModifyPermissions() and requester_username == nominated_access.get_nominated_by_username():
             nominated_access.setAccess(role)
-            requester_access.addNominatedUsername(nominated_username, self.get_store_name())
+            requester_access.addNominatedUsername(nominated_username, nominated_access)
+            self.__accesses[nominated_username] = nominated_access
             return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
+
+
+    def removeAccess(self,to_be_removed_username, requester_username):
+        requester_access: Access = self.__accesses[requester_username]
+        to_be_removed_access: Access = self.__accesses[to_be_removed_username]
+        if requester_access is None or to_be_removed_access is None:
+            raise Exception("No such access exists")
+        if requester_access.canModifyPermissions() and requester_username == to_be_removed_access.get_nominated_by_username():
+            requester_access.get_nominations().pop(to_be_removed_username)
+            removed_usernames = self.__removeAllAccesses(to_be_removed_access)
+            return removed_usernames
+        else:
+            raise Exception("User doesn't have the permission to remove this access")
+
+
+    def __removeAllAccesses(self, to_be_removed_access):
+        cur_access: Access = to_be_removed_access
+        accesses_to_remove = [to_be_removed_access]
+        usernames_to_remove = []
+        while len(accesses_to_remove) > 0:
+            cur_access = accesses_to_remove[0]
+            cur_access.removeAccessFromMember()
+            self.__accesses.pop(cur_access.get_user().get_username())
+            usernames_to_remove.extend(cur_access.get_nominations().keys())
+            accesses_to_remove.remove(cur_access)
+            accesses_to_remove.extend(cur_access.get_nominations().values())
+        return usernames_to_remove
+
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()
