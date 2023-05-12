@@ -1,6 +1,8 @@
 import json
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
+from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
+from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 #-------Data MarketObjects Imports-------#
@@ -94,7 +96,7 @@ class StoreFacade:
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
         return new_guest.get_username()
-      
+
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
         guest: Guest = Guest(entrance_id)
@@ -156,7 +158,7 @@ class StoreFacade:
         if self.admins.keys().__contains__(username):
             return self.logInAsAdmin(username, password)
         # check if the member is an actual user
-        if self.members.keys().__contains__(username):\
+        if self.members.keys().__contains__(username):
             if not self.online_members.__contains__(username):
                 existing_member: Member = self.members[username]
                 if password_validator.ConfirmPassword(password, existing_member.get_password()):

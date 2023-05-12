@@ -25,3 +25,5 @@ class UserTransaction:
     def __str__(self):
         def __str__(self):
             return f"Purchase made by {self._username} at {self._storename} on {self._date}\nProducts: {self._products}\nOverall price: {self._overall_price}"
+
+    # =======================JSON=======================#
