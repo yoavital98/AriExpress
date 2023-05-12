@@ -14,10 +14,11 @@ urlpatterns = [
     # path(r'home/', views.mainpage, name="mainpage"),
     path(r'register/', views.registerPage, name='registerPage'),
     path(r'myshops/', views.myshops, name="myshops"),
-    path (r'myshops/<str:shopname>/', views.myshops_specific, name='myshops_specific'),   
-    path (r'nominate/<str:shopname>/', views.nominateUser, name='nominateUser'),   
+    path(r'inbox/', views.inbox, name='inbox'),
+    # path(r'resetpassword', views.reset_password, name='reset_password'),
+
+    path (r'myshops/<str:shopname>/', views.myshops_specific, name='myshops_specific'),
+    path (r'nominate/<str:shopname>/', views.nominateUser, name='nominateUser'),
+
     
 ]
-
-# if settings.DEBUG:
-#     urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

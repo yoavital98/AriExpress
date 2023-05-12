@@ -116,16 +116,16 @@ def myshops(request):
                         'products': {'name': "Apple"}}}
     # products = Product.objects.all()
     return render(request, 'myshops.html', {'stores': stores})
-    
+
 
 def myshops_specific(request, shopname):
     context = None
     if request.method == 'POST':
-        context = request.POST.get('data') 
+        context = request.POST.get('data')
         # print(context)
         context = ast.literal_eval(str(context))
 
-    else: 
+    else:
         return redirect('mainApp:mainpage')
     return render(request, 'shop_specific.html', {'context': context,
                                                   'shopname': shopname})
@@ -139,12 +139,12 @@ def nominateUser(request, shopname):
         print(store_name)
         service = Service()
         if selected == '1':
-            res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name) 
+            res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
             # Mock part: assume it returns a dictionary
             # res = {'status': True,
             #            'object': "Something"
             #            }
-            # if res.get('status'):    
+            # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
                 return redirect('mainApp:myshops')
@@ -152,18 +152,30 @@ def nominateUser(request, shopname):
                 messages.success(request, ("Error nominating a user to be Owner"))
                 return redirect('mainApp:myshops')
         elif selected == '2':
-            res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name) 
+            res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
             # Mock part: assume it returns a dictionary
             res = {'status': True,
                        'object': "Something"
                        }
-            if res.get('status'):    
+            if res.get('status'):
             # if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
                 return redirect('mainApp:myshops')
             else:
                 messages.success(request, ("Error nominating a user to be Manager"))
                 return redirect('mainApp:myshops')
-            
+
     # messages.success(request, ("Error nominating a user to be Owner"))
-    return render(request, 'nominateUser.html', {'shopname': shopname})    
+    return render(request, 'nominateUser.html', {'shopname': shopname})
+
+def reset_password(request):
+    pass
+
+def homepage_guest(request):
+    pass
+
+
+
+
+def inbox(request):
+    return render(request, 'inbox.html')
