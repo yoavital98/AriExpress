@@ -65,14 +65,14 @@ def registerPage(request):
         else:
             form = CreateMemberForm(request.POST)
             if form.is_valid():
-                form.save()
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password1']
                 email = form.cleaned_data['email']
-                print("ok")
                 res = service.register(username, password, email)
                 msg = res.getReturnValue()
                 if res.getStatus() == True:
+                    form.save()
+                    print("ok")
                     user = authenticate(request, username=username, password=password)
                     loginFunc(request, user)
                     return redirect('mainApp:mainpage')

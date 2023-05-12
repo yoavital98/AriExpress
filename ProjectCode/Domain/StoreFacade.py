@@ -48,9 +48,9 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
         # Admin
-        first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
+        first_admin: Admin = Admin("admin", "12341234", "a@a.com")
         first_admin.logInAsAdmin() # added by rubin to prevent deadlock
-        self.admins["Ari"] = first_admin
+        self.admins["admin"] = first_admin
         # load data
         self.loadData()
         # call services
