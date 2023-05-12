@@ -1,4 +1,8 @@
+import json
+
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
+from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
+from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 #-------Data MarketObjects Imports-------#
@@ -17,7 +21,6 @@ from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.ExternalServices.PasswordService import PasswordValidationService
-from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
@@ -92,7 +95,7 @@ class StoreFacade:
         new_guest = Guest(self.nextEntranceID)
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
-        return DataGuest(new_guest)
+        return new_guest.get_username()
 
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
@@ -326,6 +329,9 @@ class StoreFacade:
     def getStores(self):
         return self.stores
 
+    def getStoresJson(self):
+        return self.stores
+
     def getProductsByStore(self, store_name, username):
         cur_store: Store = self.stores.get(store_name) #TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
@@ -436,7 +442,8 @@ class StoreFacade:
             nominated_access = Access(cur_store,self.members[nominated_username],requester_username)
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username, "Owner")
-        return DataAccess(nominated_modified_access)
+        # return DataAccess(nominated_modified_access)
+        return nominated_modified_access
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores[store_name]
@@ -450,7 +457,8 @@ class StoreFacade:
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Manager")
-        return DataAccess(nominated_modified_access)
+        # return DataAccess(nominated_modified_access)
+        return nominated_modified_access
 
     def addPermissions(self):
         pass
@@ -588,11 +596,12 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         accesses_dict = cur_store.getStaffInfo(username)
+        return accesses_dict
         #Generate accesses data objects
-        data_accesses_dict = dict()
-        for key,value in accesses_dict.items():
-            data_accesses_dict[key] = DataAccess(value)
-        return data_accesses_dict
+        # data_accesses_dict = dict()
+        # for key,value in accesses_dict.items():
+        #     data_accesses_dict[key] = DataAccess(value)
+        # return data_accesses_dict
 
     def getStoreManagerPermissions(self):
         pass
@@ -627,18 +636,25 @@ class StoreFacade:
             if self.password_validator.ValidatePassword(newPassword):
                 new_admin = Admin(newAdminName, newPassword, newEmail)
                 self.admins[newAdminName] = new_admin
-                return DataAdmin(new_admin)
+                return new_admin
             else:
                 raise Exception("password is too weak")
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = []
-            for member in self.online_members.values():
-                member_list.insert(DataMember(member))
-            return member_list
+            member_list = self.online_members.values()
+            return json.dumps(member_list)
         else:
             raise Exception("only admin can get the online members list")
+
+    def removeMember(self, username, memberName):
+        if self.admins.keys().__contains__(username):
+            if self.members.keys().__contains__(memberName):
+                return self.members.pop(memberName)
+            else:
+                raise Exception("no such member exists")
+        else:
+            raise Exception("only admin can remove a member")
 
 
 

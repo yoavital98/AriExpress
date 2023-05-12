@@ -30,7 +30,7 @@ class Member(User):
         return super().get_Basket(store_name)
 
     def removeFromBasket(self, store_name, product_id):
-        super().removeFromBasket(store_name, product_id)
+        return super().removeFromBasket(store_name, product_id)
 
     def edit_Product_Quantity(self, storename, product_id, quantity):
         super().edit_Product_Quantity(storename, product_id, quantity)
@@ -104,6 +104,14 @@ class Member(User):
     #     return json.dumps(data)
     def setEntranceId(self, new_entrance_id):
         self.entrance_id = new_entrance_id
+
+    def toJson(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email
+        }
+        return json.dumps(data)
 
     def addNewLottery(self, lottery_id, cur_lottery):
         if not self.lotteries.keys().__contains__(lottery_id):
