@@ -1,10 +1,12 @@
 import datetime
 from typing import List
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
+from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import DiscountPolicy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
@@ -14,7 +16,7 @@ class Store:
     def __init__(self, store_name):
         self.__store_name = store_name
         self.__products = TypedDict(int, Product)
-        #TODO: policies
+        # TODO: policies
         self.active: bool = True
         self.closed_by_admin: bool = False
         self.__accesses = TypedDict(str, Access)
@@ -25,8 +27,7 @@ class Store:
         self.__bids_requests = TypedDict(Access, List[Bid])
         self.__auctions = TypedDict(int, Auction)
         self.__lotteries = TypedDict(int, Lottery)
-
-
+        self.__discount_policy = DiscountPolicy()
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
@@ -39,13 +40,12 @@ class Store:
         access.setFounder()
         self.__accesses[username] = access
 
-
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
         self.__accesses[nominated_username] = nominated_access
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
             raise Exception("The member doesn't have the access for that store")
-        if requester_access.canModifyPermissions():#TODO: change according to permission policy
+        if requester_access.canModifyPermissions():  # TODO: change according to permission policy
             nominated_access.setAccess(role)
             requester_access.addNominatedUsername(nominated_username, self.get_store_name())
             return nominated_access
@@ -80,10 +80,7 @@ class Store:
             setattr(cur_product, k, v)
         return cur_product
 
-
-
-
-    #TODO: may cause problem for unknown reasons
+    # TODO: may cause problem for unknown reasons
     def modify_attributes(self, object_to_modify, **kwargs):
         for k, v in kwargs.items():
             try:
@@ -92,7 +89,6 @@ class Store:
                 raise Exception("No such attribute exists")
             setattr(object_to_modify, k, v)
         return object_to_modify
-
 
     # def closeStore(self, requester_username):
     #     cur_access = self.__accesses[requester_username]
@@ -110,21 +106,19 @@ class Store:
                 raise Exception("Store is inactive")
         return self.__products
 
-
     def getProductById(self, product_id, username):
         cur_access: Access = self.__accesses[username]
         if not self.active and (cur_access is None or not cur_access.hasRole()):
             raise Exception("Store is inactive")
-        return self.__products[product_id]
-
+        return self.__products.get(product_id)
 
     def getStaffInfo(self, username):
         cur_access: Access = self.__accesses[username]
         if cur_access is None:
             raise Exception("Member has no access for that store")
-        cur_access.canViewStaffInformation()
+        if not cur_access.canViewStaffInformation():
+            raise Exception("You have no permission to view staff information")
         return self.__accesses
-
 
     def checkProductAvailability(self, product_id, quantity):
 
@@ -146,7 +140,6 @@ class Store:
                 product_list.append(prod)
         return product_list
 
-
     def searchProductByCategory(self, category, username):
         cur_access: Access = self.__accesses[username]
         if not self.active and (cur_access is None or not cur_access.hasRole()):
@@ -159,14 +152,36 @@ class Store:
 
 
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
-        overall_price = 0
+        new_product_dict = TypedDict(int, int) # (id,quantity)
         for product_id, product_tuple in products_dict.items():
+            new_product_dict[product_id] = product_tuple[1]
+
+        overall_price = 0
+        price_after_discounts = 0
+        for product_id, product_quantity in new_product_dict.items():
             cur_product = self.__products[product_id]
             if cur_product is None:
                 raise Exception("No such product exists")
-            cur_product.quantity -= product_tuple[1]
-            overall_price += cur_product.price * product_tuple[1]
-        return overall_price
+            cur_product.quantity -= product_quantity
+            overall_price += cur_product.price * product_quantity
+
+        for product_id, product_quantity in new_product_dict.items():
+            cur_product: Product = self.__products[product_id]
+            price_after_discounts += product_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict, overall_price)
+        return price_after_discounts
+
+
+    def getProductPriceAfterDiscount(self, product, product_quantity_dict, overall_price):
+        cur_percent = self.__discount_policy.calculateDiscountForProduct(product, product_quantity_dict, overall_price)
+        return product.get_price() - product.get_price() * (cur_percent / 100)
+
+    def addDiscount(self, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
+                                           level_name=level_name, rule=rule, discounts=discounts)
+        return new_discount
+
+    def getDiscount(self, discount_id):
+        return self.__discount_policy.getDiscount(discount_id)
 
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
@@ -176,8 +191,6 @@ class Store:
                     self.__bids_requests[access] = []
                 self.__bids_requests[access].append(bid)
                 bid.increment_left_to_approve()
-
-
 
     def approveBid(self, username, bid_id):
         cur_access: Access = self.__accesses[username]
@@ -194,7 +207,6 @@ class Store:
             cur_bid.set_status(1)
         return cur_bid
 
-
     def rejectBid(self, username, bid_id):
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
@@ -206,7 +218,6 @@ class Store:
                 bid_list.remove(cur_bid)
         cur_bid.set_status(2)
         return cur_bid
-
 
     def sendAlternativeBid(self, username, bid_id, alternate_offer):
         cur_access: Access = self.__accesses[username]
@@ -240,10 +251,10 @@ class Store:
         self.auction_id_counter += 1
         start_date = datetime.datetime.now()
         expiration_date = start_date + datetime.timedelta(days=int(duration))
-        new_auction = Auction(self.auction_id_counter, product_id, starting_price, starting_price, start_date, expiration_date, username)
+        new_auction = Auction(self.auction_id_counter, product_id, starting_price, starting_price, start_date,
+                              expiration_date, username)
         self.__auctions[self.auction_id_counter] = new_auction
         return new_auction
-
 
     def purchaseAuctionProduct(self, auction_id):
         cur_auction: Auction = self.__auctions[auction_id]
@@ -251,7 +262,6 @@ class Store:
             raise Exception("The auction didn't end yet")
         cur_product = self.__products[cur_auction.get_product_id()]
         cur_product.quantity -= 1
-
 
     def placeOfferInAuction(self, username, auction_id, offer):
         cur_auction: Auction = self.__auctions.get(auction_id)
@@ -291,7 +301,6 @@ class Store:
             cur_lottery.set_winner(chosen)
         return cur_lottery
 
-
     def checkLotteryParticipationShare(self, lottery_id, share):
         cur_lottery: Lottery = self.__lotteries.get(lottery_id)
         if cur_lottery is None:
@@ -299,7 +308,6 @@ class Store:
         if cur_lottery.get_price() - cur_lottery.get_accumulated_price() < share:
             raise Exception("The requested share is too high")
         return cur_lottery
-
 
     def get_store_name(self):
         return self.__store_name
@@ -340,8 +348,37 @@ class Store:
     def get_lottery(self):
         return self.__lotteries
 
+    # =======================JSON=======================#
 
+    def toJsonInfo(self):
+        return {
+            'store_name': self.__store_name,
+            'active': self.active
+        }
 
+    def toJsonProducts(self):
+        return {
+            'store_name': self.__store_name,
+            'products': JsonSerialize.toJsonAttributes(self.__products),
+            'active': self.active
+        }
 
+    def toJsonAccesses(self):
+        return {
+            'store_name': self.__store_name,
+            'products': JsonSerialize.toJsonAttributes(self.__products),
+            'active': self.active,
+            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+        }
 
-
+    def toJsonAll(self):
+        return {
+            'store_name': self.__store_name,
+            'products': JsonSerialize.toJsonAttributes(self.__products),
+            'active': self.active,
+            'accesses': JsonSerialize.toJsonAttributes(self.__accesses),
+            'bids': JsonSerialize.toJsonAttributes(self.__bids),
+            'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
+            'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
+            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries)
+        }

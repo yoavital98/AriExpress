@@ -5,7 +5,7 @@ class StoreTransaction:
     def __init__(self, username, storename, products, overall_price):
         self._username = username
         self._storename = storename
-        self._products = products  # set of tuples (product_name, quantity)
+        self._products = products  # set of tuples (product_name, quantity, price)
         self._overall_price = overall_price
         self._date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
