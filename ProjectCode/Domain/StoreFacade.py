@@ -397,11 +397,9 @@ class StoreFacade:
     #TODO: add check if user is loggedin to each function
 
     def openStore(self, username, store_name):
-        cur_member: Member = self.members.get(username)
+        cur_member: Member = self.__getOnlineMemberOnly(username)
         if cur_member is None:
-            raise Exception("The user is not a member")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+            raise Exception("The user is not a member or not logged in")
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member, username)
         cur_member.accesses[store_name] = new_access
