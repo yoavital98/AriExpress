@@ -46,7 +46,7 @@ class StoreFacade:
         # Admin
         first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
         first_admin.logInAsAdmin() # added by rubin to prevent deadlock
-        self.admins["Ari"] = first_admin
+        self.admins["Ari1"] = first_admin
         # load data
         self.loadData()
 

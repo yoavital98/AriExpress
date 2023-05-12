@@ -59,7 +59,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(member.get_username(), self.member1.get_username())
 
     def test_checkIfMemberIsLoggedIn_existingUserLoggedOut(self):
-        self.member1.logOut()
+        
         self.assertFalse(self.store_facade.online_members.__contains__(self.member1.get_username()))
 
     def test_checkIfMemberIsLoggedIn_UserNotExists(self):

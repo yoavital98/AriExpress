@@ -16,8 +16,8 @@ class TestStoreFacade(TestCase):
         # TODO: check info for duplicates
         # TODO: check implementations of tests
         self.store_facade = StoreFacade()
-        self.member1 = Member(2, "Ari", "password123", "ari@gmail.com")
-        self.store_facade.members["Ari"] = self.member1
+        self.store_facade.register("Ari", "password123", "ari@gmail.com")
+        self.member1: Member = self.store_facade.members.get("Ari")
 
 
     def test_getStores_returnsStores_empty(self):
@@ -284,7 +284,7 @@ class TestStoreFacade(TestCase):
 
 
     def test_addDiscount_success(self):
-        self.member1.logInAsMember()
+        self.store_facade.logInAsMember("Ari", "password123")
         self.store_facade.openStore(self.member1.get_username(), "Store1")
         self.store = self.store_facade.stores["Store1"]
         self.access = self.store.get_accesses()[self.member1.get_username()]
@@ -295,7 +295,7 @@ class TestStoreFacade(TestCase):
 
 
     def test_calculateSimpleDiscount_success(self):
-        self.member1.logInAsMember()
+        self.store_facade.logInAsMember("Ari", "password123")
         self.store_facade.openStore(self.member1.get_username(), "Store1")
         self.store = self.store_facade.stores["Store1"]
         self.access = self.store.get_accesses()[self.member1.get_username()]
@@ -307,7 +307,7 @@ class TestStoreFacade(TestCase):
         self.assertEqual(self.price_after_discount, 9)
 
     def test_calculateConditionedDiscount_success(self):
-        self.member1.logInAsMember()
+        self.store_facade.logInAsMember("Ari", "password123")
         self.store_facade.openStore(self.member1.get_username(), "Store1")
         self.store = self.store_facade.stores["Store1"]
         self.access = self.store.get_accesses()[self.member1.get_username()]
