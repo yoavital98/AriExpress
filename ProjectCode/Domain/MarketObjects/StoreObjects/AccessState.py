@@ -13,6 +13,7 @@ class AccessState(ABC):
                                  "ModifyPermissions": self.addModifyPermissionPermit, "Auction": self.addAuctionPermit,
                                  "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit()}
 
+
     def addProductPermit(self):
         return True
 
@@ -44,3 +45,7 @@ class AccessState(ABC):
             return self.permissions[name]()
         else:
             raise Exception("You dont have the permission for that")
+
+    # =======================JSON=======================#
+    def toJson(self):
+        return self.permissions #todo fix this

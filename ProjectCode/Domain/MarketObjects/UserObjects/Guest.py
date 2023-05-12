@@ -17,7 +17,7 @@ class Guest(User):
     def removeFromBasket(self, storename, productID):
         super().removeFromBasket(storename, productID)
 
-    def get_username(self):
-        return super().get_username()
+    def get_entrance_id(self):
+        return super().get_entrance_id()
 
 
