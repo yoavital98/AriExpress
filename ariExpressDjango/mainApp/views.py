@@ -169,6 +169,28 @@ def nominateUser(request, shopname):
     # messages.success(request, ("Error nominating a user to be Owner"))
     return render(request, 'nominateUser.html', {'shopname': shopname})
 
+def adminPage(request):
+    if request.user.is_superuser:
+        return render(request, 'adminPage.html', {})
+    else:
+        messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
+        return redirect('mainApp:mainpage')
+
+def viewOnlineUsers(request):
+    if request.user.is_superuser:
+        # service = Service()
+        # service.
+
+
+
+
+
+
+        return render(request, 'adminPage.html', {})
+    else:
+        messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
+        return redirect('mainApp:mainpage')
+
 def reset_password(request):
     pass
 

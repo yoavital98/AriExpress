@@ -1,0 +1,33 @@
+
+
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  h1 {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+</style>
+<head>
+    <title>Admin Area</title>
+  </head>
+  <body>
+    <h1>Admin Area</h1>
+    <br><br><br>
+    <form method="post" action="{% url 'mainApp:viewOnlineUsers' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary" id="button">View Online Users</button>
+    </form>
+    <br>
+    <form method="post" action="#">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary" id="button">View Transaction History</button>
+    </form>
+  </body>
+
+
+
+{% endblock %}

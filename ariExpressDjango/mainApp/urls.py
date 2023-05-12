@@ -19,6 +19,9 @@ urlpatterns = [
 
     path (r'myshops/<str:shopname>/', views.myshops_specific, name='myshops_specific'),
     path (r'nominate/<str:shopname>/', views.nominateUser, name='nominateUser'),
+    path (r'adminPage/', views.adminPage, name='adminPage'),
+    path (r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
+
 
     
 ]

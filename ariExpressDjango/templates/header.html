@@ -52,7 +52,7 @@
               </li> -->
               {% if user.is_superuser %}
               <li class="nav-item">
-                <a class="nav-link" id="admintag" href="#">ADMIN</a>
+                <a class="nav-link" id="admintag" href="{% url 'mainApp:adminPage' %}">ADMIN</a>
               </li>
               {% endif %}
 
