@@ -1,5 +1,7 @@
 import json
 import logging
+
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
@@ -129,7 +131,7 @@ class Service:
             logging.error(f"register Error: {str(e)}.")
             return Response(e, False)
 
-    def logIn(self, username, password):  # todo no responses
+    def logIn(self, username, password):
         try:
             member = self.store_facade.logInAsMember(username, password)
             logging.info("Logged in successfully. By username: " + username + ".")
@@ -137,25 +139,6 @@ class Service:
         except Exception as e:
             logging.error(f"logIn Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
-
-    # def logIn(self, username, password):  # todo responses from service to gui
-    #     try:
-    #         member = self.store_facade.logInAsMember(username, password)
-    #         logging.info(f"Welcome {str(username)}")
-    #         return Response(member.toJson(), True)
-    #     except Exception as e:
-    #         logging.error(f"logIn Error: {str(e)}. By username: '{username}'")
-    #         return Response(e, False)
-    # def logIn(self, username, password):  # todo responses from domain to service
-    #     memberResponse = self.store_facade.logInAsMember(username, password)
-    #     if memberResponse.getStatus():
-    #         member = memberResponse.getReturnValue()
-    #         logging.info(f"Welcome {str(username)}")
-    #         return member.toJson()
-    #     else:
-    #         e = memberResponse.getReturnValue()
-    #         logging.error(f"logIn Error: {str(e)}. By username: '{username}'")
-    #         return e
 
     def logOut(self, username):
         try:
@@ -219,7 +202,7 @@ class Service:
         try:
             products = self.store_facade.getProductsByStore(storename, username)
             logging.debug(f"fetching all products in store '{str(storename)}'. By username: " + username + ".")
-            return Response(products.toJson(), True)
+            return Response(JsonSerialize.toJsonAttributes(products), True)
         except Exception as e:
             logging.error(f"getProductsByStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -239,7 +222,7 @@ class Service:
             results = self.store_facade.productSearchByName(productName, username)
             logging.debug(
                 f"fetching all the products with keyname '{str(productName)}'. By username: " + username + ".")
-            return Response(results.toJson(), True)
+            return Response(JsonSerialize.toJsonAttributes(results), True)
         except Exception as e:
             logging.error(f"productSearchByName Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -250,7 +233,7 @@ class Service:
             results = self.store_facade.productSearchByCategory(categoryName, username)
             logging.debug(
                 f"fetching all the products within the category '{str(categoryName)}'. By username: " + username + ".")
-            return Response(results.toJson(), True)
+            return Response(JsonSerialize.toJsonAttributes(results), True)
         except Exception as e:
             logging.error(f"productSearchByCategory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -261,7 +244,7 @@ class Service:
             products = self.store_facade.productFilterByFeatures(featuresDict, username)
             logging.debug(
                 f"fetching all the products within the features '{str(featuresDict)}'. By username: " + username + ".")
-            return Response(products.toJson(), True)
+            return Response(JsonSerialize.toJsonAttributes(products), True)
         except Exception as e:
             logging.error(f"productFilterByFeatures Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -286,11 +269,11 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            self.store_facade.addToBasket(username, storename, productID, quantity)
+            basket = self.store_facade.addToBasket(username, storename, productID, quantity)
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
-            return Response(True, True)
+            return Response(basket.toJson(), True)
         except Exception as e:
             logging.error(f"addToBasket Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -301,18 +284,18 @@ class Service:
             logging.debug(
                 f"Item has been removed from the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ".")
-            return Response(answer.toJson(), True)
+            return Response(answer, True)
         except Exception as e:
             logging.error(f"removeFromBasket Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
     def editBasketQuantity(self, username, storename, product_id, quantity):
         try:
-            self.store_facade.editBasketQuantity(username, storename, product_id, quantity)
+            basket = self.store_facade.editBasketQuantity(username, storename, product_id, quantity)
             logging.debug(
                 f"Item quantity has been edited successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     product_id) + ". quantity: " + str(quantity) + ".")
-            return Response(True, True)
+            return Response(basket.toJson(), True)
         except Exception as e:
             logging.error(f"editBasketQuantity Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

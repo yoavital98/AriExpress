@@ -15,3 +15,14 @@ class SimpleDiscount(DiscountType):
     def parse(self):
         pass
 
+    # =======================JSON=======================#
+
+    def toJson(self):
+        return{
+            "percent": self.percent,
+            "level": self.level,
+            "level_name": self.level_name,
+            # "rule": self.rule,
+            "discount_type": "Simple"
+        }
+

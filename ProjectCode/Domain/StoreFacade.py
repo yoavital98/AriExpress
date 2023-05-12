@@ -47,9 +47,9 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
         # Admin
-        first_admin: Admin = Admin("Ari", "123", "arioshryz@gmail.com")
+        first_admin: Admin = Admin("admin", "asdf1233", "a@a.com")
         first_admin.logInAsAdmin() # added by rubin to prevent deadlock
-        self.admins["Ari"] = first_admin
+        self.admins["admin"] = first_admin
         # load data
         self.loadData()
 
@@ -156,6 +156,7 @@ class StoreFacade:
         password_validator = PasswordValidationService()
         # check if the user is an admin
         if self.admins.keys().__contains__(username):
+
             return self.logInAsAdmin(username, password)
         # check if the member is an actual user
         if self.members.keys().__contains__(username):
@@ -201,14 +202,16 @@ class StoreFacade:
     def getBasket(self, user_name, store_name):
         user = self.__getUserOrMember(user_name)
         requested_basket = user.get_Basket(store_name)
-        return DataBasket(requested_basket)
+        return requested_basket
+        # return DataBasket(requested_basket)
 
     # guest and member
     # getting a Users cart
     def getCart(self, username):
         user: User = self.__getUserOrMember(username)
         requested_cart = user.get_cart()
-        return DataCart(requested_cart)
+        return requested_cart
+        # return DataCart(requested_cart)
 
     # guest and member
     # adding a product to basket, checking with store if the item is available
@@ -219,7 +222,8 @@ class StoreFacade:
             raise Exception("Store doesnt exists")
         product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
-            user.add_to_cart(username, store_name, product_id, product, quantity)
+            filled_basket = user.add_to_cart(username, store_name, product_id, product, quantity)
+            return filled_basket
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
 
@@ -242,7 +246,7 @@ class StoreFacade:
             store: Store = self.stores[store_name]
             product = store.checkProductAvailability(product_id, quantity)
             if product is not None:
-                user.edit_Product_Quantity(store_name, product_id, quantity)
+                return user.edit_Product_Quantity(store_name, product_id, quantity)
             else:
                 raise Exception("Product is not available or quantity is higher than the stock")
         else:
@@ -265,13 +269,15 @@ class StoreFacade:
         existing_member.addBidToBasket(bid)
         store: Store = self.stores[store_name]
         store.requestBid(bid)
-        return DataBid(bid)
+        return bid
+        # return DataBid(bid)
 
     def getAllBidsFromUser(self, username):
         existing_member: Member = self.__getOnlineMemberOnly(username)
         bids_set = existing_member.getAllBids()  # returns set of bids
-        data_bids_list = [DataBid(bid) for bid in bids_set]
-        return data_bids_list
+        return bids_set
+        # data_bids_list = [DataBid(bid) for bid in bids_set]
+        # return data_bids_list
 
     def purchaseConfirmedBid(self, username, store_name, bid_id, card_number, card_user_name, card_user_id, card_date,
                              back_number):
@@ -337,11 +343,12 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         #Generate data dict
-        data_products = dict()
+        # data_products = dict()
         product_dict = cur_store.getProducts(username)
-        for key, value in product_dict:
-            data_products[key] = DataProduct(value)
-        return data_products
+        return product_dict
+        # for key, value in product_dict:
+        #     data_products[key] = DataProduct(value)
+        # return data_products
 
     def getProduct(self, store_name, product_id, username):
         cur_store: Store = self.stores.get(store_name)
@@ -582,7 +589,7 @@ class StoreFacade:
             existing_admin: Admin = self.admins[username]
             if self.password_validator.ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
-                return DataAdmin(existing_admin)
+                return existing_admin
             else:
                 raise Exception("admin name or password does not match")
         else:
@@ -609,6 +616,8 @@ class StoreFacade:
                 return new_admin
             else:
                 raise Exception("password is too weak")
+        else:
+            raise Exception("only an admin can add a new admin.")
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
@@ -628,3 +637,12 @@ class StoreFacade:
 
 
 
+ # =======================JSON=======================#
+
+    def toJson(self):
+        return {
+            "username": self.username,
+            "store": self.store.get_store_name(),
+            "products": JsonSerialize.toJsonAttributes(self.products),
+            "bids": JsonSerialize.toJsonAttributes(self.bids)
+        }

@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
+
 
 class DiscountType(ABC):
     """
@@ -28,4 +30,6 @@ class DiscountType(ABC):
         elif self.level == "Product":
             return self.level_name == product.get_product_id()
         return False
+
+
 

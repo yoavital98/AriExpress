@@ -37,3 +37,14 @@ class ConditionedDiscount(DiscountType):
             self.logic_comp.parse()
         else:
             self.logic_comp = RuleComp(self.rule["rule_type"], self.rule["product_id"], self.rule["operator"], self.rule["quantity"], self.rule["category"])
+
+    # =======================JSON=======================#
+
+    def toJson(self):
+        return{
+            "percent": self.percent,
+            "level": self.level,
+            "level_name": self.level_name,
+            "rule": self.rule,
+            "discount_type": "Conditioned"
+        }

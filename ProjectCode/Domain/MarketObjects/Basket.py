@@ -1,3 +1,4 @@
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
@@ -79,11 +80,12 @@ class Basket:
 
     def clearBidFromBasket(self, bid_id):
         del self.bids[bid_id]
+    # =======================JSON=======================#
 
     def toJson(self):
         return {
             "username": self.username,
-            "store": self.store.toJson(),
-            "products": self.products.toJson(),
-            "bids": self.bids.toJson()
+            "store": self.store.get_store_name(),
+            "products": JsonSerialize.toJsonAttributes(self.products),
+            "bids": JsonSerialize.toJsonAttributes(self.bids)
         }

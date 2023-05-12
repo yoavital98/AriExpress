@@ -185,7 +185,7 @@ class Store:
 
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
-        for access in self.__accesses.values():
+        for access in self.__accesses.values(): # Todo shouldnt you check if the accessed has option to approve bids?
             if access.isOwner or access.isFounder:
                 if self.__bids_requests[access] is None:
                     self.__bids_requests[access] = []
@@ -380,5 +380,6 @@ class Store:
             'bids': JsonSerialize.toJsonAttributes(self.__bids),
             'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
             'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
-            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries)
+            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
+            'discounts': self.__discount_policy.toJson()
         }
