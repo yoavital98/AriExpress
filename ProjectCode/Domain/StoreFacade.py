@@ -156,7 +156,6 @@ class StoreFacade:
         password_validator = PasswordValidationService()
         # check if the user is an admin
         if self.admins.keys().__contains__(username):
-            print("123")
             return self.logInAsAdmin(username, password)
         # check if the member is an actual user
         if self.members.keys().__contains__(username):
@@ -579,12 +578,9 @@ class StoreFacade:
 
     # ------  Admins  ------ #
     def logInAsAdmin(self,username, password):
-        print("ok0")
         if self.admins.keys().__contains__(username):
-            print("ok1")
             existing_admin: Admin = self.admins[username]
             if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
-                print("ok2")
                 existing_admin.logInAsAdmin()
                 return existing_admin
             else:
@@ -618,7 +614,8 @@ class StoreFacade:
         if self.admins.__contains__(user_name):
             member_list = []
             for member in self.members:
-                if member.logged_In:
+                if member in self.online_members:
+                # if member.logged_In:
                     member_list.append(member)
             return json.dumps(member_list)
         else:
@@ -628,7 +625,7 @@ class StoreFacade:
         if self.admins.__contains__(user_name):
             member_list = []
             for member in self.members:
-                if not member.logged_In:
+                if member not in self.online_members:
                     member_list.append(member)
             return json.dumps(member_list)
         else:

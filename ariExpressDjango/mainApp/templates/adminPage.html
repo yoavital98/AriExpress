@@ -26,6 +26,29 @@
       {% csrf_token %}
       <button type="submit" class="btn btn-primary" id="button">View Transaction History</button>
     </form>
+
+
+    {% if context.online or context.offline%}
+      <br><br>
+      <h2>Online Users</h2>
+      <ul>
+        {% for user in context.online %}
+          <li>{{ user }}</li>
+        {% empty %}
+          <li>No online users.</li>
+        {% endfor %}
+      </ul>
+    
+      <h2>Offline Users</h2>
+      <ul>
+        {% for user in context.offline %}
+          <li>{{ user }}</li>
+        {% empty %}
+        <li>No offline users.</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
   </body>
 
 

@@ -36,7 +36,6 @@ def login(request):
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
                 res = service.logIn(username, password)
-                print(res.getStatus())
                 msg = res.getStatus()
                 if res.getStatus() == True:
                     user = authenticate(request, username=username, password=password)
@@ -73,7 +72,6 @@ def registerPage(request):
                 msg = res.getReturnValue()
                 if res.getStatus() == True:
                     form.save()
-                    print("ok")
                     user = authenticate(request, username=username, password=password)
                     loginFunc(request, user)
                     return redirect('mainApp:mainpage')
@@ -137,7 +135,6 @@ def nominateUser(request, shopname):
         toBeNominatedUsername = request.POST.get('inputNominatedUsername')
         selected = request.POST.get('nominateSelect')
         store_name = request.POST.get('storename')
-        print(store_name)
         service = Service()
         if selected == '1':
             res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
@@ -177,19 +174,22 @@ def adminPage(request):
         return redirect('mainApp:mainpage')
 
 def viewOnlineUsers(request):
-    if request.user.is_superuser:
-        # service = Service()
-        # service.
-
-
-
-
-
-
-        return render(request, 'adminPage.html', {})
-    else:
-        messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
-        return redirect('mainApp:mainpage')
+    if request.method == 'POST':
+        if request.user.is_superuser:
+            service = Service()
+            resOnline = service.getAllOnlineMembers(request.user.username)
+            resOffline = service.getAllOfflineMembers(request.user.username)
+            if resOnline.getStatus() and resOffline.getStatus():
+                onlinemembers = resOnline.getReturnValue() #returns a list
+                offlinemembers = resOffline.getReturnValue() #returns a list
+                onlinemembers = ast.literal_eval(str(onlinemembers))
+                offlinemembers = ast.literal_eval(str(offlinemembers))
+                context = {'online': onlinemembers,
+                        'offline': offlinemembers}
+                return render(request, 'adminPage.html', {'context': context})
+        
+    messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
+    return redirect('mainApp:mainpage')
 
 def reset_password(request):
     pass

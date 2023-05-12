@@ -131,7 +131,6 @@ class Service:
 
     def logIn(self, username, password):  # todo no responses
         try:
-            print(self.store_facade.admins["admin"].get_username())
             member = self.store_facade.logInAsMember(username, password)
             logging.info("Logged in successfully. By username: " + username + ".")
             return Response(member.toJson(), True)
@@ -573,7 +572,7 @@ class Service:
 
     def getAllOnlineMembers(self, requesterID):
         try:
-            users = self.store_facade.getAllOnlineMembers()
+            users = self.store_facade.getAllOnlineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
             return Response(users, True)
@@ -583,7 +582,7 @@ class Service:
 
     def getAllOfflineMembers(self, requesterID):
         try:
-            users = self.store_facade.getAllOfflineMembers()
+            users = self.store_facade.getAllOfflineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
             return Response(users, True)

@@ -11,6 +11,8 @@ class MainappConfig(AppConfig):
     def ready(self):
         service = Service()
         service.register("aaa", "asdf1233", "a@a.com") # for debug only
+        service.register("bbb", "asdf1233", "a@a.com") # for debug only
+
         # from django.contrib.auth.models import User
         # users = User.objects.all()
         # for i in range(1, len(users)):
