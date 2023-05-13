@@ -223,7 +223,7 @@ class StoreFacade:
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
-        with self.locklock_for_adding_and_purchasing:
+        with self.lock_for_adding_and_purchasing:
             product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
             filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
@@ -249,7 +249,7 @@ class StoreFacade:
         answer = user.checkProductExistance(store_name, product_id) #answer is boolean
         if answer:
             store: Store = self.stores[store_name]
-            with self.locklock_for_adding_and_purchasing:
+            with self.lock_for_adding_and_purchasing:
                 product = store.checkProductAvailability(product_id, quantity)
             if product is not None:
                 return user.edit_Product_Quantity(store_name, product_id, quantity)
@@ -263,10 +263,10 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         user: User = self.__getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
-            with self.locklock_for_adding_and_purchasing:
+            with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True)
         else:
-            with self.locklock_for_adding_and_purchasing:
+            with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False)
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------

@@ -5,9 +5,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
-# TODO check if all functions (new ones) got logging messages
-logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 
 class Service:
@@ -17,6 +15,9 @@ class Service:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls.store_facade = StoreFacade()
+            # TODO check if all functions (new ones) got logging messages
+            logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
+                                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         return cls._instance
 
     # ------  logger  ------ # < TODO cuurently without toJson
