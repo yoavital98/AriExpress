@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm
-from .models import Member
+from .models import Member , UserMessage
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -22,3 +22,10 @@ class NominateUserForm(ModelForm):
     username = forms.CharField(max_length=100)
     CHOICES = (('Owner', 'Option 1'),('Manager', 'Option 2'),)
     field = forms.ChoiceField(choices=CHOICES)
+
+
+class UserMessagesform(forms.ModelForm):
+    file = forms.FileField(required=False)
+    class Meta:
+        model = UserMessage
+        fields = ['receiver', 'subject', 'content', 'status']
