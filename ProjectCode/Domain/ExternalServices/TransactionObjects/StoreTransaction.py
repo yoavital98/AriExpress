@@ -35,7 +35,7 @@ class StoreTransaction:
     def toJson(self):
         return {
             "username": self._username,
-            "storename": self._storename,
+            "storename": self._store_name,
             "products": JsonSerialize.toJsonAttributes(self._products),
             "overall_price": self._overall_price,
             "date": self._date

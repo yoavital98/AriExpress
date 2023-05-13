@@ -382,6 +382,9 @@ class Store:
             raise Exception("The requested share is too high")
         return cur_lottery
 
+    def getAllStaffMembersNames(self):
+        return self.get_accesses().keys()
+
     def get_store_name(self):
         return self.__store_name
 

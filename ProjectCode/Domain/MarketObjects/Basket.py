@@ -8,14 +8,14 @@ class Basket:
     def __init__(self, username, store):
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id -> (product, quantity)
+        self.products = TypedDict(int, tuple)  # product id -> (product, quantity, price)
         self.bids = TypedDict(int, Bid)
 
     def add_Product(self, product_id, product, quantity):
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(product_id):
-            self.products[product_id] = (product, quantity)
+            self.products[product_id] = (product, quantity, product.get_price())
         else:
             raise Exception ("product already exists in the basket")
 
@@ -50,7 +50,10 @@ class Basket:
         return len(self.bids)
 
     def getProductsAsTuples(self):
-        return self.products.values()
+        productList = []
+        for key, value in self.products.items():
+            productList.append((key, value[0], value[1], value[2]))
+        return productList
 
     def addBidToBasket(self, bid: Bid):
         self.bids[bid.bid_id] = bid
