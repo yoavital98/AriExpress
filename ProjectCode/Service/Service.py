@@ -622,3 +622,19 @@ class Service:
         except Exception as e:
             logging.error(f"getAllStaffMembersNames Error: {str(e)}.")
             return Response(e, False)
+
+    def makeListOfObjectsToJson(self, list_of_objects):
+        list_of_jsons = []
+        for obj in list_of_objects:
+            list_of_jsons.append(obj.toJson())
+        return list_of_jsons
+    def getMemberInfo(self, requesterID, username):
+        try:
+            member, purchaseHistory = self.store_facade.getMemberInfo(requesterID, username)
+            logging.debug("fetching member info. By username: " + requesterID + ".")
+            member_info_dict = {'member': member.toJsonAll(),
+                             'purchaseHistory': self.makeListOfObjectsToJson(purchaseHistory)}
+            return Response(json.dumps(member_info_dict), True)
+        except Exception as e:
+            logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
