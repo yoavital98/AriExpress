@@ -1,3 +1,6 @@
+import json
+
+
 class Admin:
     def __init__(self, user_name, password, email):
         self.user_name = user_name
@@ -30,3 +33,12 @@ class Admin:
 
     def logOffAsAdmin(self):
         self.logged_In = False
+
+    # =======================JSON=======================#
+
+    def toJson(self):
+        data = {
+            "username": self.user_name,
+            "email": self.email
+        }
+        return json.dumps(data)

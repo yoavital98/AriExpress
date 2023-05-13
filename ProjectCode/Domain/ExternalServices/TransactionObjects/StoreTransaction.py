@@ -1,11 +1,13 @@
 from datetime import datetime
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
+
 
 class StoreTransaction:
     def __init__(self, username, storename, products, overall_price):
         self._username = username
-        self._storename = storename
-        self._products = products  # set of tuples (product_name, quantity)
+        self._store_name = storename
+        self._products = products  # set of tuples (product_id, product_name, quantity, price))
         self._overall_price = overall_price
         self._date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -13,7 +15,7 @@ class StoreTransaction:
         return self._username
 
     def get_storename(self):
-        return self._storename
+        return self._store_name
 
     def get_products(self):
         return self._products
@@ -26,4 +28,15 @@ class StoreTransaction:
 
     def __str__(self):
         product_list = "\n".join([f"{k}: {v[0]} x {v[1]}" for k, v in self._products.items()])
-        return f"Transaction on {self._date}:\nStore: {self._storename}\nUser: {self._username}\nProducts:\n{product_list}\nOverall Price: {self._overall_price}"
+
+        return f"Transaction on {self._date}:\nStore: {self._store_name}\nUser: {self._username}\nProducts:\n{product_list}\nOverall Price: {self._overall_price}"
+    # =======================JSON=======================#
+
+    def toJson(self):
+        return {
+            "username": self._username,
+            "storename": self._store_name,
+            "products": JsonSerialize.toJsonAttributes(self._products),
+            "overall_price": self._overall_price,
+            "date": self._date
+        }

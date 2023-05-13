@@ -9,6 +9,7 @@ class Bid:
         self._status = 0 # 0-PENDING 1-APPROVED 2-REJECTED 3-ALTERNATE_OFFER
         self._left_to_approval = 0 #number of owners that needs to approve this bid
 
+
     def approve_by_one(self):
         self._left_to_approval -= 1
 
@@ -19,6 +20,9 @@ class Bid:
         return self._left_to_approval
         
     # Getter and setter for username
+    def get_id(self):
+        return self.bid_id
+
     def get_username(self):
         return self._username
 
@@ -56,3 +60,15 @@ class Bid:
     def get_quantity(self):
         return self._quantity
 
+    # =======================JSON=======================#
+    def toJson(self):
+        return{
+            'bid_id': self.bid_id,
+            'username': self._username,
+            'storename': self._storename,
+            'offer': self._offer.toJson(),
+            'product': self._product.toJson(),
+            'quantity': self._quantity,
+            'status': self._status,
+            'left_to_approval': self._left_to_approval
+        }

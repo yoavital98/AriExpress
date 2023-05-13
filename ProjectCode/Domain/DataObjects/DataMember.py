@@ -9,7 +9,6 @@ class DataMember(DataUser):
         self.accesses = self.getAccesses(member)
         self.email = member.get_email()
         self.auctions = self.getAuctions(member)
-        self.logged_in = member.get_logged()
 
     def getAccesses(self, member):
         accesses = dict()

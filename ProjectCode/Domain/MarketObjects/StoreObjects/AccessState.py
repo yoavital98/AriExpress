@@ -11,7 +11,15 @@ class AccessState(ABC):
         self.permissions = dict()
         self.permission_names = {"ProductChange": self.addProductPermit, "Bid":self.addBidPermit,
                                  "ModifyPermissions": self.addModifyPermissionPermit, "Auction": self.addAuctionPermit,
-                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit()}
+                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit(),
+                                 "Policies":  self.addPolicy, "Discounts": self.addDiscount}
+
+
+    def addPolicy(self):
+        return True
+
+    def addDiscount(self):
+        return True
 
     def addProductPermit(self):
         return True
@@ -35,12 +43,24 @@ class AccessState(ABC):
     def addStaffViewPermit(self):
         return True
 
+    def removePermission(self, name):
+        if self.permissions.get(name) is None:
+            raise Exception("No such permission exists")
+        del self.permissions[name]
+    def addPermission(self,name ,func=None):
+        if func is None:
+            self.permissions[name] = self.permission_names[name]
+        else:
+            self.permissions[name] = func
 
-    def addPermission(self,name ,func):
-        self.permissions[name] = func
-
+    def get_permissions(self):
+        return self.permissions
     def checkForPermission(self, name):
         if self.permissions.get(name) is not None:
             return self.permissions[name]()
         else:
             raise Exception("You dont have the permission for that")
+
+    # =======================JSON=======================#
+    def toJson(self):
+        return self.permissions #todo fix this
