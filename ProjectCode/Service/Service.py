@@ -305,11 +305,12 @@ class Service:
 
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
                      back_number, address):  # TODO: for now lets assume only credit card(no paypal)
+        #return baskets of all stores
         try:
-            self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
+            info_dict = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
                                                   back_number, address)
             logging.info("Cart was purchased successfully. By username: " + user_name + ".")
-            return Response(True, True)
+            return Response(json.dumps(info_dict), True)
         except Exception as e:
             logging.error(f"purchaseCart Error: {str(e)}.")
             return Response(e, False)
@@ -599,4 +600,13 @@ class Service:
             return Response(users, True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
+            return Response(e, False)
+
+    def getAllStaffMembersNames(self, storename):
+        try:
+            staffNames = self.store_facade.getAllStaffMembersNames(storename)
+            logging.debug(f"fetching all the store members. By username: " + storename + ".")
+            return Response(json.dumps(staffNames), True)
+        except Exception as e:
+            logging.error(f"getAllStaffMembersNames Error: {str(e)}.")
             return Response(e, False)

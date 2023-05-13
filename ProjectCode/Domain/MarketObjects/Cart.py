@@ -1,3 +1,4 @@
+from ProjectCode.Domain.ExternalServices.MessageObjects.PurchaseReport import PurchaseReport
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -127,27 +128,27 @@ class Cart:
         payment_service = PaymentService()
         transaction_history = TransactionHistory()
         overall_price = 0  # overall price for the user
-        stores_to_products = TypedDict(str, list)  # store_name to list of tuples <products,quantities>
+        stores_products_dict = TypedDict(str, list)  # store_name to list of tuples (productid,productname,quantity,price4unit)
         # async with lock:
         answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
         if answer is True:  # means everything is ok to go
+            purchaseReports = []
             for basket in self.get_baskets().values():  # all the baskets
-                products: list = basket.getProductsAsTuples()  # TODO change tuple to include price4unit at purchase
+                products: list = basket.getProductsAsTuples()  # tupleList [(productid,productname,quantity,price4unit)]
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
-                    #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
+                #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
                 payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date, back_number, price)
-                transaction_history.addNewStoreTransaction(self.username, basket.store.get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
-                product_list: list = list()
-                for product in products:
-                    product_to_add: Product = product[0]
-                    product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1]))
-                stores_to_products[basket.store.get_store_name()] = product_list  # gets the products for the specific store
-
+                transaction_history.addNewStoreTransaction(self.username, basket.get_Store().get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
+                purchaseReports.append(PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price))
+                stores_products_dict[basket.store.get_store_name()] = products
                 overall_price += price
             if is_member:
-                transaction_history.addNewUserTransaction(self.username, stores_to_products, overall_price)
+                transaction_history.addNewUserTransaction(self.username, stores_products_dict, overall_price)
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
+            return {
+            "purchaseReports": purchaseReports,
+            "overallPrice": overall_price}
         else:
             raise Exception("There is a problem with the items quantity or existance in the store")
 

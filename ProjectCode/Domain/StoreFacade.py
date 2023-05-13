@@ -260,9 +260,9 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         user: User = self.__getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
-            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True, self.purchase_lock)
+            return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True, self.purchase_lock)
         else:
-            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False, self.purchase_lock)
+            return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False, self.purchase_lock)
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
     def placeBid(self, username, store_name, offer, product_id, quantity):
@@ -388,7 +388,7 @@ class StoreFacade:
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()
         # TODO amiel this long line can be shortened with "checkIfHasAccess"
-        if self.checkIfUserIsLoggedIn(requesterID) and (self.admins.keys().__contains__(requesterID) or self.accesses[requesterID].get_store().get_store_name() == store_name):
+        if self.checkIfUserIsLoggedIn(requesterID) and (self.admins.keys().__contains__(requesterID) or self. self.accesses[requesterID].get_store().get_store_name() == store_name):
             return transaction_history.get_Store_Transactions(store_name)
         else:
             raise Exception("username isn't logged in")
@@ -720,3 +720,6 @@ class StoreFacade:
                 raise Exception("no such member exists")
         else:
             raise Exception("only admin can remove a member")
+
+    def getAllStaffMembersNames(self, storename):
+        return self.stores[storename].getAllStaffMembersNames()
