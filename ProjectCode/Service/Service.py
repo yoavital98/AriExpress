@@ -305,11 +305,12 @@ class Service:
 
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
                      back_number, address):  # TODO: for now lets assume only credit card(no paypal)
+        #return baskets of all stores
         try:
-            self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
+            info_dict = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
                                                   back_number, address)
             logging.info("Cart was purchased successfully. By username: " + user_name + ".")
-            return Response(True, True)
+            return Response(json.dumps(info_dict), True)
         except Exception as e:
             logging.error(f"purchaseCart Error: {str(e)}.")
             return Response(e, False)
@@ -496,9 +497,9 @@ class Service:
         except Exception as e:
             logging.error(f"removeAccess Error: {str(e)}. By username: '{requester_username}'")
             return Response(e, False)
-    def addPermission(self, requesterID, nominated_username, permission):
+    def addPermission(self, storename, requesterID, nominated_username, permission):
         try:
-            access = self.store_facade.addPermissions()
+            access = self.store_facade.addPermissions(storename, requesterID, nominated_username, permission)
             logging.info(
                 "Permission has been added successfully. By username: " + requesterID + ". nominated_username: " + nominated_username + ". permission: " + permission + ".")
             return Response(access.toJson(), True)
@@ -506,10 +507,10 @@ class Service:
             logging.error(f"addPermission Error: {str(e)}.")
             return Response(e, False)
 
-    def editPermissions(self, requesterID, nominatedID,
+    def removePermissions(self, storename, requesterID, nominatedID,
                         permission):  # TODO still don't know the implementation
         try:
-            access = self.store_facade.editPermissions()
+            access = self.store_facade.removePermissions(storename, requesterID, nominatedID, permission)
             logging.info(
                 "Permission has been edited successfully. By username: " + requesterID + ". nominated_username: " + nominatedID + ". permission: " + permission + ".")
             return Response(access.toJson(), True)
@@ -517,9 +518,9 @@ class Service:
             logging.error(f"editPermissions Error: {str(e)}.")
             return Response(e, False)
 
-    def getPermissions(self, requesterID, nominatedID):  # TODO still don't know the implementation
+    def getPermissions(self, storename, requesterID, nominatedID):  # TODO still don't know the implementation
         try:
-            permissions = self.store_facade.getPermissions()
+            permissions = self.store_facade.getPermissions(storename, requesterID, nominatedID)
             logging.debug(
                 f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
             return Response(json.dumps(permissions.keys()), True)
@@ -599,4 +600,13 @@ class Service:
             return Response(users, True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
+            return Response(e, False)
+
+    def getAllStaffMembersNames(self, storename):
+        try:
+            staffNames = self.store_facade.getAllStaffMembersNames(storename)
+            logging.debug(f"fetching all the store members. By username: " + storename + ".")
+            return Response(json.dumps(staffNames), True)
+        except Exception as e:
+            logging.error(f"getAllStaffMembersNames Error: {str(e)}.")
             return Response(e, False)

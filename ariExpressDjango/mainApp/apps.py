@@ -5,6 +5,7 @@ from ProjectCode.Service.Service import Service
 
 
 
+
 class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
@@ -17,4 +18,3 @@ class MainappConfig(AppConfig):
         # users = User.objects.all()
         # for i in range(1, len(users)):
         #     User.objects.all()[i].delete()
-
