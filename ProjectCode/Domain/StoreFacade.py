@@ -701,14 +701,12 @@ class StoreFacade:
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
             member_list = []
-            for member in self.members:
-                if member in self.online_members:
-                # if member.logged_In:
-                    member_list.append(member)
-            return json.dumps(member_list)
+            for member in self.online_members.values():
+                member_list.append(member)
+            return member_list
         else:
             raise Exception("only admin can get the online members list")
-
+           
     def getAllOfflineMembers(self, user_name):
         if self.admins.__contains__(user_name):
             member_list = []
@@ -727,6 +725,34 @@ class StoreFacade:
                 raise Exception("no such member exists")
         else:
             raise Exception("only admin can remove a member")
+
+    def removeMember(self, username, memberName):
+        if self.admins.__contains__(username):
+            if self.members.__contains__(memberName):
+                cur_admin = self.admins[username]
+                cur_user = self.members[memberName]
+                cur_accesses = cur_user.get_accesses()
+                cur_user.logOut()
+                if len(cur_accesses) == 0:
+                    # TODO Add email implementation
+                    # email_subject = 'You have been banned'
+                    # email_body = 'Dear {},\n\nYou have been banned from our platform.'.format(memberName)
+                    # email = EmailMessage(
+                    #     email_subject,
+                    #     email_body,
+                    #     'AriExpressSupport@gmail.com',  # replace with your email address
+                    #     [cur_user.email],  # replace with the member's email address
+                    #     reply_to=['AriExpressSupport@gmail.com']  # replace with your support email address
+                    # )
+                    # email.send()
+                    del self.members[memberName]
+                    # TODO "הסרה של מנוי: שמוטב שתתבצע על ידי הרכיב שעוסק ברישום המנויים ובפרטיותם"
+                    # TODO should remove from database? other extra steps?
+            else:
+                raise Exception("member does not exist")
+        else:
+            raise Exception("only admin can remove a member")
+
 
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
