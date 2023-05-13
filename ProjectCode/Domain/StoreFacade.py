@@ -29,13 +29,13 @@ from ProjectCode.Domain.MarketObjects.User import User
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
-import asyncio
+import threading
 
 
 class StoreFacade:
     def __init__(self):
         # Store Data
-        self.purchase_lock = asyncio.Lock()
+        self.lock_for_adding_and_purchasing = threading.Lock() # lock for purchase
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
@@ -223,7 +223,8 @@ class StoreFacade:
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
-        product = store.checkProductAvailability(product_id, quantity)
+        with self.locklock_for_adding_and_purchasing:
+            product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
             filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
             return filled_basket
@@ -244,10 +245,12 @@ class StoreFacade:
     # editing aa product quantity from a specific basket
     def editBasketQuantity(self, username, store_name, product_id, quantity):
         user: User = self.__getUserOrMember(username)
+
         answer = user.checkProductExistance(store_name, product_id) #answer is boolean
         if answer:
             store: Store = self.stores[store_name]
-            product = store.checkProductAvailability(product_id, quantity)
+            with self.locklock_for_adding_and_purchasing:
+                product = store.checkProductAvailability(product_id, quantity)
             if product is not None:
                 return user.edit_Product_Quantity(store_name, product_id, quantity)
             else:
@@ -260,9 +263,11 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         user: User = self.__getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
-            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True, self.purchase_lock)
+            with self.locklock_for_adding_and_purchasing:
+                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True)
         else:
-            user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False, self.purchase_lock)
+            with self.locklock_for_adding_and_purchasing:
+                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False)
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
     def placeBid(self, username, store_name, offer, product_id, quantity):
@@ -358,27 +363,27 @@ class StoreFacade:
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product = cur_store.getProductById(product_id, username)
+        cur_product: Product = cur_store.getProductById(product_id, username)
         # return DataProduct(cur_product)
         return cur_product
-    def productSearchByName(self, keywords, username):  # and keywords
+    def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(DataStore, list)
+        search_results = TypedDict(str, list)
         for keyword in splitted_keywords:
             for cur_store in self.stores.values():
-                product_list = cur_store.searchProductByName(keyword, username)
+                product_list = cur_store.searchProductByName(keyword)
                 if len(product_list) > 0:
-                    data_product_list = [DataProduct(prod) for prod in product_list]
-                    search_results[DataStore(cur_store)] = data_product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+                    #data_product_list = [DataProduct(prod) for prod in product_list]
+                    search_results[cur_store.get_store_name()] = product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
         return search_results
 
-    def productSearchByCategory(self, category, username):
-        search_results = TypedDict(DataStore, list)
+    def productSearchByCategory(self, category):
+        search_results = TypedDict(str, list)
         for cur_store in self.stores.values():
-            product_list = cur_store.searchProductByCategory(category, username)
+            product_list = cur_store.searchProductByCategory(category)
             if len(product_list) > 0:
-                data_product_list = [DataProduct(prod) for prod in product_list]
-                search_results[DataStore(cur_store)] = data_product_list
+                #data_product_list = [DataProduct(prod) for prod in product_list]
+                search_results[cur_store.get_store_name()] = product_list
         return search_results
 
     def productFilterByFeatures(self, featuresDict, username):
@@ -387,11 +392,14 @@ class StoreFacade:
 
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()
+        if self.admins.keys().__contains__(requesterID):
+            return transaction_history.get_Store_Transactions(store_name)
+        member: Member = self.__getOnlineMemberOnly(requesterID)
         # TODO amiel this long line can be shortened with "checkIfHasAccess"
-        if self.checkIfUserIsLoggedIn(requesterID) and (self.admins.keys().__contains__(requesterID) or self.accesses[requesterID].get_store().get_store_name() == store_name):
+        if member.accesses.__contains__(store_name):
             return transaction_history.get_Store_Transactions(store_name)
         else:
-            raise Exception("username isn't logged in")
+            raise Exception("no permission for this store")
 
     # ------  Management  ------ #
     #TODO: add check if user is loggedin to each function
@@ -627,15 +635,6 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        # if is_founder:
-        #     #deletes all accesses for that store
-        #     for mem in self.members.values():
-        #         store_exists = mem.get_accesses().get(store_name)
-        #         if store_exists is not None:
-        #             del mem.get_accesses()[store_name]
-        #
-        #     del self.stores[store_name]
-        # return DataStore(cur_store)
         return cur_store
 
     def getStaffInfo(self, username, store_name):
@@ -720,3 +719,7 @@ class StoreFacade:
                 raise Exception("no such member exists")
         else:
             raise Exception("only admin can remove a member")
+
+    def django_getAllStaffMembersNames(self, storename):
+        return self.stores[storename].getAllStaffMembersNames()
+

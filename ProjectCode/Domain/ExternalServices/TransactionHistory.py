@@ -36,22 +36,29 @@ class TransactionHistory:
             new_list: list = self.store_transactions.get(transaction.get_storename())
             new_list.append(transaction)
 
-    def get_User_Transactions(self, username):
-        return self.user_transactions[username]
+    def get_User_Transactions(self, user_name):
+        if user_name in self.user_transactions.keys():
+            return self.user_transactions.get(user_name)
+        else:
+            raise Exception("Empty member purchases")
 
-    def get_Store_Transactions(self, storename):
-        return self.store_transactions[storename]
+    def get_Store_Transactions(self, store_name):
+        if store_name in self.store_transactions.keys():
+            return self.store_transactions.get(store_name)
+        else:
+            raise Exception("Empty store purchases")
+
 
     def addNewStoreTransaction(self, username, store_name, products, overall_price):
-        product_list: list = list()
-        for product in products:
-            product_to_add: Product = product[0]
-            product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1]))
-        new_store_transaction = StoreTransaction(username, store_name, product_list, overall_price)
+        # product_list: list = list()
+        # for product in products:
+        #     product_to_add: Product = product[0]
+        #     product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1], product.get_price()))
+        new_store_transaction = StoreTransaction(username, store_name, products, overall_price)
         self.addStoreTransaction(new_store_transaction)
 
-    def addNewUserTransaction(self, username, products, overall_price):
-        new_user_transaction: UserTransaction = UserTransaction(username, products, overall_price)
+    def addNewUserTransaction(self, username, stores_products_dict, overall_price):
+        new_user_transaction: UserTransaction = UserTransaction(username, stores_products_dict, overall_price)
         self.addUserTransaction(new_user_transaction)
 
     def getUserPurchaseHistory(self, user_name):
