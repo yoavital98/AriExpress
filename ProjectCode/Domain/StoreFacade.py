@@ -404,7 +404,7 @@ class StoreFacade:
     # ------  Management  ------ #
     #TODO: add check if user is loggedin to each function
 
-    def openStore(self, username, store_name):
+    def createStore(self, username, store_name):
         cur_member: Member = self.__getOnlineMemberOnly(username)
         if cur_member is None:
             raise Exception("The user is not a member or not logged in")
@@ -627,6 +627,14 @@ class StoreFacade:
         # return DataLottery(new_lottery)
 
 
+    def openStore(self, username, store_name):
+        if not self.checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_store: Store = self.stores.get(store_name)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        cur_store.setStoreStatus(True, username)
+        return cur_store
 
     def closeStore(self, username, store_name):
         if not self.checkIfUserIsLoggedIn(username):
