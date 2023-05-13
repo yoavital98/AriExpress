@@ -37,7 +37,7 @@ class TransactionHistory:
             new_list.append(transaction)
 
     def get_User_Transactions(self, user_name):
-        if user_name in self.store_transactions.keys():
+        if user_name in self.user_transactions.keys():
             return self.user_transactions.get(user_name)
         else:
             raise Exception("Empty member purchases")
