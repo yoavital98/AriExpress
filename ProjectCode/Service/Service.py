@@ -83,6 +83,16 @@ class Service:
             logging.error(f"removeMember Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
+    def returnMember(self, username, memberName):
+        try:
+            returnedMember = self.store_facade.returnMember(username, memberName)
+            logging.info(
+                "Member's ban has been lifted. By username: " + username + ". Returned username: " + memberName + ".")
+            return Response(returnedMember.toJson(), True)
+        except Exception as e:
+            logging.error(f"returnMember Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
     # def loadAdminsFromDB(self):
     #     try:
     #         admins = TypedDict(str, Admin)
