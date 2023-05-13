@@ -16,6 +16,7 @@ import ast
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
 from django.contrib import messages # for displaying messages
+from django.core.paginator import Paginator # for pagination
 
 
 
@@ -205,6 +206,8 @@ def homepage_guest(request):
 
 @login_required(login_url='mainApp:login')
 def inbox(request):
+    service = Service()
+    
     return render(request, 'inbox.html')
 
 @login_required(login_url='mainApp:login')
