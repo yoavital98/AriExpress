@@ -8,8 +8,17 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+		<title>My SweetAlert Page</title>
+		<!-- Include SweetAlert CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css">
+
+		<!-- Include jQuery and SweetAlert JS -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
 		<title>Bootstrap Example</title>
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+	   
 		
 	</head>
 <body>
@@ -61,13 +70,56 @@
 								<hr>
 								<div class="form-group mb-2">
 									<label for="usermassage" class="form-label">content:</label>
-									<textarea class="form-control" name="message" id="usermassage" rows="10" maxlength="1000" required></textarea>
+									<textarea class="form-control" name="message" id="usermassage" rows="10" maxlength="1000" oninput="updateCharacterCount()" required></textarea>
+									<!-- cahracter remaining counter-->
+									<p id="char-count">characters left: 1000 </p>
+									<script>
+										function updateCharacterCount() {
+											var message = document.getElementById("usermassage");
+											var charCount = document.getElementById("char-count");
+											var maxLength = message.getAttribute("maxlength");
+											var currentLength = message.value.length;
+											var remainingChars = maxLength - currentLength;
+											if(remainingChars>15) {
+												charCount.textContent = "characters left: "+remainingChars ;
+												charCount.style.color = "black";
+											}
+											else if(currentLength==maxLength){
+												charCount.textContent = "characters left: "+remainingChars ;
+												charCount.style.color = "red";
+												swal("Oops!", "You have exceeded the maximum number of characters allowed", "info");
+											}
+											else {
+												charCount.textContent = "characters left: "+remainingChars ;
+												charCount.style.color = "red";
+											}
+											
+										}
+								</script>
+
+								<!---->
 								</div>
-								<!-- cahracter remaining counter-->
-								<span id="remaining"></span>
 								<hr>
 								<div class="form-control mb-3">
-									<input class="form control" type="file" name="file" id="file">
+									<input class="form control" type="file" name="file" id="file" oninput="fileValidation()">
+									<script>
+										function fileValidation() {
+											var fileInput = document.getElementById('file');
+											var filePath = fileInput.value;
+											var fileSize = fileInput.files[0].size;
+											if (fileSize > 2097152) {
+												swal("File size is too big!", "File size is more than 2MB", "error");
+												this.value = "";
+												return false;
+											};
+											var allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+											if(!allowedExtensions.exec(filePath)){
+												swal("format error!", "Please upload file having extensions .jpeg/.jpg/.png only.", "error");
+												fileInput.value = '';
+												return false;
+											};
+										} 
+									</script>
 								</div>
 								<hr>
 								<div class="d-grid gap-2 mt-3">

@@ -5,9 +5,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
-# TODO check if all functions (new ones) got logging messages
-logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 
 class Service:
@@ -17,6 +15,9 @@ class Service:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls.store_facade = StoreFacade()
+            # TODO check if all functions (new ones) got logging messages
+            logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
+                                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         return cls._instance
 
     # ------  logger  ------ # < TODO cuurently without toJson
@@ -305,11 +306,12 @@ class Service:
 
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
                      back_number, address):  # TODO: for now lets assume only credit card(no paypal)
+        #return baskets of all stores
         try:
-            self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
+            info_dict = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
                                                   back_number, address)
             logging.info("Cart was purchased successfully. By username: " + user_name + ".")
-            return Response(True, True)
+            return Response(json.dumps(info_dict), True)
         except Exception as e:
             logging.error(f"purchaseCart Error: {str(e)}.")
             return Response(e, False)
@@ -599,4 +601,13 @@ class Service:
             return Response(users, True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
+            return Response(e, False)
+
+    def getAllStaffMembersNames(self, storename):
+        try:
+            staffNames = self.store_facade.getAllStaffMembersNames(storename)
+            logging.debug(f"fetching all the store members. By username: " + storename + ".")
+            return Response(json.dumps(staffNames), True)
+        except Exception as e:
+            logging.error(f"getAllStaffMembersNames Error: {str(e)}.")
             return Response(e, False)
