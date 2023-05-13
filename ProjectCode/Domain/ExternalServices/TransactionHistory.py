@@ -43,15 +43,15 @@ class TransactionHistory:
         return self.store_transactions[storename]
 
     def addNewStoreTransaction(self, username, store_name, products, overall_price):
-        product_list: list = list()
-        for product in products:
-            product_to_add: Product = product[0]
-            product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1]))
-        new_store_transaction = StoreTransaction(username, store_name, product_list, overall_price)
+        # product_list: list = list()
+        # for product in products:
+        #     product_to_add: Product = product[0]
+        #     product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1], product.get_price()))
+        new_store_transaction = StoreTransaction(username, store_name, products, overall_price)
         self.addStoreTransaction(new_store_transaction)
 
-    def addNewUserTransaction(self, username, products, overall_price):
-        new_user_transaction: UserTransaction = UserTransaction(username, products, overall_price)
+    def addNewUserTransaction(self, username, stores_products_dict, overall_price):
+        new_user_transaction: UserTransaction = UserTransaction(username, stores_products_dict, overall_price)
         self.addUserTransaction(new_user_transaction)
 
     def getUserPurchaseHistory(self, user_name):
