@@ -1,15 +1,15 @@
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
-from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.DiscountType import DiscountType
+from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
 
 
-class AddComp(DiscountType):
+class AddComp(Policy):
     def __init__(self, discount_dict):
-        super().__init__(0, "", "")
+        super().__init__("", "")
         self.discount_dict = discount_dict
         self.childs = list()
 
-    # child: DiscountType
+    # child: Policy
     def addChild(self, child):
         self.childs.append(child)
 

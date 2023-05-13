@@ -1,10 +1,10 @@
-from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.DiscountType import DiscountType
+from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp import LogicComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicUnit import LogicUnit
 from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.RuleComp import RuleComp
 
 
-class ConditionedDiscount(DiscountType):
+class ConditionedDiscount(Policy):
     """
         rule := { rule_type:= defined in RuleComp,
                  product_id: defined in RuleComp,
@@ -15,8 +15,9 @@ class ConditionedDiscount(DiscountType):
         logic_comp := LogicUnit | RuleComp
     """
     def __init__(self, percent, level, level_name, rule):
-        super().__init__(percent, level, level_name)
+        super().__init__(level, level_name)
         self.rule = rule
+        self.percent = percent
         self.logic_comp: LogicComp = None
         #self.percent = percent
         #self.level = level
@@ -37,3 +38,14 @@ class ConditionedDiscount(DiscountType):
             self.logic_comp.parse()
         else:
             self.logic_comp = RuleComp(self.rule["rule_type"], self.rule["product_id"], self.rule["operator"], self.rule["quantity"], self.rule["category"])
+
+    # =======================JSON=======================#
+
+    def toJson(self):
+        return{
+            "percent": self.percent,
+            "level": self.level,
+            "level_name": self.level_name,
+            "rule": self.rule,
+            "discount_type": "Conditioned"
+        }

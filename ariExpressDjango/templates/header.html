@@ -1,3 +1,8 @@
+<style>
+  #navBarSearchForm {width:450px !important;}
+  #admintag {background-color: #FF0000 !important; 
+    color: #FFFFFF !important;}
+</style>
 <body>
 	<nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
@@ -46,15 +51,19 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'mainApp:registerPage' %}">Register</a>
               </li>
-
               {% endif %}
-
               <!-- <li class="nav-item">
                 <a class="nav-link disabled">Disabled</a>
               </li> -->
+              {% if user.is_superuser %}
+              <li class="nav-item">
+                <a class="nav-link" id="admintag" href="{% url 'mainApp:adminPage' %}">ADMIN</a>
+              </li>
+              {% endif %}
+
             </ul>
             <form class="d-flex" role="search">
-              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <input class="form-control me-2" type="search" placeholder="Search" id="navBarSearchForm" aria-label="Search">
               <button class="btn btn-outline-success" type="submit">Search</button>
             </form>
           </div>

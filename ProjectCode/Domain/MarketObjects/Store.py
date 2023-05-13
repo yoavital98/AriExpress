@@ -11,6 +11,9 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
 
+from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
+
+
 class Store:
 
     def __init__(self, store_name):
@@ -24,10 +27,11 @@ class Store:
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
         self.__bids = TypedDict(int, Bid)
-        self.__bids_requests = TypedDict(Access, List[Bid])
+        self.__bids_requests = TypedDict(str, List[Bid])
         self.__auctions = TypedDict(int, Auction)
         self.__lotteries = TypedDict(int, Lottery)
         self.__discount_policy = DiscountPolicy()
+        self.__purchase_policy = PurchasePolicies()
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
@@ -36,21 +40,72 @@ class Store:
         cur_access.canChangeStatus()
         self.active = status
 
+    #-------------Permissions----------------#
+
     def setFounder(self, username, access):
         access.setFounder()
         self.__accesses[username] = access
 
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
-        self.__accesses[nominated_username] = nominated_access
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
             raise Exception("The member doesn't have the access for that store")
-        if requester_access.canModifyPermissions():  # TODO: change according to permission policy
+        if requester_access.canModifyPermissions() and requester_username == nominated_access.get_nominated_by_username():
             nominated_access.setAccess(role)
-            requester_access.addNominatedUsername(nominated_username, self.get_store_name())
+            requester_access.addNominatedUsername(nominated_username, nominated_access)
+            self.__accesses[nominated_username] = nominated_access
             return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
+
+
+    def removeAccess(self,to_be_removed_username, requester_username):
+        requester_access: Access = self.__accesses[requester_username]
+        to_be_removed_access: Access = self.__accesses[to_be_removed_username]
+        if requester_access is None or to_be_removed_access is None:
+            raise Exception("No such access exists")
+        if requester_access.canModifyPermissions() and requester_username == to_be_removed_access.get_nominated_by_username():
+            requester_access.get_nominations().pop(to_be_removed_username)
+            removed_usernames = self.__removeAllAccesses(to_be_removed_access)
+            return removed_usernames
+        else:
+            raise Exception("User doesn't have the permission to remove this access")
+
+
+    def __removeAllAccesses(self, to_be_removed_access):
+        cur_access: Access = to_be_removed_access
+        accesses_to_remove = [to_be_removed_access]
+        usernames_to_remove = []
+        while len(accesses_to_remove) > 0:
+            cur_access = accesses_to_remove[0]
+            cur_access.removeAccessFromMember()
+            self.__accesses.pop(cur_access.get_user().get_username())
+            usernames_to_remove.extend(cur_access.get_nominations().keys())
+            accesses_to_remove.remove(cur_access)
+            accesses_to_remove.extend(cur_access.get_nominations().values())
+        return usernames_to_remove
+
+    def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
+        requester_access: Access = self.__accesses.get(requester_username)
+        nominated_access: Access = self.__accesses.get(nominated_username)
+        if requester_access is None or nominated_access is None:
+            raise Exception("No such access exists")
+        if requester_access.canModifyPermissions() and nominated_access.get_nominated_by_username() == requester_username:
+            if op == "ADD":
+                nominated_access.get_access_state().addPermission(permission)
+            else:
+                nominated_access.get_access_state().removePermission(permission)
+        return nominated_access
+
+    def getPermissions(self, requester_username, nominated_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        nominated_access: Access = self.__accesses.get(nominated_username)
+        if requester_access is None or nominated_access is None:
+            raise Exception("No such access exists")
+        if requester_access == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
+            return requester_access.get_access_state().get_permissions()
+        else:
+            raise Exception("You dont have access to get this user permission")
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()
@@ -152,6 +207,7 @@ class Store:
 
 
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
+        #need to add a user arguments so we will be able to check policies
         new_product_dict = TypedDict(int, int) # (id,quantity)
         for product_id, product_tuple in products_dict.items():
             new_product_dict[product_id] = product_tuple[1]
@@ -175,7 +231,11 @@ class Store:
         cur_percent = self.__discount_policy.calculateDiscountForProduct(product, product_quantity_dict, overall_price)
         return product.get_price() - product.get_price() * (cur_percent / 100)
 
-    def addDiscount(self, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+    def addDiscount(self, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("No such access exists")
+        cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
                                            level_name=level_name, rule=rule, discounts=discounts)
         return new_discount
@@ -183,13 +243,26 @@ class Store:
     def getDiscount(self, discount_id):
         return self.__discount_policy.getDiscount(discount_id)
 
+
+    def addPurchasePolicy(self,username, purchase_policy, rule, level="", level_name=""):
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("No such access exists")
+        cur_access.canManagePolicies()
+        new_policy = self.__purchase_policy.addPurchasePolicy(purchase_policy=purchase_policy, rule=rule,
+                                                 level=level, level_name=level_name)
+        return new_policy
+
+    def getPolicy(self, policy_id):
+        return self.__purchase_policy.getPurchasePolicy(policy_id)
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
         for access in self.__accesses.values():
-            if access.isOwner or access.isFounder:
-                if self.__bids_requests[access] is None:
-                    self.__bids_requests[access] = []
-                self.__bids_requests[access].append(bid)
+            if access.canManageBids():
+                username = access.get_user().get_username()
+                if self.__bids_requests[username] is None:
+                    self.__bids_requests[username] = []
+                self.__bids_requests[username].append(bid)
                 bid.increment_left_to_approve()
 
     def approveBid(self, username, bid_id):
@@ -199,10 +272,10 @@ class Store:
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
-        if cur_bid not in self.__bids_requests[cur_access]:
+        if cur_bid not in self.__bids_requests[username]:
             raise Exception("You already approved that bid")
         cur_bid.approve_by_one()
-        self.__bids_requests[cur_access].remove(cur_bid)
+        self.__bids_requests[username].remove(cur_bid)
         if cur_bid.get_left_to_approval() == 0:
             cur_bid.set_status(1)
         return cur_bid
@@ -213,7 +286,7 @@ class Store:
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
-        for access, bid_list in self.__bids_requests.items():
+        for access_username, bid_list in self.__bids_requests.items():
             if cur_bid in bid_list:
                 bid_list.remove(cur_bid)
         cur_bid.set_status(2)
@@ -380,5 +453,6 @@ class Store:
             'bids': JsonSerialize.toJsonAttributes(self.__bids),
             'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
             'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
-            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries)
+            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
+            'discounts': self.__discount_policy.toJson()
         }
