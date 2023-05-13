@@ -18,24 +18,40 @@ def test_func(func, *args, **kwargs):
         try:
             func(*args, **kwargs)  # Call foo()
             result['success_count'] += 1
+            print(f"success: {result.get('success_count')}")
         except Exception:
             result['failure_count'] += 1
+            print(f"success: {result.get('failure_count')}")
 
-    # Create two threads to run foo() concurrently
-    thread1 = threading.Thread(target=run_func)
-    thread2 = threading.Thread(target=run_func)
+    threads = []
+    for _ in range(10):
+        thread = threading.Thread(target=run_func)
+        thread.start()
+        threads.append(thread)
 
-    # Start both threads
-    thread1.start()
-    thread2.start()
-
-    # Wait for both threads to finish
-    thread1.join()
-    thread2.join()
+    # Wait for all threads to finish
+    for thread in threads:
+        thread.join()
 
     # Check the result
-    assert result['success_count'] == 1, "One function call should succeed"
-    assert result['failure_count'] == 1, "One function call should fail"
+    assert result['success_count'] == 10, "All function calls should succeed"
+    assert result['failure_count'] == 10, "All function calls should fail"
+
+    # # Create two threads to run foo() concurrently
+    # thread1 = threading.Thread(target=run_func)
+    # thread2 = threading.Thread(target=run_func)
+
+    # # Start both threads
+    # thread1.start()
+    # thread2.start()
+
+    # # Wait for both threads to finish
+    # thread1.join()
+    # thread2.join()
+
+    # # Check the result
+    # assert result['success_count'] == 1, "One function call should succeed"
+    # assert result['failure_count'] == 1, "One function call should fail"
 
 
 class TestStoreFacade(TestCase):
