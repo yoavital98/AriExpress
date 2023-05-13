@@ -20,13 +20,13 @@ class TestStoreFacade(TestCase):
         # self.Service.addNewProductToStore("username", "storename", "product2", "category", 10, 10)
 
 
-    def test_foo():
+    def test_foo(func):
         # Create a shared variable to track the success/failure of foo()
         result = {'success_count': 0, 'failure_count': 0}
 
         def run_func():
             try:
-                foo()  # Call foo()
+                func()  # Call foo()
                 result['success_count'] += 1
             except Exception:
                 result['failure_count'] += 1
