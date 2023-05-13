@@ -1,10 +1,10 @@
 import unittest
 from unittest import TestCase
-from ProjectCode.Domain.Objects.Store import Store
-from ProjectCode.Domain.Objects.UserObjects import Guest
-from ProjectCode.Domain.Objects.UserObjects.Guest import Guest
-from ProjectCode.Domain.Objects.UserObjects.Admin import Admin
-from ProjectCode.Domain.Objects.UserObjects.Member import Member
+from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.UserObjects import Guest
+from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
+from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
+from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Service.Service import Service
 
 

@@ -1,0 +1,49 @@
+
+
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .specialh1 {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  }
+  .form-select, .userSelect {
+    width: 300px;
+
+  }
+</style>
+<head>
+    <title>Nominate User</title>
+  </head>
+  <body>
+
+    <h1 class="specialh1">Nominate User - "{{ shopname }}" Store</h1>
+    <br>
+    <br>
+    <br>
+    
+    <h2>Nominate a new staff member:</h2>
+
+    <form method="post" action="{% url 'mainApp:nominateUser' shopname %}">
+      {% csrf_token %}
+      <select class="form-select" aria-label="Default select example" name="nominateSelect">
+        <option selected>Nominate a user:</option>
+        <option value="1">Owner</option>
+        <option value="2">Manager</option>
+      </select>
+      <div class="userSelect">
+        <input type="text" class="form-control" name="inputNominatedUsername" placeholder="Enter the user's username">
+        <input type="hidden" name="storename" value="{{ shopname }}">
+        <br>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Nominate</button>
+    </form>
+
+
+
+    </body>
+{% endblock %}
