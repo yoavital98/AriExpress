@@ -721,5 +721,5 @@ class StoreFacade:
         else:
             raise Exception("only admin can remove a member")
 
-    def getAllStaffMembersNames(self, storename):
+    def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
