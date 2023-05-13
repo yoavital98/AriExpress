@@ -7,7 +7,6 @@ import os
 import sys
 from ProjectCode.Service.Service import Service
 from .forms import *
-from .models import UserMessage
 from ProjectCode.Service.Response import *
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -119,17 +118,20 @@ def homepage_guest(request):
 
 
 
-
+@login_required(login_url='mainApp:login')
 def inbox(request):
     return render(request, 'inbox.html')
 
+@login_required(login_url='mainApp:login')
 def send_message(request):
     if request.method == 'POST':
         #service = Service()
         form = UserMessagesform(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            #res = service.sendMessage(form.cleaned_data['id'], form.cleaned_data['sender'], form.cleaned_data['receiver'], form.cleaned_data['subject'], form.cleaned_data['content'], form.cleaned_data['creation_date'], form.cleaned_data['file'])
+            message=form.save(commit=False)
+            message.sender = request.user.username
+            message.save()
+            #res = service.sendMessage(message.cleaned_data['id'], message.cleaned_data['sender'], message.cleaned_data['receiver'], message.cleaned_data['subject'], message.cleaned_data['content'], message.cleaned_data['creation_date'], message.cleaned_data['file'])
             return HttpResponseRedirect('/')
         else:
             form = UserMessagesform()

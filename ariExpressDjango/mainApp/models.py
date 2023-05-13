@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.html import format_html
-
+from django.contrib.auth.models import User
 
 class Product(models.Model):
     product_id = models.IntegerField()
@@ -62,7 +62,7 @@ class UserMessage(models.Model):
         ('read', 'read'),
     )
     id = models.AutoField(primary_key=True)
-    sender = models.CharField(max_length=50) #probably should be changed to the member.id
+    sender = models.CharField(max_length=User._meta.get_field('username').max_length)
     receiver = models.CharField(max_length=50)
     subject = models.CharField(max_length=100)
     content = models.TextField(max_length=1000)

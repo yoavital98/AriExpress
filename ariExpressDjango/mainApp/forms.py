@@ -23,4 +23,4 @@ class UserMessagesform(forms.ModelForm):
     file = forms.FileField(required=False)
     class Meta:
         model = UserMessage
-        fields = "__all__"
+        fields = ['receiver', 'subject', 'content', 'status']
