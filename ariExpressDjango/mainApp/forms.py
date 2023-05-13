@@ -28,4 +28,4 @@ class UserMessagesform(forms.ModelForm):
     file = forms.FileField(required=False)
     class Meta:
         model = UserMessage
-        fields = ['receiver', 'subject', 'content', 'status']
+        fields = ['sender','receiver','subject', 'content', 'status']
