@@ -121,7 +121,6 @@ def myshops_specific(request, shopname):
     context = None
     if request.method == 'POST':
         context = request.POST.get('data')
-        # print(context)
         context = ast.literal_eval(str(context))
 
     else:
@@ -202,3 +201,11 @@ def homepage_guest(request):
 
 def inbox(request):
     return render(request, 'inbox.html')
+
+
+# for tests purposes
+def test_func(request):
+    p1 = Product(product_id=0, name="Cariot", quantity=5, price=10, categories="Milk")
+    p1.save()
+    print(p1)
+    return redirect('mainApp:mainpage')

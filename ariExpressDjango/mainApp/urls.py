@@ -22,6 +22,8 @@ urlpatterns = [
     path (r'adminPage/', views.adminPage, name='adminPage'),
     path (r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
 
+    path(r'test/', views.test_func,name='test'), #for testing purposes
+
 
     
 ]
