@@ -36,11 +36,18 @@ class TransactionHistory:
             new_list: list = self.store_transactions.get(transaction.get_storename())
             new_list.append(transaction)
 
-    def get_User_Transactions(self, username):
-        return self.user_transactions[username]
+    def get_User_Transactions(self, user_name):
+        if user_name in self.user_transactions.keys():
+            return self.user_transactions.get(user_name)
+        else:
+            raise Exception("Empty member purchases")
 
-    def get_Store_Transactions(self, storename):
-        return self.store_transactions[storename]
+    def get_Store_Transactions(self, store_name):
+        if store_name in self.store_transactions.keys():
+            return self.store_transactions.get(store_name)
+        else:
+            raise Exception("Empty store purchases")
+
 
     def addNewStoreTransaction(self, username, store_name, products, overall_price):
         # product_list: list = list()

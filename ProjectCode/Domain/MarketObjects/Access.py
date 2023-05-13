@@ -20,11 +20,11 @@ class Access:
 
 
     def setAccess(self, role):
-        if role is "Owner":
+        if role == "Owner":
             self.setOwner()
-        elif role is "Manager":
+        elif role == "Manager":
             self.setOwner()
-        elif role is "Founder":
+        elif role == "Founder":
             self.setFounder()
         else:
             raise Exception("No such role exists.")
@@ -41,13 +41,13 @@ class Access:
 
 
     def hasRole(self, role="Any"):
-        if role is "Any":
+        if role == "Any":
             return True
-        elif role is "Founder":
+        elif role == "Founder":
             return isinstance(self.access_state,FounderState)
-        elif role is "Owner":
+        elif role == "Owner":
             return isinstance(self.access_state,OwnerState)
-        elif role is "Manager":
+        elif role == "Manager":
             return isinstance(self.access_state,ManagerState)
 
 
