@@ -708,11 +708,14 @@ class StoreFacade:
         if self.admins.keys().__contains__(requesterID):
             if self.members.keys().__contains__(memberName):
                 if self.accesses.keys().__contains__(memberName):
-                    self.members[memberName].logOut()
-                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")  # TOdo : add message to login screen or something
-                    banned_member = self.members.pop(memberName)
-                    self.banned_members[memberName] = banned_member
-                    return banned_member
+                    if self.accesses.get(memberName).len() == 0:
+                        self.members[memberName].logOut()
+                        self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")  # TOdo : add message to login screen or something
+                        banned_member = self.members.pop(memberName)
+                        self.banned_members[memberName] = banned_member
+                        return banned_member
+                    else:
+                        raise Exception("Can't remove member with store roles")
                 else:
                     raise Exception("Can't remove member with store roles")
             else:
