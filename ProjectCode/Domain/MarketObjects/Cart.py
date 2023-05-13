@@ -20,12 +20,12 @@ class Cart:
         else:
             raise Exception("Basket does not exists")
 
-    def add_Product(self, username, storename, productID, product, quantity):
-        if not self.baskets.keys().__contains__(storename):
-            basket = Basket(username, storename)
-            self.baskets[storename] = basket
-        basket: Basket = self.get_Basket(storename)
-        basket.add_Product(productID, product, quantity)
+    def add_Product(self,username, store, product_id, product, quantity):
+        if not self.baskets.keys().__contains__(store.get_store_name()):
+                basket_to_add = Basket(username, store)
+                self.baskets[store.get_store_name()] = basket_to_add
+        basket: Basket = self.get_Basket(store.get_store_name())
+        basket.add_Product(product_id, product, quantity)
         return basket
 
     def removeFromBasket(self, store_name, product_id):
@@ -106,11 +106,13 @@ class Cart:
             raise Exception("Basket was not found")
 
     def clearCart(self):
+        list_of_keys_to_clear: list = list()
         for basketKey in self.baskets.keys():
             basket: Basket = self.baskets[basketKey]
             if basket.getBasketSize() == 0 and basket.getBasketBidSize() == 0:
-                del self.baskets[basketKey]
-
+                list_of_keys_to_clear.append(basketKey)
+        for key in list_of_keys_to_clear:
+            del self.baskets[basketKey]
     def clearCartFromProducts(self):
         for basketKey in self.baskets.keys():
             basket: Basket = self.baskets[basketKey]
@@ -130,14 +132,17 @@ class Cart:
         answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
         if answer is True:  # means everything is ok to go
             for basket in self.get_baskets().values():  # all the baskets
-                products: list = basket.getProductsAsTuples()
+                products: list = basket.getProductsAsTuples()  # TODO change tuple to include price4unit at purchase
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
-                # shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
-                payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date, back_number,
-                                    price)
-                transaction_history.addNewStoreTransaction(self.username, basket.store.store_name, products,
-                                                           price)  # make a new transaction and add it to the store history and user history
-                stores_to_products[basket.store.store_name] = products  # gets the products for the specific store
+                    #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
+                payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date, back_number, price)
+                transaction_history.addNewStoreTransaction(self.username, basket.store.get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
+                product_list: list = list()
+                for product in products:
+                    product_to_add: Product = product[0]
+                    product_list.append((product_to_add.get_product_id(), product_to_add.get_name(), product[1]))
+                stores_to_products[basket.store.get_store_name()] = product_list  # gets the products for the specific store
+
                 overall_price += price
             if is_member:
                 transaction_history.addNewUserTransaction(self.username, stores_to_products, overall_price)

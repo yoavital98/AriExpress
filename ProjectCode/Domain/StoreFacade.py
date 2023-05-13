@@ -97,7 +97,7 @@ class StoreFacade:
         new_guest = Guest(self.nextEntranceID)
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
-        return new_guest.get_username()
+        return new_guest.get_entrance_id()
 
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
@@ -225,7 +225,7 @@ class StoreFacade:
             raise Exception("Store doesnt exists")
         product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
-            filled_basket = user.add_to_cart(username, store_name, product_id, product, quantity)
+            filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
             return filled_basket
         else:
             raise Exception("Product is not available or quantity is higher than the stock")
@@ -397,11 +397,9 @@ class StoreFacade:
     #TODO: add check if user is loggedin to each function
 
     def openStore(self, username, store_name):
-        cur_member: Member = self.members.get(username)
+        cur_member: Member = self.__getOnlineMemberOnly(username)
         if cur_member is None:
-            raise Exception("The user is not a member")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+            raise Exception("The user is not a member or not logged in")
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member, username)
         cur_member.accesses[store_name] = new_access
@@ -487,19 +485,31 @@ class StoreFacade:
         return  removed_usernames
 
 
-    def addPermissions(self):
-        #todo return here the updated access
-        access: Access = None
-        return access
+    def addPermissions(self, store_name, requester_username, nominated_username, permission):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="ADD")
+        return modified_access
 
-    def editPermissions(self):
-        # todo return here the updated access
-        access: Access = None
-        return access
+    def removePermissions(self, store_name, requester_username, nominated_username, permission):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="REMOVE")
+        return modified_access
 
-    def getPermissions(self):
-        # todo return here the updated permissions
-        permissions: dict = None
+    def getPermissions(self, store_name, requester_username, nominated_username):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        permissions: dict = cur_store.getPermissions(requester_username, nominated_username)
         return permissions
 
     def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):

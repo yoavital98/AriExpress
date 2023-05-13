@@ -51,12 +51,12 @@ class Access:
             return isinstance(self.access_state,ManagerState)
 
 
-    def getAccessState(self):
-        return type(self.access_state).__name__[:-5]
-
     def addNominatedUsername(self, username, access):
         self.nominations[username] = access
 
+
+
+    #------ Permission Functions -------#
     def canModifyPermissions(self):
         return self.access_state.checkForPermission("ModifyPermissions")
 
@@ -94,12 +94,18 @@ class Access:
     def get_store(self):
         return self.store
 
+    def get_access_state(self):
+        return self.access_state
 
     def get_nominated_by_username(self):
         return self.nominated_by_username
 
     def get_nominations(self):
         return self.nominations
+
+    def get_access_state_name(self):
+        return type(self.access_state).__name__[:-5]
+
 
     # =======================JSON=======================#
     def toJson(self):

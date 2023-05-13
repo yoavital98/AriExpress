@@ -85,6 +85,27 @@ class Store:
             accesses_to_remove.extend(cur_access.get_nominations().values())
         return usernames_to_remove
 
+    def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
+        requester_access: Access = self.__accesses.get(requester_username)
+        nominated_access: Access = self.__accesses.get(nominated_username)
+        if requester_access is None or nominated_access is None:
+            raise Exception("No such access exists")
+        if requester_access.canModifyPermissions() and nominated_access.get_nominated_by_username() == requester_username:
+            if op == "ADD":
+                nominated_access.get_access_state().addPermission(permission)
+            else:
+                nominated_access.get_access_state().removePermission(permission)
+        return nominated_access
+
+    def getPermissions(self, requester_username, nominated_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        nominated_access: Access = self.__accesses.get(nominated_username)
+        if requester_access is None or nominated_access is None:
+            raise Exception("No such access exists")
+        if requester_access == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
+            return requester_access.get_access_state().get_permissions()
+        else:
+            raise Exception("You dont have access to get this user permission")
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()

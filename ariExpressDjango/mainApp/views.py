@@ -13,6 +13,10 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 import json
 import ast
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
+from django.contrib import messages # for displaying messages
+
 
 
 def startpage(request):
@@ -199,6 +203,21 @@ def homepage_guest(request):
 
 
 
-
+@login_required(login_url='mainApp:login')
 def inbox(request):
     return render(request, 'inbox.html')
+
+@login_required(login_url='mainApp:login')
+def send_message(request):
+    if request.method == 'POST':
+        #service = Service()
+        form = UserMessagesform(request.POST, request.FILES)
+        if form.is_valid():
+            message=form.save(commit=False)
+            message.sender = request.user.username
+            message.save()
+            #res = service.sendMessage(message.cleaned_data['id'], message.cleaned_data['sender'], message.cleaned_data['receiver'], message.cleaned_data['subject'], message.cleaned_data['content'], message.cleaned_data['creation_date'], message.cleaned_data['file'])
+            return HttpResponseRedirect('/')
+        else:
+            form = UserMessagesform()
+        return render(request, "inbox.html", {'form': form})   

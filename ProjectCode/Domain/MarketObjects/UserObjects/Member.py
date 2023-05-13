@@ -23,8 +23,8 @@ class Member(User):
     def get_cart(self):
         return super().get_cart()
 
-    def add_to_cart(self, username, store_name, product_id, product, quantity):
-        super().add_to_cart(username, store_name, product_id, product, quantity)
+    def add_to_cart(self, username, store, product_id, product, quantity):
+        super().add_to_cart(username, store, product_id, product, quantity)
 
     def get_Basket(self, store_name):
         return super().get_Basket(store_name)
@@ -114,6 +114,10 @@ class Member(User):
     def claimAuctionPurchase(self,storename, auction_id, card_number, card_user_name, card_user_ID, card_date, back_number):
         pass
         #  function will be here
+
+    def getAccessByStoreName(self,store_name):
+        return self.accesses.get(store_name)
+
 
     # =======================JSON=======================#
 
