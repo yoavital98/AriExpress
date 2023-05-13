@@ -228,7 +228,7 @@ def send_message(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Message sent successfully")
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect('/inbox/send_message')
     else:
         messages.error(request, "Error sending message")
         form = UserMessagesform()

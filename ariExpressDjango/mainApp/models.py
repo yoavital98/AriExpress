@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.html import format_html
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class Product(models.Model):
     product_id = models.IntegerField()
@@ -75,12 +76,12 @@ class UserMessage(models.Model):
         ('read', 'read'),
     )
     id = models.AutoField(primary_key=True)
-    sender = models.CharField(max_length=User._meta.get_field('username').max_length)
+    sender = models.CharField(max_length=30)
     receiver = models.CharField(max_length=50)
     subject = models.CharField(max_length=100)
     content = models.TextField(max_length=1000)
     file = models.FileField(upload_to='uploads/', null=True, blank=True)
-    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_date = models.DateTimeField(timezone.now())
     status = models.CharField(max_length=10, choices=STATUS, default='pending')
 
     def situation(self):
