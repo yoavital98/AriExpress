@@ -73,9 +73,9 @@ class Service:
             logging.error(f"addAdmin Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def removeMember(self, username, memberName):
+    def removePermissionFreeMember(self, username, memberName):
         try:
-            removedMember = self.store_facade.removeMember(username, memberName)
+            removedMember = self.store_facade.removePermissionFreeMember(username, memberName)
             logging.info(
                 "Member has been removed successfully. By username: " + username + ". Removed username: " + memberName + ".")
             return Response(removedMember.toJson(), True)
@@ -83,9 +83,9 @@ class Service:
             logging.error(f"removeMember Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def returnMember(self, username, memberName):
+    def returnPermissionFreeMember(self, username, memberName):
         try:
-            returnedMember = self.store_facade.returnMember(username, memberName)
+            returnedMember = self.store_facade.returnPermissionFreeMember(username, memberName)
             logging.info(
                 "Member's ban has been lifted. By username: " + username + ". Returned username: " + memberName + ".")
             return Response(returnedMember.toJson(), True)

@@ -704,24 +704,29 @@ class StoreFacade:
         else:
             raise Exception("only admin can get the offline members list")
 
-    def removeMember(self, requesterID, memberName):
+    def removePermissionFreeMember(self, requesterID, memberName):
         if self.admins.keys().__contains__(requesterID):
             if self.members.keys().__contains__(memberName):
-                self.members[memberName].logOut()
-                self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")
-                banned_member = self.members.pop(memberName)
-                self.banned_members[memberName] = banned_member
+                if self.accesses.keys().__contains__(memberName):
+                    self.members[memberName].logOut()
+                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")  # TOdo : add message to login screen or something
+                    banned_member = self.members.pop(memberName)
+                    self.banned_members[memberName] = banned_member
+                    return banned_member
+                else:
+                    raise Exception("Can't remove member with store roles")
             else:
                 raise Exception("no such member exists")
         else:
             raise Exception("only admin can remove a member")
 
-    def returnMember(self, requesterID, memberName):
+    def returnPermissionFreeMember(self, requesterID, memberName):
         if self.admins.keys().__contains__(requesterID):
             if self.banned_members.keys().__contains__(memberName):
                 self.messageAsAdminToUser(self, requesterID, memberName, "UNBAN", "Your ban has been lifted")
                 returned_member = self.banned_members.pop(memberName)
                 self.members[memberName] = returned_member
+                return returned_member
             else:
                 raise Exception("no such member exists")
         else:
