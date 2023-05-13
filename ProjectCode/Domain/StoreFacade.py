@@ -627,15 +627,6 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        # if is_founder:
-        #     #deletes all accesses for that store
-        #     for mem in self.members.values():
-        #         store_exists = mem.get_accesses().get(store_name)
-        #         if store_exists is not None:
-        #             del mem.get_accesses()[store_name]
-        #
-        #     del self.stores[store_name]
-        # return DataStore(cur_store)
         return cur_store
 
     def getStaffInfo(self, username, store_name):
@@ -723,3 +714,13 @@ class StoreFacade:
 
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
+
+    def sendMessageUsers(self, message_id, requester_id, receiver_id, subject, content, date, file):
+        # Create a new message and send it via the message controller
+        message = Message(message_id, requester_id, receiver_id, subject, content, date, file, False)
+        message_controller.send_message(message)
+
+        # Register an observer for the user and send them a real-time notification
+        observer = MessageObserver(receiver_id)
+        message_controller.register_observer(receiver_id, observer)
+        observer.notify(message)
