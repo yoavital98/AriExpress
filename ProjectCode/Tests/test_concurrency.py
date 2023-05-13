@@ -11,7 +11,6 @@ import threading
 class TestStoreFacade(TestCase):
 
     def setUp(self):
-
         self.Service = Service()
         # self.Service.register("username", "password", "email")
         # self.Service.logIn("username", "password")
