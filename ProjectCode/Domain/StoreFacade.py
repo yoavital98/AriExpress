@@ -358,27 +358,27 @@ class StoreFacade:
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product = cur_store.getProductById(product_id, username)
+        cur_product: Product = cur_store.getProductById(product_id, username)
         # return DataProduct(cur_product)
         return cur_product
-    def productSearchByName(self, keywords, username):  # and keywords
+    def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(DataStore, list)
+        search_results = TypedDict(str, list)
         for keyword in splitted_keywords:
             for cur_store in self.stores.values():
-                product_list = cur_store.searchProductByName(keyword, username)
+                product_list = cur_store.searchProductByName(keyword)
                 if len(product_list) > 0:
-                    data_product_list = [DataProduct(prod) for prod in product_list]
-                    search_results[DataStore(cur_store)] = data_product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+                    #data_product_list = [DataProduct(prod) for prod in product_list]
+                    search_results[cur_store.get_store_name()] = product_list #TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
         return search_results
 
-    def productSearchByCategory(self, category, username):
-        search_results = TypedDict(DataStore, list)
+    def productSearchByCategory(self, category):
+        search_results = TypedDict(str, list)
         for cur_store in self.stores.values():
-            product_list = cur_store.searchProductByCategory(category, username)
+            product_list = cur_store.searchProductByCategory(category)
             if len(product_list) > 0:
-                data_product_list = [DataProduct(prod) for prod in product_list]
-                search_results[DataStore(cur_store)] = data_product_list
+                #data_product_list = [DataProduct(prod) for prod in product_list]
+                search_results[cur_store.get_store_name()] = product_list
         return search_results
 
     def productFilterByFeatures(self, featuresDict, username):
@@ -387,11 +387,14 @@ class StoreFacade:
 
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()
+        if self.admins.keys().__contains__(requesterID):
+            return transaction_history.get_Store_Transactions(store_name)
+        member: Member = self.__getOnlineMemberOnly(requesterID)
         # TODO amiel this long line can be shortened with "checkIfHasAccess"
-        if self.checkIfUserIsLoggedIn(requesterID) and (self.admins.keys().__contains__(requesterID) or self.accesses[requesterID].get_store().get_store_name() == store_name):
+        if member.accesses.__contains__(store_name):
             return transaction_history.get_Store_Transactions(store_name)
         else:
-            raise Exception("username isn't logged in")
+            raise Exception("no permission for this store")
 
     # ------  Management  ------ #
     #TODO: add check if user is loggedin to each function

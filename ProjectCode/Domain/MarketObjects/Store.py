@@ -144,6 +144,8 @@ class Store:
         cur_access: Access = self.__accesses[username]
         if not self.active and (cur_access is None or not cur_access.hasRole()):
             raise Exception("Store is inactive")
+        if not self.__products.keys().__contains__(product_id):
+            raise Exception("Product does not Exist")
         return self.__products.get(product_id)
 
     def getStaffInfo(self, username):
@@ -163,10 +165,10 @@ class Store:
             raise Exception("There is not enough stock of the requested product")
         return cur_product
 
-    def searchProductByName(self, keyword, username):
-        cur_access: Access = self.__accesses[username]
-        if not self.active and ( cur_access is None or not cur_access.hasRole()):
-            return {}
+    def searchProductByName(self, keyword):
+        #cur_access: Access = self.__accesses[username]
+        if not self.active: #and ( cur_access is None or not cur_access.hasRole()):
+            return []
 
         product_list = []
         for prod in self.__products.values():
@@ -174,9 +176,9 @@ class Store:
                 product_list.append(prod)
         return product_list
 
-    def searchProductByCategory(self, category, username):
-        cur_access: Access = self.__accesses[username]
-        if not self.active and (cur_access is None or not cur_access.hasRole()):
+    def searchProductByCategory(self, category):
+        #cur_access: Access = self.__accesses[username]
+        if not self.active: #and (cur_access is None or not cur_access.hasRole()):
             return {}
         product_list = []
         for prod in self.__products.values():
