@@ -29,13 +29,13 @@ from ProjectCode.Domain.MarketObjects.User import User
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
-import asyncio
+import threading
 
 
 class StoreFacade:
     def __init__(self):
         # Store Data
-        self.purchase_lock = asyncio.Lock()
+        self.lock_for_adding_and_purchasing = threading.Lock() # lock for purchase
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)    # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
@@ -223,7 +223,8 @@ class StoreFacade:
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
-        product = store.checkProductAvailability(product_id, quantity)
+        with self.locklock_for_adding_and_purchasing:
+            product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
             filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
             return filled_basket
@@ -244,10 +245,12 @@ class StoreFacade:
     # editing aa product quantity from a specific basket
     def editBasketQuantity(self, username, store_name, product_id, quantity):
         user: User = self.__getUserOrMember(username)
+
         answer = user.checkProductExistance(store_name, product_id) #answer is boolean
         if answer:
             store: Store = self.stores[store_name]
-            product = store.checkProductAvailability(product_id, quantity)
+            with self.locklock_for_adding_and_purchasing:
+                product = store.checkProductAvailability(product_id, quantity)
             if product is not None:
                 return user.edit_Product_Quantity(store_name, product_id, quantity)
             else:
@@ -260,9 +263,11 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         user: User = self.__getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
-            return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True, self.purchase_lock)
+            with self.locklock_for_adding_and_purchasing:
+                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, True)
         else:
-            return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False, self.purchase_lock)
+            with self.locklock_for_adding_and_purchasing:
+                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number, address, False)
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
     def placeBid(self, username, store_name, offer, product_id, quantity):
@@ -718,12 +723,3 @@ class StoreFacade:
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
 
-    def sendMessageUsers(self, message_id, requester_id, receiver_id, subject, content, date, file):
-        # Create a new message and send it via the message controller
-        message = Message(message_id, requester_id, receiver_id, subject, content, date, file, False)
-        message_controller.send_message(message)
-
-        # Register an observer for the user and send them a real-time notification
-        observer = MessageObserver(receiver_id)
-        message_controller.register_observer(receiver_id, observer)
-        observer.notify(message)
