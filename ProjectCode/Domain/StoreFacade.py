@@ -4,20 +4,7 @@ from ProjectCode.Domain.ExternalServices.MessageController import MessageControl
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
-from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-# -------Data MarketObjects Imports-------#
-from ProjectCode.Domain.DataObjects.DataBasket import DataBasket
-from ProjectCode.Domain.DataObjects.DataCart import DataCart
-from ProjectCode.Domain.DataObjects.DataGuest import DataGuest
-from ProjectCode.Domain.DataObjects.DataBid import DataBid
-from ProjectCode.Domain.DataObjects.DataLottery import DataLottery
-from ProjectCode.Domain.DataObjects.DataProduct import DataProduct
-from ProjectCode.Domain.DataObjects.DataStore import DataStore
-from ProjectCode.Domain.DataObjects.DataAccess import DataAccess
-from ProjectCode.Domain.DataObjects.DataMember import DataMember
-from ProjectCode.Domain.DataObjects.DataAdmin import DataAdmin
-from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 # -------MarketObjects Imports-------#
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
@@ -41,6 +28,7 @@ class StoreFacade:
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
+        self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
         self.message_controller = MessageController()  # Messanger
         # Data
@@ -716,41 +704,34 @@ class StoreFacade:
         else:
             raise Exception("only admin can get the offline members list")
 
-    def removeMember(self, username, memberName):
-        if self.admins.keys().__contains__(username):
+    def removePermissionFreeMember(self, requesterID, memberName):
+        if self.admins.keys().__contains__(requesterID):
             if self.members.keys().__contains__(memberName):
-                return self.members.pop(memberName)
+                if self.accesses.keys().__contains__(memberName):
+                    self.members[memberName].logOut()
+                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")  # TOdo : add message to login screen or something
+                    banned_member = self.members.pop(memberName)
+                    self.banned_members[memberName] = banned_member
+                    return banned_member
+                else:
+                    raise Exception("Can't remove member with store roles")
             else:
                 raise Exception("no such member exists")
         else:
             raise Exception("only admin can remove a member")
 
-    def removeMember(self, username, memberName):
-        if self.admins.__contains__(username):
-            if self.members.__contains__(memberName):
-                cur_admin = self.admins[username]
-                cur_user = self.members[memberName]
-                cur_accesses = cur_user.get_accesses()
-                cur_user.logOut()
-                if len(cur_accesses) == 0:
-                    # TODO Add email implementation
-                    # email_subject = 'You have been banned'
-                    # email_body = 'Dear {},\n\nYou have been banned from our platform.'.format(memberName)
-                    # email = EmailMessage(
-                    #     email_subject,
-                    #     email_body,
-                    #     'AriExpressSupport@gmail.com',  # replace with your email address
-                    #     [cur_user.email],  # replace with the member's email address
-                    #     reply_to=['AriExpressSupport@gmail.com']  # replace with your support email address
-                    # )
-                    # email.send()
-                    del self.members[memberName]
-                    # TODO "הסרה של מנוי: שמוטב שתתבצע על ידי הרכיב שעוסק ברישום המנויים ובפרטיותם"
-                    # TODO should remove from database? other extra steps?
+    def returnPermissionFreeMember(self, requesterID, memberName):
+        if self.admins.keys().__contains__(requesterID):
+            if self.banned_members.keys().__contains__(memberName):
+                self.messageAsAdminToUser(self, requesterID, memberName, "UNBAN", "Your ban has been lifted")
+                returned_member = self.banned_members.pop(memberName)
+                self.members[memberName] = returned_member
+                return returned_member
             else:
-                raise Exception("member does not exist")
+                raise Exception("no such member exists")
         else:
-            raise Exception("only admin can remove a member")
+            raise Exception("only admin can return a member")
+
 
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
@@ -763,3 +744,6 @@ class StoreFacade:
             raise Exception("no such member exists")
         purchase_history = transaction_history.get_user_Transactions(user_name)
         return self.members[user_name], purchase_history
+
+    def messageAsAdminToUser(self, self1, requesterID, memberName, subject, message):
+        pass
