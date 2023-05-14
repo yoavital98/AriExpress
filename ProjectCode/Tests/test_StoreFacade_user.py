@@ -23,7 +23,7 @@ class TestStoreFacade(TestCase):
         self.member1: Member = self.store_facade.members.get("John")
         self.member2: Member = self.store_facade.members.get("Jane")
         self.store_facade.logInAsMember("John", "password123")
-        self.store_facade.openStore("John", "AriExpress")
+        self.store_facade.createStore("John", "AriExpress")
         self.store1: Store = self.store_facade.stores.get("AriExpress")
         self.store_facade.addNewProductToStore("John", "AriExpress", "paper", 10, 500, "paper")
         self.item_paper: Product = self.store1.getProductById(1, "John")
