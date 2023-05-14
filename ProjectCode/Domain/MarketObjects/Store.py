@@ -200,14 +200,28 @@ class Store:
     def searchProductByCategory(self, category):
         #cur_access: Access = self.__accesses[username]
         if not self.active: #and (cur_access is None or not cur_access.hasRole()):
-            return {}
+            return []
         product_list = []
         for prod in self.__products.values():
             if category in prod.categories:
                 product_list.append(prod)
         return product_list
 
-
+    def searchProductsByFeatures(self, username, feature_dict):
+        cur_access: Access = self.__accesses[username]
+        if not self.active and cur_access is None:
+            return []
+        product_list = []
+        for prod in self.__products.values():
+            product_list.append(prod)
+            for feature_name, feature_range in feature_dict.items():
+                feature_val = getattr(prod, feature_name)
+                min = feature_range[0]
+                max = feature_range[1]
+                if not (feature_val >= min and feature_val <= max):
+                    product_list.remove(prod)
+                    break
+        return product_list
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
         new_product_dict = TypedDict(int, int) # (id,quantity)

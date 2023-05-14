@@ -252,6 +252,7 @@ class Service:
             logging.error(f"productSearchByCategory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
+    # featuresDict = {"field": (min,max)} --> {"quantity": (5,10)}
     def productFilterByFeatures(self, featuresDict,
                                 username):  # TODO (opt) we will assume there's a dict that can say which features will be searched
         try:

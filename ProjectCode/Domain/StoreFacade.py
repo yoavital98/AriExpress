@@ -377,9 +377,14 @@ class StoreFacade:
                 search_results[cur_store.get_store_name()] = product_list
         return search_results
 
-    def productFilterByFeatures(self, featuresDict, username):
+    def productFilterByFeatures(self, features_dict, username):
+        search_results = TypedDict(str, list)
+        for store in self.stores:
+            product_list = store.searchProductsByFeatures(username, features_dict)
+            if len(product_list) > 0:
+                search_results[store.get_store_name()] = product_list
         # TODO: not implemented yet
-        return []
+        return search_results
 
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()
