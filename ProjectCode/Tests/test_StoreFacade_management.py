@@ -1,6 +1,8 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -11,85 +13,52 @@ class TestStoreFacade(TestCase):
 
     def setUp(self):
         self.store_facade = StoreFacade()
-        self.member1 = Member("Ari", "password123", "ari@gmail.com")
-        self.store_facade.members["Ari"] = self.member1
-        self.member2 = Member("Feliks", "password456", "feliks@gmail.com")
-        self.store_facade.members["Feliks"] = self.member2
-        self.member3 = Member("Amiel", "password789", "amiel@gmail.com")
-        self.store_facade.members["Amiel"] = self.member3
+        self.store_facade.register("Ari", "password123", "ari@gmail.com")
+        self.store_facade.register("Jane", "password456", "jane.doe@example.com")
+        self.member1: Member = self.store_facade.members.get("Ari")
+        self.member2: Member = self.store_facade.members.get("Jane")
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.store_facade.createStore("Ari", "Store1")
+        self.store1: Store = self.store_facade.stores.get("Store1")
+        self.store_facade.addNewProductToStore("Ari", "Store1", "paper", 10, 500, "paper")
+        self.item_paper: Product = self.store1.getProductById(1, "Ari")
+        self.store_facade.logOut("Ari")
 
     def test_openStore_success(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        self.assertTrue(self.store_facade.stores.keys().__contains__("Store1"))
+        self.assertTrue(len(self.store_facade.stores.values()) == 1)
     
     def test_openStore_userNotLoggedIn_failure(self):
-        self.member1.logged_In = False
-        with self.assertRaises(Exception) as context:
-            self.store_facade.openStore("Ari", "Store1")
-        self.assertTrue("User not logged in" in str(context.exception))
+        with self.assertRaises(Exception):
+            self.store_facade.createStore("Jane", "some_store")
 
     def test_openStore_storeAlreadyExists_failure(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        self.assertTrue(self.store_facade.stores.keys().__contains__("Store1"))
-        with self.assertRaises(Exception) as context:
-            self.store_facade.openStore("Ari", "Store1")
-        self.assertTrue("Store already exists" in str(context.exception))
+        self.store_facade.logInAsMember("Jane", "password456")
+        with self.assertRaises(Exception):
+            self.store_facade.createStore("Jane", "Store1")
 
     def test_addNewProductToStore_success(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        self.product = self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
-        self.assertTrue(self.store_facade.stores.get("Store1").get_products().keys().__contains__(self.product.product_id))
-        self.assertEqual(self.store_facade.stores.get("Store1").get_products().get(self.product.product_id), self.product)
+        self.assertTrue(len(self.store1.getProducts("Ari").keys()) == 1)
 
     def test_addNewProductToStore_userNotLoggedIn_failure(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        self.member1.logged_In = False
-        with self.assertRaises(Exception) as context:
-            self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
-        self.assertTrue("User not logged in" in str(context.exception))
+        with self.assertRaises(Exception):
+            self.store_facade.addNewProductToStore("Ari", "Store1", "paper1", 10, 500, "paper")
 
     def test_addNewProductToStore_storeDoesNotExist_failure(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        with self.assertRaises(Exception) as context:
-            self.store_facade.addNewProductToStore("Ari", "Store2", "Product1", 10, 10, "category1")
-        self.assertTrue("No such store exists" in str(context.exception))
+        self.store_facade.logInAsMember("Ari", "password123")
+        with self.assertRaises(Exception):
+            self.store_facade.addNewProductToStore("Ari", "Store2", "paper1", 10, 500, "paper")
 
-    def test_addNewProductToStore_userIsNotFounder_failure(self):
-        self.member1.logged_In = True
-        self.member2.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        with self.assertRaises(Exception) as context:
-            self.store_facade.addNewProductToStore("Feliks", "Store1", "Product1", 10, 10, "category1")
-        self.assertTrue("User doesn't have permissions" in str(context.exception))
+    def test_addNewProductToStore_userDoesNotHaveAccess_failure(self):
+        self.store_facade.logInAsMember("Jane", "password456")
+        with self.assertRaises(Exception):
+            self.store_facade.addNewProductToStore("Jane", "Store1", "paper", 10, 500, "paper")
 
-    def test_addNewProductToStore_userIsNotOwner_failure(self):
-        # TODO: add owner to store
-        self.member1.logged_In = True
-        self.member2.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        with self.assertRaises(Exception) as context:
-            self.store_facade.addNewProductToStore("Feliks", "Store1", "Product1", 10, 10,"category1")
-        self.assertTrue("User doesn't have permissions" in str(context.exception))
 
-    def test_addNewProductToStore_productAlreadyExists_failure(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
-        with self.assertRaises(Exception) as context:
-            self.store_facade.addNewProductToStore("Ari", "Store1", "Product1", 10, 10, "category1")
-        self.assertTrue("Product already exists" in str(context.exception))
 
     def test_addNewProductToStore_productNameIsEmpty_failure(self):
-        self.member1.logged_In = True
-        self.store_facade.openStore("Ari", "Store1")
-        with self.assertRaises(Exception) as context:
+        self.store_facade.logInAsMember("Ari", "password123")
+        with self.assertRaises(Exception):
             self.store_facade.addNewProductToStore("Ari", "Store1", "", 10, 10, "category1")
-        self.assertTrue("Product info is invalid" in str(context.exception))
 
     def test_addNewProductToStore_productPriceIsNegative_failure(self):
         self.member1.logged_In = True

@@ -399,6 +399,8 @@ class StoreFacade:
         cur_member: Member = self.__getOnlineMemberOnly(username)
         if cur_member is None:
             raise Exception("The user is not a member or not logged in")
+        if self.stores.keys().__contains__(store_name):
+            raise Exception("Store name already taken")
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member, username)
         cur_member.accesses[store_name] = new_access
@@ -409,14 +411,16 @@ class StoreFacade:
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
 
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+        member: Member = self.__getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        # cur_member: Member = self.members[str(requester_id)]
-        member = self.members[username]
-        new_product = cur_store.addProduct(member.get_accesses().get(store_name), name, quantity, price,
+
+        if member.get_accesses().keys().__contains__(store_name):
+            access: Access = member.get_accesses().get(store_name)
+        else:
+            raise Exception("No access for this member to the store")
+        new_product = cur_store.addProduct(access, name, quantity, price,
                                            categories)  # TODO: change first atribute to access
         return new_product
         # return DataProduct(new_product)
