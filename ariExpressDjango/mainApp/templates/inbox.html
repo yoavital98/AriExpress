@@ -40,7 +40,7 @@
 						</tr>
 					</thead>
 					{% for usermessage in usermessages %}
-					<tr style="background-color:#afcbec;"> 
+					<tr style="background-color:#f3f8ff;"> 
 						<td>{{ usermessage.sender }}</td>
 						<td>{{ usermessage.subject }}</td>
 						<td>{{ usermessage.creation_date | date:'m/d/y (H:i' }}</td>
@@ -48,7 +48,7 @@
 						<td>{{ usermessage.status }}</td>
 
 						<td>
-							<button class="btn btn-secondary btn-sm btn-action" title="Delete message">
+							<button class="btn btn-secondary btn-sm btn-action" title="Delete message" data-bs-toggle="modal" data-bs-target="#deleteModal{{ usermessage.pk }}">
 								<i class="fas fa-trash-alt"></i>
 							</button>
 						</td>
@@ -58,19 +58,48 @@
 							</button>
 						</td>
 					</tr>
+
+					<!--Delete message button functionality-->
+					{% include 'messages/delete.html' %}
+
 					{% endfor %}	
 				</table>
 			</div>
 		</div>
+		<br>
 		<div>
 			<button type="button" class="btn text-light" data-bs-toggle="modal" data-bs-target="#messageModal" style = "background-color: #0074fe; position: absolute; bottom: 50px; right: 50px;">
 				<i class = "fas fa-envelope fa-2x"></i>
-			</button>
-
+			</button>	
 		</div>
+		<!--Pagination-->
+		<nav>
+			{% if usermessages.has_other_pages %}
+			<ul class="pagination"> 
+				{% if usermessages.has_previous %}
+				<a href="?page=1" class="btn btn-outline-secondary mb4" style="border-radius: 1px; border= 1px solid #d3d3d3">First</a>
+				<li class="page-item"><a class="page-link" href="?page={{ usermessages.previous_page_number }}"><i class="fas fa-angle-double-left"></i></a></li>
+				{% else %}
+				<li class="page-item disabled"></li>
+				{% endif %}
+				{% for i in usermessages.paginator.page_range %}
+				{% if usermessages.number == i %}
+				<li class="page-item active"><span class="page-link">{{ i }}<span class="sr-only"></span></span></li>
+				{% else %}
+				<li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+				{% endif %}
+				{% endfor %}
+		
+				{% if usermessages.has_next %}
+				<li class="page-item"><a class="page-link" href="?page={{ usermessages.next_page_number }}"><i class="fas fa-angle-double-right"></i></a></li>
+				<a href="?page={{ usermessages.paginator.num_pages }}" class="btn btn-outline-secondary mb4" style="border-radius: 1px; border= 1px solid #d3d3d3; border-left: none;">Last</a>
+				{% else %}
+				<li class="page-item disabled"></li>
+				{% endif %}
+			</ul>
+			{% endif %}
+		</nav>
 	</main>
-	
-
 </body>
 </html>
 

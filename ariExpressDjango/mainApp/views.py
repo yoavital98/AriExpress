@@ -207,10 +207,11 @@ def homepage_guest(request):
 
 
 def inbox(request):
-    all_user_messages = UserMessage.objects.filter(receiver=request.user.username)
-    paginator = Paginator(all_user_messages, 5)
+    all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
+    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+    paginator = Paginator(all_user_messages, 3)
     page = request.GET.get('page')
-    all_message = paginator.get_page(page)
+    all_messages = paginator.get_page(page)
     #________________________________________Message Counter________________________________________
     #total = UserMessage.objects.all().count()
     #read = UserMessage.objects.filter(status='read').count()
@@ -218,7 +219,7 @@ def inbox(request):
     #base = datetime.now().today()
     #today_messages = UserMessage.objects.filter(creation_date__gt = base)
 
-    return render(request, 'inbox.html',{'usermessages': all_user_messages})
+    return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
 
 
 def send_message(request):
