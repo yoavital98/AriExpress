@@ -22,7 +22,7 @@ urlpatterns = [
     path (r'adminPage/', views.adminPage, name='adminPage'),
     path (r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
     # path to send the message
-    path (r'inbox/send_message', views.send_message, name='send_message'),
+    path (r'send_message', views.send_message, name='send_message'),
 
     
-]#+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

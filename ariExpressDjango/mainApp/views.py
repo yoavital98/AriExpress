@@ -205,31 +205,32 @@ def homepage_guest(request):
 
 
 
-@login_required(login_url='mainApp:login')
+
 def inbox(request):
-    all_user_messages = UserMessage.objects.all().order_by('-creation_date')
+    all_user_messages = UserMessage.objects.filter(receiver=request.user.username)
     paginator = Paginator(all_user_messages, 5)
     page = request.GET.get('page')
     all_message = paginator.get_page(page)
     #________________________________________Message Counter________________________________________
-    total = UserMessage.objects.all().count()
-    read = UserMessage.objects.filter(status='read').count()
-    pending = UserMessage.objects.filter(status='pending').count()
-    base = datetime.now().today()
-    today_messages = UserMessage.objects.filter(creation_date__gt = base)
+    #total = UserMessage.objects.all().count()
+    #read = UserMessage.objects.filter(status='read').count()
+    #pending = UserMessage.objects.filter(status='pending').count()
+    #base = datetime.now().today()
+    #today_messages = UserMessage.objects.filter(creation_date__gt = base)
 
-    return render(request, 'inbox.html',{'user_messages':all_message, 'total':total, 'read':read, 'pending':pending, 'today':today_messages})
+    return render(request, 'inbox.html',{'usermessages': all_user_messages})
 
-@login_required(login_url='mainApp:login')
+
 def send_message(request):
     if request.method == 'POST':
-        #service = Service()
-        form = UserMessagesform(request.POST, request.FILES)
+        form = UserMessageform(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            message = form.save(commit=False)
+            message.sender = request.user.username
+            message.save()
             messages.success(request, "Message sent successfully")
-        return HttpResponseRedirect('/inbox/send_message')
-    else:
+        return HttpResponseRedirect('/inbox')
+    else:       
+        form = UserMessageform()
         messages.error(request, "Error sending message")
-        form = UserMessagesform()
     return render(request, "inbox.html", {'form': form})   
