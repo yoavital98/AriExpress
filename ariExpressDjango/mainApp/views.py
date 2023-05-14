@@ -206,7 +206,7 @@ def homepage_guest(request):
 
 
 
-
+@login_required(login_url='/login')
 def inbox(request):
     all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
     pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
