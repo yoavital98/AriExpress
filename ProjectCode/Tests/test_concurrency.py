@@ -10,7 +10,7 @@ from ProjectCode.Service.Service import Service
 import threading
 
 
-def test_func(func, *args, **kwargs):
+def test_func_ten(func, *args, **kwargs):
     # Create a shared variable to track the success/failure of foo()
     result = {'success_count': 0, 'failure_count': 0}
 
@@ -18,8 +18,37 @@ def test_func(func, *args, **kwargs):
         try:
             func(*args, **kwargs)  # Call foo()
             result['success_count'] += 1
+            print(f"success: {result.get('success_count')}")
         except Exception:
             result['failure_count'] += 1
+            print(f"success: {result.get('failure_count')}")
+
+    threads = []
+    for _ in range(10):
+        thread = threading.Thread(target=run_func)
+        thread.start()
+        threads.append(thread)
+
+    # Wait for all threads to finish
+    for thread in threads:
+        thread.join()
+
+    # Check the result
+    assert result['success_count'] == 10, "All function calls should succeed"
+    assert result['failure_count'] == 10, "All function calls should fail"
+
+def test_func_one(func, *args, **kwargs):
+    # Create a shared variable to track the success/failure of foo()
+    result = {'success_count': 0, 'failure_count': 0}
+
+    def run_func():
+        try:
+            func(*args, **kwargs)  # Call foo()
+            result['success_count'] += 1
+            print(f"success: {result.get('success_count')}")
+        except Exception:
+            result['failure_count'] += 1
+            print(f"success: {result.get('failure_count')}")
 
     # Create two threads to run foo() concurrently
     thread1 = threading.Thread(target=run_func)
@@ -37,7 +66,6 @@ def test_func(func, *args, **kwargs):
     assert result['success_count'] == 1, "One function call should succeed"
     assert result['failure_count'] == 1, "One function call should fail"
 
-
 class TestStoreFacade(TestCase):
     def setUp(self):
         self.store_facade = StoreFacade()
@@ -50,7 +78,7 @@ class TestStoreFacade(TestCase):
 
     def test_addToBasket_success(self):
         # test_func(self.store_facade.purchaseCart("username", 1234, "feliks", 123456789, 1, 111, "okokok"))
-        test_func(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
+        test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
         
 
 

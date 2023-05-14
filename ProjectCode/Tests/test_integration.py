@@ -1,145 +1,119 @@
 import unittest
 from unittest import TestCase
 from ProjectCode.Domain.MarketObjects.Store import Store
-from ProjectCode.Domain.MarketObjects.UserObjects import Guest
-from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
+from ProjectCode.Domain.DataObjects.DataGuest import DataGuest
+from ProjectCode.Domain.DataObjects.DataMember import DataMember
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Service.Service import Service
+from ProjectCode.Service.Response import Response
 
 
-class TestStoreFacade(TestCase):
+class Test_Use_Cases_1(TestCase):
+    def setUp(self):
 
+        self.Service = Service()
+
+    # ----------------------sysyem functionality tests----------------------
+    #Use Case 1.1
+    def testing_starting_the_market_system_success(self):
+
+        self.Service.login("Ari", "123")
+        res = self.Service.openTheSystem("Ari")
+        self.assertEqual(res, None, "The system is not open")
+
+    def testing_starting_the_market_system_failure(self):
+
+        res = self.Service.openTheSystem("Rubin")
+        self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't open")
+
+    #Use Case 1.2
+
+    def tearDown(self):
+        #self.Service.closeTheSystem()
+        pass
+
+    # ----------------------guest functionality tests----------------------
+
+class Test_Use_Cases_2_1(TestCase):
+    def setUp(self):
+
+        self.Service = Service()
+        self.Service.openTheSystem("Ari")
+
+    # Use Case 2.1.1
+    def test_guest_visit_success(self):
+            
+        res = self.Service.loginAsGuest()
+        self.assertIsInstance(res.getReturnValue(), DataGuest, "the return value is not a guest - an error occured")
+
+    def test_guest_visit_failure(self):
+
+        # TODO: wait for Ari's code
+        pass
+
+    # Use Case 2.1.2
+    def test_guest_exit_success(self):
+
+        dataGuest = self.Service.loginAsGuest()
+        res =self.Service.leaveAsGuest(dataGuest)
+        self.assertEquals(res.getReturnValue(), None, "the return value is not None - an error occured")
+
+        #---------------------------------member functionality tests---------------------------------
+
+    #Use Case 2.1.3
+    def test_registration_to_the_system_success(self):
+
+        res = self.Service.register("username22", "password", "email")
+        self.assertIsInstance(res.getReturnValue(), DataMember, "the return value is not a member - an error occured")
+
+    def test_registration_to_the_system_failure(self):
+
+        self.Service.register("username", "password", "email")
+        res = self.Service.register("username", "password", "email")
+        self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't register")
+
+
+
+ #Use Case 2.1.4
+class Test_Use_Case_2_1_4(TestCase):
+
+    def setUp(self):
+        self.Service = Service()
+        self.Service.openTheSystem("Ari")
+        self.Service.register("username", "password", "email")
+
+
+    def test_login_to_the_system_success(self):
+
+        res = self.Service.login("username", "password")
+        self.assertTrue(res.getReturnValue().get_login_status(), "The user is not logged in")
+
+    def test_logging_in_the_system_failure(self):
+        self.Service.login("username", "password")
+        res = self.Service.login("username", "password")
+        self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't log in")
+
+
+    #Use Case 2.2.1
+class Test_Use_Case_2_2(TestCase):
     def setUp(self):
 
         self.Service = Service()
         self.Service.openTheSystem("Ari")
         self.Service.register("username", "password", "email")
-        self.Service.logIn("username", "password")
+        self.Service.login("username", "password")
         self.Service.openStore("username", "storename")
         self.Service.addNewProductToStore("username", "storename", "product1", "category", 10, 10)
         self.Service.addNewProductToStore("username", "storename", "product2", "category", 10, 10)
 
-
-    # ----------------------sysyem functionality tests----------------------
-    #Use Case 1.1
-    # An admin logging into the system using his password and username of a system manager type user
-    # The system checks if the user exists in the database
-    # The system checks if the user is a system_manager type of user
-    # The system sends a message to payment and supliment services
-    # a message is being return from those services to the system
-    # The system sends a message to the the user that he had connected successfuly.
-    def testing_starting_the_market_system_success(self):
-        self.Service.logIn("Ari", "123")
-        self.Service.openTheSystem("Ari")
-        self.assertNotEqual(self.Service.store_facade, None, "The system is not open")
-
-    def testing_starting_the_market_system_failure(self):
-        try:
-            self.Service.openTheSystem("Ari")
-        except Exception:
-            pass
-
-    #Use Case 1.2
-
-
-
-    # ----------------------guest functionality tests----------------------
-
-
-    # Use Case 2.1.1
-    # The user enters the market system.
-    # The system checks if the type of the current user is Guest.
-    # If OK:
-    #    The system assigns a Cart for the user.
-    # Else:
-    #    The system redirects to an error page.
-    def test_guest_visit_success(self):
-        guest = self.Service.loginAsGuest()
-        self.assertIsInstance(guest, Guest)
-
-    def test_guest_visit_failure(self):
-        # TODO: wait for Ari's code
-        pass
-
-    # Use Case 2.1.2
-    # Pre - conditions: User is in the market as guest.
-    # Post - conditions: User loses his basket.
-    # Flow:
-    #   The user exists the system.
-    #   The system removes the user cart.
-    def test_guest_exit_success(self):
-        guest = self.Service.loginAsGuest()
-        self.Service.leasveAsGuest(guest)
-        self.assertNotIn(guest, self.Service.store_facade.onlineGuests)
-
-    #---------------------------------member functionality tests---------------------------------
-
-    #Use Case 2.1.3
-    #Pre-conditions: User is defined as a guest.
-    #Post- conditions: a new member created in the system with a new member id and the registration information
-    #Flow:
-    #   The user enter username, password and email and send a registration request.
-    #   The system validates that the type of the user is a guest.
-    #   If OK:
-    #       The system validates that there is no user with the same username or email.
-    #   If OK:
-    #       The system creates a new user and sends a confirmation to the user.
-    #   else:
-    #       The system returns an appropriate error.
-    def test_registration_to_the_system_success(self):
-        member = self.Service.register("username22", "password", "email")
-        self.assertIsInstance(member, Member)
-
-    def test_registration_to_the_system_failure(self):
-        try:
-            self.Service.register("username", "password", "email")
-
-        except Exception:
-            pass
-
-
-    #Use Case 2.1.4
-    #Pre-conditions: User is defined as a guest and has already registered to the system.
-    #Post- conditions: The User status is changed from Guest to Member.
-    #Flow:
-    #   The user enters the market system.
-    #   The user logs-in with a username and a password.
-    #   The system checks if the type of the current user is Guest.
-    #   The system uses an external service for password validation.
-    #   If OK:
-    #       The system checks that the type of the user is Member.
-    #       The system return an confirmation that the operation succeed.
-    #   Else:
-    #       The system sends an error message that the log-in failed.
-    def test_logging_in_the_system_success(self):
-        member = self.Service.logIn("username", "password")
-        self.assertTrue(member.get_logged())
-
-    def test_logging_in_the_system_failure(self):
-        try:
-            self.Service.register("username", "password", "email")
-            self.Service.login("username", "password")
-            self.Service.login("username", "password")
-        except Exception:
-            pass
-
-    #Use Case 2.2.1
-    #Pre-conditions: User defined as a guest.
-    #Post-conditions: User gets the information about the stores and products.
-    #Flow:
-    #   User enters a store in the market.
-    #   The system fetches the requested store.
-    #   If OK:
-    #       The system returns to the user all the products information.
-    #   Else:
-    #       The system returns an error that no such store exists.
+        
 
     def test_guest_information_fetching(self):
-        guest = self.Service.loginAsGuest()
-        stores = self.Service.getStores()
+        res_guest = self.Service.loginAsGuest()
+        stores = self.Service.getStores().getReturnValue()
         store_name = stores[0].get_store_name()  #TODO: check why doest this line doesn't work (something about way we access an object in list)
-        products = self.Service.getProductsByStore(store_name)
+        products = self.Service.getProductsByStore(store_name).getReturnValue()
         self.assertTrue(len(products) > 0)
 
     def test_guest_information_fetching_failure(self):
@@ -176,17 +150,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(len(products) > 0)
 
     #Use Case 2.2.3
-    #Pre-conditions: User defined as a guest is connected to the system.
-    #Post-conditions: User basket filled with the products he added.
-    #Flow:
-    #   User adds a specific product to the basket.
-    #   The system looks for the product id that corresponds to the store id.
-    #   The system checks if there is an existing basket for the specific store.
-    #   If OK:
-    #       The system adds the product to the basket.
-    #   Else:
-    #       The system creates a new basket for the user.
-    #       The system adds the product to the basket.
+
     def test_guest_add_product_to_cart_success(self): #TODO: check the todo in storeFacade under the productSearchByName function
         guest = self.Service.loginAsGuest()
         products = self.Service.productSearchByName("product1")

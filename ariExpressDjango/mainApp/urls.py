@@ -4,6 +4,7 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from ariExpressDjango import settings
 
 app_name = "mainApp"
 
@@ -20,6 +21,9 @@ urlpatterns = [
     path (r'nominate/<str:shopname>/', views.nominateUser, name='nominateUser'),
     path (r'adminPage/', views.adminPage, name='adminPage'),
     path (r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
+    # path to send the message
+    path (r'send_message', views.send_message, name='send_message'),
+    path (r'delete_message/<str:usermessage_id>', views.delete_message, name='delete_message'),
 
     
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
