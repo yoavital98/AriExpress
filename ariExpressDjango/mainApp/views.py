@@ -17,6 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
 from django.contrib import messages # for displaying messages
 from django.core.paginator import Paginator # for pagination
+from datetime import datetime #used to get total msg per day
 
 
 
@@ -204,22 +205,32 @@ def homepage_guest(request):
 
 
 
-@login_required(login_url='mainApp:login')
-def inbox(request):
-    service = Service()
-    
-    return render(request, 'inbox.html')
 
-@login_required(login_url='mainApp:login')
+def inbox(request):
+    all_user_messages = UserMessage.objects.filter(receiver=request.user.username)
+    paginator = Paginator(all_user_messages, 5)
+    page = request.GET.get('page')
+    all_message = paginator.get_page(page)
+    #________________________________________Message Counter________________________________________
+    #total = UserMessage.objects.all().count()
+    #read = UserMessage.objects.filter(status='read').count()
+    #pending = UserMessage.objects.filter(status='pending').count()
+    #base = datetime.now().today()
+    #today_messages = UserMessage.objects.filter(creation_date__gt = base)
+
+    return render(request, 'inbox.html',{'usermessages': all_user_messages})
+
+
 def send_message(request):
     if request.method == 'POST':
-        #service = Service()
-        form = UserMessagesform(request.POST, request.FILES)
+        form = UserMessageform(request.POST, request.FILES)
         if form.is_valid():
-            message=form.save(commit=False)
+            message = form.save(commit=False)
             message.sender = request.user.username
             message.save()
-            return HttpResponseRedirect('/')
-        else:
-            form = UserMessagesform()
-        return render(request, "inbox.html", {'form': form})   
+            messages.success(request, "Message sent successfully")
+        return HttpResponseRedirect('/inbox')
+    else:       
+        form = UserMessageform()
+        messages.error(request, "Error sending message")
+    return render(request, "inbox.html", {'form': form})   
