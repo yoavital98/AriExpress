@@ -109,6 +109,8 @@ class Store:
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()
+        if name == "":
+            raise Exception("product name cannot be empty")
         self.product_id_counter += 1
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
         self.__products.__setitem__(self.product_id_counter, product_to_add)
