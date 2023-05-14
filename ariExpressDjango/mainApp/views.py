@@ -13,11 +13,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 import json
 import ast
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required 
 from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
 from django.contrib import messages # for displaying messages
 from django.core.paginator import Paginator # for pagination
 from datetime import datetime #used to get total msg per day
+from django.views.decorators.cache import cache_control # for disabling cache
 
 
 
@@ -235,3 +236,12 @@ def send_message(request):
         form = UserMessageform()
         messages.error(request, "Error sending message")
     return render(request, "inbox.html", {'form': form})   
+
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def delete_message(request, usermessage_id):
+    message = UserMessage.objects.get(id=usermessage_id)
+    message.delete()
+    messages.success(request, "Message deleted successfully")
+    return HttpResponseRedirect('/inbox')
