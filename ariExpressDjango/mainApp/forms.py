@@ -8,17 +8,17 @@ class loginForm(forms.Form):
     username = forms.CharField(max_length=100)
     password = forms.CharField(max_length=100)
 
-class Register(ModelForm):
-    class Meta:
-        model = Member
-        fields = '__all__'
-
-class CreateMemberForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-
-class NominateUserForm(ModelForm):
-    username = forms.CharField(max_length=100)
-    CHOICES = (('Owner', 'Option 1'),('Manager', 'Option 2'),)
-    field = forms.ChoiceField(choices=CHOICES)
+# class Register(ModelForm):
+#     class Meta:
+#         model = Member
+#         fields = '__all__'
+#
+# class CreateMemberForm(UserCreationForm):
+#     class Meta:
+#         model = User
+#         fields = ['username', 'email', 'password1', 'password2']
+#
+# class NominateUserForm(ModelForm):
+#     username = forms.CharField(max_length=100)
+#     CHOICES = (('Owner', 'Option 1'),('Manager', 'Option 2'),)
+#     field = forms.ChoiceField(choices=CHOICES)

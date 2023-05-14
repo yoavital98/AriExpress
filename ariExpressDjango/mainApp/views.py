@@ -1,3 +1,4 @@
+from django.db.models import F, Min
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as loginFunc
@@ -51,41 +52,41 @@ def login(request):
     return render(request, 'login.html', {'form': form,
                                           'msg': msg,
                                           'showMsg': showMsg})
-
-
-
-def registerPage(request):
-    msg = ""
-    showMsg = False
-    if request.method == 'POST':
-        service = Service()
-        if request.user.is_authenticated:
-            msg="A User is already logged in"
-            form = None
-        else:
-            form = CreateMemberForm(request.POST)
-            if form.is_valid():
-                username = form.cleaned_data['username']
-                password = form.cleaned_data['password1']
-                email = form.cleaned_data['email']
-                res = service.register(username, password, email)
-                msg = res.getReturnValue()
-                if res.getStatus() == True:
-                    form.save()
-                    user = authenticate(request, username=username, password=password)
-                    loginFunc(request, user)
-                    return redirect('mainApp:mainpage')
-
-
-    else:
-        form = CreateMemberForm()
-        msg = ""
-        showMsg = True
-
-
-    return render(request, 'register.html', {'form': form,
-                                          'msg': msg,
-                                          'showMsg': showMsg})
+#
+#
+#
+# def registerPage(request):
+#     msg = ""
+#     showMsg = False
+#     if request.method == 'POST':
+#         service = Service()
+#         if request.user.is_authenticated:
+#             msg="A User is already logged in"
+#             form = None
+#         else:
+#             form = CreateMemberForm(request.POST)
+#             if form.is_valid():
+#                 username = form.cleaned_data['username']
+#                 password = form.cleaned_data['password1']
+#                 email = form.cleaned_data['email']
+#                 res = service.register(username, password, email)
+#                 msg = res.getReturnValue()
+#                 if res.getStatus() == True:
+#                     form.save()
+#                     user = authenticate(request, username=username, password=password)
+#                     loginFunc(request, user)
+#                     return redirect('mainApp:mainpage')
+#
+#
+#     else:
+#         form = CreateMemberForm()
+#         msg = ""
+#         showMsg = True
+#
+#
+#     return render(request, 'register.html', {'form': form,
+#                                           'msg': msg,
+#                                           'showMsg': showMsg})
 
 
 def logout(request):
@@ -204,8 +205,74 @@ def inbox(request):
 
 
 # for tests purposes
-def test_func(request):
-    p1 = Product(product_id=0, name="Cariot", quantity=5, price=10, categories="Milk")
+def create_obj(request):
+    Product.objects.all().delete()
+
+    p1 = Product(product_id=0, name="Cariot", quantity=5, price=10, categories="Cereal")
     p1.save()
+
+    #alternative
+    Product.objects.create(product_id=1, name="Trix", quantity=5, price=10, categories="Cereal")
+    post = Product.objects.all()
     print(p1)
-    return redirect('mainApp:mainpage')
+    return render(request, 'output.html', {'posts':post})
+
+def update_obj(request):
+    cariot = Product.objects.get(pk=0)
+    cariot.quantity += 5
+    cariot.save()
+
+    print(cariot.quantity)
+    return render(request, 'output.html', {'posts': cariot})
+
+def filter_data(request):
+    #syntax: field__fieldlookup
+    query1 = Product.objects.filter(quantity__lte=5)
+    query2 = Product.objects.filter(name__startswith="Car")
+    query3 = Product.objects.filter(name__exact="Trix")
+    query = {"LTE": query1, "START WITH":query2, "EXACT":query3}
+    return render(request, 'output.html', {'posts': query})
+
+
+def using_f_expr(request):
+    query1 = Product.objects.filter(quantity__gt=F("price"))
+    query2 = Product.objects.aggregate(quantity=Min("quantity"))
+
+    query = {"F EXPR": query1, "MIN EXPR": query2}
+    return render(request, 'output.html', {'posts': query})
+
+
+def caching_queryset(request):
+    query = Product.objects.all()
+    p1 = query[2] #queries the database
+    p1_again = query[2] #again queries the database
+
+    #NOT GOOD!
+
+    query = Product.objects.all()
+    list(query)
+    p1 = query[2]  # uses cache
+    p1_again = query[2]  # uses cache
+
+    #alternatives to evaluate the whole queryset:
+    [product for product in query]
+    bool(query)
+    list(query)
+
+def many_to_many_relation(request):
+    Store.objects.all().delete()
+    store = Store.objects.create(pk="Ari-Levi", active=True)
+    product1 = Product.objects.get(pk=0)
+    store.product.add(product1)
+    store.save()
+    results = {"STORE": store, "PRODUCTS": store.product}
+    return render(request, 'output.html', {'posts': results})
+
+def foreign_key(request):
+    store = Store.objects.create(pk="Ari-Levi-Badarom", active=True)
+    store.product = Product.objects.get(pk=0)
+    store.save()
+    results = {"STORE": store, "PRODUCT": store.product}
+    return render(request, 'output.html', {'posts': results})
+
+

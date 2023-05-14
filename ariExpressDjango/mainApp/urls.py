@@ -12,7 +12,7 @@ urlpatterns = [
     path(r'login/', views.login, name="login"),
     path(r'logout/', views.logout, name="logout"),
     # path(r'home/', views.mainpage, name="mainpage"),
-    path(r'register/', views.registerPage, name='registerPage'),
+    #path(r'register/', views.registerPage, name='registerPage'),
     path(r'myshops/', views.myshops, name="myshops"),
     path(r'inbox/', views.inbox, name='inbox'),
     # path(r'resetpassword', views.reset_password, name='reset_password'),
@@ -22,7 +22,7 @@ urlpatterns = [
     path (r'adminPage/', views.adminPage, name='adminPage'),
     path (r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
 
-    path(r'test/', views.test_func,name='test'), #for testing purposes
+    path(r'test/', views.using_f_expr,name='test'), #for testing purposes
 
 
     
