@@ -10,7 +10,7 @@ from ProjectCode.Service.Service import Service
 import threading
 
 
-def test_func(func, *args, **kwargs):
+def test_func_ten(func, *args, **kwargs):
     # Create a shared variable to track the success/failure of foo()
     result = {'success_count': 0, 'failure_count': 0}
 
@@ -37,22 +37,34 @@ def test_func(func, *args, **kwargs):
     assert result['success_count'] == 10, "All function calls should succeed"
     assert result['failure_count'] == 10, "All function calls should fail"
 
-    # # Create two threads to run foo() concurrently
-    # thread1 = threading.Thread(target=run_func)
-    # thread2 = threading.Thread(target=run_func)
+def test_func_one(func, *args, **kwargs):
+    # Create a shared variable to track the success/failure of foo()
+    result = {'success_count': 0, 'failure_count': 0}
 
-    # # Start both threads
-    # thread1.start()
-    # thread2.start()
+    def run_func():
+        try:
+            func(*args, **kwargs)  # Call foo()
+            result['success_count'] += 1
+            print(f"success: {result.get('success_count')}")
+        except Exception:
+            result['failure_count'] += 1
+            print(f"success: {result.get('failure_count')}")
 
-    # # Wait for both threads to finish
-    # thread1.join()
-    # thread2.join()
+    # Create two threads to run foo() concurrently
+    thread1 = threading.Thread(target=run_func)
+    thread2 = threading.Thread(target=run_func)
 
-    # # Check the result
-    # assert result['success_count'] == 1, "One function call should succeed"
-    # assert result['failure_count'] == 1, "One function call should fail"
+    # Start both threads
+    thread1.start()
+    thread2.start()
 
+    # Wait for both threads to finish
+    thread1.join()
+    thread2.join()
+
+    # Check the result
+    assert result['success_count'] == 1, "One function call should succeed"
+    assert result['failure_count'] == 1, "One function call should fail"
 
 class TestStoreFacade(TestCase):
     def setUp(self):
@@ -66,7 +78,7 @@ class TestStoreFacade(TestCase):
 
     def test_addToBasket_success(self):
         # test_func(self.store_facade.purchaseCart("username", 1234, "feliks", 123456789, 1, 111, "okokok"))
-        test_func(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
+        test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
         
 
 
