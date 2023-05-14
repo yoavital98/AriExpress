@@ -5,9 +5,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
-# TODO check if all functions (new ones) got logging messages
-logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 
 class Service:
@@ -17,6 +15,9 @@ class Service:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls.store_facade = StoreFacade()
+            # TODO check if all functions (new ones) got logging messages
+            logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
+                                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         return cls._instance
 
     # ------  logger  ------ # < TODO cuurently without toJson
@@ -72,14 +73,24 @@ class Service:
             logging.error(f"addAdmin Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def removeMember(self, username, memberName):
+    def removePermissionFreeMember(self, username, memberName):
         try:
-            removedMember = self.store_facade.removeMember(username, memberName)
+            removedMember = self.store_facade.removePermissionFreeMember(username, memberName)
             logging.info(
                 "Member has been removed successfully. By username: " + username + ". Removed username: " + memberName + ".")
             return Response(removedMember.toJson(), True)
         except Exception as e:
             logging.error(f"removeMember Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
+    def returnPermissionFreeMember(self, username, memberName):
+        try:
+            returnedMember = self.store_facade.returnPermissionFreeMember(username, memberName)
+            logging.info(
+                "Member's ban has been lifted. By username: " + username + ". Returned username: " + memberName + ".")
+            return Response(returnedMember.toJson(), True)
+        except Exception as e:
+            logging.error(f"returnMember Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
     # def loadAdminsFromDB(self):
@@ -424,14 +435,14 @@ class Service:
 
     # ------  Management  ------ #
 
-    def openStore(self, username, store_name):
+    def createStore(self, username, store_name):
         try:
-            cur_store = self.store_facade.openStore(username, store_name)
+            cur_store = self.store_facade.createStore(username, store_name)
             logging.info(
-                "Store has been opened successfully. By username: " + username + ". store_name: " + store_name + ".")
+                "Store has been created successfully. By username: " + username + ". store_name: " + store_name + ".")
             return Response(cur_store.toJson(), True)
         except Exception as e:
-            logging.error(f"openStore Error: {str(e)}. By username: '{username}'")
+            logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
     def addNewProductToStore(self, username, storename, productname, categories, quantity, price):
@@ -556,12 +567,23 @@ class Service:
             logging.error(f"addPurchasePolicy Error: {str(e)}")
             return Response(e, False)
 
+
+    def openStore(self, username, storename):
+        try:
+            opened_store = self.store_facade.openStore(username, storename)
+            logging.info(
+                "Store has been opened successfully. By username: " + username + ". storename: " + storename + ".")
+            return Response(opened_store.toJson(), True)
+        except Exception as e:
+            logging.error(f"openStore Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
     def closeStore(self, username, storename):
         try:
-            closed_store_name = self.store_facade.closeStore(username, storename)
+            closed_store = self.store_facade.closeStore(username, storename)
             logging.info(
                 "Store has been closed successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(closed_store_name.toJson(), True)
+            return Response(closed_store.toJson(), True)
         except Exception as e:
             logging.error(f"closeStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -609,4 +631,20 @@ class Service:
             return Response(json.dumps(staffNames), True)
         except Exception as e:
             logging.error(f"getAllStaffMembersNames Error: {str(e)}.")
+            return Response(e, False)
+
+    def makeListOfObjectsToJson(self, list_of_objects):
+        list_of_jsons = []
+        for obj in list_of_objects:
+            list_of_jsons.append(obj.toJson())
+        return list_of_jsons
+    def getMemberInfo(self, requesterID, username):
+        try:
+            member, purchaseHistory = self.store_facade.getMemberInfo(requesterID, username)
+            logging.debug("fetching member info. By username: " + requesterID + ".")
+            member_info_dict = {'member': member.toJsonAll(),
+                             'purchaseHistory': self.makeListOfObjectsToJson(purchaseHistory)}
+            return Response(json.dumps(member_info_dict), True)
+        except Exception as e:
+            logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

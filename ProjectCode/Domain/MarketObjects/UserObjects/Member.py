@@ -1,5 +1,6 @@
 import json
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Cart import Cart
@@ -126,5 +127,17 @@ class Member(User):
             "entrance_id": self.entrance_id,
             "username": self.user_name,
             "email": self.email
+        }
+        return json.dumps(data)
+
+    def toJsonAll(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email,
+            "auctions": JsonSerialize.toJsonAttributes(self.auctions),
+            "lotteries": JsonSerialize.toJsonAttributes(self.lotteries),
+            "accesses": JsonSerialize.toJsonAttributes(self.accesses),
+            "cart": self.cart.toJson()
         }
         return json.dumps(data)
