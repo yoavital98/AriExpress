@@ -71,14 +71,16 @@ class TestStoreFacade(TestCase):
         self.store_facade = StoreFacade()
         self.store_facade.register("username", "password", "email")
         self.store_facade.logInAsMember("username", "password")
-        self.store_facade.openStore("username", "storename")
-        self.store_facade.addNewProductToStore("username", "storename", "product1", 10, 10, "category")
-        self.store_facade.addNewProductToStore("username", "storename", "product2", 10, 10, "category")
-        self.store_facade.addToBasket("username", "storename", 1, 5)
+        self.store_facade.createStore("username", "storename")
+        self.store_facade.addNewProductToStore("username", "storename", "product1", 100, 10, "category")
+        # self.store_facade.addNewProductToStore("username", "storename", "product2", 100, 10, "category")
 
     def test_addToBasket_success(self):
         # test_func(self.store_facade.purchaseCart("username", 1234, "feliks", 123456789, 1, 111, "okokok"))
-        test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
+        # test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
+        for i in range(0, 10):
+            self.store_facade.addToBasket("username", "storename", 1, 5)
+            test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
         
 
 
