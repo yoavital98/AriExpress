@@ -1,4 +1,6 @@
 from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 class MessageController:
@@ -18,10 +20,16 @@ class MessageController:
         self._unread_messages[receiver_id].append(message)
 
         # Notify the observers of the new message
-        if receiver_id in self._observers:
-            self._observers[receiver_id].raise_notifications_count()
+        # if receiver_id in self._observers:
+        #     self._observers[receiver_id].raise_notifications_count()
 
-        return message
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)('notifications', {
+            'type': 'notify',
+            'message': message,
+        })
+
+        #return message
 
     def read_message(self, user_id, message_id):
         for message in self._unread_messages[user_id]:

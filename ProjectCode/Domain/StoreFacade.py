@@ -720,14 +720,14 @@ class StoreFacade:
 
     # ==================  Messages  ==================#
 
-    def sendMessageUsers(self, requesterID, receiverID, subject, content, file):
+    def sendMessageUsers(self, requesterID, receiverID, subject, content, file, ):
         # Register an observer for a user
-        observer = MessageObserver(receiverID)
+        #observer = MessageObserver(receiverID)
         MessageController().register_observer(receiverID, observer)
         # Send a message to the user
         message = MessageController().send_message(requesterID, receiverID, subject, content, file)
         # The observer will be notified of the new message and can send a notification to the user
-        observer.notify(message)
+        MessageController().get_observer(receiverID).notify()
 
     def sendMessageFromStore(self, messageID, store_name, receiverID, subject, content, file):
         # Register an observer for a user

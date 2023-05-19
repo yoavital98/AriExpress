@@ -68,13 +68,14 @@ class MessageObserver:
         self.notifications -= 1
 
     def notify(self, message):
-        self.notifications += 1
-        # if the user is currently logged in, show a notification to them
-        if StoreFacade().online_members.get(self.user_id):
-            StoreFacade().online_members[self.user_id].show_notification(self.notifications)
-        # if the user is currently offline, update their notification count in the database
-        else:
-            message_controller = MessageController()
-            user = message_controller.get_user_by_id(self.user_id)
-            user.increment_notification_count()
-            message_controller.update_user(user)
+
+        # self.notifications += 1
+        # # if the user is currently logged in, show a notification to them
+        # if StoreFacade().online_members.get(self.user_id):
+        #     StoreFacade().online_members[self.user_id].show_notification(self.notifications)
+        # # if the user is currently offline, update their notification count in the database
+        # else:
+        #     message_controller = MessageController()
+        #     user = message_controller.get_user_by_id(self.user_id)
+        #     user.increment_notification_count()
+        #     message_controller.update_user(user)
