@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mainApp',
     'channels',
-    #'django_cleanup',
+    'django_cleanup',
 ]
 
 MIDDLEWARE = [

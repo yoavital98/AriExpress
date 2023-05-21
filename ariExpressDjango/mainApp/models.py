@@ -86,14 +86,5 @@ class UserMessage(models.Model):
     file = models.FileField(upload_to='uploads/', null=True, blank=True)
     creation_date = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=10, choices=STATUS, default='pending')
-
-    def situation(self):
-        if self.status=='read':
-            return format_html('<span style="color: black">{0}</span>', self.status)  
-        else:
-            return format_html('<span style="color: red">{0}</span>', self.status)
-    situation.allow_tags = True
-
-
     def __str__(self):
         return self.sender

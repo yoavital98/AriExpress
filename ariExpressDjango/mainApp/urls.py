@@ -23,7 +23,11 @@ urlpatterns = [
     path (r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
     # path to send the message
     path (r'send_message', views.send_message, name='send_message'),
+    path (r'check_username/', views.check_username, name='check_username'),
+    # path to delete the message
     path (r'delete_message/<str:usermessage_id>', views.delete_message, name='delete_message'),
+    # path to view the message
+    path (r'mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
 
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -638,6 +638,7 @@ class Service:
         for obj in list_of_objects:
             list_of_jsons.append(obj.toJson())
         return list_of_jsons
+    
     def getMemberInfo(self, requesterID, username):
         try:
             member, purchaseHistory = self.store_facade.getMemberInfo(requesterID, username)
@@ -647,4 +648,16 @@ class Service:
             return Response(json.dumps(member_info_dict), True)
         except Exception as e:
             logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+        
+    def checkUsernameExistence(self, username):
+        try:
+            exist=self.store_facade.checkIfUsernameExists(username)
+            logging.debug("checking username existence. By username: " + username + ".")
+            if exist:
+                return Response("username exists", True)
+            else:
+                return Response("username does not exist", False)
+        except Exception as e:
+            logging.error(f"checkUsernameExistence Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

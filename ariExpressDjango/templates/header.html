@@ -1,3 +1,4 @@
+<script> src="ariExpressDjango/script.js"</script>
 <style>
   #navBarSearchForm {width:450px !important;}
   #admintag {background-color: #FF0000 !important; 
@@ -41,7 +42,25 @@
               </li>
               <li class= "nav-item">
                 <a class = "nav-link" href="{% url 'mainApp:inbox' %}">
-                  <i class = "fas fa-bell"></i><span class = "pending">{{usermessages.number}}</span>
+                  <i class = "fas fa-bell"></i>
+                  <span class = "pending" id="notification">{{usermessages.number}}</span>
+                  <script>
+                      $(document).ready(function() {
+                          const socket = new WebSocket('ws://localhost:8000/ws/notifications/');
+
+                          socket.onmessage = function(event) {
+                              const data = JSON.parse(event.data);
+                              $('#notification').text('Number of messages: ' + data.message);
+                          };
+
+                          // Optional: Handle WebSocket connection errors, close events, etc.
+
+                          // Close the WebSocket connection when leaving the page
+                          $(window).on('beforeunload', function() {
+                              socket.close();
+                          });
+                      });
+                  </script>
                 </a>
               </li>
               {% else %}
