@@ -147,5 +147,11 @@ class TestStoreFacade(TestCase):
         # while preventing conflicts or inconsistencies.
         pass
 
+    def test_concurrent_registerTwice_sameName(self):
+        # Create a test case where two users simultaneously try to register with the same username.
+        # Validate that the system handles this concurrency correctly, allowing only one user to register
+        # while preventing conflicts or inconsistencies.
+        pass
+
 if __name__ == '__main__':
     unittest.main()
