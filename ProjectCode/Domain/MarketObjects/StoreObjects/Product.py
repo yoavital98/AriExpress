@@ -32,5 +32,6 @@ class Product:
             'name': self.name,
             'quantity': self.quantity,
             'price': self.price,
-            'categories': json.dumps(self.categories)
+            'categories': self.categories
+            # 'categories': json.dumps(self.categories)
         }

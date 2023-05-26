@@ -112,31 +112,37 @@ def logout(request):
     
 
 def myshops(request):
-    # service = Service()
-    # stores = Store.objects.filter(store_name='')
-    stores = {'store1': {'store_name': "Aqew Store",
-                         'active': True,
-                         'products': {'name': "Banana"}},
-            'store2': {'store_name': "BulBul Store",
-                        'active': False,
-                        'products': {'name': "Apple"}}}
+    service = Service()
+    storesInfo = service.getStoresBasicInfo()
+    # print(type(storesInfo.getReturnValue()))
+    string_data = storesInfo.getReturnValue()
+
+    storesInfoDict = ast.literal_eval(str(string_data))
+    # print(storesInfoDict)
+    # stores = {'store1': {'store_name': "Aqew Store",
+    #                      'active': True,
+    #                      'products': {'name': "Banana"}},
+    #         'store2': {'store_name': "BulBul Store",
+    #                     'active': False,
+    #                     'products': {'name': "Apple"}}}
     # products = Product.objects.all()
-    return render(request, 'myshops.html', {'stores': stores})
+    return render(request, 'myshops.html', {'stores': storesInfoDict})
 
 
-def myshops_specific(request, shopname):
-    context = None
-    if request.method == 'POST':
-        context = request.POST.get('data')
-        # print(context)
-        context = ast.literal_eval(str(context))
-
+def myshops_specific(request, storename):
+    if request.method == 'POST' and request.user.is_authenticated:
+        service = Service()
+        products = service.getStoreProductsInfo(storename).getReturnValue()
+        # context = request.POST.get('data')
+        context = ast.literal_eval(str(products))
+        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+        return render(request, 'shop_specific.html', {'products': products_dict,
+                                                  'storename': storename})
     else:
         return redirect('mainApp:mainpage')
-    return render(request, 'shop_specific.html', {'context': context,
-                                                  'shopname': shopname})
 
-def nominateUser(request, shopname):
+
+def nominateUser(request, storename):
     if request.method == 'POST':
         requesterUsername = request.user.username
         toBeNominatedUsername = request.POST.get('inputNominatedUsername')
@@ -171,7 +177,7 @@ def nominateUser(request, shopname):
                 return redirect('mainApp:myshops')
 
     # messages.success(request, ("Error nominating a user to be Owner"))
-    return render(request, 'nominateUser.html', {'shopname': shopname})
+    return render(request, 'nominateUser.html', {'storename': storename})
 
 def adminPage(request):
     if request.user.is_superuser:
