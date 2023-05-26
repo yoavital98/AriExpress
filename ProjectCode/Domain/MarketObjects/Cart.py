@@ -30,7 +30,6 @@ class Cart:
                 self.baskets[store.get_store_name()] = basket_to_add
         basket: Basket = self.get_Basket(store.get_store_name())
         basket.add_Product(product_id, product, quantity)
-        print(basket.products)
         return basket
 
     def removeFromBasket(self, store_name, product_id):
