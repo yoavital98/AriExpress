@@ -433,21 +433,21 @@ class Store:
     def toJsonInfo(self):
         return {
             'store_name': self.__store_name,
-            'active': self.active
+            'active': str(self.active)
         }
 
     def toJsonProducts(self):
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active
+            'active': str(self.active)
         }
 
     def toJsonAccesses(self):
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active,
+            'active': str(self.active),
             'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
         }
 
@@ -455,7 +455,7 @@ class Store:
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active,
+            'active': str(self.active),
             'accesses': JsonSerialize.toJsonAttributes(self.__accesses),
             'bids': JsonSerialize.toJsonAttributes(self.__bids),
             'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
