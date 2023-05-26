@@ -17,9 +17,14 @@ class MainappConfig(AppConfig):
         service.logIn("aaa", "asdf1233")
         service.createStore("aaa", "store123")
         service.createStore("aaa", "456store")
-        service.addNewProductToStore("aaa", "store123", "apple", "fruit", "20", "3")
-        service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
-        service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
+        service.addNewProductToStore("aaa", "store123", "apple", "fruit", 20, 3)
+        service.addNewProductToStore("aaa", "store123", "banana", "fruit", 30, 8)
+        service.addNewProductToStore("aaa", "store123", "headphones", "electronics", 10, 700)
+        service.logOut("aaa")
+        service.logIn("bbb", "asdf1233")
+        res = service.addToBasket("bbb", "store123", 1, 5)
+
+
         # from django.contrib.auth.models import User
         # users = User.objects.all()
         # for i in range(1, len(users)):
