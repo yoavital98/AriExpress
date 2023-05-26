@@ -13,6 +13,7 @@ class MainappConfig(AppConfig):
         service = Service()
         service.register("aaa", "asdf1233", "a@a.com") # for debug only
         service.register("bbb", "asdf1233", "a@a.com") # for debug only
+        service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
         service.logIn("aaa", "asdf1233")
         service.createStore("aaa", "store123")
         service.createStore("aaa", "456store")

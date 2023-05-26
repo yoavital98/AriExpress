@@ -1,4 +1,9 @@
+
 {% extends 'messages/baseModal.html' %}
+
+{% block modal-size%}
+modal-lg
+{% endblock modal-size %}
 
 
 
@@ -15,17 +20,19 @@
 
 <!--Form-->
 {% block form %}
-<form method ="POST" action="/send_message" class="was-validated" autocomplete="off" enctype="multipart/form-data"> 
+<form method ="POST" action="/send_message" class="was-validated" autocomplete="off" enctype="multipart/form-data" id="messageForm"> 
     {% csrf_token %}
     <div class="modal-body">
         <div class = "mb-1">
             <label for="sender" class="form-label">From:</label>
-            <p id="sender"> {{user.username}} </p> 
+            <b><p id="sender"> {{user.username}} </p></b> 
         </div>
         <div class = "mb-1">
             <label for="receiver" class="form-label">To:</label>
-            <input type = "text" class = "form-control" id = "receiver" name = "receiver" maxlength = "40" placeholder = "addressee username" required> 
+            <input type = "text" class = "form-control" id = "receiver" name = "receiver" maxlength = "40" placeholder = "addressee username" required>
+        
         </div>
+        <div id="error-msg"></div>
         <hr>
         <div>
             <label for="subject" class="form-label">Subject:</label>
@@ -59,7 +66,7 @@
                     }
                     
                 }
-        </script>
+            </script>
         <!---->
         </div>
         <hr>
@@ -86,12 +93,14 @@
         </div>
         <hr>
         <div class="d-grid gap-2 mt-3">
-            <button class="btn text-light" type="submit" style="background-color:#0074fe">Send message &nbsp;&nbsp;
+            <button class="btn text-light" type="submit" id="submit" style="background-color:#0074fe" onclick="sendMessage()" >Send message &nbsp;&nbsp;
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
     </div>
     <input type="hidden" value="Pending" name="status">
+       
+      
 </form>
 {% endblock form %}
 

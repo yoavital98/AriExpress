@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as loginFunc
 from django.contrib.auth import logout as logoutFunc, authenticate
@@ -219,29 +219,30 @@ def inbox(request):
     paginator = Paginator(all_user_messages, 3)
     page = request.GET.get('page')
     all_messages = paginator.get_page(page)
-    #________________________________________Message Counter________________________________________
-    #total = UserMessage.objects.all().count()
-    #read = UserMessage.objects.filter(status='read').count()
-    #pending = UserMessage.objects.filter(status='pending').count()
-    #base = datetime.now().today()
-    #today_messages = UserMessage.objects.filter(creation_date__gt = base)
-
     return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
 
 
 def send_message(request):
     if request.method == 'POST':
+        service = Service()
         form = UserMessageform(request.POST, request.FILES)
         if form.is_valid():
-            message = form.save(commit=False)
-            message.sender = request.user.username
-            message.save()
-            messages.success(request, "Message sent successfully")
-        return HttpResponseRedirect('/inbox')
-    else:       
+            receiver_username = form.cleaned_data['receiver']
+            res = service.checkUsernameExistence(receiver_username)
+            if res.getStatus():
+                message = form.save(commit=False)
+                message.sender = request.user.username
+                message.save()
+                messages.success(request, "Message sent successfully")
+                return HttpResponseRedirect('/inbox')
+            else:
+                messages.error(request, "Invalid adresssee username - the message was not sent")
+        else:
+            messages.error(request, "Invalid form submission")
+    else:
         form = UserMessageform()
         messages.error(request, "Error sending message")
-    return render(request, "inbox.html", {'form': form})   
+    return HttpResponseRedirect('/inbox')   
 
 
 @login_required(login_url='/login')
@@ -251,3 +252,30 @@ def delete_message(request, usermessage_id):
     message.delete()
     messages.success(request, "Message deleted successfully")
     return HttpResponseRedirect('/inbox')
+
+
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def mark_as_read(request, usermessage_id):
+    message = UserMessage.objects.get(id=usermessage_id)
+    message.status = 'read'
+    message.save()
+    messages.success(request, "Message marked as read successfully")
+    return HttpResponseRedirect('/inbox')
+
+
+# check if username exists
+def check_username(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', None)
+        service = Service()
+        res = service.checkUsernameExistence(username)
+        if res.getStatus():
+            return JsonResponse({'status': True})
+        else:
+            return JsonResponse({'status': False}) 
+
+@login_required(login_url='/login')
+def notifications(request):
+    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()

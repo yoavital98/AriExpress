@@ -106,6 +106,10 @@ class StoreFacade:
 
     def checkIfUserIsLoggedIn(self, user_name):
         return self.online_members.__contains__(user_name)
+    
+    # checks if username exists in the system
+    def checkIfUsernameExists(self, user_name):
+        return self.members.keys().__contains__(str(user_name))
 
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def __getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
