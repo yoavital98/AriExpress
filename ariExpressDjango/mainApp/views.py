@@ -295,3 +295,32 @@ def check_username(request):
 @login_required(login_url='/login')
 def notifications(request):
     pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+
+
+
+#cart functionality
+def cart(request):
+    if request.user.is_authenticated:
+        service = Service()
+        res = service.getCart(request.user.username)
+        if res.getStatus():
+            cart = res.getReturnValue()
+            baskets = ast.literal_eval(str(cart)).get('baskets')
+            baskets = ast.literal_eval(str(baskets))
+            products = dict()
+            for basket in baskets:
+                basket_res = service.getBasket(request.user.username, basket['storename'])
+                if basket_res.getStatus()==True:
+                    basket_res = basket_res.getReturnValue()
+                    basket_products = ast.literal_eval(str(basket_res)).get('products')
+                    basket_products = ast.literal_eval(str(basket_products))
+                    products[basket['storename']] = basket_products
+
+            return render(request, 'cart.html', {'baskets': baskets , 'products': products})
+        else:
+            messages.error(request, "Error loading cart - "+str(res.getReturnValue()))
+            return redirect('mainApp:mainpage')
+    else:
+        messages.error(request, "You must be logged in to view your cart")
+        return HttpResponseRedirect('/login')
+    
