@@ -180,11 +180,10 @@ class Store:
         return self.__accesses
 
     def checkProductAvailability(self, product_id, quantity):
-
-        cur_product = self.__products[int(product_id)]
+        cur_product : Product = self.__products[int(product_id)]
         if cur_product is None:
             raise Exception("No such product exists")
-        if cur_product.quantity - quantity < 0:
+        if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
         return cur_product
 
