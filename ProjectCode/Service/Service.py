@@ -179,7 +179,7 @@ class Service:
         try:
             stores = self.store_facade.getStores()
             logging.debug(f"fetching all stores in the system")
-            stores_list = [store.toJsonInfo() for store in stores]
+            stores_list = [store.toJsonInfo() for store in stores.values()]
             return Response(json.dumps(stores_list), True)
         except Exception as e:
             logging.error(f"getStoresBasicInfo Error: {str(e)}.")
