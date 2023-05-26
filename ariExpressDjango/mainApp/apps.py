@@ -20,6 +20,9 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "apple", "fruit", "20", "3")
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
+        service.logOut("aaa")
+        service.logIn("rubin_krief", "h9reynWq").getStatus()
+        print(service.addToBasket("rubin_krief", "store123", 2, 5).getReturnValue())
         # from django.contrib.auth.models import User
         # users = User.objects.all()
         # for i in range(1, len(users)):
