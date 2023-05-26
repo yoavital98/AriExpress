@@ -167,11 +167,6 @@ def nominateUser(request, storename):
         service = Service()
         if selected == '1':
             res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
-            # Mock part: assume it returns a dictionary
-            # res = {'status': True,
-            #            'object': "Something"
-            #            }
-            # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
                 return redirect('mainApp:mystores')
@@ -180,12 +175,7 @@ def nominateUser(request, storename):
                 return redirect('mainApp:mystores')
         elif selected == '2':
             res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
-            # Mock part: assume it returns a dictionary
-            res = {'status': True,
-                       'object': "Something"
-                       }
-            if res.get('status'):
-            # if res.getStatus():
+            if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
                 return redirect('mainApp:mystores')
             else:
