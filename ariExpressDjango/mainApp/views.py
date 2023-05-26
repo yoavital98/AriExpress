@@ -268,4 +268,8 @@ def check_username(request):
         if res.getStatus():
             return JsonResponse({'status': True})
         else:
-            return JsonResponse({'status': False})    
+            return JsonResponse({'status': False}) 
+
+@login_required(login_url='/login')
+def notifications(request):
+    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
