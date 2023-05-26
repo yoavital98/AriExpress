@@ -10,7 +10,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import Discoun
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
-
+from peewee import *
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
 
 
@@ -33,6 +33,12 @@ class Store:
         self.__discount_policy = DiscountPolicy()
         self.__purchase_policy = PurchasePolicies()
 
+
+    def testing_orm(self):
+        db = SqliteDatabase('database.db')
+        db.connect()
+        db.create_tables([Product])
+        Product.create(product_id=0,name="Oreo",quantity=5,price=5,categories="Milk")
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:

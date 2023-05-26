@@ -1,13 +1,23 @@
 import json
+from peewee import *
 
+class Product(Model):
 
-class Product:
-    def __init__(self, product_id, name, quantity, price, categories):
-        self.product_id = product_id
-        self.name = name
-        self.quantity = quantity
-        self.price = price
-        self.categories = categories
+    product_id = IntegerField(primary_key=True)
+    name = CharField(max_length=100)
+    quantity = IntegerField()
+    price = IntegerField()
+    categories = CharField(max_length=100)
+
+    class Meta:
+        database = SqliteDatabase('database.db')
+
+    # def __init__(self, product_id, name, quantity, price, categories):
+    #     self.product_id = product_id
+    #     self.name = name
+    #     self.quantity = quantity
+    #     self.price = price
+    #     self.categories = categories
 
     def get_product_id(self):
         return self.product_id
