@@ -111,7 +111,7 @@ def logout(request):
 
     
 
-def myshops(request):
+def mystores(request):
     service = Service()
     storesInfo = service.getStoresBasicInfo()
     # print(type(storesInfo.getReturnValue()))
@@ -126,10 +126,10 @@ def myshops(request):
     #                     'active': False,
     #                     'products': {'name': "Apple"}}}
     # products = Product.objects.all()
-    return render(request, 'myshops.html', {'stores': storesInfoDict})
+    return render(request, 'mystores.html', {'stores': storesInfoDict})
 
 
-def myshops_specific(request, storename):
+def mystores_specific(request, storename):
     if request.method == 'POST' and request.user.is_authenticated:
         service = Service()
         products = service.getStoreProductsInfo(storename).getReturnValue()
@@ -158,10 +158,10 @@ def nominateUser(request, storename):
             # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
             else:
                 messages.success(request, ("Error nominating a user to be Owner"))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
         elif selected == '2':
             res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
             # Mock part: assume it returns a dictionary
@@ -171,10 +171,10 @@ def nominateUser(request, storename):
             if res.get('status'):
             # if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
             else:
                 messages.success(request, ("Error nominating a user to be Manager"))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
 
     # messages.success(request, ("Error nominating a user to be Owner"))
     return render(request, 'nominateUser.html', {'storename': storename})

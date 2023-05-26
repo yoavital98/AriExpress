@@ -20,6 +20,7 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "apple", "fruit", "20", "3")
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
+        service.logOut("aaa")
         # from django.contrib.auth.models import User
         # users = User.objects.all()
         # for i in range(1, len(users)):
