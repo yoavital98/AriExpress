@@ -14,6 +14,11 @@ class MainappConfig(AppConfig):
         service.register("aaa", "asdf1233", "a@a.com") # for debug only
         service.register("bbb", "asdf1233", "a@a.com") # for debug only
         service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+
+        service.logIn("bbb", "asdf1233")
+        service.createStore("bbb", "TESTSTORE")
+        service.logOut("bbb")
+
         service.logIn("aaa", "asdf1233")
         service.createStore("aaa", "store123")
         service.createStore("aaa", "456store")
@@ -23,6 +28,7 @@ class MainappConfig(AppConfig):
         service.logOut("aaa")
         service.logIn("rubin_krief", "h9reynWq").getStatus()
         print(service.addToBasket("rubin_krief", "store123", 2, 5).getReturnValue())
+        
         # from django.contrib.auth.models import User
         # users = User.objects.all()
         # for i in range(1, len(users)):

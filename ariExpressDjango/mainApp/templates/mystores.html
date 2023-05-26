@@ -28,7 +28,7 @@
     <ul>
       {% for store in stores %}
         <li>
-          <form method="post" action="{% url 'mainApp:myshops_specific' store.store_name %}">
+          <form method="post" action="{% url 'mainApp:mystores_specific' store.store_name %}">
             {% csrf_token %}
             <input type="hidden" name="data" value="{{ store_data }}">
             <button type="submit" class="link-button">{{ store.store_name }}</button>

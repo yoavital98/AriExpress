@@ -440,7 +440,7 @@ class Service:
             cur_store = self.store_facade.createStore(username, store_name)
             logging.info(
                 "Store has been created successfully. By username: " + username + ". store_name: " + store_name + ".")
-            return Response(cur_store.toJson(), True)
+            return Response(cur_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -660,4 +660,17 @@ class Service:
                 return Response("username does not exist", False)
         except Exception as e:
             logging.error(f"checkUsernameExistence Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+        
+    def getUserStores(self, username):
+        try:
+            store_list = self.store_facade.getUserStores(username)
+            logging.debug(
+                f"fetching all the user stores info. By username: " + username + ".")
+            store_json = []
+            for cur_store in store_list:
+                store_json.append(cur_store.toJsonProducts())
+            return Response(json.dumps(store_json), True)
+        except Exception as e:
+            logging.error(f"getUserStores Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

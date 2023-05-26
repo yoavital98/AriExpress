@@ -1,0 +1,53 @@
+
+
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .link-button {
+    background: none;
+    border: none;
+    color: black;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 25px;
+  }
+  h1 {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+</style>
+<head>
+    <title>All Stores List</title>
+  </head>
+  <body>
+    <h1>All Stores List</h1>
+    <br><br><br>
+    <ul>
+      {% for store in stores %}
+        <li>
+          <form method="post" action="#">
+            {% csrf_token %}
+            <input type="hidden" name="data" value="{{ store_data }}">
+            <button type="submit" class="link-button">{{ store.store_name }}</button>
+          </form>
+
+          <p>Active: {{ store.active }}</p>
+                <ul>
+                    {% for product_key, product_data in store_data.products.items %}
+                        <li>{{ product_data }}</li>
+                    {% endfor %}
+                </ul>
+                <br>
+        </li>
+      {% empty %}
+        <li>No stores available.</li>
+      {% endfor %}
+    </ul>
+  </body>
+
+
+
+{% endblock %}

@@ -111,25 +111,26 @@ def logout(request):
 
     
 
-def myshops(request):
+def mystores(request):
     service = Service()
-    storesInfo = service.getStoresBasicInfo()
+    storesInfo = service.getUserStores(request.user.username)
     # print(type(storesInfo.getReturnValue()))
     string_data = storesInfo.getReturnValue()
-
+    print(storesInfo.getReturnValue())
     storesInfoDict = ast.literal_eval(str(string_data))
-    # print(storesInfoDict)
-    # stores = {'store1': {'store_name': "Aqew Store",
-    #                      'active': True,
-    #                      'products': {'name': "Banana"}},
-    #         'store2': {'store_name': "BulBul Store",
-    #                     'active': False,
-    #                     'products': {'name': "Apple"}}}
-    # products = Product.objects.all()
-    return render(request, 'myshops.html', {'stores': storesInfoDict})
+
+    return render(request, 'mystores.html', {'stores': storesInfoDict})
 
 
-def myshops_specific(request, storename):
+def viewAllStores(request):
+    service = Service()
+    storesInfo = service.getStoresBasicInfo() 
+    string_data = storesInfo.getReturnValue()
+    storesInfoDict = ast.literal_eval(str(string_data))
+    return render(request, 'allStores.html', {'stores': storesInfoDict})
+
+
+def mystores_specific(request, storename):
     if request.method == 'POST' and request.user.is_authenticated:
         service = Service()
         products = service.getStoreProductsInfo(storename).getReturnValue()
@@ -141,6 +142,21 @@ def myshops_specific(request, storename):
     else:
         return redirect('mainApp:mainpage')
 
+def createStore(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        newStoreName = request.POST.get('storeName')
+        service = Service()
+        res = service.createStore(request.user.username, newStoreName)
+        if res.getStatus():
+            messages.success(request, ("A new store has been created successfully"))
+            return redirect('mainApp:mystores')
+        else:
+            msg = res.getReturnValue()
+            messages.success(request, (f"Error: {msg}"))
+            return redirect('mainApp:mainpage')
+    else:
+        return render(request, 'createStore.html', {})
+    
 
 def nominateUser(request, storename):
     if request.method == 'POST':
@@ -158,10 +174,10 @@ def nominateUser(request, storename):
             # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
             else:
                 messages.success(request, ("Error nominating a user to be Owner"))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
         elif selected == '2':
             res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
             # Mock part: assume it returns a dictionary
@@ -171,10 +187,10 @@ def nominateUser(request, storename):
             if res.get('status'):
             # if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
             else:
                 messages.success(request, ("Error nominating a user to be Manager"))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
 
     # messages.success(request, ("Error nominating a user to be Owner"))
     return render(request, 'nominateUser.html', {'storename': storename})
