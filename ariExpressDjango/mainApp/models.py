@@ -1,8 +1,11 @@
+import datetime
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.html import format_html
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.utils import timezone
 
 class Product(models.Model):
     product_id = models.IntegerField()
@@ -64,32 +67,24 @@ class Member(models.Model):
     email = models.CharField(max_length=100)
     # isLoggedIn = models.BooleanField()
     cart_id = models.ForeignKey(Cart, on_delete=models.DO_NOTHING)
-    password = models.CharField(max_length=100)
+    password = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return self.username
 
 class UserMessage(models.Model):
+    
     STATUS = (
         ('pending', 'pending'),
         ('read', 'read'),
     )
     id = models.AutoField(primary_key=True)
-    sender = models.CharField(max_length=User._meta.get_field('username').max_length)
+    sender = models.CharField(max_length=50)
     receiver = models.CharField(max_length=50)
     subject = models.CharField(max_length=100)
     content = models.TextField(max_length=1000)
     file = models.FileField(upload_to='uploads/', null=True, blank=True)
-    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_date = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=10, choices=STATUS, default='pending')
-
-    def situation(self):
-        if self.status=='read':
-            return format_html('<span style="color: black">{0}</span>', self.status)  
-        else:
-            return format_html('<span style="color: red">{0}</span>', self.status)
-    situation.allow_tags = True
-
-
     def __str__(self):
         return self.sender

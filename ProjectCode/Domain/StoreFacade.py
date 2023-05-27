@@ -106,6 +106,10 @@ class StoreFacade:
 
     def checkIfUserIsLoggedIn(self, user_name):
         return self.online_members.__contains__(user_name)
+    
+    # checks if username exists in the system
+    def checkIfUsernameExists(self, user_name):
+        return self.members.keys().__contains__(str(user_name))
 
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def __getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
@@ -122,7 +126,7 @@ class StoreFacade:
 
     # gets an online member.
     def __getOnlineMemberOnly(self, user_name):
-        if self.online_members.keys().__contains__(user_name):
+        if self.online_members.keys().__contains__(str(user_name)):
             return self.online_members.get(user_name)
         else:
             raise Exception("user is not logged in")
@@ -751,3 +755,10 @@ class StoreFacade:
 
     def messageAsAdminToUser(self, self1, requesterID, memberName, subject, message):
         pass
+
+    def getUserStores(self, username):
+        stores_list = list()
+        for cur_store in self.stores.values():
+            if cur_store.get_accesses().get(username) is not None:
+                stores_list.append(cur_store)
+        return stores_list

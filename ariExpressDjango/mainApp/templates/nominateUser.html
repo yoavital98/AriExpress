@@ -20,14 +20,14 @@
   </head>
   <body>
 
-    <h1 class="specialh1">Nominate User - "{{ shopname }}" Store</h1>
+    <h1 class="specialh1">Nominate User - "{{ storename }}" Store</h1>
     <br>
     <br>
     <br>
     
     <h2>Nominate a new staff member:</h2>
 
-    <form method="post" action="{% url 'mainApp:nominateUser' shopname %}">
+    <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
       {% csrf_token %}
       <select class="form-select" aria-label="Default select example" name="nominateSelect">
         <option selected>Nominate a user:</option>
@@ -36,7 +36,7 @@
       </select>
       <div class="userSelect">
         <input type="text" class="form-control" name="inputNominatedUsername" placeholder="Enter the user's username">
-        <input type="hidden" name="storename" value="{{ shopname }}">
+        <input type="hidden" name="storename" value="{{ storename }}">
         <br>
       </div>
 
