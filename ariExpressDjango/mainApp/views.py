@@ -115,13 +115,6 @@ def logout(request):
 
 def mystores(request):
     service = Service()
-    # if request.method == 'POST' and request.user.is_authenticated:
-    #     staffResposne = service.getStaffInfo(request.user.username, request.POST.get('storename'))
-    #     if staffResposne.getStatus():
-    #         staff = ast.literal_eval(str(staffResposne.getReturnValue()))
-    #         return render(request, 'mystores.html', {'stores': storesInfoDict})
-
-    
     storesInfo = service.getUserStores(request.user.username)
     string_data = storesInfo.getReturnValue()
     storesInfoDict = ast.literal_eval(str(string_data))
@@ -138,44 +131,76 @@ def viewAllStores(request):
 
 
 def mystores_specific(request, storename):
-    if request.method == 'POST' and request.user.is_authenticated:
-        service = Service()
-        products = service.getStoreProductsInfo(storename).getReturnValue()
-        # context = request.POST.get('data')
-        context = ast.literal_eval(str(products))
-        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
-        active = "Open" if context['active'].lower() == "true" else "Closed"
-        return render(request, 'shop_specific.html', {'products': products_dict,
-                                                  'storename': storename,
-                                                  'active': active})
+    if request.user.is_authenticated:
+        if 'openStore' in request.POST:
+            service = Service()
+            actionRes = service.openStore(request.user.username, storename)
+            if actionRes.getStatus():
+                messages.success(request, ("Store is now open."))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+            
+        if 'closeStore' in request.POST:
+            service = Service()
+            actionRes = service.closeStore(request.user.username, storename)
+            if actionRes.getStatus():
+                messages.success(request, ("Store is now closed."))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+            
+        if 'removeProduct' in request.POST:
+            service = Service()
+            product_id = request.POST.get('product_id')
+            actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
+            if actionRes.getStatus():
+                messages.success(request, ("Product has been removed"))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+        
+        else:
+            service = Service()
+            products = service.getStoreProductsInfo(storename).getReturnValue()
+            # context = request.POST.get('data')
+            context = ast.literal_eval(str(products))
+            products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+            active = "Open" if context['active'].lower() == "true" else "Closed"
+            return render(request, 'shop_specific.html', {'products': products_dict,
+                                                    'storename': storename,
+                                                    'active': active})  
     else:
         return redirect('mainApp:mainpage')
     
 
-def openStore(request, storename):
-    if request.method == 'POST' and request.user.is_authenticated:
-        service = Service()
-        actionRes = service.openStore(request.user.username, storename)
-        if actionRes.getStatus():
-            messages.success(request, ("Store is now open."))
-            return redirect('mainApp:mystores_specific', storename=storename)
-        else: 
-            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-            return redirect('mainApp:mystores')
-    return redirect('mainApp:mainpage')
+# def openStore(request, storename):
+#     if request.method == 'POST' and request.user.is_authenticated:
+#         service = Service()
+#         actionRes = service.openStore(request.user.username, storename)
+#         if actionRes.getStatus():
+#             messages.success(request, ("Store is now open."))
+#             return redirect('mainApp:mystores_specific', storename=storename)
+#         else: 
+#             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+#             return redirect('mainApp:mystores')
+#     return redirect('mainApp:mainpage')
         
 
-def closeStore(request, storename):
-    if request.method == 'POST' and request.user.is_authenticated:
-        service = Service()
-        actionRes = service.closeStore(request.user.username, storename)
-        if actionRes.getStatus():
-            messages.success(request, ("Store is now closed."))
-            return redirect('mainApp:mystores_specific', storename=storename)
-        else: 
-            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-            return redirect('mainApp:mystores')
-    return redirect('mainApp:mainpage')
+# def closeStore(request, storename):
+#     if request.method == 'POST' and request.user.is_authenticated:
+#         service = Service()
+#         actionRes = service.closeStore(request.user.username, storename)
+#         if actionRes.getStatus():
+#             messages.success(request, ("Store is now closed."))
+#             return redirect('mainApp:mystores_specific', storename=storename)
+#         else: 
+#             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+#             return redirect('mainApp:mystores')
+#     return redirect('mainApp:mainpage')
 
 
 def createStore(request):

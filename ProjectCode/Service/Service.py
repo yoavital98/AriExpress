@@ -463,7 +463,7 @@ class Service:
             logging.info(
                 "Product has been removed successfully. By username: " + username + ". storename: " + storename + ". product_id: " + str(
                     product_id) + ".")
-            return Response(deleted_product_id.toJson(), True)
+            return Response(deleted_product_id, True)
         except Exception as e:
             logging.error(f"removeProductFromStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

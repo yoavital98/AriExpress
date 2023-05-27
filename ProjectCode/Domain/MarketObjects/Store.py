@@ -117,6 +117,7 @@ class Store:
         return product_to_add
 
     def deleteProduct(self, access, product_id):
+        product_id = int(product_id)
         access.canChangeProducts()
         if self.__products.get(product_id) is None:
             raise Exception("Product doesn't exists")
