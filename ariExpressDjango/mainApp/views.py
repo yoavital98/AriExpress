@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as loginFunc
 from django.contrib.auth import logout as logoutFunc, authenticate
@@ -111,32 +111,54 @@ def logout(request):
 
     
 
-def myshops(request):
-    # service = Service()
-    # stores = Store.objects.filter(store_name='')
-    stores = {'store1': {'store_name': "Aqew Store",
-                         'active': True,
-                         'products': {'name': "Banana"}},
-            'store2': {'store_name': "BulBul Store",
-                        'active': False,
-                        'products': {'name': "Apple"}}}
-    # products = Product.objects.all()
-    return render(request, 'myshops.html', {'stores': stores})
+def mystores(request):
+    service = Service()
+    storesInfo = service.getUserStores(request.user.username)
+    # print(type(storesInfo.getReturnValue()))
+    string_data = storesInfo.getReturnValue()
+    print(storesInfo.getReturnValue())
+    storesInfoDict = ast.literal_eval(str(string_data))
+
+    return render(request, 'mystores.html', {'stores': storesInfoDict})
 
 
-def myshops_specific(request, shopname):
-    context = None
-    if request.method == 'POST':
-        context = request.POST.get('data')
-        # print(context)
-        context = ast.literal_eval(str(context))
+def viewAllStores(request):
+    service = Service()
+    storesInfo = service.getStoresBasicInfo() 
+    string_data = storesInfo.getReturnValue()
+    storesInfoDict = ast.literal_eval(str(string_data))
+    return render(request, 'allStores.html', {'stores': storesInfoDict})
 
+
+def mystores_specific(request, storename):
+    if request.method == 'POST' and request.user.is_authenticated:
+        service = Service()
+        products = service.getStoreProductsInfo(storename).getReturnValue()
+        # context = request.POST.get('data')
+        context = ast.literal_eval(str(products))
+        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+        return render(request, 'shop_specific.html', {'products': products_dict,
+                                                  'storename': storename})
     else:
         return redirect('mainApp:mainpage')
-    return render(request, 'shop_specific.html', {'context': context,
-                                                  'shopname': shopname})
 
-def nominateUser(request, shopname):
+def createStore(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        newStoreName = request.POST.get('storeName')
+        service = Service()
+        res = service.createStore(request.user.username, newStoreName)
+        if res.getStatus():
+            messages.success(request, ("A new store has been created successfully"))
+            return redirect('mainApp:mystores')
+        else:
+            msg = res.getReturnValue()
+            messages.success(request, (f"Error: {msg}"))
+            return redirect('mainApp:mainpage')
+    else:
+        return render(request, 'createStore.html', {})
+    
+
+def nominateUser(request, storename):
     if request.method == 'POST':
         requesterUsername = request.user.username
         toBeNominatedUsername = request.POST.get('inputNominatedUsername')
@@ -152,10 +174,10 @@ def nominateUser(request, shopname):
             # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
             else:
                 messages.success(request, ("Error nominating a user to be Owner"))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
         elif selected == '2':
             res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
             # Mock part: assume it returns a dictionary
@@ -165,13 +187,13 @@ def nominateUser(request, shopname):
             if res.get('status'):
             # if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
             else:
                 messages.success(request, ("Error nominating a user to be Manager"))
-                return redirect('mainApp:myshops')
+                return redirect('mainApp:mystores')
 
     # messages.success(request, ("Error nominating a user to be Owner"))
-    return render(request, 'nominateUser.html', {'shopname': shopname})
+    return render(request, 'nominateUser.html', {'storename': storename})
 
 def adminPage(request):
     if request.user.is_superuser:
@@ -206,36 +228,37 @@ def homepage_guest(request):
 
 
 
-
+@login_required(login_url='/login')
 def inbox(request):
     all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
     pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
     paginator = Paginator(all_user_messages, 3)
     page = request.GET.get('page')
     all_messages = paginator.get_page(page)
-    #________________________________________Message Counter________________________________________
-    #total = UserMessage.objects.all().count()
-    #read = UserMessage.objects.filter(status='read').count()
-    #pending = UserMessage.objects.filter(status='pending').count()
-    #base = datetime.now().today()
-    #today_messages = UserMessage.objects.filter(creation_date__gt = base)
-
     return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
 
 
 def send_message(request):
     if request.method == 'POST':
+        service = Service()
         form = UserMessageform(request.POST, request.FILES)
         if form.is_valid():
-            message = form.save(commit=False)
-            message.sender = request.user.username
-            message.save()
-            messages.success(request, "Message sent successfully")
-        return HttpResponseRedirect('/inbox')
-    else:       
+            receiver_username = form.cleaned_data['receiver']
+            res = service.checkUsernameExistence(receiver_username)
+            if res.getStatus():
+                message = form.save(commit=False)
+                message.sender = request.user.username
+                message.save()
+                messages.success(request, "Message sent successfully")
+                return HttpResponseRedirect('/inbox')
+            else:
+                messages.error(request, "Invalid adresssee username - the message was not sent")
+        else:
+            messages.error(request, "Invalid form submission")
+    else:
         form = UserMessageform()
         messages.error(request, "Error sending message")
-    return render(request, "inbox.html", {'form': form})   
+    return HttpResponseRedirect('/inbox')   
 
 
 @login_required(login_url='/login')
@@ -245,3 +268,59 @@ def delete_message(request, usermessage_id):
     message.delete()
     messages.success(request, "Message deleted successfully")
     return HttpResponseRedirect('/inbox')
+
+
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def mark_as_read(request, usermessage_id):
+    message = UserMessage.objects.get(id=usermessage_id)
+    message.status = 'read'
+    message.save()
+    messages.success(request, "Message marked as read successfully")
+    return HttpResponseRedirect('/inbox')
+
+
+# check if username exists
+def check_username(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', None)
+        service = Service()
+        res = service.checkUsernameExistence(username)
+        if res.getStatus():
+            return JsonResponse({'status': True})
+        else:
+            return JsonResponse({'status': False}) 
+
+@login_required(login_url='/login')
+def notifications(request):
+    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+
+
+
+#cart functionality
+def cart(request):
+    if request.user.is_authenticated:
+        service = Service()
+        res = service.getCart(request.user.username)
+        if res.getStatus():
+            cart = res.getReturnValue()
+            baskets = ast.literal_eval(str(cart)).get('baskets')
+            baskets = ast.literal_eval(str(baskets))
+            products = dict()
+            for basket in baskets:
+                basket_res = service.getBasket(request.user.username, basket['storename'])
+                if basket_res.getStatus()==True:
+                    basket_res = basket_res.getReturnValue()
+                    basket_products = ast.literal_eval(str(basket_res)).get('products')
+                    basket_products = ast.literal_eval(str(basket_products))
+                    products[basket['storename']] = basket_products
+
+            return render(request, 'cart.html', {'baskets': baskets , 'products': products})
+        else:
+            messages.error(request, "Error loading cart - "+str(res.getReturnValue()))
+            return redirect('mainApp:mainpage')
+    else:
+        messages.error(request, "You must be logged in to view your cart")
+        return HttpResponseRedirect('/login')
+    

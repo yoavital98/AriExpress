@@ -180,11 +180,10 @@ class Store:
         return self.__accesses
 
     def checkProductAvailability(self, product_id, quantity):
-
-        cur_product = self.__products[int(product_id)]
+        cur_product : Product = self.__products[int(product_id)]
         if cur_product is None:
             raise Exception("No such product exists")
-        if cur_product.quantity - quantity < 0:
+        if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
         return cur_product
 
@@ -433,21 +432,21 @@ class Store:
     def toJsonInfo(self):
         return {
             'store_name': self.__store_name,
-            'active': self.active
+            'active': str(self.active)
         }
 
     def toJsonProducts(self):
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active
+            'active': str(self.active)
         }
 
     def toJsonAccesses(self):
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active,
+            'active': str(self.active),
             'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
         }
 
@@ -455,7 +454,7 @@ class Store:
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active,
+            'active': str(self.active),
             'accesses': JsonSerialize.toJsonAttributes(self.__accesses),
             'bids': JsonSerialize.toJsonAttributes(self.__bids),
             'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),

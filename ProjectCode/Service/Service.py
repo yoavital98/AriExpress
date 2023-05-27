@@ -179,7 +179,7 @@ class Service:
         try:
             stores = self.store_facade.getStores()
             logging.debug(f"fetching all stores in the system")
-            stores_list = [store.toJsonInfo() for store in stores]
+            stores_list = [store.toJsonInfo() for store in stores.values()]
             return Response(json.dumps(stores_list), True)
         except Exception as e:
             logging.error(f"getStoresBasicInfo Error: {str(e)}.")
@@ -440,7 +440,7 @@ class Service:
             cur_store = self.store_facade.createStore(username, store_name)
             logging.info(
                 "Store has been created successfully. By username: " + username + ". store_name: " + store_name + ".")
-            return Response(cur_store.toJson(), True)
+            return Response(cur_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -638,6 +638,7 @@ class Service:
         for obj in list_of_objects:
             list_of_jsons.append(obj.toJson())
         return list_of_jsons
+    
     def getMemberInfo(self, requesterID, username):
         try:
             member, purchaseHistory = self.store_facade.getMemberInfo(requesterID, username)
@@ -647,4 +648,29 @@ class Service:
             return Response(json.dumps(member_info_dict), True)
         except Exception as e:
             logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+        
+    def checkUsernameExistence(self, username):
+        try:
+            exist=self.store_facade.checkIfUsernameExists(username)
+            logging.debug("checking username existence. By username: " + username + ".")
+            if exist:
+                return Response("username exists", True)
+            else:
+                return Response("username does not exist", False)
+        except Exception as e:
+            logging.error(f"checkUsernameExistence Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+        
+    def getUserStores(self, username):
+        try:
+            store_list = self.store_facade.getUserStores(username)
+            logging.debug(
+                f"fetching all the user stores info. By username: " + username + ".")
+            store_json = []
+            for cur_store in store_list:
+                store_json.append(cur_store.toJsonProducts())
+            return Response(json.dumps(store_json), True)
+        except Exception as e:
+            logging.error(f"getUserStores Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .specialh1 {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .form-select,
+  .storeNameInput {
+    width: 300px;
+  }
+  h2 {
+    font-size: 25px;
+  }
+</style>
+
+<head>
+  <title>Create Store</title>
+</head>
+
+<body>
+  <h1 class="specialh1">Create Store</h1>
+  <br><br><br>
+
+  <h2>Enter Store Name:</h2>
+
+  <form method="post" action="{% url 'mainApp:createStore' %}">
+    {% csrf_token %}
+    <div class="storeNameInput">
+      <input type="text" class="form-control" name="storeName" placeholder="Enter the store name">
+    </div>
+
+    <br><br>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+  </form>
+</body>
+{% endblock %}
