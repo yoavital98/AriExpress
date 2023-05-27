@@ -30,3 +30,12 @@ class UserMessageform(ModelForm):
     class Meta:
         model = UserMessage
         fields = ['receiver', 'subject', 'content','file']
+
+class RemoveProductForm(forms.Form):
+    product_id = forms.IntegerField()
+    store_name = forms.CharField(max_length=100)
+
+class EditProductForm(forms.Form):
+    product_id = forms.IntegerField()
+    store_name = forms.CharField(max_length=100)
+    quantity = forms.IntegerField()
