@@ -28,7 +28,7 @@
   
   <body>
 
-    <h1 class="specialh1">{{ storename }}</h1>
+    <h1 class="specialh1">{{ storename }} - {{ active }}</h1>
     <br>
     <br>
     <br>
@@ -59,10 +59,20 @@
         </tr>
       {% endfor %}
     </table>
-
-    <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
-			{% csrf_token %}
-      <button type="submit" class="btn btn-primary">Nominate</button>
-    </form>
+    <br>
+    <div class="d-flex justify-content-start">
+      <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Nominate</button>
+      </form>
+      <form method="post" action="{% url 'mainApp:openStore' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Open Store</button>
+      </form>
+      <form method="post" action="{% url 'mainApp:closeStore' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Close Store</button>
+      </form>
+    </div>
     </body>
 {% endblock %}

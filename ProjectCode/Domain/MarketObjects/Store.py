@@ -43,7 +43,7 @@ class Store:
     #-------------Permissions----------------#
 
     def setFounder(self, username, access):
-        access.setFounder()
+        access.setAccess("Founder")
         self.__accesses[username] = access
 
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
@@ -439,26 +439,28 @@ class Store:
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': str(self.active)
+            'active': str(self.active),
+            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+
         }
 
     def toJsonAccesses(self):
         return {
-            'store_name': self.__store_name,
-            'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': str(self.active),
-            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+            "store_name": self.__store_name,
+            "products": JsonSerialize.toJsonAttributes(self.__products),
+            "active": str(self.active),
+            # "accesses": JsonSerialize.toJsonAttributes(self.__accesses)
         }
 
     def toJsonAll(self):
         return {
-            'store_name': self.__store_name,
-            'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': str(self.active),
-            'accesses': JsonSerialize.toJsonAttributes(self.__accesses),
-            'bids': JsonSerialize.toJsonAttributes(self.__bids),
-            'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
-            'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
-            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
-            'discounts': self.__discount_policy.toJson()
+            "store_name": self.__store_name,
+            "products": JsonSerialize.toJsonAttributes(self.__products),
+            "active": str(self.active),
+            "accesses": JsonSerialize.toJsonAttributes(self.__accesses),
+            "bids": JsonSerialize.toJsonAttributes(self.__bids),
+            "bids_requests": JsonSerialize.toJsonAttributes(self.__bids_requests),
+            "auctions": JsonSerialize.toJsonAttributes(self.__auctions),
+            "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
+            "discounts": self.__discount_policy.toJson()
         }

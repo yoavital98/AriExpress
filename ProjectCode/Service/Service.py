@@ -573,7 +573,7 @@ class Service:
             opened_store = self.store_facade.openStore(username, storename)
             logging.info(
                 "Store has been opened successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(opened_store.toJson(), True)
+            return Response(opened_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"openStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -583,7 +583,7 @@ class Service:
             closed_store = self.store_facade.closeStore(username, storename)
             logging.info(
                 "Store has been closed successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(closed_store.toJson(), True)
+            return Response(closed_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"closeStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
