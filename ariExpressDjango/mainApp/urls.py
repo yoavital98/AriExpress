@@ -23,6 +23,7 @@ urlpatterns = [
     # path(r'openStore/<str:storename>', views.openStore, name='openStore'),
     # path(r'closeStore/<str:storename>', views.closeStore, name='closeStore'),
     path(r'addNewProduct/<str:storename>', views.addNewProduct, name='addNewProduct'),
+    path(r'editProduct/<str:storename>', views.editProduct, name='editProduct'),
 
 
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
