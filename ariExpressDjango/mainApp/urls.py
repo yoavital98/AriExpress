@@ -31,6 +31,7 @@ urlpatterns = [
     # path to view the message
     path (r'mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
     path(r'cart/', views.cart, name='cart'),
-
+    path(r'remove_product', views.remove_product, name='remove_product'),
+    path(r'edit_product', views.edit_product, name='edit_product'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

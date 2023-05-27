@@ -232,7 +232,7 @@ def homepage_guest(request):
 def inbox(request):
     all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
     pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-    paginator = Paginator(all_user_messages, 3)
+    paginator = Paginator(all_user_messages, 5)
     page = request.GET.get('page')
     all_messages = paginator.get_page(page)
     return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
@@ -298,7 +298,7 @@ def notifications(request):
 
 
 
-#cart functionality
+#---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
     if request.user.is_authenticated:
         service = Service()
@@ -309,18 +309,81 @@ def cart(request):
             baskets = ast.literal_eval(str(baskets))
             products = dict()
             for basket in baskets:
-                basket_res = service.getBasket(request.user.username, basket['storename'])
-                if basket_res.getStatus()==True:
+                basket_res = service.getBasket(request.user.username, basket)
+                if basket_res.getStatus() == True:
                     basket_res = basket_res.getReturnValue()
                     basket_products = ast.literal_eval(str(basket_res)).get('products')
                     basket_products = ast.literal_eval(str(basket_products))
-                    products[basket['storename']] = basket_products
+                    total_price = calculate_total_price(basket_products)
+                    products[basket] = {'items': basket_products, 'total_price': total_price}
 
-            return render(request, 'cart.html', {'baskets': baskets , 'products': products})
+            return render(request, 'cart.html', {'baskets': baskets, 'products': products})
         else:
-            messages.error(request, "Error loading cart - "+str(res.getReturnValue()))
+            messages.error(request, "Error loading cart - " + str(res.getReturnValue()))
             return redirect('mainApp:mainpage')
     else:
         messages.error(request, "You must be logged in to view your cart")
         return HttpResponseRedirect('/login')
+
+def calculate_total_price(products):
+    total_price = 0
+    for product in products.values():
+        total_price += float(product['price']) * float(product['quantity'])
+    return total_price
+
+@login_required(login_url='/login')
+def remove_product(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = RemoveProductForm(request.POST)
+            if form.is_valid():
+                store = form.cleaned_data['store_name']
+                product_id = form.cleaned_data['product_id']
+                res = service.removeFromBasket(request.user.username, store, product_id)
+                if res.getStatus():
+                    messages.success(request, "Product removed from cart successfully")
+                    return HttpResponseRedirect('/cart')
+                else:
+                    messages.error(request, "Error removing product from cart - " + str(res.getReturnValue()))
+                    return HttpResponseRedirect('/cart')
+            else:
+                messages.error(request, "Error removing product from cart - " + str(form.errors))
+                return HttpResponseRedirect('/cart')
+        else:
+            messages.error(request, "You must be logged in to view your cart")
+            return HttpResponseRedirect('/login')
+    else:
+        form = RemoveProductForm()
+        messages.error(request, "Error removing product from cart - "+ str(request.method))
+        return HttpResponseRedirect('/cart')  
     
+@login_required(login_url='/login')
+def edit_product(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = EditProductForm(request.POST)
+            if form.is_valid():
+                store = form.cleaned_data['store_name']
+                product_id = form.cleaned_data['product_id']
+                quantity = form.cleaned_data['quantity']
+                res = service.editBasketQuantity(request.user.username, store, product_id, quantity)
+                if res.getStatus():
+                    messages.success(request, "quantity edited successfully")
+                    return HttpResponseRedirect('/cart')
+                else:
+                    messages.error(request, "Error editting product quantity res - " + str(res.getReturnValue()))
+                    return HttpResponseRedirect('/cart')
+            else:
+                messages.error(request, "Error editting product quantity form - " + str(form.errors))
+                return HttpResponseRedirect('/cart')
+        else:
+            messages.error(request, "You must be logged in to view your cart")
+            return HttpResponseRedirect('/login')
+    else:
+        form = RemoveProductForm()
+        messages.error(request, "Error editting product quantity - "+ str(request.method))
+        return HttpResponseRedirect('/cart')  
+    
+#---------------------------------------------------------------------------------------------------------------------------------------#
