@@ -22,6 +22,8 @@ urlpatterns = [
     path(r'createStore/', views.createStore, name='createStore'),
     path(r'openStore/<str:storename>', views.openStore, name='openStore'),
     path(r'closeStore/<str:storename>', views.closeStore, name='closeStore'),
+    path(r'addNewProduct/<str:storename>', views.addNewProduct, name='addNewProduct'),
+
 
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
     path(r'adminPage/', views.adminPage, name='adminPage'),

@@ -30,3 +30,10 @@ class UserMessageform(ModelForm):
     class Meta:
         model = UserMessage
         fields = ['receiver', 'subject', 'content','file']
+
+
+class NewProductForm(forms.Form):
+    productName = forms.CharField(max_length=100)
+    productCategory = forms.CharField(max_length=100)
+    productPrice = forms.IntegerField()
+    productQuantity = forms.IntegerField()

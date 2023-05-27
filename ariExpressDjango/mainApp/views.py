@@ -221,6 +221,34 @@ def nominateUser(request, storename):
     # messages.success(request, ("Error nominating a user to be Owner"))
     return render(request, 'nominateUser.html', {'storename': storename})
 
+
+def addNewProduct(request, storename):
+    if request.method == 'POST':
+        form = NewProductForm(request.POST)
+        if form.is_valid():
+            productname = form.cleaned_data['productName']
+            category = form.cleaned_data['productCategory']
+            price = form.cleaned_data['productPrice']
+            quantity = form.cleaned_data['productQuantity']
+            service = Service()
+            actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
+            if actionRes.getStatus():
+                print(actionRes.getReturnValue())
+                messages.success(request, ("A new Product has been added to the store"))
+                return redirect('mainApp:mystores')
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+        else:
+            # Handle the case when the form is invalid
+            messages.error(request, "Invalid form data")
+            return redirect('mainApp:addNewProduct', storename=storename)
+    else:
+        form = NewProductForm()
+
+    return render(request, 'addNewProduct.html', {'storename': storename})
+
+
 def adminPage(request):
     if request.user.is_superuser:
         return render(request, 'adminPage.html', {})
