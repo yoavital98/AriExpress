@@ -1,5 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse
+
 from django.contrib.auth import login as loginFunc
 from django.contrib.auth import logout as logoutFunc, authenticate
 from django.contrib.auth.forms import UserCreationForm
@@ -114,11 +116,9 @@ def logout(request):
 def mystores(request):
     service = Service()
     storesInfo = service.getUserStores(request.user.username)
-    # print(type(storesInfo.getReturnValue()))
     string_data = storesInfo.getReturnValue()
-    print(storesInfo.getReturnValue())
     storesInfoDict = ast.literal_eval(str(string_data))
-
+    # print(storesInfoDict)
     return render(request, 'mystores.html', {'stores': storesInfoDict})
 
 
@@ -131,16 +131,100 @@ def viewAllStores(request):
 
 
 def mystores_specific(request, storename):
-    if request.method == 'POST' and request.user.is_authenticated:
-        service = Service()
-        products = service.getStoreProductsInfo(storename).getReturnValue()
-        # context = request.POST.get('data')
-        context = ast.literal_eval(str(products))
-        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
-        return render(request, 'shop_specific.html', {'products': products_dict,
-                                                  'storename': storename})
+    if request.user.is_authenticated:
+        if 'openStore' in request.POST:
+            service = Service()
+            actionRes = service.openStore(request.user.username, storename)
+            if actionRes.getStatus():
+                messages.success(request, ("Store is now open."))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+            
+        if 'closeStore' in request.POST:
+            service = Service()
+            actionRes = service.closeStore(request.user.username, storename)
+            if actionRes.getStatus():
+                messages.success(request, ("Store is now closed."))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+            
+        if 'removeProduct' in request.POST:
+            service = Service()
+            product_id = request.POST.get('product_id')
+            actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
+            if actionRes.getStatus():
+                messages.success(request, ("Product has been removed"))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+        
+        else:
+            service = Service()
+            products = service.getStoreProductsInfo(storename).getReturnValue()
+            # context = request.POST.get('data')
+            context = ast.literal_eval(str(products))
+            products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+            active = "Open" if context['active'].lower() == "true" else "Closed"
+            return render(request, 'shop_specific.html', {'products': products_dict,
+                                                    'storename': storename,
+                                                    'active': active})  
     else:
         return redirect('mainApp:mainpage')
+    
+
+# def openStore(request, storename):
+#     if request.method == 'POST' and request.user.is_authenticated:
+#         service = Service()
+#         actionRes = service.openStore(request.user.username, storename)
+#         if actionRes.getStatus():
+#             messages.success(request, ("Store is now open."))
+#             return redirect('mainApp:mystores_specific', storename=storename)
+#         else: 
+#             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+#             return redirect('mainApp:mystores')
+#     return redirect('mainApp:mainpage')
+        
+
+# def closeStore(request, storename):
+#     if request.method == 'POST' and request.user.is_authenticated:
+#         service = Service()
+#         actionRes = service.closeStore(request.user.username, storename)
+#         if actionRes.getStatus():
+#             messages.success(request, ("Store is now closed."))
+#             return redirect('mainApp:mystores_specific', storename=storename)
+#         else: 
+#             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+#             return redirect('mainApp:mystores')
+#     return redirect('mainApp:mainpage')
+
+def editProduct(request, storename):
+    product_id = request.POST.get('product_id')
+    product_name = request.POST.get('product_name')
+    product_quantity = request.POST.get('product_quantity')
+    product_price = request.POST.get('product_price')
+    product_categories = request.POST.get('product_categories')
+
+    if 'editButton' in request.POST:
+        print(product_id, product_name)
+        service = Service()
+        actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
+        if actionRes.getStatus():
+            messages.success(request, ("Product has been edited"))
+            return redirect('mainApp:mystores_specific', storename=storename)
+        
+    return render(request, 'editProduct.html', {'storename': storename,
+                                                'product_name': product_name,
+                                                'product_quantity': product_quantity,
+                                                'product_price': product_price,
+                                                'product_categories': product_categories})
+
+
+
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
@@ -167,11 +251,6 @@ def nominateUser(request, storename):
         service = Service()
         if selected == '1':
             res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
-            # Mock part: assume it returns a dictionary
-            # res = {'status': True,
-            #            'object': "Something"
-            #            }
-            # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
                 return redirect('mainApp:mystores')
@@ -180,12 +259,7 @@ def nominateUser(request, storename):
                 return redirect('mainApp:mystores')
         elif selected == '2':
             res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
-            # Mock part: assume it returns a dictionary
-            res = {'status': True,
-                       'object': "Something"
-                       }
-            if res.get('status'):
-            # if res.getStatus():
+            if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
                 return redirect('mainApp:mystores')
             else:
@@ -194,6 +268,34 @@ def nominateUser(request, storename):
 
     # messages.success(request, ("Error nominating a user to be Owner"))
     return render(request, 'nominateUser.html', {'storename': storename})
+
+
+def addNewProduct(request, storename):
+    if request.method == 'POST':
+        form = NewProductForm(request.POST)
+        if form.is_valid():
+            productname = form.cleaned_data['productName']
+            category = form.cleaned_data['productCategory']
+            price = form.cleaned_data['productPrice']
+            quantity = form.cleaned_data['productQuantity']
+            service = Service()
+            actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
+            if actionRes.getStatus():
+                print(actionRes.getReturnValue())
+                messages.success(request, ("A new Product has been added to the store"))
+                return redirect('mainApp:mystores')
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+        else:
+            # Handle the case when the form is invalid
+            messages.error(request, "Invalid form data")
+            return redirect('mainApp:addNewProduct', storename=storename)
+    else:
+        form = NewProductForm()
+
+    return render(request, 'addNewProduct.html', {'storename': storename})
+
 
 def adminPage(request):
     if request.user.is_superuser:
