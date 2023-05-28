@@ -57,7 +57,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:inbox' %}">
-                                <i class="fas fa-bell"></i><span class="pending">{{usermessages.number}}</span>
+                                <i class="fas fa-bell"></i><span class="badge badge-pill badge-warning">{{usermessages.number}}</span>
                             </a>
                         </li>
                         {% else %}
