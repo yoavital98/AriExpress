@@ -1,0 +1,42 @@
+{% extends 'baseModal.html' %}
+
+<!--Modal ID-->
+{% block modal-id %} id="editProductModal{{ store }}{{ product_id }}" {% endblock modal-id %}
+
+<!--Modal title-->
+{% block modal-title %}
+<i class="fa-solid fa-pen-to-square"></i>&nbsp; Edit Products
+{% endblock modal-title %}
+
+<!--Modal form-->
+{% block form %}
+<form method="POST" action="/edit_product" id="editProductForm">
+    {% csrf_token %}
+    <div class="modal-body text-center">
+        <input type="hidden" name="store_name" value="{{ store }}" id="store">
+        <input type="hidden" name="product_id" value="{{ product_id }}" id="product_id">
+
+        <div class="text-center text-info" id="stack" style="color: #0074fe;">
+            <span class="fa-stack fa-3x">
+                <i class="fas fa-bag-shopping fa-stack-2x"></i>
+                <i class="fas fa-bag-shopping fa-stack-1x fa-inverse mb-2 mt-4 "></i>
+            </span>
+        </div>
+        <br>
+        <div class="text-center text-info">
+            <span>Do you want to change the quantity of {{ product.product.name }} in your cart?</span>
+        </div>
+        <div class = "text-center">
+            <label for="quantity" class="form-label">Number of items:</label>
+            <input type = "number" id = "quantity" name = "quantity" placeholder = "{{product.quantity}}" size="3" min="0" required>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-outline-info btn-modal" type="submit" id="submit" onclick="edit_product()">save my edit <i class="fa-solid fa-check"></i> &nbsp;&nbsp;</button>
+        </div>
+    </div>
+</form>
+{% endblock form %}
+
+<!--Modal footer-->
+{% block close %}{% endblock close %}

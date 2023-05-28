@@ -1,0 +1,33 @@
+{% extends 'baseModal.html' %}
+
+<!--Modal ID-->
+{% block modal-id %} id="removeProductModal{{ store }}{{ product_id }}" {% endblock modal-id %}
+
+<!--Modal title-->
+{% block modal-title %}
+<i class="fas fa-trash-alt"></i>&nbsp; Remove Product
+{% endblock modal-title %}
+
+<!--Modal form-->
+{% block form %}
+<form method="POST" action="/remove_product" id="removeProductForm">
+    {% csrf_token %}
+    <div class="modal-body text-center">
+        <input type="hidden" name="store_name" value="{{ store }}" id="store">
+        <input type="hidden" name="product_id" value="{{ product_id }}" id="product_id">
+        <div class="text-center text-danger"><i class="far fa-times-circle fa-5x mb-4 mt-2"> </i></div>
+        <div class="text-center text-danger">
+            <span>Are you sure you want to remove this product from your cart?</span>
+            <div class="text-dark mt-3 mb-2">{{ product.product.name }} from store {{ store }}</div>
+        </div>
+
+        <hr>
+        <div>
+            <button class="btn btn-outline-danger btn-sm btn-modal" type="submit" id="submit" onclick="remove_product()">Remove from my cart &nbsp;&nbsp;</button>
+        </div>
+    </div>
+</form>
+{% endblock form %}
+
+<!--Modal footer-->
+{% block close %}{% endblock close %}
