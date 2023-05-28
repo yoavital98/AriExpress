@@ -209,9 +209,10 @@ def editProduct(request, storename):
     product_price = request.POST.get('product_price')
     product_categories = request.POST.get('product_categories')
 
-    if request.method == 'POST':
+    if 'editButton' in request.POST:
+        print(product_id, product_name)
         service = Service()
-        actionRes = service.editProductOfStore(request.user.username, storename, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
+        actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
         if actionRes.getStatus():
             messages.success(request, ("Product has been edited"))
             return redirect('mainApp:mystores_specific', storename=storename)

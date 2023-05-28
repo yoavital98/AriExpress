@@ -45,7 +45,7 @@
                     <input type="hidden" name="product_quantity" value="{{ product.quantity }}">
                     <input type="hidden" name="product_price" value="{{ product.price }}">
                     <input type="hidden" name="product_categories" value="{{ product.categories }}">
-                    <button type="submit" class="btn btn-outline-dark">Edit</button>
+                    <button type="submit" class="btn btn-outline-dark" name="openEditProduct">Edit</button>
                 </form>
 
                 <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">

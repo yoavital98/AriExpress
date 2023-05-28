@@ -468,10 +468,10 @@ class Service:
             logging.error(f"removeProductFromStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def editProductOfStore(self, username, storename,
+    def editProductOfStore(self, username, storename, product_id,
                            **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
-            changed_product = self.store_facade.editProductOfStore(username, storename, **kwargs)
+            changed_product = self.store_facade.editProductOfStore(username, storename, product_id, **kwargs)
             logging.debug(
                 f"Product has been edited successfully. By username: " + username + ". storename: " + storename + ".")
             return Response(changed_product.toJson(), True)
