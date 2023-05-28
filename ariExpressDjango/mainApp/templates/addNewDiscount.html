@@ -9,7 +9,7 @@
   <script src="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous"></script>
 </head>
 
-<body>
+<body onload="handleLevelChange(document.getElementById('levelType'))">
 	<h1 class="mb-3">{{ storename }} - Add a new Discount</h1>
 
 	<div class="d-flex justify-content-start">
@@ -49,6 +49,7 @@
 						updateRangeAmount();
 					</script>
 					
+
 					<select class="form-select mb-3" aria-label="Default select example" name="levelType" onchange="handleLevelChange(this)">
 						<option selected disabled>Store/Category/Product</option>
 						<option value="1" {% if levelType == "Store" %} selected {% endif %}>Store</option>
@@ -57,9 +58,10 @@
 					</select>
 					
 					<div class="form-floating mb-3">
-						<input type="text" class="form-control" id="floatingInput" name="levelName" value="{{ levelName|default_if_none:'' }}" on>
-						<label for="floatingInput"></label>
+						<input type="text" class="form-control" id="floatingInput" name="levelName" value="{{ levelName|default_if_none:'' }}">
+						<label for="floatingInput">{{ levelType|default_if_none:''|title }}</label>
 					</div>
+					  
 					
 					<script>
                         function handleLevelChange(selectElement) {
