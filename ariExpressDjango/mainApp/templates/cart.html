@@ -10,54 +10,54 @@
 {% endif %}
 
 <br><br><br>
-
 {% if baskets %}
-    <ul>
-        {% for store, basket_products in products.items %}
-        <li style=" list-style-type: none;">
-            <h2 >{{ store }}</h2>
-            <table class="table table-hover">
-                <tr class="table-light">
-                    <th style="width: 30%;">Name</th>
-                    <th style="width: 15%;">Quantity</th>
-                    <th style="width: 15%;">Price</th>
-                    <th style="width: 25%;">Categories</th>
-                    <th style="width: 15%;">Actions</th>
-                </tr>
-                {% for product_id, product in basket_products.items.items %}
-                <tr>
-                    <td>{{ product.product.name }}</td>
-                    <td>{{ product.quantity }}</td>
-                    <td>{{ product.price }}</td>
-                    <td>{{ product.product.categories }}</td>
+  <ul>
+      {% for store, basket_products in products.items %}
+      <li style=" list-style-type: none;">
+          <h2 >{{ store }}</h2>
+          <table class="table table-hover">
+            <thead>
+              <tr class="table-light">
+                  <th style="width: 30%;">Name</th>
+                  <th style="width: 15%;">Quantity</th>
+                  <th style="width: 15%;">Price</th>
+                  <th style="width: 25%;">Categories</th>
+                  <th style="width: 15%;">Actions</th>
+              </tr>
+            </thead>
+              {% for product_id, product in basket_products.items.items %}
+              <tr>
+                  <td>{{ product.product.name }}</td>
+                  <td>{{ product.quantity }}</td>
+                  <td>{{ product.price }}</td>
+                  <td>{{ product.product.categories }}</td>
 
-                    <td>
-                      <button class="btn btn-outline-dark btn-action" title="Edit Product" data-bs-toggle="modal" data-bs-target="#editProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product="{{ product }}">
-                        Edit <i class="fa-solid fa-pen-to-square"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-action" title="Remove Product" data-bs-toggle="modal" data-bs-target="#removeProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product-name="{{ product.product.name }}">
-                        Remove <i class="fas fa-trash-alt"></i>
-                      </button>
-                     
-                    </td>
-                </tr>
-                {% include 'products/removeProduct.html' %}
-                {% include 'products/editProduct.html' %}
-                {% endfor %}
-            </table>
-            <p>
-              <b>Total Price: {{ basket_products.total_price }}</b>
-              <button class="btn btn-outline-primary btn-sm btn-action" title="Buy Product" data-bs-toggle="modal" data-bs-target="#buyProductModal{{ basket_products }}"  style = "margin-left: 4%;"> 
-                Checkout? <i class="fa-solid fa-bag-shopping fa-bounce"></i>
-              </button>
-            </p> 
-        </li>
-        <br><br>
-        {% empty %}
-        <li>No baskets available.</li>
-        {% endfor %}
-
-    </ul>
+                  <td>
+                    <button class="btn btn-outline-dark btn-action" title="Edit Product" data-bs-toggle="modal" data-bs-target="#editProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product="{{ product }}">
+                      Edit <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-action" title="Remove Product" data-bs-toggle="modal" data-bs-target="#removeProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product-name="{{ product.product.name }}">
+                      Remove <i class="fas fa-trash-alt"></i>
+                    </button>
+                    
+                  </td>
+              </tr>
+              {% include 'products/removeProduct.html' %}
+              {% include 'products/editProduct.html' %}
+              {% endfor %}
+          </table>
+          <p>
+            <b>Total Price: {{ basket_products.total_price }}</b>
+          </p> 
+      </li>
+      <br><br>
+      {% empty %}
+      <li>No baskets available.</li>
+      {% endfor %}
+  </ul>
+  <button class="btn btn-light btn-outline-primary btn-action btn-lg" title="purchase cart" style = "position: fixed; bottom: 20px; right: 20px;"> 
+    Checkout? <i class="fa-solid fa-bag-shopping fa-bounce"></i>
+  </button>
 {% else %}
     <p>No items in the cart.</p>
 {% endif %}
