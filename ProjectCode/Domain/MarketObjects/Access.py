@@ -23,7 +23,7 @@ class Access:
         if role == "Owner":
             self.setOwner()
         elif role == "Manager":
-            self.setOwner()
+            self.setManager()
         elif role == "Founder":
             self.setFounder()
         else:

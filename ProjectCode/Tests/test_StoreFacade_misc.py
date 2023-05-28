@@ -1,62 +1,99 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
+from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
+from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 
 
+
 class TestStoreFacade(TestCase):
 
     def setUp(self):
         self.store_facade = StoreFacade()
-        # self.store_facade.register("Ari", "password123", "ari@gmail.com")
-        # self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
-        # self.store_facade.register("Amiel", "password789", "amiel@gmail.com")
+        self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
+        self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
+        self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
+        self.store_facade.register("Amiel", "password789", "amiel@gmail.com")
+        self.store_facade.register("YuvalMelamed", "PussyDestroyer69", "fuck@gmail.com")
+        self.store_facade.loginAsGuest()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriExpress")
+        self.my_store: Store = self.store_facade.stores.get("AriExpress")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "paper", 10, 500, "paper")
+        self.item_paper: Product = self.my_store.getProductById(1, "Feliks")
+        self.store_facade.logOut("Feliks")
+
 
     # __getAdmin
     def test_getAdmin_success(self):
-        pass
+        admin: Admin = self.store_facade.getAdmin("Ari")
+        self.assertTrue(admin.user_name == "Ari" and admin.email == "ari@gmail.com")
+        admin2: Admin = self.store_facade.getAdmin("Rubin")
+        self.assertTrue(admin2.user_name == "Rubin" and admin2.email == "rubin@gmail.com")
 
     def test_getAdmin_fail(self):
-        pass
-
+        with self.assertRaises(Exception):
+            admin: Admin = self.store_facade.getAdmin("Felix")
+            self.assertTrue(admin.user_name == "Felix" and admin.email == "felix@gmail.com")
     # __getOnlineMemberOnly
     def test_getOnlineMemberOnly_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        member: Member = self.store_facade.getOnlineMemberOnly("Feliks")
+        self.assertTrue(member.user_name == "Feliks" and member.email == "feliks@gmail.com")
 
     def test_getOnlineMemberOnly_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.getOnlineMemberOnly("Feliks")
+            self.assertTrue(member.user_name == "Feliks" and member.email == "feliks@gmail.com")
 
     # __getUserOrMember
     def test_getUserOrMember_getUser_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        member: Member = self.store_facade.getUserOrMember("Feliks")
+        self.assertTrue(member.user_name == "Feliks" and member.email == "feliks@gmail.com")
 
     def test_getUserOrMember_getGuest_success(self):
-        pass
+        guest: Guest = self.store_facade.getUserOrMember(0)
+        self.assertTrue(guest.get_entrance_id() == 0)
 
-    def test_getUserOrMember_fail(self):
-        pass
+    def test_getUserOrMember_getGuest_fail(self):
+        with self.assertRaises(Exception):
+            guest: Guest = self.store_facade.getUserOrMember(5)
 
+    def test_getUserOrMember_getMember_fail(self):
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("Feliks", "password456")
+            member: Member = self.store_facade.getUserOrMember("someone")
     # addAdmin
     def test_addAdmin_success(self):
-        pass
+        self.store_facade.addAdmin("Ari", "yoav", "password789", "yoav@gmail.com")
+        self.assertTrue(self.store_facade.admins.keys().__contains__("yoav"))
+
 
     def test_addAdmin_userNotAdmin_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.addAdmin("Felix", "yoav", "password789", "yoav@gmail.com")
+        self.assertTrue(not self.store_facade.admins.keys().__contains__("yoav"))
 
     def test_addAdmin_newAdminAlreadyAdmin_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.addAdmin("Ari", "Rubin", "password789", "yoav@gmail.com")
+
 
     def test_addAdmin_weakPassword_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.addAdmin("Ari", "Rubin", "pass", "yoav@gmail.com")
 
-    def test_addAdmin_newAdminDoesntExist_fail(self):
-        pass
 
     def test_addAdmin_selfAddToAdmin_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.addAdmin("Ari", "Ari", "pass", "yoav@gmail.com")
     
     # addAuction
     def test_addAuction_success(self):
@@ -130,44 +167,133 @@ class TestStoreFacade(TestCase):
 
     # addNewProductToStore
     def test_addNewProductToStore_success(self):
-        pass
+        #before
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        #after
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "shoes", 10, 500, "shoes")
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 2)
+        new_product: Product = self.my_store.getProductById(2, "Feliks")
+        self.assertTrue(new_product.get_name() == "shoes")
+        
 
     def test_addNewProductToStore_userNotLoggedIn_fail(self):
-        pass
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        with self.assertRaises(Exception):
+            self.store_facade.addNewProductToStore("Feliks", "AriExpress", "shoes", 10, 500, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     def test_addNewProductToStore_storeNotExists_fail(self):
-        pass
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        with self.assertRaises(Exception):
+            self.store_facade.addNewProductToStore("Feliks", "Some_Store", "shoes", 10, 500, "shoes")
+
 
     def test_addNewProductToStore_userWithoutPermission_fail(self):
-        pass
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            # Amiel is trying to add a product to a store he doesn't own or manage
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "shoes", 10, 500, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
-    def test_addNewProductToStore_productAlreadyExists_fail(self):
-        pass
+    def test_addNewProductToStore_invalidPrice_0_fail(self):
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # Amiel is trying to add a product to a store he doesn't own or manage
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "shoes", 10, 0, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
-    def test_addNewProductToStore_invalidPrice_fail(self):
-        pass
+    def test_addNewProductToStore_invalidPrice_negativePrice_fail(self):
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # Amiel is trying to add a product to a store he doesn't own or manage
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "shoes", 10, -1, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+    def test_addNewProductToStore_invalidQuantity_0_fail(self):
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # zero price
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "shoes", 0, 500, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
-    def test_addNewProductToStore_invalidQuantity_fail(self):
-        pass
+    def test_addNewProductToStore_invalidQuantity_negativeQuantity_fail(self):
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # negative price
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "shoes", -1, 500, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+
 
     def test_addNewProductToStore_invalidCategory_fail(self):
-        pass
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # empty category
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "shoes", -1, 500, "")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     def test_addNewProductToStore_invalidName_fail(self):
-        pass
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # empty name
+            self.store_facade.addNewProductToStore("Amiel", "AriExpress", "", -1, 500, "shoes")
+        # checks if the store products list hasn't changed
+        self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     # addPermissions
-    def test_addPermissions_success(self):
-        pass
+    def test_addPermissions_Owner_success(self):
+        member_to_nominate: Member = self.store_facade.members.get("Amiel")
+        # before
+        self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
+        # after
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(member_to_nominate.accesses.keys().__contains__("AriExpress"))
+        access: Access = member_to_nominate.get_accesses().get("AriExpress")
+        self.assertTrue(access.get_nominated_by_username() == "Feliks")
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        self.assertTrue(access.hasRole("Owner"))
 
-    def test_addPermissions_userNotLoggedIn_fail(self):
-        pass
+    def test_addPermissions_Manager_success(self):
+        member_to_nominate: Member = self.store_facade.members.get("Amiel")
+        # before
+        self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
+        # after
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(member_to_nominate.accesses.keys().__contains__("AriExpress"))
+        access: Access = member_to_nominate.get_accesses().get("AriExpress")
+        self.assertTrue(access.get_nominated_by_username() == "Feliks")
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        self.assertTrue(access.hasRole("Manager"))
 
     def test_addPermissions_nomineeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            self.store_facade.nominateStoreOwner("Feliks", "some_random_guy", "AriExpress")
+        self.assertFalse(len(self.my_store.get_accesses().values()) == 2)
+        self.assertTrue(len(self.my_store.get_accesses().values()) == 1)
+
+
 
     def test_addPermissions_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            self.store_facade.nominateStoreOwner("Feliks", "Amiel", "some_store")
+        self.assertFalse(self.store_facade.stores.keys().__contains__("some_store"))
 
     def test_addPermissions_userWithoutPermission_fail(self):
         pass
