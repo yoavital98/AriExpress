@@ -295,14 +295,38 @@ class TestStoreFacade(TestCase):
             self.store_facade.nominateStoreOwner("Feliks", "Amiel", "some_store")
         self.assertFalse(self.store_facade.stores.keys().__contains__("some_store"))
 
-    def test_addPermissions_userWithoutPermission_fail(self):
-        pass
+    def test_addPermissions_userWithoutPermission_Ownertry_fail(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.nominateStoreOwner("Amiel","YuvalMelamed","AriExpress")
+        self.assertFalse(len(self.my_store.get_accesses().values()) == 2)
+        self.assertTrue(len(self.my_store.get_accesses().values()) == 1)
+        yuval: Member = self.store_facade.members.get("YuvalMelamed")
+        self.assertFalse(yuval.get_accesses().keys().__contains__("AriExpress"))
+
+    def test_addPermissions_userWithoutPermission_Managertry_fail(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.nominateStoreManager("Amiel","YuvalMelamed","AriExpress")
+        self.assertFalse(len(self.my_store.get_accesses().values()) == 2)
+        self.assertTrue(len(self.my_store.get_accesses().values()) == 1)
+        yuval: Member = self.store_facade.members.get("YuvalMelamed")
+        self.assertFalse(yuval.get_accesses().keys().__contains__("AriExpress"))
 
     def test_addPermissions_nomineeAlreadyHasPermissions_fail(self):
-        pass
-
-    def test_addPermissions_invalidPermissions_fail(self):
-        pass
+        member_to_nominate: Member = self.store_facade.members.get("Amiel")
+        # before
+        self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
+        # after
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(member_to_nominate.accesses.keys().__contains__("AriExpress"))
+        access: Access = member_to_nominate.get_accesses().get("AriExpress")
+        self.assertTrue(access.get_nominated_by_username() == "Feliks")
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        self.assertTrue(access.hasRole("Owner"))
 
     # addPurchasePolicy
     def test_addPurchasePolicy_success(self):
@@ -322,7 +346,11 @@ class TestStoreFacade(TestCase):
 
     # addToBasket
     def test_addToBasket_success(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertTrue(amiel.cart.baskets.keys().__contains__("AriExpress"))
+
 
     def test_addToBasket_userNotLoggedIn_fail(self):
         pass

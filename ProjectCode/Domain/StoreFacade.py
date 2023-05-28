@@ -466,12 +466,13 @@ class StoreFacade:
         nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-            self.members[nominated_username].get_accesses()[store_name] = nominated_access
+
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Owner")
+        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
-
+        # TODO:
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores[store_name]
         if not self.checkIfUserIsLoggedIn(requester_username):
@@ -481,9 +482,10 @@ class StoreFacade:
         nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-            self.members[nominated_username].get_accesses()[store_name] = nominated_access
+
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Manager")
+        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
