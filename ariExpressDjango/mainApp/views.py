@@ -224,22 +224,18 @@ def editProduct(request, storename):
                                                 'product_categories': product_categories})
 
 def addNewDiscount(request, storename):
-    # product_id = request.POST.get('product_id')
-    # product_name = request.POST.get('product_name')
-    # product_quantity = request.POST.get('product_quantity')
-    # product_price = request.POST.get('product_price')
-    # product_categories = request.POST.get('product_categories')
+    username = request.user.username
+    discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
+    discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
+    percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
+    levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+    levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
+    levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
+    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
+
     if 'simpleDiscount' in request.POST:
-        discountTypeInt = int(request.POST.get('discountType'))
-        discountType = getDiscountType(discountTypeInt)
-        username = request.user.username
         service = Service()
         if discountTypeInt == 1:
-            # def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
-            level_type = int(request.POST.get('levelType'))
-            percent = request.POST.get('discountAmountRange')
-            levelType = getLevelType(level_type)
-            levelName = getlevelName(level_type, request.POST.get('levelName'))
             actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
@@ -247,13 +243,20 @@ def addNewDiscount(request, storename):
 
         if discountTypeInt == 2:
             pass
+
         if discountTypeInt == 3:
+            pass
+
+        if discountTypeInt == 4:
+            pass
+
+        if discountTypeInt == 5:
             pass
 
 
     if 'conditionedDiscount' in request.POST:
         pass
-    return render(request, 'addNewDiscount.html', {'storename': storename})
+    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent})
 
 
 def createStore(request):

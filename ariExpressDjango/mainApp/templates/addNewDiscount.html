@@ -20,16 +20,17 @@
 					{% csrf_token %}
 					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleContainer(this)">
 						<option selected disabled>Discount Type</option>
-						<option value="1">Simple</option>
-						<option value="2">Conditioned</option>
-						<option value="3">Coupon</option>
-						<option value="4">Max</option>
-						<option value="5">Add</option>
+						<option value="1" {% if discountType == "Simple" %} selected {% endif %}>Simple</option>
+						<option value="2" {% if discountType == "Conditioned" %} selected {% endif %}>Conditioned</option>
+						<option value="3" {% if discountType == "Coupon" %} selected {% endif %}>Coupon</option>
+						<option value="4" {% if discountType == "Max" %} selected {% endif %}>Max</option>
+						<option value="5" {% if discountType == "Add" %} selected {% endif %}>Add</option>
+
 					</select>
 
 					<div class="mb-3">
 						<label for="discountAmountRange" class="form-label">Discount Percentage</label>
-						<input type="range" class="form-range" min="1" max="100" id="discountAmountRange" name="discountAmountRange"> 
+						<input type="range" class="form-range" min="1" max="100" id="discountAmountRange" name="discountAmountRange" value="{{ percent|default_if_none:'50' }}"> 
 					</div>
 					<p id="rangeAmount"></p>
 					<script>
@@ -49,37 +50,37 @@
 					</script>
 					
 					<select class="form-select mb-3" aria-label="Default select example" name="levelType" onchange="handleLevelChange(this)">
-						<option selected disabled>Discount Type</option>
-						<option value="1">Store</option>
-						<option value="2">Category</option>
-						<option value="3">Product</option>
+						<option selected disabled>Store/Category/Product</option>
+						<option value="1" {% if levelType == "Store" %} selected {% endif %}>Store</option>
+						<option value="2" {% if levelType == "Category" %} selected {% endif %}>Category</option>
+						<option value="3" {% if levelType == "Product" %} selected {% endif %}>Product</option>
 					</select>
 					
 					<div class="form-floating mb-3">
-						<input type="text" class="form-control" id="floatingInput" name="levelName">
+						<input type="text" class="form-control" id="floatingInput" name="levelName" value="{{ levelName|default_if_none:'' }}" on>
 						<label for="floatingInput"></label>
 					</div>
 					
 					<script>
-						function handleLevelChange(selectElement) {
-							const inputElement = document.getElementById("floatingInput");
-							const labelElement = document.querySelector("label[for='floatingInput']");
+                        function handleLevelChange(selectElement) {
+                            const inputElement = document.getElementById("floatingInput");
+                            const labelElement = document.querySelector("label[for='floatingInput']");
+                    
+                            if (selectElement.value === "1") {
+                                inputElement.disabled = true;
+                                labelElement.textContent = "Store";
+                            } else if (selectElement.value === "2") {
+                                inputElement.disabled = false;
+                                labelElement.textContent = "Category";
+                            } else if (selectElement.value === "3") {
+                                inputElement.disabled = false;
+                                labelElement.textContent = "Product";
+                            }
+                        }
+                    </script>
 					
-							if (selectElement.value === "1") {
-								inputElement.disabled = true;
-								labelElement.textContent = "Store";
-							} else if (selectElement.value === "2") {
-								inputElement.disabled = false;
-								labelElement.textContent = "Category";
-							} else if (selectElement.value === "3") {
-								inputElement.disabled = false;
-								labelElement.textContent = "Product ID";
-							}
-						}
-					</script>
-					
-					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" style="display: none;" name="simpleDiscount">Submit</button>
-					</form>
+					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" {% if discountType == "Simple" %}style="display: block;"{% else %}style="display: none;"{% endif %} name="simpleDiscount">Submit</button>
+				</form>
 				</div>
 			</div>
 		</div>
@@ -94,7 +95,44 @@
 				<div class="card-body">
 					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}">
 					{% csrf_token %}
-					<button type="submit" class="btn btn-primary" id="submitButtonSecondContainer">Submit</button>
+
+					<select class="form-select mb-3" aria-label="Default select example" name="ruleType">
+						<option selected disabled>Rule Type</option>
+						<option value="1">Basket total price</option>
+						<option value="2">Amount of product</option>
+						<option value="3">Amount of category</option>
+					</select>
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="floatingInput" name="ruleProductName">
+						<label for="floatingInput">Product name</label>
+					</div>
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="floatingInput" name="ruleCategoryName">
+						<label for="floatingInput">Category name</label>
+					</div>
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="floatingInput" name="ruleQuantity">
+						<label for="floatingInput">Quantity</label>
+					</div>
+
+					<label class="form-label">Operator: </label>
+					<br>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+						<label class="form-check-label" for="inlineRadio1">Equal to</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
+						<label class="form-check-label" for="inlineRadio2">Greater than</label>
+					</div>
+					<div class="form-check form-check-inline mb-3">
+						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="option3">
+						<label class="form-check-label" for="inlineRadio3">Less than</label>
+					</div>
+					<!-- 
+					quantity := quantity of a product | total price -->
+					<br>
+					<div><button type="submit" class="btn btn-primary" id="submitButtonSecondContainer">Submit</button></div>
 					</form>
 				</div>
 			</div>
