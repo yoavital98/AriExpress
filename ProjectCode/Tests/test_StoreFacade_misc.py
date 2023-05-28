@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
@@ -350,25 +351,73 @@ class TestStoreFacade(TestCase):
         self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
         amiel: Member = self.store_facade.members.get("Amiel")
         self.assertTrue(amiel.cart.baskets.keys().__contains__("AriExpress"))
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        self.assertTrue(len(basket.products.values()) == 1)
+        self.assertTrue(basket.products.keys().__contains__(1))
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[0] == self.item_paper)
+        self.assertTrue(product_tuple[1] == 5)
+        self.assertTrue(product_tuple[2] == 500)
 
-
+    def test_addToBasket_fromMultipleStores_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "FeliksExpress")
+        my_store2: Store = self.store_facade.stores.get("FeliksExpress")
+        self.store_facade.addNewProductToStore("Feliks", "FeliksExpress", "shoes", 10, 500, "shoes")
+        item_shoes: Product = my_store2.getProductById(1, "Feliks")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        self.store_facade.addToBasket("Amiel", "FeliksExpress", 1, 5)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertTrue(amiel.cart.baskets.keys().__contains__("AriExpress"))
+        self.assertTrue(amiel.cart.baskets.keys().__contains__("FeliksExpress"))
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        basket2: Basket = amiel.cart.baskets.get("FeliksExpress")
+        self.assertTrue(basket.products.keys().__contains__(1))
+        self.assertTrue(basket2.products.keys().__contains__(1))
+        product_tuple: tuple = basket.products.get(1)
+        product_tuple2: tuple = basket2.products.get(1)
+        self.assertTrue(product_tuple[0] == self.item_paper)
+        self.assertTrue(product_tuple[1] == 5)
+        self.assertTrue(product_tuple[2] == 500)
+        self.assertTrue(product_tuple2[0] == item_shoes)
+        self.assertTrue(product_tuple2[1] == 5)
+        self.assertTrue(product_tuple2[2] == 500)
     def test_addToBasket_userNotLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
+
 
     def test_addToBasket_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Amiel", "some_store", 1, 5)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("some_store"))
 
     def test_addToBasket_productNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Amiel", "AriExpress", 2, 5)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     def test_addToBasket_invalidQuantity_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Amiel", "AriExpress", 1, -1)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
-    def test_addToBasket_productNotInStore_fail(self):
-        pass
 
     def test_addToBasket_productNotInStock_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Amiel", "AriExpress", 1, 11)
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     # approveBid
     def test_approveBid_success(self):
@@ -386,12 +435,6 @@ class TestStoreFacade(TestCase):
     def test_approveBid_bidNotExists_fail(self):
         pass
 
-    # checkIfUserIsLoggedIn
-    def test_checkIfUserIsLoggedIn_success(self):
-        pass
-
-    def test_checkIfUserIsLoggedIn_fail(self):
-        pass
 
     # ClaimAuctionPurchase
     def test_ClaimAuctionPurchase_success(self):

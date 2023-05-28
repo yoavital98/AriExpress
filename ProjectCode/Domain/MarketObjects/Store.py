@@ -185,6 +185,8 @@ class Store:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
+        if quantity < 0:
+            raise Exception("quantity can't be under zero")
         return cur_product
 
     def searchProductByName(self, keyword):

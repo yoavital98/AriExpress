@@ -9,7 +9,7 @@ class Basket:
     def __init__(self, username, store):
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id -> (product, quantity, price)
+        self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
         self.bids = TypedDict(int, Bid)
 
     def add_Product(self, product_id, product, quantity):
