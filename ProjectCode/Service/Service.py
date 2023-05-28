@@ -463,15 +463,15 @@ class Service:
             logging.info(
                 "Product has been removed successfully. By username: " + username + ". storename: " + storename + ". product_id: " + str(
                     product_id) + ".")
-            return Response(deleted_product_id.toJson(), True)
+            return Response(deleted_product_id, True)
         except Exception as e:
             logging.error(f"removeProductFromStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def editProductOfStore(self, username, storename,
+    def editProductOfStore(self, username, storename, product_id,
                            **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
-            changed_product = self.store_facade.editProductOfStore(username, storename, **kwargs)
+            changed_product = self.store_facade.editProductOfStore(username, storename, product_id, **kwargs)
             logging.debug(
                 f"Product has been edited successfully. By username: " + username + ". storename: " + storename + ".")
             return Response(changed_product.toJson(), True)
@@ -573,7 +573,7 @@ class Service:
             opened_store = self.store_facade.openStore(username, storename)
             logging.info(
                 "Store has been opened successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(opened_store.toJson(), True)
+            return Response(opened_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"openStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -583,7 +583,7 @@ class Service:
             closed_store = self.store_facade.closeStore(username, storename)
             logging.info(
                 "Store has been closed successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(closed_store.toJson(), True)
+            return Response(closed_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"closeStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
