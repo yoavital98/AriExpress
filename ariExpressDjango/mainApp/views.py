@@ -223,7 +223,37 @@ def editProduct(request, storename):
                                                 'product_price': product_price,
                                                 'product_categories': product_categories})
 
+def addNewDiscount(request, storename):
+    # product_id = request.POST.get('product_id')
+    # product_name = request.POST.get('product_name')
+    # product_quantity = request.POST.get('product_quantity')
+    # product_price = request.POST.get('product_price')
+    # product_categories = request.POST.get('product_categories')
+    if 'simpleDiscount' in request.POST:
+        discountTypeInt = int(request.POST.get('discountType'))
+        discountType = getDiscountType(discountTypeInt)
+        username = request.user.username
+        service = Service()
+        if discountTypeInt == 1:
+            # def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+            level_type = int(request.POST.get('levelType'))
+            percent = request.POST.get('discountAmountRange')
+            levelType = getLevelType(level_type)
+            levelName = getlevelName(level_type, request.POST.get('levelName'))
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+                return redirect('mainApp:addNewDiscount', storename=storename)
 
+        if discountTypeInt == 2:
+            pass
+        if discountTypeInt == 3:
+            pass
+
+
+    if 'conditionedDiscount' in request.POST:
+        pass
+    return render(request, 'addNewDiscount.html', {'storename': storename})
 
 
 def createStore(request):
@@ -488,4 +518,28 @@ def edit_product(request):
         messages.error(request, "Error editting product quantity - "+ str(request.method))
         return HttpResponseRedirect('/cart')  
     
+#---------------------------------------------------------------------------------------------------------------------------------------#
+
+
+#-----------------------------------------------------------Helper Functions------------------------------------------------------------#
+
+def getDiscountType(discount):
+    discount = int(discount)
+    if discount == 1: return "Simple"
+    if discount == 2: return "Conditioned"
+    if discount == 3: return "Coupon"
+    if discount == 4: return "Max"
+    else: return "Add"
+
+def getLevelType(level):
+    level = int(level)
+    if level == 1: return "Store"
+    if level == 2: return "Category"
+    else: return "Product"
+
+def getlevelName(level, name):
+    level = int(level)
+    if level == 1: return ""
+    else: return name
+
 #---------------------------------------------------------------------------------------------------------------------------------------#
