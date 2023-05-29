@@ -498,11 +498,11 @@ def calculate_total_price(products):
     return total_price
 
 @login_required(login_url='/login')
-def remove_product(request):
+def remove_basket_product(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
             service = Service()
-            form = RemoveProductForm(request.POST)
+            form = BasketRemoveProductForm(request.POST)
             if form.is_valid():
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
@@ -520,16 +520,16 @@ def remove_product(request):
             messages.error(request, "You must be logged in to view your cart")
             return HttpResponseRedirect('/login')
     else:
-        form = RemoveProductForm()
+        form = BasketRemoveProductForm()
         messages.error(request, "Error removing product from cart - "+ str(request.method))
         return HttpResponseRedirect('/cart')  
     
 @login_required(login_url='/login')
-def edit_product(request):
+def edit_basket_product(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
             service = Service()
-            form = EditProductForm(request.POST)
+            form = BasketEditProductForm(request.POST)
             if form.is_valid():
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
@@ -548,10 +548,69 @@ def edit_product(request):
             messages.error(request, "You must be logged in to view your cart")
             return HttpResponseRedirect('/login')
     else:
-        form = RemoveProductForm()
+        form = BasketEditProductForm()
         messages.error(request, "Error editting product quantity - "+ str(request.method))
         return HttpResponseRedirect('/cart')  
     
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def checkoutpage(request):
+    if request.user.is_authenticated:
+        service = Service()
+        res = service.getCart(request.user.username)
+        if res.getStatus():
+            cart = res.getReturnValue()
+            baskets = ast.literal_eval(str(cart)).get('baskets')
+            baskets = ast.literal_eval(str(baskets))
+            products = []
+            total_cart_price=0
+            quantity= 0
+            for basket in baskets:
+                basket_res = service.getBasket(request.user.username, basket)
+                if basket_res.getStatus() == True:
+                    basket_res = basket_res.getReturnValue()
+                    basket_products = ast.literal_eval(str(basket_res)).get('products')
+                    basket_products = ast.literal_eval(str(basket_products))
+                    total_cart_price += calculate_total_price(basket_products)
+                    quantity += len(basket_products)
+                    products.append(basket_products)
+
+            return render(request, 'checkoutpage.html', {'total_cart_price': total_cart_price, 'products': products, 'quantity': quantity})
+        else:
+            messages.error(request, "Error loading checkout page - " + str(res.getReturnValue()))
+            return redirect('mainApp:mainpage')
+    else:
+        messages.error(request, "You must be logged in to checkout")
+        return HttpResponseRedirect('/login')
+    
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def checkout(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = CheckoutForm(request.POST)
+            if form.is_valid():
+                full_address = str(form.cleaned_data['address'])+", "+str(form.cleaned_data['country'])
+                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']), form.cleaned_data['cc_name'], int(form.cleaned_data['cc_id']), form.cleaned_data['cc_expiration'], int(form.cleaned_data['cc_cvv']), full_address)
+                if res.getStatus():
+                    messages.success(request,"Order placed successfully! thank you for shopping with us")
+                    return redirect('mainApp:mainpage')
+                else:
+                    messages.error(request, "Error placing order res - " + str(res.getReturnValue()))
+                    return HttpResponseRedirect('/cart')
+            else:
+                messages.error(request, "Error placing order form - " + str(form.errors))
+                return HttpResponseRedirect('/cart')
+        else:
+            messages.error(request, "You must be logged in to place an order")
+            return HttpResponseRedirect('/login')
+    else:
+        form = BasketEditProductForm()
+        messages.error(request, "Error placing an order - "+ str(request.method))
+        return HttpResponseRedirect('/cart')  
+
 #---------------------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -595,10 +654,5 @@ def fixRulesData(rulesData):
     #     current_key = str(i)
     #     rulesData[prev_key]['child'] = rulesData[current_key]
     # return rulesData['0']
-
-
-
-
-
 
 #---------------------------------------------------------------------------------------------------------------------------------------#

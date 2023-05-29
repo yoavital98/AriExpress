@@ -27,13 +27,13 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
 
-#         TODO: remove the comments
-#         service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")
-#         service.logOut("aaa")
-#         service.logIn("rubin_krief", "h9reynWq").getStatus()
-#         service.addToBasket("rubin_krief", "store123", 2, 5)
-#         service.addToBasket("rubin_krief", "store123", 1, 3)
-#         service.addToBasket("rubin_krief", "456store", 1, 2)
+        # TODO: remove the comments
+        service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")
+        service.logOut("aaa")
+        service.logIn("rubin_krief", "h9reynWq").getStatus()
+        service.addToBasket("rubin_krief", "store123", 2, 5)
+        service.addToBasket("rubin_krief", "store123", 1, 3)
+        service.addToBasket("rubin_krief", "456store", 1, 2)
 
         
         # from django.contrib.auth.models import User
