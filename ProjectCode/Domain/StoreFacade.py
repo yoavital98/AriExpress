@@ -685,7 +685,17 @@ class StoreFacade:
 
     def closeStoreAsAdmin(self, admin_name, store_name):
         if self.admins.keys().__contains__(admin_name):
-            pass  # TODO: logic of closing a store as an admin amiel!
+            admin: Admin = self.admins.get(admin_name)
+            if admin.logged_In:
+                cur_store: Store = self.stores.get(store_name)
+                if cur_store is None:
+                    raise Exception("No such store exists")
+                cur_store.close_store_by_admin()
+            else:
+                raise Exception("admin is not logged in")
+        else:
+            raise Exception("no such admin exists")
+
 
     def getAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):

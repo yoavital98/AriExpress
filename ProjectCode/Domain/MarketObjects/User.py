@@ -11,7 +11,6 @@ class User(ABC):
     def get_cart(self):
         return self.cart
 
-
     def add_to_cart(self, username, store, productID, product, quantity):
         return self.cart.add_Product(username, store, productID, product, quantity)
 

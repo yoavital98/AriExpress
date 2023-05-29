@@ -461,58 +461,176 @@ class TestStoreFacade(TestCase):
 
     # closeStore
     def test_closeStore_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+
 
     def test_closeStore_userNotLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.closeStore("Feliks", "AriExpress")
+            #check if store is still active
+        self.assertTrue(self.my_store.active)
 
     def test_closeStore_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStore("Feliks", "some_store")
+            # check if store is still active
+        self.assertTrue(self.my_store.active)
 
-    def test_closeStore_userWithoutPermission_fail(self):
-        pass
+    def test_closeStore_userWithoutAccessToStore_fail(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStore("Amiel", "some_store")
+            # check if store is still active
+        self.assertTrue(self.my_store.active)
+
+    def test_closeStore_userWithAccessToStoreAsOwner_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStore("Amiel", "some_store")
+            # check if store is still active
+        self.assertTrue(self.my_store.active)
+    def test_closeStore_userWithAccessToStoreAsManager_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStore("Amiel", "some_store")
+            # check if store is still active
+        self.assertTrue(self.my_store.active)
+
 
     def test_closeStore_storeAlreadyClosed_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStore("Feliks", "AriExpress")
+            # check if store is still active
+        self.assertTrue(self.my_store.active)
 
     # closeStoreAsAdmin
     def test_closeStoreAsAdmin_success(self):
-        pass
+        self.store_facade.logInAsAdmin("Ari", "password123")
+        self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
+        self.assertTrue(self.my_store.closed_by_admin)
+        self.assertFalse(self.my_store.active)
+
 
     def test_closeStoreAsAdmin_userNotLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
+        self.assertFalse(self.my_store.closed_by_admin)
+        self.assertTrue(self.my_store.active)
 
     def test_closeStoreAsAdmin_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsAdmin("Ari", "password123")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStoreAsAdmin("Ari", "some_store")
+        self.assertFalse(self.my_store.closed_by_admin)
+        self.assertTrue(self.my_store.active)
 
     def test_closeStoreAsAdmin_userNotAdmin_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStoreAsAdmin("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.closed_by_admin)
+        self.assertTrue(self.my_store.active)
 
     def test_closeStoreAsAdmin_storeAlreadyClosed_fail(self):
-        pass
+        self.store_facade.logInAsAdmin("Ari", "password123")
+        self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
+        self.assertTrue(self.my_store.closed_by_admin)
+        self.assertFalse(self.my_store.active)
 
     # editBasketQuantity
     def test_editBasketQuantity_member_success(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[1] == 5)
+        self.store_facade.editBasketQuantity("Amiel", "AriExpress", 1, 8)
+        product_tuple2: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple2[1] == 8)
+
+
 
     def test_editBasketQuantity_guest_success(self):
-        pass
+        guest: Guest = self.store_facade.onlineGuests.get("0")
+        self.store_facade.addToBasket("0", "AriExpress", 1, 5)
+        basket: Basket = guest.cart.baskets.get("AriExpress")
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[1] == 5)
+        self.store_facade.editBasketQuantity("0", "AriExpress", 1, 8)
+        product_tuple2: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple2[1] == 8)
 
     def test_editBasketQuantity_userNotLoggedIn_fail(self):
-        #check that a member is logged in as member or a guest logged in as guest
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[1] == 5)
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.editBasketQuantity("Amiel", "AriExpress", 1, 8)
+        product_tuple2: tuple = basket.products.get(1)
+        self.assertFalse(product_tuple2[1] == 8)
+        self.assertTrue(product_tuple2[1] == 5)
 
     def test_editBasketQuantity_storeNotExists_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[1] == 5)
+        with self.assertRaises(Exception):
+            self.store_facade.editBasketQuantity("Amiel", "some_store", 1, 8)
+        product_tuple2: tuple = basket.products.get(1)
+        self.assertFalse(product_tuple2[1] == 8)
+        self.assertTrue(product_tuple2[1] == 5)
 
     def test_editBasketQuantity_productNotExists_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[1] == 5)
+        with self.assertRaises(Exception):
+            self.store_facade.editBasketQuantity("Amiel", "AriExpress", 2, 8)
+        product_tuple2: tuple = basket.products.get(1)
+        self.assertFalse(product_tuple2[1] == 8)
+        self.assertTrue(product_tuple2[1] == 5)
 
     def test_editBasketQuantity_invalidQuantity_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        product_tuple: tuple = basket.products.get(1)
+        self.assertTrue(product_tuple[1] == 5)
+        with self.assertRaises(Exception):
+            self.store_facade.editBasketQuantity("Amiel", "AriExpress", 1, -5)
+        product_tuple2: tuple = basket.products.get(1)
+        self.assertFalse(product_tuple2[1] == 8)
+        self.assertTrue(product_tuple2[1] == 5)
 
     def test_editBasketQuantity_productNotInBasket_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.editBasketQuantity("Amiel", "AriExpress", 1, 8)
+        self.assertTrue(not amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     # editProductOfStore
     def test_editProductOfStore_success(self):

@@ -464,3 +464,14 @@ class Store:
             'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
             'discounts': self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+
