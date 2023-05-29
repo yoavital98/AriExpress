@@ -102,7 +102,7 @@ class Store:
         nominated_access: Access = self.__accesses.get(nominated_username)
         if requester_access is None or nominated_access is None:
             raise Exception("No such access exists")
-        if requester_access == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
+        if requester_username == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
