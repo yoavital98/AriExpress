@@ -55,7 +55,7 @@
       <li>No baskets available.</li>
       {% endfor %}
   </ul>
-  <button class="btn btn-light btn-outline-primary btn-action btn-lg" title="purchase cart" style = "position: fixed; bottom: 20px; right: 20px;"> 
+  <button class="btn btn-light btn-outline-primary btn-action btn-lg" onclick="window.location.href='{% url 'mainApp:checkoutpage' %}'" title="purchase cart" style = "position: fixed; bottom: 20px; right: 20px;"> 
     Checkout? <i class="fa-solid fa-bag-shopping fa-bounce"></i>
   </button>
 {% else %}

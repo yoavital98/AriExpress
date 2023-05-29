@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'mainApp',
     'channels',
     'django_cleanup',
+    'mathfilters',
 ]
 
 MIDDLEWARE = [

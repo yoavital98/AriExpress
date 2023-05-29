@@ -10,7 +10,7 @@
 
 <!--Modal form-->
 {% block form %}
-<form method="POST" action="/remove_product" id="removeProductForm">
+<form method="POST" action="/remove_basket_product" id="basketRemoveProductForm">
     {% csrf_token %}
     <div class="modal-body text-center">
         <input type="hidden" name="store_name" value="{{ store }}" id="store">
@@ -23,7 +23,7 @@
 
         <hr>
         <div>
-            <button class="btn btn-outline-danger btn-sm btn-modal" type="submit" id="submit" onclick="remove_product()">Remove from my cart &nbsp;&nbsp;</button>
+            <button class="btn btn-outline-danger btn-sm btn-modal" type="submit" id="submit" onclick="remove_basket_product()">Remove from my cart &nbsp;&nbsp;</button>
         </div>
     </div>
 </form>

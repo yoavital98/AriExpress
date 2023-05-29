@@ -37,7 +37,9 @@ urlpatterns = [
     # path to view the message
     path (r'mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
     path(r'cart/', views.cart, name='cart'),
-    path(r'remove_product', views.remove_product, name='remove_product'),
-    path(r'edit_product', views.edit_product, name='edit_product'),
+    path(r'remove_basket_product', views.remove_basket_product, name='remove_basket_product'),
+    path(r'edit_basket_product', views.edit_basket_product, name='edit_basket_product'),
+    path(r'checkoutpage/', views.checkoutpage, name='checkoutpage'),
+    path(r'checkout', views.checkout, name='checkout'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

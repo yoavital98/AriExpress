@@ -10,7 +10,7 @@
 
 <!--Modal form-->
 {% block form %}
-<form method="POST" action="/edit_product" id="editProductForm">
+<form method="POST" action="/edit_basket_product" id="basketEditProductForm">
     {% csrf_token %}
     <div class="modal-body text-center">
         <input type="hidden" name="store_name" value="{{ store }}" id="store">
@@ -32,7 +32,7 @@
         </div>
         <hr>
         <div>
-            <button class="btn btn-outline-info btn-modal" type="submit" id="submit" onclick="edit_product()">save my edit <i class="fa-solid fa-check"></i> &nbsp;&nbsp;</button>
+            <button class="btn btn-outline-info btn-modal" type="submit" id="submit" onclick="edit_basket_product()">save my edit <i class="fa-solid fa-check"></i> &nbsp;&nbsp;</button>
         </div>
     </div>
 </form>
