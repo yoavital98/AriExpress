@@ -18,7 +18,7 @@
 				<div class="card-body">
 					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}">
 					{% csrf_token %}
-					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleContainer(this)">
+					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleConditioned(this)">
 						<option selected disabled>Discount Type</option>
 						<option value="1" {% if discountType == "Simple" %} selected {% endif %}>Simple</option>
 						<option value="2" {% if discountType == "Conditioned" %} selected {% endif %}>Conditioned</option>
@@ -82,7 +82,7 @@
                     </script>
 					
 					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" {% if discountType == "Simple" %}style="display: block;"{% else %}style="display: none;"{% endif %} name="simpleDiscount">Submit</button>
-				</form>
+
 				</div>
 			</div>
 		</div>
@@ -95,9 +95,7 @@
 		<div class="container" id="secondContainer" style="display: none;">
 			<div class="card">
 				<div class="card-body">
-					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}">
-					{% csrf_token %}
-
+					<input type="hidden" name="rulesData" value="{{ rulesData }}">
 					<select class="form-select mb-3" aria-label="Default select example" name="ruleType">
 						<option selected disabled>Rule Type</option>
 						<option value="1">Basket total price</option>
@@ -131,32 +129,34 @@
 						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="option3">
 						<label class="form-check-label" for="inlineRadio3">Less than</label>
 					</div>
-					<!-- 
-					quantity := quantity of a product | total price -->
 					<br>
-					<div><button type="submit" class="btn btn-primary" id="submitButtonSecondContainer">Submit</button></div>
+					<div><button type="submit" class="btn btn-primary" id="submitButtonSecondContainer" name="conditionedAddRule">Submit</button></div>
 					</form>
 				</div>
 			</div>
 		</div>
 		<script>
-			function toggleContainer(element) {
-				const submitButtonFirstContainer = document.getElementById("submitButtonFirstContainer");
-				const submitButtonSecondContainer = document.getElementById("submitButtonSecondContainer");
-				const secondContainer = document.getElementById("secondContainer");
-				if (element.value === "1") {
-					secondContainer.style.display = "none";
-					submitButtonFirstContainer.style.display = "block"
-
-				} else if (element.value === "2") {
-					secondContainer.style.display = "block";
-					submitButtonFirstContainer.style.display = "none"
-
-				} else {
-					secondContainer.style.display = "none";
-					submitButtonFirstContainer.style.display = "none"
-				}
+			function toggleConditioned(element) {
+			  const submitButtonFirstContainer = document.getElementById("submitButtonFirstContainer");
+			  const submitButtonSecondContainer = document.getElementById("submitButtonSecondContainer");
+			  const secondContainer = document.getElementById("secondContainer");
+			  if (element.value === "1") {
+				secondContainer.style.display = "none";
+				submitButtonFirstContainer.style.display = "block";
+			  } else if (element.value === "2") {
+				secondContainer.style.display = "block";
+				submitButtonFirstContainer.style.display = "none";
+			  } else {
+				secondContainer.style.display = "none";
+				submitButtonFirstContainer.style.display = "none";
+			  }
 			}
+		  
+			// Run toggleConditioned on page load
+			window.addEventListener("DOMContentLoaded", function() {
+			  const discountTypeSelect = document.querySelector("select[name='discountType']");
+			  toggleConditioned(discountTypeSelect);
+			});
 		</script>
 		  
 	</div>

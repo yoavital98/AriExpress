@@ -231,6 +231,7 @@ def addNewDiscount(request, storename):
     levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
     levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
     levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
+    rulesData = {} if request.POST.get('levelName') == None else request.POST.get('levelName')
 
     if 'simpleDiscount' in request.POST:
         service = Service()
@@ -238,7 +239,6 @@ def addNewDiscount(request, storename):
             actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
-                return redirect('mainApp:addNewDiscount', storename=storename)
 
         if discountTypeInt == 2:
             pass
@@ -253,9 +253,12 @@ def addNewDiscount(request, storename):
             pass
 
 
-    if 'conditionedDiscount' in request.POST:
-        pass
-    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent})
+    if 'conditionedAddRule' in request.POST:
+        rulesData
+
+    print(rulesData)
+
+    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName, 'rulesData': rulesData})
 
 
 def createStore(request):
