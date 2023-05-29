@@ -3,6 +3,13 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
+def send_notification(user_id, message):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.send)(f"user_{user_id}", {
+        'type': 'notify',
+        'message': message,
+    })
+
 class MessageController:
     def __init__(self):
         self._read_messages = {}  # receiver_id to list of messages
@@ -23,11 +30,7 @@ class MessageController:
         # if receiver_id in self._observers:
         #     self._observers[receiver_id].raise_notifications_count()
 
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)('notifications', {
-            'type': 'notify',
-            'message': message,
-        })
+        send_notification(receiver_id, message)
 
         #return message
 
@@ -60,3 +63,4 @@ class MessageController:
                 for observer in self._observers[user_id]:
                     observer.update_unread_count()
         return messages
+

@@ -748,7 +748,7 @@ class StoreFacade:
         pass
 
     def readMessage(self, requesterID, messageID):
-
+        pass
 
     def messageAsAdminToUser(self, admin_name, receiverID, message):
         pass
