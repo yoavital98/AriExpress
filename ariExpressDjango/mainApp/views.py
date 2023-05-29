@@ -1,5 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib.auth import login as loginFunc
 from django.contrib.auth import logout as logoutFunc, authenticate
 from django.contrib.auth.forms import UserCreationForm
@@ -114,11 +115,9 @@ def logout(request):
 def mystores(request):
     service = Service()
     storesInfo = service.getUserStores(request.user.username)
-    # print(type(storesInfo.getReturnValue()))
     string_data = storesInfo.getReturnValue()
-    print(storesInfo.getReturnValue())
     storesInfoDict = ast.literal_eval(str(string_data))
-
+    # print(storesInfoDict)
     return render(request, 'mystores.html', {'stores': storesInfoDict})
 
 
@@ -131,16 +130,165 @@ def viewAllStores(request):
 
 
 def mystores_specific(request, storename):
-    if request.method == 'POST' and request.user.is_authenticated:
-        service = Service()
-        products = service.getStoreProductsInfo(storename).getReturnValue()
-        # context = request.POST.get('data')
-        context = ast.literal_eval(str(products))
-        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
-        return render(request, 'shop_specific.html', {'products': products_dict,
-                                                  'storename': storename})
+    if request.user.is_authenticated:
+        if 'openStore' in request.POST:
+            service = Service()
+            actionRes = service.openStore(request.user.username, storename)
+            if actionRes.getStatus():
+                messages.success(request, ("Store is now open."))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+            
+        if 'closeStore' in request.POST:
+            service = Service()
+            actionRes = service.closeStore(request.user.username, storename)
+            if actionRes.getStatus():
+                messages.success(request, ("Store is now closed."))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+            
+        if 'removeProduct' in request.POST:
+            service = Service()
+            product_id = request.POST.get('product_id')
+            actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
+            if actionRes.getStatus():
+                messages.success(request, ("Product has been removed"))
+                return redirect('mainApp:mystores_specific', storename=storename)
+            else: 
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+        
+        else:
+            service = Service()
+            products = service.getStoreProductsInfo(storename).getReturnValue()
+            # context = request.POST.get('data')
+            context = ast.literal_eval(str(products))
+            products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+            active = "Open" if context['active'].lower() == "true" else "Closed"
+            return render(request, 'shop_specific.html', {'products': products_dict,
+                                                    'storename': storename,
+                                                    'active': active})  
     else:
         return redirect('mainApp:mainpage')
+    
+
+# def openStore(request, storename):
+#     if request.method == 'POST' and request.user.is_authenticated:
+#         service = Service()
+#         actionRes = service.openStore(request.user.username, storename)
+#         if actionRes.getStatus():
+#             messages.success(request, ("Store is now open."))
+#             return redirect('mainApp:mystores_specific', storename=storename)
+#         else: 
+#             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+#             return redirect('mainApp:mystores')
+#     return redirect('mainApp:mainpage')
+        
+
+# def closeStore(request, storename):
+#     if request.method == 'POST' and request.user.is_authenticated:
+#         service = Service()
+#         actionRes = service.closeStore(request.user.username, storename)
+#         if actionRes.getStatus():
+#             messages.success(request, ("Store is now closed."))
+#             return redirect('mainApp:mystores_specific', storename=storename)
+#         else: 
+#             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+#             return redirect('mainApp:mystores')
+#     return redirect('mainApp:mainpage')
+
+def editProduct(request, storename):
+    product_id = request.POST.get('product_id')
+    product_name = request.POST.get('product_name')
+    product_quantity = request.POST.get('product_quantity')
+    product_price = request.POST.get('product_price')
+    product_categories = request.POST.get('product_categories')
+
+    if 'editButton' in request.POST:
+        print(product_id, product_name)
+        service = Service()
+        actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
+        if actionRes.getStatus():
+            messages.success(request, ("Product has been edited"))
+            return redirect('mainApp:mystores_specific', storename=storename)
+        
+    return render(request, 'editProduct.html', {'storename': storename,
+                                                'product_name': product_name,
+                                                'product_quantity': product_quantity,
+                                                'product_price': product_price,
+                                                'product_categories': product_categories})
+
+def addNewDiscount(request, storename):
+    username = request.user.username
+    discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
+    discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
+    percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
+    levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+    levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
+    levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
+
+    if 'submitDiscount' in request.POST:
+        service = Service()
+        if discountTypeInt == 1:
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+
+        if discountTypeInt == 2:
+            rulesData = request.session['rulesData']
+            fixedRulesData = fixRulesData(rulesData)
+            print(fixedRulesData)
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+                if 'rulesData' in request.session:
+                    del request.session['rulesData']
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            
+
+        if discountTypeInt == 3:
+            pass
+
+        if discountTypeInt == 4:
+            pass
+
+        if discountTypeInt == 5:
+            pass
+
+
+    if 'conditionedAddRule' in request.POST:
+        # Retrieve the submitted rulesData
+        rulesData = request.POST.get('rulesData')
+        ruleData = json.loads(rulesData)
+
+        if 'rulesData' not in request.session:
+            request.session['rulesData'] = {}
+            request.session['ruleCounter'] = 0
+
+        # Check if ruleData is not already in the session
+        if ruleData not in dict(request.session['rulesData']).values():
+            counter = request.session['ruleCounter']
+            ruleDict = request.session['rulesData']
+            ruleDict[counter] = ruleData
+            request.session['ruleCounter'] += 1
+        print(request.session['rulesData'])
+
+
+    if 'clearAllRules' in request.POST:
+        if 'rulesData' in request.session:
+            del request.session['rulesData']
+        request.session['ruleCounter'] = 0
+
+    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
+
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
@@ -167,11 +315,6 @@ def nominateUser(request, storename):
         service = Service()
         if selected == '1':
             res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
-            # Mock part: assume it returns a dictionary
-            # res = {'status': True,
-            #            'object': "Something"
-            #            }
-            # if res.get('status'):
             if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Owner."))
                 return redirect('mainApp:mystores')
@@ -180,12 +323,7 @@ def nominateUser(request, storename):
                 return redirect('mainApp:mystores')
         elif selected == '2':
             res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
-            # Mock part: assume it returns a dictionary
-            res = {'status': True,
-                       'object': "Something"
-                       }
-            if res.get('status'):
-            # if res.getStatus():
+            if res.getStatus():
                 messages.success(request, ("A new user has been nominated to be Manager."))
                 return redirect('mainApp:mystores')
             else:
@@ -194,6 +332,34 @@ def nominateUser(request, storename):
 
     # messages.success(request, ("Error nominating a user to be Owner"))
     return render(request, 'nominateUser.html', {'storename': storename})
+
+
+def addNewProduct(request, storename):
+    if request.method == 'POST':
+        form = NewProductForm(request.POST)
+        if form.is_valid():
+            productname = form.cleaned_data['productName']
+            category = form.cleaned_data['productCategory']
+            price = form.cleaned_data['productPrice']
+            quantity = form.cleaned_data['productQuantity']
+            service = Service()
+            actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
+            if actionRes.getStatus():
+                print(actionRes.getReturnValue())
+                messages.success(request, ("A new Product has been added to the store"))
+                return redirect('mainApp:mystores')
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:mystores')
+        else:
+            # Handle the case when the form is invalid
+            messages.error(request, "Invalid form data")
+            return redirect('mainApp:addNewProduct', storename=storename)
+    else:
+        form = NewProductForm()
+
+    return render(request, 'addNewProduct.html', {'storename': storename})
+
 
 def adminPage(request):
     if request.user.is_superuser:
@@ -232,7 +398,7 @@ def homepage_guest(request):
 def inbox(request):
     all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
     pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-    paginator = Paginator(all_user_messages, 3)
+    paginator = Paginator(all_user_messages, 5)
     page = request.GET.get('page')
     all_messages = paginator.get_page(page)
     return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
@@ -298,7 +464,7 @@ def notifications(request):
 
 
 
-#cart functionality
+#---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
     if request.user.is_authenticated:
         service = Service()
@@ -309,18 +475,130 @@ def cart(request):
             baskets = ast.literal_eval(str(baskets))
             products = dict()
             for basket in baskets:
-                basket_res = service.getBasket(request.user.username, basket['storename'])
-                if basket_res.getStatus()==True:
+                basket_res = service.getBasket(request.user.username, basket)
+                if basket_res.getStatus() == True:
                     basket_res = basket_res.getReturnValue()
                     basket_products = ast.literal_eval(str(basket_res)).get('products')
                     basket_products = ast.literal_eval(str(basket_products))
-                    products[basket['storename']] = basket_products
+                    total_price = calculate_total_price(basket_products)
+                    products[basket] = {'items': basket_products, 'total_price': total_price}
 
-            return render(request, 'cart.html', {'baskets': baskets , 'products': products})
+            return render(request, 'cart.html', {'baskets': baskets, 'products': products})
         else:
-            messages.error(request, "Error loading cart - "+str(res.getReturnValue()))
+            messages.error(request, "Error loading cart - " + str(res.getReturnValue()))
             return redirect('mainApp:mainpage')
     else:
         messages.error(request, "You must be logged in to view your cart")
         return HttpResponseRedirect('/login')
+
+def calculate_total_price(products):
+    total_price = 0
+    for product in products.values():
+        total_price += float(product['price']) * float(product['quantity'])
+    return total_price
+
+@login_required(login_url='/login')
+def remove_product(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = RemoveProductForm(request.POST)
+            if form.is_valid():
+                store = form.cleaned_data['store_name']
+                product_id = form.cleaned_data['product_id']
+                res = service.removeFromBasket(request.user.username, store, product_id)
+                if res.getStatus():
+                    messages.success(request, "Product removed from cart successfully")
+                    return HttpResponseRedirect('/cart')
+                else:
+                    messages.error(request, "Error removing product from cart - " + str(res.getReturnValue()))
+                    return HttpResponseRedirect('/cart')
+            else:
+                messages.error(request, "Error removing product from cart - " + str(form.errors))
+                return HttpResponseRedirect('/cart')
+        else:
+            messages.error(request, "You must be logged in to view your cart")
+            return HttpResponseRedirect('/login')
+    else:
+        form = RemoveProductForm()
+        messages.error(request, "Error removing product from cart - "+ str(request.method))
+        return HttpResponseRedirect('/cart')  
     
+@login_required(login_url='/login')
+def edit_product(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = EditProductForm(request.POST)
+            if form.is_valid():
+                store = form.cleaned_data['store_name']
+                product_id = form.cleaned_data['product_id']
+                quantity = form.cleaned_data['quantity']
+                res = service.editBasketQuantity(request.user.username, store, product_id, quantity)
+                if res.getStatus():
+                    messages.success(request, "quantity edited successfully")
+                    return HttpResponseRedirect('/cart')
+                else:
+                    messages.error(request, "Error editting product quantity res - " + str(res.getReturnValue()))
+                    return HttpResponseRedirect('/cart')
+            else:
+                messages.error(request, "Error editting product quantity form - " + str(form.errors))
+                return HttpResponseRedirect('/cart')
+        else:
+            messages.error(request, "You must be logged in to view your cart")
+            return HttpResponseRedirect('/login')
+    else:
+        form = RemoveProductForm()
+        messages.error(request, "Error editting product quantity - "+ str(request.method))
+        return HttpResponseRedirect('/cart')  
+    
+#---------------------------------------------------------------------------------------------------------------------------------------#
+
+
+#-----------------------------------------------------------Helper Functions------------------------------------------------------------#
+
+def getDiscountType(discount):
+    discount = int(discount)
+    if discount == 1: return "Simple"
+    if discount == 2: return "Conditioned"
+    if discount == 3: return "Coupon"
+    if discount == 4: return "Max"
+    else: return "Add"
+
+def getLevelType(level):
+    level = int(level)
+    if level == 1: return "Store"
+    if level == 2: return "Category"
+    else: return "Product"
+
+def getlevelName(level, name):
+    level = int(level)
+    if level == 1: return ""
+    else: return name
+
+def fixRulesData(rulesData):
+    keys = list(rulesData.keys())
+    for i in range(1, len(keys)):
+        key = keys[i]
+        previous_key = keys[i-1]
+        child_dict = {
+            'logic_type': rulesData[key].pop('logic_type', ''),
+            'rule': rulesData[key]
+        }
+        rulesData[previous_key]['child'] = child_dict
+    rulesData['0'].pop('logic_type', None)
+    return rulesData['0']
+
+    # keys = list(rulesData.keys())
+    # for i in range(1, len(keys)):
+    #     prev_key = str(i - 1)
+    #     current_key = str(i)
+    #     rulesData[prev_key]['child'] = rulesData[current_key]
+    # return rulesData['0']
+
+
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------------------------------#
