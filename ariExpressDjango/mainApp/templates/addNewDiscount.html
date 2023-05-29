@@ -121,16 +121,31 @@
 					<label class="form-label">Operator: </label>
 					<br>
 					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="equal">
+						<input class="form-check-input" type="radio" name="operatorRadioOptions" id="inlineRadio1" value="==" checked>
 						<label class="form-check-label" for="inlineRadio1">Equal to</label>
 					</div>
 					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="greater">
+						<input class="form-check-input" type="radio" name="operatorRadioOptions" id="inlineRadio2" value=">=">
 						<label class="form-check-label" for="inlineRadio2">Greater than</label>
 					</div>
 					<div class="form-check form-check-inline mb-3">
-						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="less">
+						<input class="form-check-input" type="radio" name="operatorRadioOptions" id="inlineRadio3" value="<=">
 						<label class="form-check-label" for="inlineRadio3">Less than</label>
+					</div>
+					<br>
+					<label class="form-label">Logic type: </label>
+					<br>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio1" value="OR" checked>
+						<label class="form-check-label" for="inlineRadio1">OR</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio2" value="XOR">
+						<label class="form-check-label" for="inlineRadio2">XOR</label>
+					</div>
+					<div class="form-check form-check-inline mb-3">
+						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio3" value="AND">
+						<label class="form-check-label" for="inlineRadio3">AND</label>
 					</div>
 					<br>
 					<div class="d-flex justify-content-start">
@@ -174,17 +189,21 @@
 				var ruleQuantity = document.querySelector("input[name='ruleQuantity']").value;
 
 				// Retrieve the selected radio button value
-				var selectedOption = document.querySelector("input[name='inlineRadioOptions']:checked");
-				var radioValue = selectedOption ? selectedOption.value : '';
+				var operatorOption = document.querySelector("input[name='operatorRadioOptions']:checked");
+				var operatorRadioValue = operatorOption ? operatorOption.value : '';
+
+				var logicOption = document.querySelector("input[name='logicRadioOptions']:checked");
+				var logicRadioValue = logicOption ? logicOption.value : '';
 
 				// Create a dictionary object to store the values
 				var rulesData = {
 					'rule_type': ruleType,
 					'product_id': ruleProductName,
-					'operator': radioValue,
+					'operator': operatorRadioValue,
 					'quantity': ruleQuantity,
 					'category': ruleCategoryName,
-					'child': ''
+					'logic_type': logicRadioValue,
+					'child': {}
 				};
 				return JSON.stringify(rulesData);
 			}

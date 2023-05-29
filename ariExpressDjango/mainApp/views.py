@@ -237,16 +237,21 @@ def addNewDiscount(request, storename):
             actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
 
         if discountTypeInt == 2:
             rulesData = request.session['rulesData']
             fixedRulesData = fixRulesData(rulesData)
             print(fixedRulesData)
-            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, rulesData)
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
                 if 'rulesData' in request.session:
                     del request.session['rulesData']
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
             
 
         if discountTypeInt == 3:
@@ -574,10 +579,22 @@ def getlevelName(level, name):
 def fixRulesData(rulesData):
     keys = list(rulesData.keys())
     for i in range(1, len(keys)):
-        prev_key = str(i - 1)
-        current_key = str(i)
-        rulesData[prev_key]['child'] = rulesData[current_key]
+        key = keys[i]
+        previous_key = keys[i-1]
+        child_dict = {
+            'logic_type': rulesData[key].pop('logic_type', ''),
+            'rule': rulesData[key]
+        }
+        rulesData[previous_key]['child'] = child_dict
+    rulesData['0'].pop('logic_type', None)
     return rulesData['0']
+
+    # keys = list(rulesData.keys())
+    # for i in range(1, len(keys)):
+    #     prev_key = str(i - 1)
+    #     current_key = str(i)
+    #     rulesData[prev_key]['child'] = rulesData[current_key]
+    # return rulesData['0']
 
 
 
