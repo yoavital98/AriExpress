@@ -446,7 +446,7 @@ class StoreFacade:
     def editProductOfStore(self, username, store_name, product_id, **kwargs):
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         cur_access = self.members[username].get_accesses().get(store_name)

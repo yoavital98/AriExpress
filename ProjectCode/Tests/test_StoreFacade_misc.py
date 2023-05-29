@@ -633,24 +633,76 @@ class TestStoreFacade(TestCase):
         self.assertTrue(not amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     # editProductOfStore
-    def test_editProductOfStore_success(self):
-        pass
+    def test_editProductOfStore_changeQuantityAndPrice_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        # before
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
+        self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, quantity = 4 , price = 25)
+        # after
+        self.assertTrue(product.quantity == 4)
+        self.assertTrue(product.price == 25)
 
     def test_editProductOfStore_userNotLoggedIn_fail(self):
-        pass
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        # before
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
+        with self.assertRaises(Exception):
+            self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, quantity=4, price=25)
+        # after
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
 
     def test_editProductOfStore_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
+        with self.assertRaises(Exception):
+            self.store_facade.editProductOfStore("Feliks", "some_store", 1, quantity=4, price=25)
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
 
     def test_editProductOfStore_userWithoutPermission_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
+        with self.assertRaises(Exception):
+            self.store_facade.editProductOfStore("Amiel", "AriExpress", 1, quantity=4, price=25)
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
 
     def test_editProductOfStore_productNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
+        with self.assertRaises(Exception):
+            self.store_facade.editProductOfStore("Feliks", "AriExpress", 2, quantity=4, price=25)
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
 
     def test_editProductOfStore_invalidQuantity_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
+        with self.assertRaises(Exception):
+            self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, quantity=-4, price=25)
+        self.assertTrue(product.quantity == 10)
+        self.assertTrue(product.price == 500)
 
+    def test_editProductOfStore_invalidName_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        self.assertTrue(product.name == "paper")
+        with self.assertRaises(Exception):
+            self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, name = "")
+        self.assertTrue(product.name == "paper")
     def test_editProductOfStore_invalidPrice_fail(self):
         pass
 

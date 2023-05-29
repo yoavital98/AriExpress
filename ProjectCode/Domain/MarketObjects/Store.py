@@ -126,7 +126,7 @@ class Store:
 
     def changeProduct(self, access, product_id, **kwargs):
         access.canChangeProducts()
-        cur_product = self.__products.get(product_id)
+        cur_product: Product = self.__products.get(product_id)
         if cur_product is None:
             raise Exception("Product doesn't exists")
         for k, v in kwargs.items():
@@ -134,6 +134,7 @@ class Store:
                 getattr(cur_product, k)
             except AttributeError:
                 raise Exception("No such attribute exists")
+            self.checkValue(v)
             setattr(cur_product, k, v)
         return cur_product
 
@@ -474,4 +475,11 @@ class Store:
             else:
                 self.active = False
                 self.closed_by_admin = True
-
+    def checkValue(self, value):
+        if isinstance(value,int):
+            if value <= 0:
+                raise Exception("value cannot be 0 or negative number")
+        else:
+            if isinstance(value,str):
+                if value == "":
+                    raise Exception("name or category cannot be empty")
