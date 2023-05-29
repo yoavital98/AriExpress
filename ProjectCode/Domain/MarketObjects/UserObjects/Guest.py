@@ -8,8 +8,8 @@ class Guest(User):
     def get_cart(self):
         return super().get_cart()
 
-    def add_to_cart(self, storename, productID, product, quantity):
-        super().add_to_cart(storename, productID, product, quantity)
+    def add_to_cart(self,username, storename, productID, product, quantity):
+        super().add_to_cart(username, storename, productID, product, quantity)
 
     def get_Basket(self, storename):
         return super().get_Basket(storename)

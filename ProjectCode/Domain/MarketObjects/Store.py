@@ -186,6 +186,8 @@ class Store:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
+        if quantity < 0:
+            raise Exception("quantity can't be under zero")
         return cur_product
 
     def searchProductByName(self, keyword):
@@ -465,3 +467,14 @@ class Store:
             "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
             "discounts": self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+
