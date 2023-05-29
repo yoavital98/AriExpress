@@ -446,6 +446,7 @@ class StoreFacade:
         cur_access = self.members[username].get_accesses().get(store_name)
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
+
         changed_product = cur_store.changeProduct(cur_access, product_id, **kwargs)
         # return DataProduct(changed_product)
         return changed_product

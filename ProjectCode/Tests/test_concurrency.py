@@ -1,3 +1,5 @@
+import concurrent
+import random
 import unittest
 from unittest import TestCase
 from ProjectCode.Domain.MarketObjects.Store import Store
@@ -8,7 +10,9 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Domain.StoreFacade import StoreFacade
 from ProjectCode.Service.Service import Service
 import threading
-
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from unittest import TestCase
 
 # def test_func_ten(func, *args, **kwargs):
 #     # Create a shared variable to track the success/failure of foo()
@@ -37,37 +41,39 @@ import threading
 #     assert result['success_count'] == 10, "All function calls should succeed"
 #     assert result['failure_count'] == 10, "All function calls should fail"
 
-def test_func_one(func, *args, **kwargs):
-    # Create a shared variable to track the success/failure of foo()
+def test_2_concurrent_actions(func1, func2, user1_args, user2_args):
+    # Create a shared variable to track the success/failure of the function calls
     result = {'success_count': 0, 'failure_count': 0}
 
-    def run_func():
+    def run_func(func, user_args):
         try:
-            func(*args, **kwargs)  # Call foo()
+            func(*user_args)  # Call the function with user-specific arguments
             result['success_count'] += 1
-            print(f"success_success: {result.get('success_count')}")
+            print(f"User {user_args[0]} succeeded. Success count: {result['success_count']}")
         except Exception:
             result['failure_count'] += 1
-            print(f"failure_success: {result.get('failure_count')}")
+            print(f"User {user_args[0]} failed. Failure count: {result['failure_count']}")
 
-    # Create two threads to run foo() concurrently
-    thread1 = threading.Thread(target=run_func)
-    thread2 = threading.Thread(target=run_func)
+    # Create a list of threads
+    thread1 = threading.Thread(target=run_func, args=(func1, user1_args,))
+    thread2 = threading.Thread(target=run_func, args=(func2, user2_args,))
+    threads = [thread1, thread2]
 
-    # Start both threads
-    thread1.start()
-    thread2.start()
+    # Shuffle the order of threads
+    random.shuffle(threads)
 
-    # Wait for both threads to finish
-    thread1.join()
-    thread2.join()
+    # Start all threads
+    for thread in threads:
+        thread.start()
 
-    # Check the result
-    assert result['success_count'] == 1, "One function call should succeed"
-    assert result['failure_count'] == 1, "One function call should fail"
+    # Wait for all threads to finish
+    for thread in threads:
+        thread.join()
+
+    return result
 
 class TestStoreFacade(TestCase):
-    def baseSetUp(self):
+    def setup(self):
         # sets 3 users, 1 stores where user1 is founder, user2 is manager, user3 is costumer
         self.store_facade = StoreFacade()
         self.store_facade.register("user1", "123", "email1")
@@ -75,54 +81,46 @@ class TestStoreFacade(TestCase):
         self.store_facade.register("user3", "123", "email3")
         self.store_facade.logInAsMember("user1", "123")
         self.store_facade.logInAsMember("user2", "123")
+        self.store_facade.logInAsMember("user3", "123")
         self.store_facade.createStore("user1", "store1")
         self.store_facade.nominateStoreManager("user1", "user2", "store1")
-        self.store_facade.addNewProductToStore("user1", "store1", "product1", 100, 10, "category")
-
-    def setUpForPurchaseCartTwice(self):
-        self.store_facade = StoreFacade()
-        self.store_facade.register("username", "password", "email")
-        self.store_facade.logInAsMember("username", "password")
-        self.store_facade.createStore("username", "storename")
-        self.store_facade.addNewProductToStore("username", "storename", "product1", 100, 10, "category")
-
-    def setUpForPurchaseCartUsers(self):
-        pass
-
-    def setUpForPurchaseCartManagerDeletes(self):
-        pass
-
-    def setUpForNominateManagerTwice(self):
-        pass
-
-
-
-    def test_concurrent_purchaseCart_purchaseTwice(self):
-        # test_func(self.store_facade.purchaseCart("username", 1234, "feliks", 123456789, 1, 111, "okokok"))
-        # test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
-        self.setUpForPurchaseCartTwice()
-        for i in range(0, 10):
-            self.store_facade.addToBasket("username", "storename", 1, 5)
-            test_func_one(self.store_facade.purchaseCart, "username", 1234, "feliks", 123456789, 1, 111, "okokok")
+        self.store_facade.addNewProductToStore("user1", "store1", "product1", 1, 10, "category")
 
     def test_concurrent_purchaseCart_2CostumersLastItem(self):
         # Simulate two customers attempting to purchase the same last item in stock simultaneously.
         # Verify that the system handles the concurrency correctly, allowing only one customer
         # to successfully purchase the item while notifying the other customer that the item is no longer available.
-        self.setUpForPurchaseCartTwice()
-        self.store_facade.addToBasket("username", "storename", 1, 10)
-        self.store_facade.addToBasket("username", "storename", 1, 10)
-        self.store_facade.purchaseCart("username", 1234, "feliks", 123456789, 1, 111, "okokok")
-        self.store_facade.purchaseCart("username", 1234, "feliks", 123456789, 1, 111, "okokok")
+        for _ in range(10):  # Run the scenario 10 times
+            self.setup()
+            self.store_facade.addToBasket("user2", "store1", 1, 1)
+            self.store_facade.addToBasket("user3", "store1", 1, 1)
+
+            user1_args = ("user2", 123, "feliks", 123456789, 1, 111, "okokok")
+            user2_args = ("user3", 123, "feliks", 123456789, 1, 111, "okokok")
+
+            result = test_2_concurrent_actions(self.store_facade.purchaseCart, self.store_facade.purchaseCart, user1_args, user2_args)
+            # Check the result
+            assert result['success_count'] == 1, "One function call should succeed"
+            assert result['failure_count'] == 1, "One function call should fail"
 
     def test_concurrent_purchaseCart_managerDeletesItem(self):
         # Test a scenario where a customer initiates a purchase for an item while a manager concurrently deletes the
         # same item from the system. Ensure that the system handles this concurrency appropriately,
         # either preventing the purchase or notifying the customer about the item's unavailability.
-        self.setUpForPurchaseCartManagerDeletes()
-        self.store_facade.addToBasket("username", "storename", 1, 10)
-        self.store_facade.addToBasket("username", "storename", 1, 10)
+        for _ in range(10):  # Run the scenario 10 times
+            self.setup()
+            self.store_facade.addToBasket("user2", "store1", 1, 1)
 
+            user1_args = ("user2", 123, "feliks", 123456789, 1, 111, "okokok")
+            user2_args = ("user1", "store1", 1)
+
+            result = test_2_concurrent_actions(self.store_facade.purchaseCart, self.store_facade.removeProductFromStore, user1_args, user2_args)
+            assert (result['success_count'] == 1 and result['failure_count'] == 1) or \
+                   (result['success_count'] == 2)
+            "One function call should succeed and the other to fail OR both should succeed but the product is not in the store"
+            if(result['success_count'] == 2):
+                with self.assertRaises(Exception):
+                    self.store_facade.getProduct("user2", "store1", 1)
     def test_concurrent_nominateManager_sameNomineeTwice(self):
         # Create a test case where two managers simultaneously try to nominate themselves as the new manager for
         # a specific task or department. Validate that the system handles this concurrency correctly,
