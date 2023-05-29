@@ -720,10 +720,14 @@ class StoreFacade:
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = []
-            for member in self.online_members.values():
-                member_list.append(member)
-            return member_list
+            admin: Admin = self.admins.get(user_name)
+            if admin.logged_In:
+                member_list = []
+                for member in self.online_members.values():
+                    member_list.append(member)
+                return member_list
+            else:
+                raise Exception("admin is not logged in")
         else:
             raise Exception("only admin can get the online members list")
 

@@ -26,7 +26,7 @@ class Cart:
 
     def add_Product(self,username, store, product_id, product, quantity):
         if not self.baskets.keys().__contains__(store.get_store_name()):
-                basket_to_add = Basket(username, store)
+                basket_to_add = Basket(str(username), store)
                 self.baskets[store.get_store_name()] = basket_to_add
         basket: Basket = self.get_Basket(store.get_store_name())
         basket.add_Product(product_id, product, quantity)
