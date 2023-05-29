@@ -76,6 +76,10 @@
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Add new product</button>
       </form>
+      <form method="post" action="{% url 'mainApp:addNewDiscount' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Add new discount</button>
+      </form>
     </div>
     </body>
 {% endblock %}

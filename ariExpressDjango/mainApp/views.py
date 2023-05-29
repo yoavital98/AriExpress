@@ -1,7 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-
 from django.contrib.auth import login as loginFunc
 from django.contrib.auth import logout as logoutFunc, authenticate
 from django.contrib.auth.forms import UserCreationForm
@@ -223,7 +222,72 @@ def editProduct(request, storename):
                                                 'product_price': product_price,
                                                 'product_categories': product_categories})
 
+def addNewDiscount(request, storename):
+    username = request.user.username
+    discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
+    discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
+    percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
+    levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+    levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
+    levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
 
+    if 'submitDiscount' in request.POST:
+        service = Service()
+        if discountTypeInt == 1:
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+
+        if discountTypeInt == 2:
+            rulesData = request.session['rulesData']
+            fixedRulesData = fixRulesData(rulesData)
+            print(fixedRulesData)
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+                if 'rulesData' in request.session:
+                    del request.session['rulesData']
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            
+
+        if discountTypeInt == 3:
+            pass
+
+        if discountTypeInt == 4:
+            pass
+
+        if discountTypeInt == 5:
+            pass
+
+
+    if 'conditionedAddRule' in request.POST:
+        # Retrieve the submitted rulesData
+        rulesData = request.POST.get('rulesData')
+        ruleData = json.loads(rulesData)
+
+        if 'rulesData' not in request.session:
+            request.session['rulesData'] = {}
+            request.session['ruleCounter'] = 0
+
+        # Check if ruleData is not already in the session
+        if ruleData not in dict(request.session['rulesData']).values():
+            counter = request.session['ruleCounter']
+            ruleDict = request.session['rulesData']
+            ruleDict[counter] = ruleData
+            request.session['ruleCounter'] += 1
+        print(request.session['rulesData'])
+
+
+    if 'clearAllRules' in request.POST:
+        if 'rulesData' in request.session:
+            del request.session['rulesData']
+        request.session['ruleCounter'] = 0
+
+    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
 
 
 def createStore(request):
@@ -488,4 +552,53 @@ def edit_product(request):
         messages.error(request, "Error editting product quantity - "+ str(request.method))
         return HttpResponseRedirect('/cart')  
     
+#---------------------------------------------------------------------------------------------------------------------------------------#
+
+
+#-----------------------------------------------------------Helper Functions------------------------------------------------------------#
+
+def getDiscountType(discount):
+    discount = int(discount)
+    if discount == 1: return "Simple"
+    if discount == 2: return "Conditioned"
+    if discount == 3: return "Coupon"
+    if discount == 4: return "Max"
+    else: return "Add"
+
+def getLevelType(level):
+    level = int(level)
+    if level == 1: return "Store"
+    if level == 2: return "Category"
+    else: return "Product"
+
+def getlevelName(level, name):
+    level = int(level)
+    if level == 1: return ""
+    else: return name
+
+def fixRulesData(rulesData):
+    keys = list(rulesData.keys())
+    for i in range(1, len(keys)):
+        key = keys[i]
+        previous_key = keys[i-1]
+        child_dict = {
+            'logic_type': rulesData[key].pop('logic_type', ''),
+            'rule': rulesData[key]
+        }
+        rulesData[previous_key]['child'] = child_dict
+    rulesData['0'].pop('logic_type', None)
+    return rulesData['0']
+
+    # keys = list(rulesData.keys())
+    # for i in range(1, len(keys)):
+    #     prev_key = str(i - 1)
+    #     current_key = str(i)
+    #     rulesData[prev_key]['child'] = rulesData[current_key]
+    # return rulesData['0']
+
+
+
+
+
+
 #---------------------------------------------------------------------------------------------------------------------------------------#
