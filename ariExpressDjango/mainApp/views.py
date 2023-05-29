@@ -1,7 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-
 from django.contrib.auth import login as loginFunc
 from django.contrib.auth import logout as logoutFunc, authenticate
 from django.contrib.auth.forms import UserCreationForm
@@ -231,9 +230,8 @@ def addNewDiscount(request, storename):
     levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
     levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
     levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
-    rulesData = {} if request.POST.get('levelName') == None else request.POST.get('levelName')
 
-    if 'simpleDiscount' in request.POST:
+    if 'submitDiscount' in request.POST:
         service = Service()
         if discountTypeInt == 1:
             actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
@@ -241,7 +239,14 @@ def addNewDiscount(request, storename):
                 messages.success(request, ("Discount has been added"))
 
         if discountTypeInt == 2:
-            pass
+            rulesData = request.session['rulesData']
+            print(rulesData)
+            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, rulesData)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+                if 'rulesData' in request.session:
+                    del request.session['rulesData']
+            
 
         if discountTypeInt == 3:
             pass
@@ -254,11 +259,28 @@ def addNewDiscount(request, storename):
 
 
     if 'conditionedAddRule' in request.POST:
-        rulesData
+        # Retrieve the submitted rulesData
+        rulesData = request.POST.get('rulesData')
+        ruleData = json.loads(rulesData)
 
-    print(rulesData)
+        if 'rulesData' not in request.session:
+            request.session['rulesData'] = {}
+            request.session['ruleCounter'] = 0
 
-    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName, 'rulesData': rulesData})
+        # Check if ruleData is not already in the session
+        if ruleData not in dict(request.session['rulesData']).values():
+            counter = request.session['ruleCounter']
+            ruleDict = request.session['rulesData']
+            ruleDict[counter] = ruleData
+            request.session['ruleCounter'] += 1
+        print(request.session['rulesData'])
+
+    if 'clearAllRules' in request.POST:
+        if 'rulesData' in request.session:
+            del request.session['rulesData']
+        request.session['ruleCounter'] = 0
+
+    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
 
 
 def createStore(request):

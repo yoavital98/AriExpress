@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
+<script>
+	var rulesData = {};
+</script>
 <head>
   <title>{{ storename }} - Add new product</title>
   <meta charset="utf-8">
@@ -16,8 +19,9 @@
 		<div class="container" id="firstContainer">
 			<div class="card">
 				<div class="card-body">
-					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}">
-					{% csrf_token %}
+					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}" id="addRuleForm" onsubmit="handleFormSubmit(event)">
+						{% csrf_token %}
+					<input type="hidden" name="rulesData" value="{{ rulesData|safe }}">
 					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleConditioned(this)">
 						<option selected disabled>Discount Type</option>
 						<option value="1" {% if discountType == "Simple" %} selected {% endif %}>Simple</option>
@@ -81,7 +85,7 @@
                         }
                     </script>
 					
-					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" {% if discountType == "Simple" %}style="display: block;"{% else %}style="display: none;"{% endif %} name="simpleDiscount">Submit</button>
+					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" name="submitDiscount">Submit Discount</button>
 
 				</div>
 			</div>
@@ -95,7 +99,6 @@
 		<div class="container" id="secondContainer" style="display: none;">
 			<div class="card">
 				<div class="card-body">
-					<input type="hidden" name="rulesData" value="{{ rulesData }}">
 					<select class="form-select mb-3" aria-label="Default select example" name="ruleType">
 						<option selected disabled>Rule Type</option>
 						<option value="1">Basket total price</option>
@@ -118,37 +121,40 @@
 					<label class="form-label">Operator: </label>
 					<br>
 					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="equal">
 						<label class="form-check-label" for="inlineRadio1">Equal to</label>
 					</div>
 					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
+						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="greater">
 						<label class="form-check-label" for="inlineRadio2">Greater than</label>
 					</div>
 					<div class="form-check form-check-inline mb-3">
-						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="option3">
+						<input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="less">
 						<label class="form-check-label" for="inlineRadio3">Less than</label>
 					</div>
 					<br>
-					<div><button type="submit" class="btn btn-primary" id="submitButtonSecondContainer" name="conditionedAddRule">Submit</button></div>
+					<div class="d-flex justify-content-start">
+						<div><button type="submit" class="btn btn-primary me-2" id="submitButtonSecondContainer" name="conditionedAddRule">Add Rule</button></div>
+						<div><button type="submit" class="btn btn-primary me-2" name="clearAllRules">Clear Rules</button></div>
+					</div>
 					</form>
 				</div>
 			</div>
 		</div>
 		<script>
 			function toggleConditioned(element) {
-			  const submitButtonFirstContainer = document.getElementById("submitButtonFirstContainer");
+			//   const submitButtonFirstContainer = document.getElementById("submitButtonFirstContainer");
 			  const submitButtonSecondContainer = document.getElementById("submitButtonSecondContainer");
 			  const secondContainer = document.getElementById("secondContainer");
 			  if (element.value === "1") {
 				secondContainer.style.display = "none";
-				submitButtonFirstContainer.style.display = "block";
+				// submitButtonFirstContainer.style.display = "block";
 			  } else if (element.value === "2") {
 				secondContainer.style.display = "block";
-				submitButtonFirstContainer.style.display = "none";
+				// submitButtonFirstContainer.style.display = "none";
 			  } else {
 				secondContainer.style.display = "none";
-				submitButtonFirstContainer.style.display = "none";
+				// submitButtonFirstContainer.style.display = "none";
 			  }
 			}
 		  
@@ -158,8 +164,50 @@
 			  toggleConditioned(discountTypeSelect);
 			});
 		</script>
+		<script>
+			// Function to capture input values and create a dictionary
+			function captureInputValues() {
+				// Retrieve the input values
+				var ruleType = document.querySelector("select[name='ruleType']").value;
+				var ruleProductName = document.querySelector("input[name='ruleProductName']").value;
+				var ruleCategoryName = document.querySelector("input[name='ruleCategoryName']").value;
+				var ruleQuantity = document.querySelector("input[name='ruleQuantity']").value;
+
+				// Retrieve the selected radio button value
+				var selectedOption = document.querySelector("input[name='inlineRadioOptions']:checked");
+				var radioValue = selectedOption ? selectedOption.value : '';
+
+				// Create a dictionary object to store the values
+				var rulesData = {
+					'ruleType': ruleType,
+					'ruleProductName': ruleProductName,
+					'ruleCategoryName': ruleCategoryName,
+					'ruleQuantity': ruleQuantity,
+					'radioValue': radioValue,
+					'child': ''
+				};
+				return JSON.stringify(rulesData);
+			}
 		  
+			// Function to handle the form submission
+			function handleFormSubmit(event) {
+				// Prevent the form from submitting
+				event.preventDefault();
+
+				// Capture the input values and create the dictionary
+				var rulesData = captureInputValues();
+
+				// Set the dictionary value in a hidden input field
+				var hiddenInput = document.createElement('input');
+				hiddenInput.setAttribute('type', 'hidden');
+				hiddenInput.setAttribute('name', 'rulesData');
+				hiddenInput.setAttribute('value', rulesData);
+				document.getElementById('addRuleForm').appendChild(hiddenInput);
+
+				// Submit the form
+				document.getElementById('addRuleForm').submit();
+			}
+		</script>
 	</div>
-	  
 </body>
 {% endblock %}
