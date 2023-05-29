@@ -20,6 +20,13 @@ urlpatterns = [
     # path(r'resetpassword', views.reset_password, name='reset_password'),
     path(r'mystores/<str:storename>/', views.mystores_specific, name='mystores_specific'),
     path(r'createStore/', views.createStore, name='createStore'),
+    # path(r'openStore/<str:storename>', views.openStore, name='openStore'),
+    # path(r'closeStore/<str:storename>', views.closeStore, name='closeStore'),
+    path(r'addNewProduct/<str:storename>', views.addNewProduct, name='addNewProduct'),
+    path(r'editProduct/<str:storename>', views.editProduct, name='editProduct'),
+    path(r'addNewDiscount/<str:storename>', views.addNewDiscount, name='addNewDiscount'),
+
+
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
     path(r'adminPage/', views.adminPage, name='adminPage'),
     path(r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
@@ -31,6 +38,7 @@ urlpatterns = [
     # path to view the message
     path (r'mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
     path(r'cart/', views.cart, name='cart'),
-
+    path(r'remove_product', views.remove_product, name='remove_product'),
+    path(r'edit_product', views.edit_product, name='edit_product'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

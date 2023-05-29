@@ -13,26 +13,12 @@
     <script src="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous"></script>
 
 </head>
-<style>
-  .specialh1 {
-  position: absolute;
-  top: 12%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  }
-  .form-select, .userSelect {
-    width: 300px;
 
-  }
-</style>
   
   <body>
 
-    <h1 class="specialh1">{{ storename }}</h1>
+    <h1 class="specialh1">{{ storename }} - {{ active }}</h1>
     <br>
-    <br>
-    <br>
-
     <table class="table table-hover">
       <tr class="table-light">
           <th>Product ID</th>
@@ -52,17 +38,48 @@
             <td>{{ product.categories }}</td>
             <td>
               <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-                <button type="button" class="btn btn-outline-dark">Edit</button>
-                <button type="button" class="btn btn-outline-dark">Remove</button>
+                <form method="post" action="{% url 'mainApp:editProduct' storename %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                    <input type="hidden" name="product_name" value="{{ product.name }}">
+                    <input type="hidden" name="product_quantity" value="{{ product.quantity }}">
+                    <input type="hidden" name="product_price" value="{{ product.price }}">
+                    <input type="hidden" name="product_categories" value="{{ product.categories }}">
+                    <button type="submit" class="btn btn-outline-dark" name="openEditProduct">Edit</button>
+                </form>
+
+                <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                    <button type="submit" class="btn btn-outline-dark" name="removeProduct">Remove</button>
+                </form>
               </div>
             </td>
         </tr>
       {% endfor %}
     </table>
-
-    <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
-			{% csrf_token %}
-      <button type="submit" class="btn btn-primary">Nominate</button>
-    </form>
+    <br>
+    <div class="d-flex justify-content-start">
+      <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Nominate</button>
+      </form>
+      <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2" name="openStore">Open Store</button>
+      </form>
+      <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2" name="closeStore">Close Store</button>
+      </form>
+      <form method="post" action="{% url 'mainApp:addNewProduct' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Add new product</button>
+      </form>
+      <form method="post" action="{% url 'mainApp:addNewDiscount' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Add new discount</button>
+      </form>
+    </div>
     </body>
 {% endblock %}

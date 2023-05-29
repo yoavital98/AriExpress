@@ -123,7 +123,7 @@ class Member(User):
     # =======================JSON=======================#
 
     def toJson(self):
-        data = {
+        return {
             "entrance_id": self.entrance_id,
             "username": self.user_name,
             "email": self.email
