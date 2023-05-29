@@ -240,7 +240,8 @@ def addNewDiscount(request, storename):
 
         if discountTypeInt == 2:
             rulesData = request.session['rulesData']
-            print(rulesData)
+            fixedRulesData = fixRulesData(rulesData)
+            print(fixedRulesData)
             actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, rulesData)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
@@ -274,6 +275,7 @@ def addNewDiscount(request, storename):
             ruleDict[counter] = ruleData
             request.session['ruleCounter'] += 1
         print(request.session['rulesData'])
+
 
     if 'clearAllRules' in request.POST:
         if 'rulesData' in request.session:
@@ -568,5 +570,18 @@ def getlevelName(level, name):
     level = int(level)
     if level == 1: return ""
     else: return name
+
+def fixRulesData(rulesData):
+    keys = list(rulesData.keys())
+    for i in range(1, len(keys)):
+        prev_key = str(i - 1)
+        current_key = str(i)
+        rulesData[prev_key]['child'] = rulesData[current_key]
+    return rulesData['0']
+
+
+
+
+
 
 #---------------------------------------------------------------------------------------------------------------------------------------#

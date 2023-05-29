@@ -179,16 +179,20 @@
 
 				// Create a dictionary object to store the values
 				var rulesData = {
-					'ruleType': ruleType,
-					'ruleProductName': ruleProductName,
-					'ruleCategoryName': ruleCategoryName,
-					'ruleQuantity': ruleQuantity,
-					'radioValue': radioValue,
+					'rule_type': ruleType,
+					'product_id': ruleProductName,
+					'operator': radioValue,
+					'quantity': ruleQuantity,
+					'category': ruleCategoryName,
 					'child': ''
 				};
 				return JSON.stringify(rulesData);
 			}
-		  
+		// 	rule_type := "basket_total_price" | "amount_of_product" | "amount_of_category"
+        // product := product_id | -1 for non-specific product rule
+        // category := category name | "" for non specific category rule
+        // operator := ">=" | "<=" | "=="
+        // quantity := quantity of a product | total price
 			// Function to handle the form submission
 			function handleFormSubmit(event) {
 				// Prevent the form from submitting
