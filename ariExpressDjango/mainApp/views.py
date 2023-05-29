@@ -231,7 +231,6 @@ def addNewDiscount(request, storename):
     levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
     levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
     levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
-    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
 
     if 'simpleDiscount' in request.POST:
         service = Service()
