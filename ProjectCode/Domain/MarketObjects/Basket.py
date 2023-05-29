@@ -10,7 +10,7 @@ class Basket:
         self.username = username
         self.store: Store = store
         self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
-        self.bids = TypedDict(int, Bid)
+        self.bids = TypedDict(int, Bid) # Bid id -> Bid
 
     def add_Product(self, product_id, product, quantity):
         if quantity <= 0:

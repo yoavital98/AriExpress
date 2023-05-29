@@ -729,11 +729,15 @@ class StoreFacade:
 
     def getAllOfflineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = []
-            for member in self.members:
-                if member not in self.online_members:
-                    member_list.append(member)
-            return json.dumps(member_list)
+            admin: Admin = self.admins.get(user_name)
+            if admin.logged_In:
+                member_list = []
+                for member in self.members:
+                    if member not in self.online_members:
+                        member_list.append(member)
+                return member_list
+            else:
+                raise Exception("admin is not logged in")
         else:
             raise Exception("only admin can get the offline members list")
 
