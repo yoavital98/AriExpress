@@ -9,7 +9,7 @@ class Basket:
     def __init__(self, username, store):
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id -> (product, quantity, price)
+        self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
         self.bids = TypedDict(int, Bid)
 
     def add_Product(self, product_id, product, quantity):
@@ -24,7 +24,7 @@ class Basket:
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         product: tuple = self.products[product_id]
-        self.products[product_id] = (product[0], quantity)
+        self.products[product_id] = (product[0], quantity, product[2])
 
     def remove_Product(self, product_ID):
         if self.products.keys().__contains__(product_ID):
