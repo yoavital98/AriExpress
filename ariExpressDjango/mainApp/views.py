@@ -113,12 +113,16 @@ def logout(request):
     
 
 def mystores(request):
-    service = Service()
-    storesInfo = service.getUserStores(request.user.username)
-    string_data = storesInfo.getReturnValue()
-    storesInfoDict = ast.literal_eval(str(string_data))
-    # print(storesInfoDict)
-    return render(request, 'mystores.html', {'stores': storesInfoDict})
+    if request.user.is_authenticated:
+        service = Service()
+        storesInfo = service.getUserStores(request.user.username)
+        string_data = storesInfo.getReturnValue()
+        storesInfoDict = ast.literal_eval(str(string_data))
+        # print(storesInfoDict)
+        return render(request, 'mystores.html', {'stores': storesInfoDict})
+    messages.success(request, ("Error: User is not logged in (django error)"))
+    return redirect('mainApp:mainpage')
+
 
 
 def viewAllStores(request):
@@ -136,7 +140,7 @@ def mystores_specific(request, storename):
     permissions = ast.literal_eval(str(permissions))
     # print(permissions)
 
-    if 'openStore' in request.POST:
+    if 'openStore' in request.POST: # StatusChange
         actionRes = service.openStore(request.user.username, storename)
         if actionRes.getStatus():
             messages.success(request, ("Store is now open."))
@@ -145,7 +149,7 @@ def mystores_specific(request, storename):
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
             return redirect('mainApp:mystores')
         
-    if 'closeStore' in request.POST:
+    if 'closeStore' in request.POST: # StatusChange
         actionRes = service.closeStore(request.user.username, storename)
         if actionRes.getStatus():
             messages.success(request, ("Store is now closed."))
@@ -154,7 +158,7 @@ def mystores_specific(request, storename):
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
             return redirect('mainApp:mystores')
         
-    if 'removeProduct' in request.POST:
+    if 'removeProduct' in request.POST: # ProductChange
         product_id = request.POST.get('product_id')
         actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
         if actionRes.getStatus():
@@ -220,7 +224,7 @@ def editProduct(request, storename):
                                                 'product_price': product_price,
                                                 'product_categories': product_categories})
 
-def addNewDiscount(request, storename):
+def addNewDiscount(request, storename): # Discounts
     username = request.user.username
     discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
     discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
