@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 
@@ -63,7 +64,7 @@ class TestStoreFacade(TestCase):
 
     def test_getUserOrMember_getGuest_success(self):
         guest: Guest = self.store_facade.getUserOrMember(0)
-        self.assertTrue(guest.get_entrance_id() == 0)
+        self.assertTrue(guest.get_entrance_id() == "0")
 
     def test_getUserOrMember_getGuest_fail(self):
         with self.assertRaises(Exception):
@@ -875,18 +876,58 @@ class TestStoreFacade(TestCase):
     def test_getDiscount_discountNotExists_fail(self):
         pass
     #purchaseCart
-    def test_purchaseCart_success(self):
-        pass
+    def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                     1, 9)
+        self.store_facade.addToBasket("YuvalMelamed", "AriExpress",
+                                      1, 9)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "some_address")
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11", "554",
+                                           "some_address")
+        amiel_transaction_list: list =transaction_history.get_User_Transactions("Amiel")
+
+        # integrity that the transaction was successful for amiel
+        self.assertTrue(len(amiel_transaction_list) == 1)
+        # integrity that the transaction failed for Yuval
+        with self.assertRaises(Exception):
+            # 0 transactions means he cant get anything
+            transaction_history.get_User_Transactions("YuvalMelamed")
+        transaction_history.clearAllHistory()
 
     def test_purchaseCart_userNotLoggedIn_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 3)
+
+        self.store_facade.purchaseCart("Amiel", "4580", "Amiel saad", "007", "12/26", "555",
+                                       "some_address")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 3)
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580", "Amiel saad", "007", "12/26", "555",
+                                       "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        self.assertTrue(len(amiel_transaction_list) == 1)
+        transaction_history.clearAllHistory()
 
     def test_purchaseCart_cartWithoutBaskets_fail(self):
-        pass
-
-    def test_purchaseCart_cartWithEmptyBaskets_fail(self):
-        # TODO: should it be success?
-        pass
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580", "Amiel saad", "007", "12/26", "555",
+                                           "some_address")
+            # integrity that the transaction failed for Amiel
+        with self.assertRaises(Exception):
+            amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        transaction_history.clearAllHistory()
 
     def test_purchaseCart_cardNumberInvalid_fail(self):
         pass
