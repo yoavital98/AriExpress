@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
+
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
@@ -846,16 +847,20 @@ class TestStoreFacade(TestCase):
         amiel: Member = self.store_facade.members.get("Amiel")
         self.store_facade.logInAsMember("Amiel", "password789")
         cart: Cart = self.store_facade.getCart("Amiel")
+        self.assertTrue(cart.username == "Amiel")
     def test_getCart_guest_success(self):
-        pass
+        guest: Guest = self.store_facade.getUserOrMember(0)
+        cart: Cart = self.store_facade.getCart(0)
+        self.assertTrue(cart.username == "0")
+        self.assertTrue(len(cart.baskets.keys()) == 0)
 
     def test_getCart_userNotLoggedIn_fail(self):
-        pass
-
-    def test_getCart_storeNotExists_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            cart: Cart = self.store_facade.getCart("Amiel")
 
     # getDiscount
+    #TODO: Discounts
     def test_getDiscount_success(self):
         pass
 
@@ -869,7 +874,40 @@ class TestStoreFacade(TestCase):
 
     def test_getDiscount_discountNotExists_fail(self):
         pass
+    #purchaseCart
+    def test_purchaseCart_success(self):
+        pass
 
+    def test_purchaseCart_userNotLoggedIn_fail(self):
+        pass
+
+    def test_purchaseCart_cartWithoutBaskets_fail(self):
+        pass
+
+    def test_purchaseCart_cartWithEmptyBaskets_fail(self):
+        # TODO: should it be success?
+        pass
+
+    def test_purchaseCart_cardNumberInvalid_fail(self):
+        pass
+
+    def test_purchaseCart_cardDateInvalid_fail(self):
+        pass
+
+    def test_purchaseCart_cardNameInvalid_fail(self):
+        pass
+
+    def test_purchaseCart_cardCcvInvalid_fail(self):
+        pass
+
+    def test_purchaseCart_addressInvalid_fail(self):
+        pass
+
+    def test_purchaseCart_productInBasketOutOfStock_fail(self):
+        pass
+
+    def test_purchaseCart_productInBasketNotExists_fail(self):
+        pass
     # getMemberPurchaseHistory
     def test_getMemberPurchaseHistory_member_success(self):
         pass
@@ -1279,39 +1317,7 @@ class TestStoreFacade(TestCase):
     # purchaseCart
     # Tests with 'invalid' means bad info/empty info/missing info
     # so each test can hold several smaller tests
-    def test_purchaseCart_success(self):
-        pass
 
-    def test_purchaseCart_userNotLoggedIn_fail(self):
-        pass
-
-    def test_purchaseCart_cartWithoutBaskets_fail(self):
-        pass
-
-    def test_purchaseCart_cartWithEmptyBaskets_fail(self):
-        # TODO: should it be success?
-        pass
-
-    def test_purchaseCart_cardNumberInvalid_fail(self):
-        pass
-
-    def test_purchaseCart_cardDateInvalid_fail(self):
-        pass
-
-    def test_purchaseCart_cardNameInvalid_fail(self):
-        pass
-
-    def test_purchaseCart_cardCcvInvalid_fail(self):
-        pass
-
-    def test_purchaseCart_addressInvalid_fail(self):
-        pass
-
-    def test_purchaseCart_productInBasketOutOfStock_fail(self):
-        pass
-
-    def test_purchaseCart_productInBasketNotExists_fail(self):
-        pass
 
     # purchaseConfirmedBid
     def test_purchaseConfirmedBid_success(self):

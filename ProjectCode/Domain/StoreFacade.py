@@ -81,7 +81,7 @@ class StoreFacade:
 
     # regular guest entrance
     def loginAsGuest(self):
-        new_guest = Guest(self.nextEntranceID)
+        new_guest = Guest(str(self.nextEntranceID))
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
         return new_guest.get_entrance_id()
@@ -204,7 +204,7 @@ class StoreFacade:
     # guest and member
     # getting a Users cart
     def getCart(self, username):
-        user: User = self.getUserOrMember(username)
+        user: User = self.getUserOrMember(str(username))
         requested_cart = user.get_cart()
         return requested_cart
         # return DataCart(requested_cart)

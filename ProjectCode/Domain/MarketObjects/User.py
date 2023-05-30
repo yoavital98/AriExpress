@@ -6,7 +6,7 @@ from ProjectCode.Domain.MarketObjects.Cart import Cart
 class User(ABC):
     def __init__(self, entrance_id):
         self.entrance_id = entrance_id
-        self.cart = Cart(entrance_id)
+        self.cart = Cart(str(entrance_id))
 
     def get_cart(self):
         return self.cart
