@@ -48,7 +48,7 @@
                     <button type="submit" class="btn btn-outline-dark" name="openEditProduct">Edit</button>
                 </form>
 
-                <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">
+                <form method="post" action="{% url 'mainApp:store_specific' storename %}">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.product_id }}">
                     <button type="submit" class="btn btn-outline-dark" name="removeProduct">Remove</button>
@@ -64,11 +64,11 @@
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Nominate</button>
       </form>
-      <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">
+      <form method="post" action="{% url 'mainApp:store_specific' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2" name="openStore">Open Store</button>
       </form>
-      <form method="post" action="{% url 'mainApp:mystores_specific' storename %}">
+      <form method="post" action="{% url 'mainApp:store_specific' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2" name="closeStore">Close Store</button>
       </form>

@@ -36,7 +36,7 @@
     {% for store in stores %}
       <tr class="table-light">
         <td>
-          <form method="post" action="{% url 'mainApp:mystores_specific' store.store_name %}">
+          <form method="post" action="{% url 'mainApp:store_specific' store.store_name %}">
             {% csrf_token %}
             <input type="hidden" name="data" value="{{ store_data }}">
             <button type="submit" class="link-button" name="storeNameClick">{{ store.store_name }}</button>

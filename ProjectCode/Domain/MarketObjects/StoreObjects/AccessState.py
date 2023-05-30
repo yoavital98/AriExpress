@@ -11,7 +11,7 @@ class AccessState(ABC):
         self.permissions = dict()
         self.permission_names = {"ProductChange": self.addProductPermit, "Bid":self.addBidPermit,
                                  "ModifyPermissions": self.addModifyPermissionPermit, "Auction": self.addAuctionPermit,
-                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit(),
+                                 "Lottery": self.addLotteryPermit, "StatusChange": self.addChangeStatusPermit, "StaffInfo": self.addStaffViewPermit,
                                  "Policies":  self.addPolicy, "Discounts": self.addDiscount}
 
 
@@ -62,7 +62,7 @@ class AccessState(ABC):
     
     def checkForPermission(self, name):
         if self.permissions.get(name) is not None:
-            return self.permissions[name]()
+            return self.permissions[name]
         else:
             raise Exception("You dont have the permission for that")
 
