@@ -1,5 +1,5 @@
 from abc import ABC
-
+import json
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 
 
@@ -47,6 +47,7 @@ class AccessState(ABC):
         if self.permissions.get(name) is None:
             raise Exception("No such permission exists")
         del self.permissions[name]
+
     def addPermission(self,name ,func=None):
         if func is None:
             self.permissions[name] = self.permission_names[name]
@@ -55,6 +56,10 @@ class AccessState(ABC):
 
     def get_permissions(self):
         return self.permissions
+    
+    def get_permissionsAsJson(self):
+        return self.toJson()
+    
     def checkForPermission(self, name):
         if self.permissions.get(name) is not None:
             return self.permissions[name]()
@@ -63,4 +68,11 @@ class AccessState(ABC):
 
     # =======================JSON=======================#
     def toJson(self):
-        return self.permissions #todo fix this
+        retPermissions = self.permissions
+        for key in retPermissions:
+                retPermissions[key] = "True"
+
+        # for key in self.permission_names:
+        #     if key not in retPermissions:
+        #         retPermissions[key] = "False"
+        return json.dumps(retPermissions)

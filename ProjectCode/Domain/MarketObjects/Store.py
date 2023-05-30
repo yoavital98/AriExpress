@@ -106,6 +106,14 @@ class Store:
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
+        
+    # Get personal permissions for a given store
+    def getPermissionsAsJson(self, requester_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        if requester_access is None:
+            return {}
+        else:
+            return requester_access.get_access_state().get_permissionsAsJson()
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()

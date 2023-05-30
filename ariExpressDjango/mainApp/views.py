@@ -130,50 +130,49 @@ def viewAllStores(request):
 
 
 def mystores_specific(request, storename):
-    if request.user.is_authenticated:
-        if 'openStore' in request.POST:
-            service = Service()
-            actionRes = service.openStore(request.user.username, storename)
-            if actionRes.getStatus():
-                messages.success(request, ("Store is now open."))
-                return redirect('mainApp:mystores_specific', storename=storename)
-            else: 
-                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-                return redirect('mainApp:mystores')
-            
-        if 'closeStore' in request.POST:
-            service = Service()
-            actionRes = service.closeStore(request.user.username, storename)
-            if actionRes.getStatus():
-                messages.success(request, ("Store is now closed."))
-                return redirect('mainApp:mystores_specific', storename=storename)
-            else: 
-                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-                return redirect('mainApp:mystores')
-            
-        if 'removeProduct' in request.POST:
-            service = Service()
-            product_id = request.POST.get('product_id')
-            actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
-            if actionRes.getStatus():
-                messages.success(request, ("Product has been removed"))
-                return redirect('mainApp:mystores_specific', storename=storename)
-            else: 
-                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-                return redirect('mainApp:mystores')
+    service = Service()
+    username = request.user.username
+    permissions = service.getPermissionsAsJson("store123", username).getReturnValue()
+    permissions = ast.literal_eval(str(permissions))
+    # print(permissions)
+
+    if 'openStore' in request.POST:
+        actionRes = service.openStore(request.user.username, storename)
+        if actionRes.getStatus():
+            messages.success(request, ("Store is now open."))
+            return redirect('mainApp:mystores_specific', storename=storename)
+        else: 
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mystores')
         
-        else:
-            service = Service()
-            products = service.getStoreProductsInfo(storename).getReturnValue()
-            # context = request.POST.get('data')
-            context = ast.literal_eval(str(products))
-            products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
-            active = "Open" if context['active'].lower() == "true" else "Closed"
-            return render(request, 'shop_specific.html', {'products': products_dict,
-                                                    'storename': storename,
-                                                    'active': active})  
+    if 'closeStore' in request.POST:
+        actionRes = service.closeStore(request.user.username, storename)
+        if actionRes.getStatus():
+            messages.success(request, ("Store is now closed."))
+            return redirect('mainApp:mystores_specific', storename=storename)
+        else: 
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mystores')
+        
+    if 'removeProduct' in request.POST:
+        product_id = request.POST.get('product_id')
+        actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
+        if actionRes.getStatus():
+            messages.success(request, ("Product has been removed"))
+            return redirect('mainApp:mystores_specific', storename=storename)
+        else: 
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mystores')
+        
     else:
-        return redirect('mainApp:mainpage')
+        products = service.getStoreProductsInfo(storename).getReturnValue()
+        # context = request.POST.get('data')
+        context = ast.literal_eval(str(products))
+        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+        active = "Open" if context['active'].lower() == "true" else "Closed"
+        return render(request, 'shop_specific.html', {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})  
+    # else:
+    #     return redirect('mainApp:mainpage')
     
 
 # def openStore(request, storename):
@@ -209,7 +208,6 @@ def editProduct(request, storename):
     product_categories = request.POST.get('product_categories')
 
     if 'editButton' in request.POST:
-        print(product_id, product_name)
         service = Service()
         actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
         if actionRes.getStatus():
@@ -244,7 +242,6 @@ def addNewDiscount(request, storename):
         if discountTypeInt == 2:
             rulesData = request.session['rulesData']
             fixedRulesData = fixRulesData(rulesData)
-            print(fixedRulesData)
             actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
@@ -279,7 +276,6 @@ def addNewDiscount(request, storename):
             ruleDict = request.session['rulesData']
             ruleDict[counter] = ruleData
             request.session['ruleCounter'] += 1
-        print(request.session['rulesData'])
 
 
     if 'clearAllRules' in request.POST:
@@ -307,31 +303,43 @@ def createStore(request):
     
 
 def nominateUser(request, storename):
-    if request.method == 'POST':
-        requesterUsername = request.user.username
-        toBeNominatedUsername = request.POST.get('inputNominatedUsername')
-        selected = request.POST.get('nominateSelect')
-        store_name = request.POST.get('storename')
-        service = Service()
-        if selected == '1':
-            res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
-            if res.getStatus():
-                messages.success(request, ("A new user has been nominated to be Owner."))
-                return redirect('mainApp:mystores')
-            else:
-                messages.success(request, ("Error nominating a user to be Owner"))
-                return redirect('mainApp:mystores')
-        elif selected == '2':
-            res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
-            if res.getStatus():
-                messages.success(request, ("A new user has been nominated to be Manager."))
-                return redirect('mainApp:mystores')
-            else:
-                messages.success(request, ("Error nominating a user to be Manager"))
-                return redirect('mainApp:mystores')
+    service = Service()
+    username = request.user.username
+    permissionName = 'ModifyPermissions'
 
-    # messages.success(request, ("Error nominating a user to be Owner"))
-    return render(request, 'nominateUser.html', {'storename': storename})
+    if permissionCheck(username, storename, permissionName):
+        if request.method == 'POST':
+            requesterUsername = request.user.username
+            toBeNominatedUsername = request.POST.get('inputNominatedUsername')
+            selected = request.POST.get('nominateSelect')
+            store_name = request.POST.get('storename')
+            if selected == '1':
+                res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
+                if res.getStatus():
+                    messages.success(request, ("A new user has been nominated to be Owner."))
+                    return redirect('mainApp:mystores')
+                else:
+                    messages.success(request, (f"Error: {res.getReturnValue()}"))
+                    return redirect('mainApp:mystores')
+            elif selected == '2':
+                res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
+                if res.getStatus():
+                    messages.success(request, ("A new user has been nominated to be Manager."))
+                    return redirect('mainApp:mystores')
+                else:
+                    messages.success(request, ("Error nominating a user to be Manager"))
+                    return redirect('mainApp:mystores')
+            else:
+                return render(request, 'nominateUser.html', {'storename': storename})           #didn't nominate yet, just load the page
+
+
+        else:
+            return render(request, 'nominateUser.html', {'storename': storename})
+    
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:mystores_specific', storename=storename)
+
+    # return render(request, 'mystores_specific.html', {'storename': storename})
 
 
 def addNewProduct(request, storename):
@@ -345,7 +353,6 @@ def addNewProduct(request, storename):
             service = Service()
             actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
             if actionRes.getStatus():
-                print(actionRes.getReturnValue())
                 messages.success(request, ("A new Product has been added to the store"))
                 return redirect('mainApp:mystores')
             else:
@@ -654,5 +661,13 @@ def fixRulesData(rulesData):
     #     current_key = str(i)
     #     rulesData[prev_key]['child'] = rulesData[current_key]
     # return rulesData['0']
+
+def permissionCheck(username, storename, permissionName):
+    service = Service()
+    permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
+    permissions : dict = ast.literal_eval(str(permissions))                             #already a dict
+    if permissionName in permissions.keys():
+        return True
+    return False
 
 #---------------------------------------------------------------------------------------------------------------------------------------#

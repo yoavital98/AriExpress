@@ -534,9 +534,19 @@ class Service:
             permissions = self.store_facade.getPermissions(storename, requesterID, nominatedID)
             logging.debug(
                 f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
-            return Response(json.dumps(permissions.keys()), True)
+            return Response(json.dumps(permissions), True)
         except Exception as e:
             logging.error(f"getPermissions Error: {str(e)}.")
+            return Response(e, False)
+    
+    def getPermissionsAsJson(self, storename, requesterID):  # TODO still don't know the implementation
+        try:
+            permissions = self.store_facade.getPermissionsAsJson(storename, requesterID)
+            logging.debug(
+                f"fetching all the store's permissions as json. By username: " + requesterID + ". nominated_username: ")
+            return Response(permissions, True)
+        except Exception as e:
+            logging.error(f"getPermissionsAsJson Error: {str(e)}.")
             return Response(e, False)
 
     def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
