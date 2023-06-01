@@ -113,12 +113,16 @@ def logout(request):
     
 
 def mystores(request):
-    service = Service()
-    storesInfo = service.getUserStores(request.user.username)
-    string_data = storesInfo.getReturnValue()
-    storesInfoDict = ast.literal_eval(str(string_data))
-    # print(storesInfoDict)
-    return render(request, 'mystores.html', {'stores': storesInfoDict})
+    if request.user.is_authenticated:
+        service = Service()
+        storesInfo = service.getUserStores(request.user.username)
+        string_data = storesInfo.getReturnValue()
+        storesInfoDict = ast.literal_eval(str(string_data))
+        # print(storesInfoDict)
+        return render(request, 'mystores.html', {'stores': storesInfoDict})
+    messages.success(request, ("Error: User is not logged in (django error)"))
+    return redirect('mainApp:mainpage')
+
 
 
 def viewAllStores(request):
@@ -129,51 +133,70 @@ def viewAllStores(request):
     return render(request, 'allStores.html', {'stores': storesInfoDict})
 
 
-def mystores_specific(request, storename):
+def store_specific(request, storename):
+    service = Service()
+    username = request.user.username
     if request.user.is_authenticated:
-        if 'openStore' in request.POST:
-            service = Service()
+        permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
+        permissions = ast.literal_eval(str(permissions))
+    else: permissions = {}
+
+    print(permissions)
+    print(storename)
+    print(username)
+
+    if 'openStore' in request.POST:
+        permissionName = 'StatusChange'
+        if permissionCheck(username, storename, permissionName):
             actionRes = service.openStore(request.user.username, storename)
             if actionRes.getStatus():
                 messages.success(request, ("Store is now open."))
-                return redirect('mainApp:mystores_specific', storename=storename)
+                return redirect('mainApp:store_specific', storename=storename)
             else: 
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                 return redirect('mainApp:mystores')
-            
-        if 'closeStore' in request.POST:
-            service = Service()
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+            return redirect('mainApp:store_specific', storename=storename)
+        
+    if 'closeStore' in request.POST:
+        permissionName = 'StatusChange'
+        if permissionCheck(username, storename, permissionName):
             actionRes = service.closeStore(request.user.username, storename)
             if actionRes.getStatus():
                 messages.success(request, ("Store is now closed."))
-                return redirect('mainApp:mystores_specific', storename=storename)
+                return redirect('mainApp:store_specific', storename=storename)
             else: 
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                 return redirect('mainApp:mystores')
-            
-        if 'removeProduct' in request.POST:
-            service = Service()
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+            return redirect('mainApp:store_specific', storename=storename)
+        
+    if 'removeProduct' in request.POST:
+        permissionName = 'ProductChange'
+        if permissionCheck(username, storename, permissionName):
             product_id = request.POST.get('product_id')
             actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
             if actionRes.getStatus():
                 messages.success(request, ("Product has been removed"))
-                return redirect('mainApp:mystores_specific', storename=storename)
+                return redirect('mainApp:store_specific', storename=storename)
             else: 
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                 return redirect('mainApp:mystores')
-        
         else:
-            service = Service()
-            products = service.getStoreProductsInfo(storename).getReturnValue()
-            # context = request.POST.get('data')
-            context = ast.literal_eval(str(products))
-            products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
-            active = "Open" if context['active'].lower() == "true" else "Closed"
-            return render(request, 'shop_specific.html', {'products': products_dict,
-                                                    'storename': storename,
-                                                    'active': active})  
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+            return redirect('mainApp:store_specific', storename=storename)
+        
     else:
-        return redirect('mainApp:mainpage')
+        products = service.getStoreProductsInfo(storename).getReturnValue()
+        # context = request.POST.get('data')
+        context = ast.literal_eval(str(products))
+        products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
+        active = "Open" if context['active'].lower() == "true" else "Closed"
+        return render(request, 'store_specific.html', {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})  
+    # else:
+    #     return redirect('mainApp:mainpage')
     
 
 # def openStore(request, storename):
@@ -182,7 +205,7 @@ def mystores_specific(request, storename):
 #         actionRes = service.openStore(request.user.username, storename)
 #         if actionRes.getStatus():
 #             messages.success(request, ("Store is now open."))
-#             return redirect('mainApp:mystores_specific', storename=storename)
+#             return redirect('mainApp:store_specific', storename=storename)
 #         else: 
 #             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 #             return redirect('mainApp:mystores')
@@ -195,100 +218,107 @@ def mystores_specific(request, storename):
 #         actionRes = service.closeStore(request.user.username, storename)
 #         if actionRes.getStatus():
 #             messages.success(request, ("Store is now closed."))
-#             return redirect('mainApp:mystores_specific', storename=storename)
+#             return redirect('mainApp:store_specific', storename=storename)
 #         else: 
 #             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 #             return redirect('mainApp:mystores')
 #     return redirect('mainApp:mainpage')
 
 def editProduct(request, storename):
-    product_id = request.POST.get('product_id')
-    product_name = request.POST.get('product_name')
-    product_quantity = request.POST.get('product_quantity')
-    product_price = request.POST.get('product_price')
-    product_categories = request.POST.get('product_categories')
-
-    if 'editButton' in request.POST:
-        print(product_id, product_name)
-        service = Service()
-        actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
-        if actionRes.getStatus():
-            messages.success(request, ("Product has been edited"))
-            return redirect('mainApp:mystores_specific', storename=storename)
-        
-    return render(request, 'editProduct.html', {'storename': storename,
-                                                'product_name': product_name,
-                                                'product_quantity': product_quantity,
-                                                'product_price': product_price,
-                                                'product_categories': product_categories})
-
-def addNewDiscount(request, storename):
+    permissionName = 'ProductChange'
     username = request.user.username
-    discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
-    discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
-    percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
-    levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
-    levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
-    levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
+    if permissionCheck(username, storename, permissionName):
+        product_id = request.POST.get('product_id')
+        product_name = request.POST.get('product_name')
+        product_quantity = request.POST.get('product_quantity')
+        product_price = request.POST.get('product_price')
+        product_categories = request.POST.get('product_categories')
 
-    if 'submitDiscount' in request.POST:
-        service = Service()
-        if discountTypeInt == 1:
-            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
+        if 'editButton' in request.POST:
+            service = Service()
+            actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
             if actionRes.getStatus():
-                messages.success(request, ("Discount has been added"))
-            else:
-                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-
-
-        if discountTypeInt == 2:
-            rulesData = request.session['rulesData']
-            fixedRulesData = fixRulesData(rulesData)
-            print(fixedRulesData)
-            actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
-            if actionRes.getStatus():
-                messages.success(request, ("Discount has been added"))
-                if 'rulesData' in request.session:
-                    del request.session['rulesData']
-            else:
-                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                messages.success(request, ("Product has been edited"))
+                return redirect('mainApp:store_specific', storename=storename)
             
+        return render(request, 'editProduct.html', {'storename': storename,
+                                                    'product_name': product_name,
+                                                    'product_quantity': product_quantity,
+                                                    'product_price': product_price,
+                                                    'product_categories': product_categories})
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
 
-        if discountTypeInt == 3:
-            pass
+def addNewDiscount(request, storename): # Discounts
+    username = request.user.username
+    permissionName = 'Discounts'
+    if permissionCheck(username, storename, permissionName):
+        discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
+        discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
+        percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
+        levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+        levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
+        levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
 
-        if discountTypeInt == 4:
-            pass
+        if 'submitDiscount' in request.POST:
+            service = Service()
+            if discountTypeInt == 1:
+                actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
+                if actionRes.getStatus():
+                    messages.success(request, ("Discount has been added"))
+                else:
+                    messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
-        if discountTypeInt == 5:
-            pass
+
+            if discountTypeInt == 2:
+                rulesData = request.session['rulesData']
+                fixedRulesData = fixRulesData(rulesData)
+                actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
+                if actionRes.getStatus():
+                    messages.success(request, ("Discount has been added"))
+                    if 'rulesData' in request.session:
+                        del request.session['rulesData']
+                else:
+                    messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                
+
+            if discountTypeInt == 3:
+                pass
+
+            if discountTypeInt == 4:
+                pass
+
+            if discountTypeInt == 5:
+                pass
 
 
-    if 'conditionedAddRule' in request.POST:
-        # Retrieve the submitted rulesData
-        rulesData = request.POST.get('rulesData')
-        ruleData = json.loads(rulesData)
+        if 'conditionedAddRule' in request.POST:
+            # Retrieve the submitted rulesData
+            rulesData = request.POST.get('rulesData')
+            ruleData = json.loads(rulesData)
 
-        if 'rulesData' not in request.session:
-            request.session['rulesData'] = {}
+            if 'rulesData' not in request.session:
+                request.session['rulesData'] = {}
+                request.session['ruleCounter'] = 0
+
+            # Check if ruleData is not already in the session
+            if ruleData not in dict(request.session['rulesData']).values():
+                counter = request.session['ruleCounter']
+                ruleDict = request.session['rulesData']
+                ruleDict[counter] = ruleData
+                request.session['ruleCounter'] += 1
+
+
+        if 'clearAllRules' in request.POST:
+            if 'rulesData' in request.session:
+                del request.session['rulesData']
             request.session['ruleCounter'] = 0
 
-        # Check if ruleData is not already in the session
-        if ruleData not in dict(request.session['rulesData']).values():
-            counter = request.session['ruleCounter']
-            ruleDict = request.session['rulesData']
-            ruleDict[counter] = ruleData
-            request.session['ruleCounter'] += 1
-        print(request.session['rulesData'])
-
-
-    if 'clearAllRules' in request.POST:
-        if 'rulesData' in request.session:
-            del request.session['rulesData']
-        request.session['ruleCounter'] = 0
-
-    return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
-
+        return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
@@ -307,58 +337,76 @@ def createStore(request):
     
 
 def nominateUser(request, storename):
-    if request.method == 'POST':
-        requesterUsername = request.user.username
-        toBeNominatedUsername = request.POST.get('inputNominatedUsername')
-        selected = request.POST.get('nominateSelect')
-        store_name = request.POST.get('storename')
-        service = Service()
-        if selected == '1':
-            res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
-            if res.getStatus():
-                messages.success(request, ("A new user has been nominated to be Owner."))
-                return redirect('mainApp:mystores')
-            else:
-                messages.success(request, ("Error nominating a user to be Owner"))
-                return redirect('mainApp:mystores')
-        elif selected == '2':
-            res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
-            if res.getStatus():
-                messages.success(request, ("A new user has been nominated to be Manager."))
-                return redirect('mainApp:mystores')
-            else:
-                messages.success(request, ("Error nominating a user to be Manager"))
-                return redirect('mainApp:mystores')
+    service = Service()
+    username = request.user.username
+    permissionName = 'ModifyPermissions'
 
-    # messages.success(request, ("Error nominating a user to be Owner"))
-    return render(request, 'nominateUser.html', {'storename': storename})
+    if permissionCheck(username, storename, permissionName):
+        if request.method == 'POST':
+            requesterUsername = request.user.username
+            toBeNominatedUsername = request.POST.get('inputNominatedUsername')
+            selected = request.POST.get('nominateSelect')
+            store_name = request.POST.get('storename')
+            if selected == '1':
+                res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
+                if res.getStatus():
+                    messages.success(request, ("A new user has been nominated to be Owner."))
+                    return redirect('mainApp:mystores')
+                else:
+                    messages.success(request, (f"Error: {res.getReturnValue()}"))
+                    return redirect('mainApp:mystores')
+            elif selected == '2':
+                res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
+                if res.getStatus():
+                    messages.success(request, ("A new user has been nominated to be Manager."))
+                    return redirect('mainApp:mystores')
+                else:
+                    messages.success(request, ("Error nominating a user to be Manager"))
+                    return redirect('mainApp:mystores')
+            else:
+                return render(request, 'nominateUser.html', {'storename': storename})           #didn't nominate yet, just load the page
+
+
+        else:
+            return render(request, 'nominateUser.html', {'storename': storename})
+    
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
+
+    # return render(request, 'store_specific.html', {'storename': storename})
 
 
 def addNewProduct(request, storename):
-    if request.method == 'POST':
-        form = NewProductForm(request.POST)
-        if form.is_valid():
-            productname = form.cleaned_data['productName']
-            category = form.cleaned_data['productCategory']
-            price = form.cleaned_data['productPrice']
-            quantity = form.cleaned_data['productQuantity']
-            service = Service()
-            actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
-            if actionRes.getStatus():
-                print(actionRes.getReturnValue())
-                messages.success(request, ("A new Product has been added to the store"))
-                return redirect('mainApp:mystores')
-            else:
-                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-                return redirect('mainApp:mystores')
-        else:
-            # Handle the case when the form is invalid
-            messages.error(request, "Invalid form data")
-            return redirect('mainApp:addNewProduct', storename=storename)
-    else:
-        form = NewProductForm()
+    permissionName = 'ProductChange'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        if "openAddNewProduct" in request.POST:
+            return render(request, 'addNewProduct.html', {'storename': storename})
 
-    return render(request, 'addNewProduct.html', {'storename': storename})
+        else:
+            form = NewProductForm(request.POST)
+            if form.is_valid():
+                productname = form.cleaned_data['productName']
+                category = form.cleaned_data['productCategory']
+                price = form.cleaned_data['productPrice']
+                quantity = form.cleaned_data['productQuantity']
+                service = Service()
+                actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
+                if actionRes.getStatus():
+                    messages.success(request, ("A new Product has been added to the store"))
+                    return redirect('mainApp:store_specific', storename=storename)
+                else:
+                    messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                    return redirect('mainApp:store_specific', storename=storename)
+            else:
+                # Handle the case when the form is invalid
+                messages.error(request, "Invalid form data")
+                return redirect('mainApp:addNewProduct', storename=storename)
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
+    
 
 
 def adminPage(request):
@@ -654,5 +702,14 @@ def fixRulesData(rulesData):
     #     current_key = str(i)
     #     rulesData[prev_key]['child'] = rulesData[current_key]
     # return rulesData['0']
+
+def permissionCheck(username, storename, permissionName):
+    if username == "": return False
+    service = Service()
+    permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
+    permissions : dict = ast.literal_eval(str(permissions))                             #already a dict
+    if permissionName in permissions.keys():
+        return True
+    return False
 
 #---------------------------------------------------------------------------------------------------------------------------------------#

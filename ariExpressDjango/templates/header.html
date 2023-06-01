@@ -39,9 +39,9 @@
                                 Dropdown
                             </a>
                             <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'mainApp:viewAllStores'%}">All Stores</a></li>
                                 {% if user.is_authenticated %}
                                 <li><a class="dropdown-item" href="{% url 'mainApp:mystores'%}">My Stores</a></li>
-                                <li><a class="dropdown-item" href="{% url 'mainApp:viewAllStores'%}">All Stores</a></li>
                                 <li><a class="dropdown-item" href="{% url 'mainApp:createStore'%}">Create a new Store</a></li>
                                 {% endif %}
                                 <li><a class="dropdown-item" href="#">Action</a></li>
