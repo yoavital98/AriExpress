@@ -223,24 +223,30 @@ def store_specific(request, storename):
 #     return redirect('mainApp:mainpage')
 
 def editProduct(request, storename):
-    product_id = request.POST.get('product_id')
-    product_name = request.POST.get('product_name')
-    product_quantity = request.POST.get('product_quantity')
-    product_price = request.POST.get('product_price')
-    product_categories = request.POST.get('product_categories')
+    permissionName = 'ProductChange'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        product_id = request.POST.get('product_id')
+        product_name = request.POST.get('product_name')
+        product_quantity = request.POST.get('product_quantity')
+        product_price = request.POST.get('product_price')
+        product_categories = request.POST.get('product_categories')
 
-    if 'editButton' in request.POST:
-        service = Service()
-        actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
-        if actionRes.getStatus():
-            messages.success(request, ("Product has been edited"))
-            return redirect('mainApp:store_specific', storename=storename)
-        
-    return render(request, 'editProduct.html', {'storename': storename,
-                                                'product_name': product_name,
-                                                'product_quantity': product_quantity,
-                                                'product_price': product_price,
-                                                'product_categories': product_categories})
+        if 'editButton' in request.POST:
+            service = Service()
+            actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
+            if actionRes.getStatus():
+                messages.success(request, ("Product has been edited"))
+                return redirect('mainApp:store_specific', storename=storename)
+            
+        return render(request, 'editProduct.html', {'storename': storename,
+                                                    'product_name': product_name,
+                                                    'product_quantity': product_quantity,
+                                                    'product_price': product_price,
+                                                    'product_categories': product_categories})
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
 
 def addNewDiscount(request, storename): # Discounts
     username = request.user.username

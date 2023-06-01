@@ -13,7 +13,11 @@
     <script src="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous"></script>
 
 </head>
-
+<style>
+  td:last-child {
+      width: 25%;
+  }
+</style>
   
   <body>
 
@@ -38,6 +42,7 @@
             <td>{{ product.categories }}</td>
             <td>
               <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                {% if "ProductChange" in permissions %}
                 <form method="post" action="{% url 'mainApp:editProduct' storename %}">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.product_id }}">
@@ -47,11 +52,17 @@
                     <input type="hidden" name="product_categories" value="{{ product.categories }}">
                     <button type="submit" class="btn btn-outline-dark" name="openEditProduct">Edit</button>
                 </form>
-
+                {% endif %}
+                {% if "ProductChange" in permissions %}
                 <form method="post" action="{% url 'mainApp:store_specific' storename %}">
                     {% csrf_token %}
                     <input type="hidden" name="product_id" value="{{ product.product_id }}">
                     <button type="submit" class="btn btn-outline-dark" name="removeProduct">Remove</button>
+                </form>
+                {% endif %}
+                <form method="post" action="#">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-dark" name="addToCart">Add to cart</button>
                 </form>
               </div>
             </td>
@@ -60,26 +71,36 @@
     </table>
     <br>
     <div class="d-flex justify-content-start">
+      {% if "ModifyPermissions" in permissions %}
       <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Nominate</button>
       </form>
+      {% endif %}
+      {% if "StatusChange" in permissions %}
       <form method="post" action="{% url 'mainApp:store_specific' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2" name="openStore">Open Store</button>
       </form>
+      {% endif %}
+      {% if "StatusChange" in permissions %}
       <form method="post" action="{% url 'mainApp:store_specific' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2" name="closeStore">Close Store</button>
       </form>
+      {% endif %}
+      {% if "ProductChange" in permissions %}
       <form method="post" action="{% url 'mainApp:addNewProduct' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Add new product</button>
       </form>
+      {% endif %}
+      {% if "Discounts" in permissions %}
       <form method="post" action="{% url 'mainApp:addNewDiscount' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Add new discount</button>
       </form>
+      {% endif %}
     </div>
     </body>
 {% endblock %}
