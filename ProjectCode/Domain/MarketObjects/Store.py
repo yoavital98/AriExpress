@@ -106,6 +106,14 @@ class Store:
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
+        
+    # Get personal permissions for a given store
+    def getPermissionsAsJson(self, requester_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        if requester_access is None:
+            return {}
+        else:
+            return requester_access.get_access_state().get_permissionsAsJson()
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()
@@ -186,6 +194,8 @@ class Store:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
+        if quantity < 0:
+            raise Exception("quantity can't be under zero")
         return cur_product
 
     def searchProductByName(self, keyword):
@@ -465,3 +475,14 @@ class Store:
             "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
             "discounts": self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+

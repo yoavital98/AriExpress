@@ -557,8 +557,7 @@ class Service:
         except Exception as e:
             logging.error(f"getDiscount Error: {str(e)}")
             return Response(e, False)
-
-
+        
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         try:
             policy = self.store_facade.addPurchasePolicy(storename, username, purchase_policy, rule, level, level_name)
