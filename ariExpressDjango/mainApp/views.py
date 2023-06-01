@@ -379,7 +379,17 @@ def viewDiscounts(request, storename):
                     'operator': 'greater',
                     'quantity': 'asd',
                     'category': 'asd',
-                    'child': None
+                    'child': {
+                        'logic_type': 'XOR',
+                        'rule': {
+                            'rule_type': 'Rule Type',
+                            'product_id': 'asd',
+                            'operator': 'greater',
+                            'quantity': 'asd',
+                            'category': 'asd',
+                            'child': None
+                        }
+                    }
                 }
             }
         },
@@ -399,6 +409,12 @@ def viewDiscounts(request, storename):
         'username': 'john',
         'discount_type': 'Simple',
         'percent': 50,
+        'rule': {},
+        'discounts': {}
+    }, 3: {
+        'username': 'aaa',
+        'discount_type': 'Simple',
+        'percent': 70,
         'rule': {},
         'discounts': {}
     }}
