@@ -137,11 +137,13 @@ def store_specific(request, storename):
     service = Service()
     username = request.user.username
     if request.user.is_authenticated:
-        permissions = service.getPermissionsAsJson("store123", username).getReturnValue()
+        permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else: permissions = {}
 
-    # print(permissions)
+    print(permissions)
+    print(storename)
+    print(username)
 
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
@@ -379,7 +381,10 @@ def addNewProduct(request, storename):
     permissionName = 'ProductChange'
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
-        if request.method == 'POST':
+        if "openAddNewProduct" in request.POST:
+            return render(request, 'addNewProduct.html', {'storename': storename})
+
+        else:
             form = NewProductForm(request.POST)
             if form.is_valid():
                 productname = form.cleaned_data['productName']
@@ -390,18 +395,18 @@ def addNewProduct(request, storename):
                 actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
                 if actionRes.getStatus():
                     messages.success(request, ("A new Product has been added to the store"))
-                    return redirect('mainApp:mystores')
+                    return redirect('mainApp:store_specific', storename=storename)
                 else:
                     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-                    return redirect('mainApp:mystores')
+                    return redirect('mainApp:store_specific', storename=storename)
             else:
                 # Handle the case when the form is invalid
                 messages.error(request, "Invalid form data")
                 return redirect('mainApp:addNewProduct', storename=storename)
-        else:
-            form = NewProductForm()
+        # else:
+        #     form = NewProductForm()
 
-        return render(request, 'addNewProduct.html', {'storename': storename})
+        # return render(request, 'addNewProduct.html', {'storename': storename})
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)

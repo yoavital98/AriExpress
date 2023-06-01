@@ -22,12 +22,12 @@ class MainappConfig(AppConfig):
         service.logIn("aaa", "asdf1233")
         service.createStore("aaa", "store123")
         service.createStore("aaa", "456store")
-
         service.addNewProductToStore("aaa", "store123", "apple", "fruit", "20", "3")
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
         service.logOut("aaa")
-        # service.logIn("bbb", "asdf1233")
+        
+        service.logIn("bbb", "asdf1233")
 
         # TODO: remove the comments
         # service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")
