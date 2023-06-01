@@ -403,10 +403,6 @@ def addNewProduct(request, storename):
                 # Handle the case when the form is invalid
                 messages.error(request, "Invalid form data")
                 return redirect('mainApp:addNewProduct', storename=storename)
-        # else:
-        #     form = NewProductForm()
-
-        # return render(request, 'addNewProduct.html', {'storename': storename})
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
