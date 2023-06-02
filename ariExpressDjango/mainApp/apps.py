@@ -31,6 +31,8 @@ class MainappConfig(AppConfig):
 
         # TODO: remove the comments
         # service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")
+        # service.addNewProductToStore("aaa", "456store", "banana flavoured lipgloss", "makeup, lipgloss", "20", "25")
+        # service.addNewProductToStore("aaa", "456store", "bananas stickers", "craft, art", "10", "5")
         # service.logOut("aaa")
         # service.logIn("rubin_krief", "h9reynWq").getStatus()
         # service.addToBasket("rubin_krief", "store123", 2, 5)

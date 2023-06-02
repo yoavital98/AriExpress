@@ -79,9 +79,10 @@
                         </li>
                         {% endif %}
                     </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2 nav-search-form" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    <form class="d-flex" method="POST" role="search" action="{% url 'mainApp:searchpage' %}">
+                        {% csrf_token %}
+                        <input class="form-control me-2 nav-search-form" type="search" placeholder="I'm looking for..." aria-label="Search" name ="searched">
+                        <button class="btn btn-outline-success" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
                     </form>
                 </div>
             </div>

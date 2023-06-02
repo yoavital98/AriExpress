@@ -49,6 +49,13 @@ class BasketEditProductForm(forms.Form):
     store_name = forms.CharField(max_length=100)
     quantity = forms.IntegerField()
 
+class BasketAddProductForm(forms.Form):
+    searched = forms.CharField(max_length=200)
+    product_id = forms.IntegerField()
+    store_name = forms.CharField(max_length=100)
+    quantity = forms.IntegerField()
+
+
 class CheckoutForm(forms.Form):
     firstName = forms.CharField(max_length=100)
     lastName = forms.CharField(max_length=100)
