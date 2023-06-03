@@ -668,17 +668,16 @@ def add_product_to_cart(request):
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
                 quantity = form.cleaned_data['quantity']
-                searched = form.cleaned_data['searched']
                 res = service.addToBasket(request.user.username, store, product_id, quantity)
                 if res.getStatus():
                     messages.success(request, "Product added successfully")
-                    return searchpage(request)
+                    return redirect(request.META.get('HTTP_REFERER'))
                 else:
                     messages.error(request, "Error adding product to cart res - " + str(res.getReturnValue()))
-                    return searchpage(request)
+                    return redirect(request.META.get('HTTP_REFERER'))
             else:
                 messages.error(request, "Error adding product to cart form - " + str(form.errors))
-                return searchpage(request)
+                return redirect(request.META.get('HTTP_REFERER'))
         else:
             messages.error(request, "You must be logged in to add products to cart")
             return HttpResponseRedirect('/login')

@@ -14,7 +14,7 @@
                 {% for product in products%}
                 <div class="card product-card" >
                     <div class="product-img">
-                        <img class="card-img-top img-responsive" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/2324px-Banana-Single.jpg" alt="Product" >
+                        <img class="card-img-top img-responsive" src="https://www.bevi.com/static/files/0/ecommerce-default-product.png" alt="https://www.bevi.com/static/files/0/ecommerce-default-product.png" >
                     </div>
                     <div class="card-body" style="padding-top:90%;">
                         <div class="title-product">
@@ -26,10 +26,10 @@
                         </div>
                     </div>
                     <div class="card-footer bg-transparent">
-                        <div class="wcf-left" style="float:left;"><span class="price" style="font-size:20px; font-weight:bold;">${{product.price}}</span></div>
-                        <div class="wcf-right" style="float:right;"><button class="buy-btn" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.id}}{{searched}}"><i class="fa-solid fa-basket-shopping"></i></button></div>
+                        <div class="wcf-left" style="float:left;"><span class="product-price" style="font-size:20px; font-weight:bold;">${{product.price}}</span></div>
+                        <div class="wcf-right" style="float:right;"><button class="buy-btn btn-action" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}"><i class="fa-solid fa-basket-shopping"></i></button></div>
                     </div>
-                    {% include 'products/addToCart.html'%}
+                    {% include 'products/addToCart.html' with storename=storename product=product %}
                 </div>
                 {% endfor %}
             {% endfor %}
@@ -72,7 +72,7 @@
         border:1px solid #212121;
         transition: all 0.2s ease-in-out;
     }
-    button.buy-btn:hover , a.buy-btn:active, a.buy-btn:focus{
+    button.buy-btn:hover , button.buy-btn:active{
         border-color: #FF9800;
         background: #FF9800;
         color: #fff;
