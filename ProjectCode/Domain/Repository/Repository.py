@@ -10,7 +10,7 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def add(self, pk, item):
+    def add(self, **kwargs):
         pass
 
     @abstractmethod

@@ -18,7 +18,6 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
-
 class StoreFacade:
     def __init__(self):
         # Store Data
@@ -401,6 +400,7 @@ class StoreFacade:
             raise Exception("The user is not a member or not logged in")
         if self.stores.keys().__contains__(store_name):
             raise Exception("Store name already taken")
+
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member, username)
         cur_member.accesses[store_name] = new_access
@@ -462,6 +462,7 @@ class StoreFacade:
             self.members[nominated_username].get_accesses()[store_name] = nominated_access
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Owner")
+
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
