@@ -3,6 +3,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
+
 def send_notification(user_id, message):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.send)(f"user_{user_id}", {
@@ -11,34 +12,56 @@ def send_notification(user_id, message):
     })
 
 class MessageController:
-    def __init__(self):
-        self._read_messages = {}  # receiver_id to list of messages
-        self._unread_messages = {}  # receiver_id to list of messages
-        self._observers = {}    # receiver_id to observer
-        self.msgCounter = 0
+    _instance = None
 
-    def send_message(self, requester_id, receiver_id, subject, content, file=None):
+    def __new__(cls):
+        if cls._instance is None:
+            cls._read_messages = {}  # receiver_id to list of messages
+            cls._unread_messages = {}  # receiver_id to list of messages
+            cls.observers = []  # receiver_id to observer
+            cls.msgCounter = 0
+        return cls._instance
+    #
+    # def attach(self, observer):
+    #     self.observers.append(observer)
+    #
+    # def detach(self, observer):
+    #     self.observers.remove(observer)
+    #
+    # def notify_observers(self, message):
+    #     for observer in self.observers:
+    #         observer.update(message)
+
+    def send_message(self, requester_id, receiver_id, subject, content, creation_date, status, file=None):
         message_id = self.msgCounter
         self.msgCounter += 1
-        message = Message(message_id, requester_id, receiver_id, subject, content,  file)
+        message = Message(message_id, requester_id, receiver_id, subject, content, creation_date, file)
 
         if receiver_id not in self._unread_messages.keys():
             self._unread_messages[receiver_id] = []
         self._unread_messages[receiver_id].append(message)
 
-        # Notify the observers of the new message
-        # if receiver_id in self._observers:
-        #     self._observers[receiver_id].raise_notifications_count()
+        # Notify the observers
+        channel_layer = get_channel_layer()
 
-        send_notification(receiver_id, message)
+        # Send the message to the recipient's channel group
+        async_to_sync(channel_layer.group_send)(
+            f"user_{receiver_id}",
+            {
+                'type': 'message',
+                'message': message.toJson(),
+            }
+        )
 
-        #return message
+        send_notification(receiver_id, "You have a new message")
+
+        return message
 
     def read_message(self, user_id, message_id):
         for message in self._unread_messages[user_id]:
             if message.get_id() == message_id:
                 message.mark_as_read()
-                for observer in self._observers[user_id]:
+                for observer in self.observers[user_id]:
                     observer.decrease_notifications_count()
                 self._unread_messages[user_id].remove(message)  # remove from unread
                 if user_id not in self._read_messages.keys():  # add to read
@@ -48,9 +71,9 @@ class MessageController:
         return None
 
     def register_observer(self, user_id, observer):
-        if user_id not in self._observers.keys():
-            self._observers[user_id] = []
-        self._observers[user_id].append(observer)
+        if user_id not in self.observers.keys():
+            self.observers[user_id] = []
+        self.observers[user_id].append(observer)
 
     def get_messages_sent(self, user_id):
         return [message for message in self._messages if message.get_sender_id() == user_id]

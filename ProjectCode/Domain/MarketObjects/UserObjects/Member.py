@@ -19,7 +19,7 @@ class Member(User):
         self.user_name = user_name  # username
         self.password = password  # password
         self.email = email  # email
-        self._messages_observer = MessageObserver(user_name)
+        #self._messages_observer = MessageObserver(user_name)
 
 
     # -------------------------Methods from User--------------------------------
@@ -38,8 +38,8 @@ class Member(User):
     def edit_Product_Quantity(self, storename, product_id, quantity):
         super().edit_Product_Quantity(storename, product_id, quantity)
 
-    def get_messages_observer(self):
-        return self._messages_observer
+    # def get_messages_observer(self):
+    #     return self._messages_observer
 
     # -------------------------------------------------------------------------------
 

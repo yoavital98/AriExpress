@@ -1,31 +1,24 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from ProjectCode.Domain.ExternalServices.MessageController import send_notification
 
 
 class MessageObserver:
+
     def __init__(self, user_id):
         self.user_id = user_id
-        self.notifications = 0
 
-    def get_user_id(self):
-        return self._user_id
+    def update(self, message):
+        channel_layer = get_channel_layer()
 
-    def get_notifications_count(self):
-        return self.notifications
+        # Send the message to the recipient's channel group
+        async_to_sync(channel_layer.group_send)(
+            f"user_{message.receiver_id}",
+            {
+                'type': 'message',
+                'message': message.toJson(),
+            }
+        )
 
-    def raise_notifications_count(self):
-        self.notifications += 1
-
-    def decrease_notifications_count(self):
-        self.notifications -= 1
-
-    def notify(self, message):
-
-        # self.notifications += 1
-        # # if the user is currently logged in, show a notification to them
-        # if StoreFacade().online_members.get(self.user_id):
-        #     StoreFacade().online_members[self.user_id].show_notification(self.notifications)
-        # # if the user is currently offline, update their notification count in the database
-        # else:
-        #     message_controller = MessageController()
-        #     user = message_controller.get_user_by_id(self.user_id)
-        #     user.increment_notification_count()
-        #     message_controller.update_user(user)
+        send_notification(message.receiver_id, "You have a new message")

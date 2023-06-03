@@ -614,9 +614,10 @@ class Service:
             return Response(e, False)
 
     # =================================================Messages=================================================
-    def sendMessageUsers(self, requester_id, receiver_id, subject, content, file=None):
+    def sendMessageUsers(self, requester_id, receiver_id, subject, content, creation_date, status, file=None):
         try:
-            message = self.store_facade.sendMessageUsers(requester_id, receiver_id, subject, content, file)
+            message = self.store_facade.sendMessageUsers(requester_id, receiver_id, subject, content, creation_date, status, file)
+            # TODO save to database
             logging.info(
                 "Message has been sent successfully. By username: " + requester_id + ". receiver_username: " + receiver_id + ".")
             return Response(message.toJson(), True)

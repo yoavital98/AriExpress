@@ -44,7 +44,7 @@ class StoreFacade:
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
         # Services
-        self.message_controller = MessageController()  # Messanger
+        self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
@@ -720,12 +720,12 @@ class StoreFacade:
 
     # ==================  Messages  ==================#
 
-    def sendMessageUsers(self, requesterID, receiverID, subject, content, file, ):
+    def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
         # Register an observer for a user
-        #observer = MessageObserver(receiverID)
-        MessageController().register_observer(receiverID, observer)
+        # observer = MessageObserver(receiverID)
+        #MessageController().register_observer(receiverID, observer)
         # Send a message to the user
-        message = MessageController().send_message(requesterID, receiverID, subject, content, file)
+        message = MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
         # The observer will be notified of the new message and can send a notification to the user
         MessageController().get_observer(receiverID).notify()
 

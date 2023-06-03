@@ -213,12 +213,16 @@ def inbox(request):
 @login_required(login_url='mainApp:login')
 def send_message(request):
     if request.method == 'POST':
-        #service = Service()
+        service = Service()
         form = UserMessagesform(request.POST, request.FILES)
         if form.is_valid():
             message=form.save(commit=False)
             message.sender = request.user.username
-            message.save()
+            msg_res = service.sendMessageUsers(message.sender, message.receiver, message.subject, message.content, message.creation_date, message.status, message.file)
+            if msg_res.getStatus():
+                messages.success(request, ("Message sent successfully"))
+            else:
+                messages.error(request, ("Error sending message - " + str(msg_res.getReturnValue())))
             return HttpResponseRedirect('/')
         else:
             form = UserMessagesform()

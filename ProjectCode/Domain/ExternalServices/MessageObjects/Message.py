@@ -2,14 +2,14 @@ from datetime import datetime
 
 
 class Message:
-    def __init__(self, message_id, sender_id, receiver_id, subject, content, file=None):
+    def __init__(self, message_id, sender_id, receiver_id, subject, content, creation_date, file=None):
         self._id = message_id
         self._sender_id = sender_id
         self._receiver_id = receiver_id
         self._subject = subject
         self._content = content
         self._file = file
-        self._date = datetime.now()
+        self._date = creation_date
         self._read = False
 
     def get_id(self):

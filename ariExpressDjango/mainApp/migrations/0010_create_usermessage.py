@@ -4,9 +4,8 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mainApp' ),
+        ('mainApp', '0009_remove_store_products1_store_products'),
     ]
 
     operations = [
