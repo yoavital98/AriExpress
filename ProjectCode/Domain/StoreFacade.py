@@ -51,11 +51,11 @@ class StoreFacade:
 
     def logInFromGuestToMember(self, entrance_id, user_name, password):
         password_validator = PasswordValidationService()
-        guest: Guest = self.onlineGuests.get(entrance_id)
+        guest: Guest = self.onlineGuests.get(str(entrance_id))
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
             existing_member: Member = self.members[user_name]
-            if password_validator.ConfirmePassword(password, existing_member.get_password()):
+            if password_validator.ConfirmPassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
                 existing_member.setEntranceId(guest.entrance_id)  # it's the same entrance id
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?

@@ -912,8 +912,10 @@ class TestStoreFacade(TestCase):
 
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
         transaction_history = TransactionHistory()
-        transaction_history.insertEmptyList("Amiel")
         # before
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToUser("YuvalMelamed")
+        transaction_history.insertEmptyListToStore("AriExpress")
         self.assertTrue(len(transaction_history.user_transactions.get("Amiel")) == 0)
         self.store_facade.logInAsMember("Amiel", "password789")
         self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
@@ -928,18 +930,20 @@ class TestStoreFacade(TestCase):
                                            "554H",
                                            "some_address")
         amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
-
-        # integrity that the transaction was successful for amiel
+        yuval_transaction_list: list = transaction_history.get_User_Transactions("YuvalMelamed")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
         self.assertTrue(len(amiel_transaction_list) == 1)
+        self.assertTrue(len(ariExpress_transaction_list) == 1)
         # integrity that the transaction failed for Yuval
-        with self.assertRaises(Exception):
-            # 0 transactions means he cant get anything
-            transaction_history.get_User_Transactions("YuvalMelamed")
+        self.assertTrue(len(yuval_transaction_list) == 0)
         transaction_history.clearAllHistory()
 
     def test_purchaseCart_userNotLoggedIn_fail(self):
         transaction_history = TransactionHistory()
         self.store_facade.logInAsMember("Amiel", "password789")
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
         self.store_facade.addToBasket("Amiel", "AriExpress",
                                       1, 3)
 
@@ -953,24 +957,58 @@ class TestStoreFacade(TestCase):
                                            "some_address")
             # integrity that the transaction failed for Amiel
         amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
         self.assertTrue(len(amiel_transaction_list) == 1)
+        self.assertTrue(len(ariExpress_transaction_list) == 1)
         transaction_history.clearAllHistory()
 
     def test_purchaseCart_cartWithoutBaskets_fail(self):
         transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
         self.store_facade.logInAsMember("Amiel", "password789")
         with self.assertRaises(Exception):
             self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                            "some_address")
             # integrity that the transaction failed for Amiel
-        with self.assertRaises(Exception):
-            amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
         transaction_history.clearAllHistory()
     def test_purchaseCart_cardNumberInvalid_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580020345672", "Amiel saad", "123456789", "12/26", "555",
+                                           "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
+        transaction_history.clearAllHistory()
 
     def test_purchaseCart_cardDateInvalid_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "/26", "555",
+                                           "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
+        transaction_history.clearAllHistory()
 
     def test_purchaseCart_cardNameInvalid_fail(self):
         pass
@@ -1159,7 +1197,7 @@ class TestStoreFacade(TestCase):
 
     # logInFromGuestToMember
     def test_logInFromGuestToMember_success(self):
-        pass
+        self.store_facade.logInFromGuestToMember(0 , "Feliks", "password456")
 
     def test_logInFromGuestToMember_userNotExists_fail(self):
         pass

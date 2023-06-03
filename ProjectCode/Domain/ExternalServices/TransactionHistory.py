@@ -17,8 +17,11 @@ class TransactionHistory:
             # Add any initialization code here
         return cls._instance
     # insert empty list is a method for tests
-    def insertEmptyList(self, user_name):
+    def insertEmptyListToUser(self, user_name):
         self.user_transactions[user_name] = list()
+
+    def insertEmptyListToStore(self, store_name):
+        self.store_transactions[store_name] = list()
 
 
     def addUserTransaction(self, transaction: UserTransaction):
