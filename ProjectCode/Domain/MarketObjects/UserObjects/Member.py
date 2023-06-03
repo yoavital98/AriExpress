@@ -1,6 +1,6 @@
 import json
 
-from ProjectCode.Domain.ExternalServices.MessageObjects.MessageObserver import MessageObserver
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Cart import Cart
@@ -19,8 +19,6 @@ class Member(User):
         self.user_name = user_name  # username
         self.password = password  # password
         self.email = email  # email
-        #self._messages_observer = MessageObserver(user_name)
-
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):
@@ -37,9 +35,6 @@ class Member(User):
 
     def edit_Product_Quantity(self, storename, product_id, quantity):
         super().edit_Product_Quantity(storename, product_id, quantity)
-
-    # def get_messages_observer(self):
-    #     return self._messages_observer
 
     # -------------------------------------------------------------------------------
 
@@ -132,5 +127,17 @@ class Member(User):
             "entrance_id": self.entrance_id,
             "username": self.user_name,
             "email": self.email
+        }
+        return json.dumps(data)
+
+    def toJsonAll(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email,
+            "auctions": JsonSerialize.toJsonAttributes(self.auctions),
+            "lotteries": JsonSerialize.toJsonAttributes(self.lotteries),
+            "accesses": JsonSerialize.toJsonAttributes(self.accesses),
+            "cart": self.cart.toJson()
         }
         return json.dumps(data)

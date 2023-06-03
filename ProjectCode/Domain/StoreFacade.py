@@ -6,20 +6,7 @@ from ProjectCode.Domain.ExternalServices.MessageObjects.MessageObserver import M
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
-from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-# -------Data MarketObjects Imports-------#
-from ProjectCode.Domain.DataObjects.DataBasket import DataBasket
-from ProjectCode.Domain.DataObjects.DataCart import DataCart
-from ProjectCode.Domain.DataObjects.DataGuest import DataGuest
-from ProjectCode.Domain.DataObjects.DataBid import DataBid
-from ProjectCode.Domain.DataObjects.DataLottery import DataLottery
-from ProjectCode.Domain.DataObjects.DataProduct import DataProduct
-from ProjectCode.Domain.DataObjects.DataStore import DataStore
-from ProjectCode.Domain.DataObjects.DataAccess import DataAccess
-from ProjectCode.Domain.DataObjects.DataMember import DataMember
-from ProjectCode.Domain.DataObjects.DataAdmin import DataAdmin
-from ProjectCode.Domain.DataObjects.DataAuction import DataAuction
 # -------MarketObjects Imports-------#
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Bid import Bid
@@ -31,18 +18,19 @@ from ProjectCode.Domain.MarketObjects.User import User
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
-import asyncio
+import threading
 
 
 class StoreFacade:
     def __init__(self):
         # Store Data
-        self.purchase_lock = asyncio.Lock()
+        self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)  # dict of members
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
+        self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
         self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
@@ -224,7 +212,8 @@ class StoreFacade:
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
-        product = store.checkProductAvailability(product_id, quantity)
+        with self.lock_for_adding_and_purchasing:
+            product = store.checkProductAvailability(product_id, quantity)
         if product is not None:
             filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
             return filled_basket
@@ -248,7 +237,8 @@ class StoreFacade:
         answer = user.checkProductExistance(store_name, product_id)  # answer is boolean
         if answer:
             store: Store = self.stores[store_name]
-            product = store.checkProductAvailability(product_id, quantity)
+            with self.lock_for_adding_and_purchasing:
+                product = store.checkProductAvailability(product_id, quantity)
             if product is not None:
                 return user.edit_Product_Quantity(store_name, product_id, quantity)
             else:
@@ -261,11 +251,13 @@ class StoreFacade:
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
         user: User = self.__getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
-            return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
-                                                address, True, self.purchase_lock)
+            with self.lock_for_adding_and_purchasing:
+                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
+                                                    address, True)
         else:
-            return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
-                                                address, False, self.purchase_lock)
+            with self.lock_for_adding_and_purchasing:
+                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
+                                                    address, False)
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
     def placeBid(self, username, store_name, offer, product_id, quantity):
@@ -404,10 +396,12 @@ class StoreFacade:
     # ------  Management  ------ #
     # TODO: add check if user is loggedin to each function
 
-    def openStore(self, username, store_name):
+    def createStore(self, username, store_name):
         cur_member: Member = self.__getOnlineMemberOnly(username)
         if cur_member is None:
             raise Exception("The user is not a member or not logged in")
+        if self.stores.keys().__contains__(store_name):
+            raise Exception("Store name already taken")
         cur_store = Store(store_name)
         new_access = Access(cur_store, cur_member, username)
         cur_member.accesses[store_name] = new_access
@@ -418,14 +412,16 @@ class StoreFacade:
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
 
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+        member: Member = self.__getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        # cur_member: Member = self.members[str(requester_id)]
-        member = self.members[username]
-        new_product = cur_store.addProduct(member.get_accesses().get(store_name), name, quantity, price,
+
+        if member.get_accesses().keys().__contains__(store_name):
+            access: Access = member.get_accesses().get(store_name)
+        else:
+            raise Exception("No access for this member to the store")
+        new_product = cur_store.addProduct(access, name, quantity, price,
                                            categories)  # TODO: change first atribute to access
         return new_product
         # return DataProduct(new_product)
@@ -624,6 +620,15 @@ class StoreFacade:
         return new_lottery
         # return DataLottery(new_lottery)
 
+    def openStore(self, username, store_name):
+        if not self.checkIfUserIsLoggedIn(username):
+            raise Exception("User is not logged in")
+        cur_store: Store = self.stores.get(store_name)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        cur_store.setStoreStatus(True, username)
+        return cur_store
+
     def closeStore(self, username, store_name):
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
@@ -688,11 +693,9 @@ class StoreFacade:
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
             member_list = []
-            for member in self.members:
-                if member in self.online_members:
-                    # if member.logged_In:
-                    member_list.append(member)
-            return json.dumps(member_list)
+            for member in self.online_members.values():
+                member_list.append(member)
+            return member_list
         else:
             raise Exception("only admin can get the online members list")
 
@@ -706,19 +709,49 @@ class StoreFacade:
         else:
             raise Exception("only admin can get the offline members list")
 
-    def removeMember(self, username, memberName):
-        if self.admins.keys().__contains__(username):
+    def removePermissionFreeMember(self, requesterID, memberName):
+        if self.admins.keys().__contains__(requesterID):
             if self.members.keys().__contains__(memberName):
-                return self.members.pop(memberName)
+                if self.accesses.keys().__contains__(memberName):
+                    self.members[memberName].logOut()
+                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")  # TOdo : add message to login screen or something
+                    banned_member = self.members.pop(memberName)
+                    self.banned_members[memberName] = banned_member
+                    return banned_member
+                else:
+                    raise Exception("Can't remove member with store roles")
             else:
                 raise Exception("no such member exists")
         else:
             raise Exception("only admin can remove a member")
 
+    def returnPermissionFreeMember(self, requesterID, memberName):
+        if self.admins.keys().__contains__(requesterID):
+            if self.banned_members.keys().__contains__(memberName):
+                self.messageAsAdminToUser(self, requesterID, memberName, "UNBAN", "Your ban has been lifted")
+                returned_member = self.banned_members.pop(memberName)
+                self.members[memberName] = returned_member
+                return returned_member
+            else:
+                raise Exception("no such member exists")
+        else:
+            raise Exception("only admin can return a member")
+
+
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
 
+    def getMemberInfo(self, requesterID, user_name):
+        transaction_history = TransactionHistory()
+        if not self.admins.keys().__contains__(requesterID):
+            raise Exception("only admin can get member info")
+        if not self.members.keys().__contains__(user_name):
+            raise Exception("no such member exists")
+        purchase_history = transaction_history.get_user_Transactions(user_name)
+        return self.members[user_name], purchase_history
+
     # ==================  Messages  ==================#
+
 
     def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
         # Register an observer for a user

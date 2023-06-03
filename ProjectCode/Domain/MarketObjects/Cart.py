@@ -1,3 +1,6 @@
+import asyncio
+
+
 from ProjectCode.Domain.ExternalServices.MessageObjects.PurchaseReport import PurchaseReport
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -124,12 +127,11 @@ class Cart:
             basket: Basket = self.baskets[storename]
             basket.clearBidFromBasket(bid_id)
 
-    def PurchaseCart(self, card_number, card_user_name, card_user_id, card_date, back_number, address, is_member, lock):
+    def PurchaseCart(self, card_number, card_user_name, card_user_id, card_date, back_number, address, is_member):
         payment_service = PaymentService()
         transaction_history = TransactionHistory()
         overall_price = 0  # overall price for the user
         stores_products_dict = TypedDict(str, list)  # store_name to list of tuples (productid,productname,quantity,price4unit)
-        # async with lock:
         answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
         if answer is True:  # means everything is ok to go
             purchaseReports = []
