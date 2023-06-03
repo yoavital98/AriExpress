@@ -353,11 +353,11 @@ class StoreFacade:
         #     data_products[key] = DataProduct(value)
         # return data_products
 
-    def getProduct(self, store_name, product_id, username):
+    def getProduct(self, store_name, product_id):
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product: Product = cur_store.getProductById(product_id, username)
+        cur_product: Product = cur_store.getProductById(product_id)
         # return DataProduct(cur_product)
         return cur_product
 

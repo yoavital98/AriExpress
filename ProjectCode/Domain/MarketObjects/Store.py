@@ -199,9 +199,8 @@ class Store:
                 raise Exception("Store is inactive")
         return self.__products
 
-    def getProductById(self, product_id, username):
-        cur_access: Access = self.__accesses[username]
-        if not self.active and (cur_access is None or not cur_access.hasRole()):
+    def getProductById(self, product_id):
+        if not self.active:
             raise Exception("Store is inactive")
         if not self.__products.keys().__contains__(product_id):
             raise Exception("Product does not Exist")
