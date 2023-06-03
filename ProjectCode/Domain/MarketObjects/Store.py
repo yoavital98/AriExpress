@@ -62,6 +62,8 @@ class Store:
         if cur_access is None:
             raise Exception("No such access exists in the store")
         cur_access.canChangeStatus()
+        if status == self.active:
+            raise Exception("store is already open or closed")
         self.active = status
 
     #-------------Permissions----------------#

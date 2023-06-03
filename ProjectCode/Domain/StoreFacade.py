@@ -186,8 +186,8 @@ class StoreFacade:
     # getting the user purchase history
     def getMemberPurchaseHistory(self, requesterID, username):
         transaction_history = TransactionHistory()
-        if self.checkIfUserIsLoggedIn(requesterID) and (
-                self.admins.keys().__contains__(requesterID) or requesterID == username):
+        if self.admins.keys().__contains__(requesterID) or (
+                  requesterID == username and self.checkIfUserIsLoggedIn(requesterID)):
             return transaction_history.get_User_Transactions(username)
         else:
             raise Exception("username isn't logged in")
