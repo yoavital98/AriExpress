@@ -80,7 +80,7 @@ class StoreFacade:
 
     # regular guest entrance
     def loginAsGuest(self):
-        new_guest = Guest(self.nextEntranceID)
+        new_guest = Guest(str(self.nextEntranceID))
         self.onlineGuests[str(self.nextEntranceID)] = new_guest
         self.nextEntranceID += 1
         return new_guest.get_entrance_id()
@@ -203,7 +203,7 @@ class StoreFacade:
     # guest and member
     # getting a Users cart
     def getCart(self, username):
-        user: User = self.getUserOrMember(username)
+        user: User = self.getUserOrMember(str(username))
         requested_cart = user.get_cart()
         return requested_cart
         # return DataCart(requested_cart)
@@ -450,7 +450,7 @@ class StoreFacade:
     def editProductOfStore(self, username, store_name, product_id, **kwargs):
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User is not logged in")
-        cur_store: Store = self.stores[store_name]
+        cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
         cur_access = self.members[username].get_accesses().get(store_name)
@@ -734,20 +734,28 @@ class StoreFacade:
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = []
-            for member in self.online_members.values():
-                member_list.append(member)
-            return member_list
+            admin: Admin = self.admins.get(user_name)
+            if admin.logged_In:
+                member_list = []
+                for member in self.online_members.values():
+                    member_list.append(member)
+                return member_list
+            else:
+                raise Exception("admin is not logged in")
         else:
             raise Exception("only admin can get the online members list")
 
     def getAllOfflineMembers(self, user_name):
         if self.admins.__contains__(user_name):
-            member_list = []
-            for member in self.members:
-                if member not in self.online_members:
-                    member_list.append(member)
-            return json.dumps(member_list)
+            admin: Admin = self.admins.get(user_name)
+            if admin.logged_In:
+                member_list = []
+                for member in self.members:
+                    if member not in self.online_members:
+                        member_list.append(member)
+                return member_list
+            else:
+                raise Exception("admin is not logged in")
         else:
             raise Exception("only admin can get the offline members list")
 

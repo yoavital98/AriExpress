@@ -619,7 +619,7 @@ class Service:
             users = self.store_facade.getAllOnlineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
-            return Response(users, True)
+            return Response(json.dumps(users), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)
@@ -629,7 +629,7 @@ class Service:
             users = self.store_facade.getAllOfflineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
-            return Response(users, True)
+            return Response(json.dumps(users), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)

@@ -26,7 +26,7 @@ class Cart:
 
     def add_Product(self,username, store, product_id, product, quantity):
         if not self.baskets.keys().__contains__(store.get_store_name()):
-                basket_to_add = Basket(username, store)
+                basket_to_add = Basket(str(username), store)
                 self.baskets[store.get_store_name()] = basket_to_add
         basket: Basket = self.get_Basket(store.get_store_name())
         basket.add_Product(product_id, product, quantity)
@@ -128,19 +128,23 @@ class Cart:
             basket: Basket = self.baskets[storename]
             basket.clearBidFromBasket(bid_id)
 
-    def PurchaseCart(self, card_number, card_user_name, card_user_id, card_date, back_number, address, is_member):
+    def PurchaseCart(self, card_number, card_user_name, card_holder_id, card_date, cvv, address, is_member):
         payment_service = PaymentService()
         transaction_history = TransactionHistory()
         overall_price = 0  # overall price for the user
         stores_products_dict = TypedDict(str, list)  # store_name to list of tuples (productid,productname,quantity,price4unit)
         answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
+        # this checks if the credit card is valid!
+        try:
+            payment_service.validate_credit_card(card_number, card_date, cvv, card_holder_id)
+        except Exception as e:
+            raise Exception(e)
         if answer is True:  # means everything is ok to go
             purchaseReports = []
             for basket in self.get_baskets().values():  # all the baskets
                 products: list = basket.getProductsAsTuples()  # tupleList [(productid,productname,quantity,price4unit)]
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
                 #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
-                payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date, back_number, price)
                 transaction_history.addNewStoreTransaction(self.username, basket.get_Store().get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
                 purchaseReports.append(PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price))
                 stores_products_dict[basket.store.get_store_name()] = products
