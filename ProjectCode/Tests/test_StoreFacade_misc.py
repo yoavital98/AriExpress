@@ -878,6 +878,9 @@ class TestStoreFacade(TestCase):
     #purchaseCart
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
         transaction_history = TransactionHistory()
+        transaction_history.insertEmptyList("Amiel")
+        # before
+        self.assertTrue(len(transaction_history.user_transactions.get("Amiel")) == 0)
         self.store_facade.logInAsMember("Amiel", "password789")
         self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
         self.store_facade.addToBasket("Amiel", "AriExpress",
@@ -887,7 +890,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                        "some_address")
         with self.assertRaises(Exception):
-            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11", "554",
+            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11", "554H",
                                            "some_address")
         amiel_transaction_list: list =transaction_history.get_User_Transactions("Amiel")
 
@@ -905,14 +908,14 @@ class TestStoreFacade(TestCase):
         self.store_facade.addToBasket("Amiel", "AriExpress",
                                       1, 3)
 
-        self.store_facade.purchaseCart("Amiel", "4580", "Amiel saad", "007", "12/26", "555",
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                        "some_address")
         self.store_facade.addToBasket("Amiel", "AriExpress",
                                       1, 3)
         self.store_facade.logOut("Amiel")
         with self.assertRaises(Exception):
-            self.store_facade.purchaseCart("Amiel", "4580", "Amiel saad", "007", "12/26", "555",
-                                       "some_address")
+            self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                           "some_address")
             # integrity that the transaction failed for Amiel
         amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
         self.assertTrue(len(amiel_transaction_list) == 1)
@@ -922,7 +925,7 @@ class TestStoreFacade(TestCase):
         transaction_history = TransactionHistory()
         self.store_facade.logInAsMember("Amiel", "password789")
         with self.assertRaises(Exception):
-            self.store_facade.purchaseCart("Amiel", "4580", "Amiel saad", "007", "12/26", "555",
+            self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                            "some_address")
             # integrity that the transaction failed for Amiel
         with self.assertRaises(Exception):
