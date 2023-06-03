@@ -1,6 +1,7 @@
 import json
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
+from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -29,7 +30,7 @@ class StoreFacade:
         self.online_members = TypedDict(str, Member)  # dict from username to online members
         self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
-        self.message_controller = MessageController()  # Messanger
+        self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
@@ -107,7 +108,7 @@ class StoreFacade:
             raise Exception("user does not exists")
     def checkIfUserIsLoggedIn(self, user_name):
         return self.online_members.__contains__(user_name)
-    
+
     # checks if username exists in the system
     def checkIfUsernameExists(self, user_name):
         return self.members.keys().__contains__(str(user_name))
@@ -363,18 +364,18 @@ class StoreFacade:
 
     def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(str, list)        
-        for cur_store in self.stores.values(): 
+        search_results = TypedDict(str, list)
+        for cur_store in self.stores.values():
             product_list=[]
-            for keyword in splitted_keywords: 
+            for keyword in splitted_keywords:
                 product_list.extend(cur_store.searchProductByName(keyword))
             if len(product_list) > 0:
                     # data_product_list = [DataProduct(prod) for prod in product_list]
                     json_product_list = [prod.toJson() for prod in product_list]
                     search_results[cur_store.get_store_name()] =  json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
-        
+
         return search_results
-    
+
 
 
     def productSearchByCategory(self, category):
@@ -529,7 +530,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         permissions: dict = cur_store.getPermissions(requester_username, nominated_username)
         return permissions
-    
+
     def getPermissionsAsJson(self, store_name, requester_username):
         cur_store: Store = self.stores[store_name]
         if not self.checkIfUserIsLoggedIn(requester_username):
@@ -674,6 +675,13 @@ class StoreFacade:
         #     data_accesses_dict[key] = DataAccess(value)
         # return data_accesses_dict
 
+    def getStaffInfoForMessage(self, store_name):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        accesses_dict = cur_store.get_accesses()
+        return accesses_dict
+
     def getStoreManagerPermissions(self):
         pass
 
@@ -800,12 +808,47 @@ class StoreFacade:
         purchase_history = transaction_history.get_user_Transactions(user_name)
         return self.members[user_name], purchase_history
 
-    def messageAsAdminToUser(self, self1, requesterID, memberName, subject, message):
-        pass
-
     def getUserStores(self, username):
         stores_list = list()
         for cur_store in self.stores.values():
             if cur_store.get_accesses().get(username) is not None:
                 stores_list.append(cur_store)
         return stores_list
+
+    # ==================  Messages  ==================#
+
+
+    def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
+        return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
+
+    # def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file):
+    #     # with purchase form AliExpress to user
+    #     return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
+    # # TODO need to deny users from having a username which's a storename
+    #
+    #
+    # def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status,file):
+    #     # with purchase form AliExpress to store's founder
+    #     return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
+    #
+    #     staff = self.getStaffInfoForMessage(storeID).keys()
+    #     message_list = []
+    #     for staff_member in staff:
+    #         message_list.append(MessageController().send_message(requesterID, staff_member, subject, content, creation_date, status, file))
+    #     return message_list
+
+    def getAllMessagesSent(self, requesterID):
+        return MessageController().get_messages_sent(requesterID)
+
+    def getAllMessagesReceived(self, requesterID):
+        return MessageController().get_messages_received(requesterID)
+
+    def readMessage(self, requesterID, messageID):
+        return MessageController().read_message(requesterID, messageID)
+
+    # def messageAsAdminToUser(self, admin_name, receiverID, message):
+    #     pass
+    #
+    # def messageAsAdminToStore(self, admin_name, store_Name, message):
+    #     pass
+

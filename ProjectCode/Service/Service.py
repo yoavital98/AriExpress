@@ -6,8 +6,6 @@ from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
 
-
-
 class Service:
     _instance = None
 
@@ -155,7 +153,8 @@ class Service:
         try:
             guest = self.store_facade.logOut(username)
             data = {'username': username, 'entrance_id': guest.getEntranceId()}
-            logging.info(f"Logged out successfully. By username: " + username + ". Became a guest with id: " + str(guest.getEntranceId()) + ".")
+            logging.info(f"Logged out successfully. By username: " + username + ". Became a guest with id: " + str(
+                guest.getEntranceId()) + ".")
             return Response(json.dumps(data), True)
         except Exception as e:
             logging.error(f"logOut Error: {str(e)}. By username: '{username}'")
@@ -316,10 +315,10 @@ class Service:
 
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
                      back_number, address):  # TODO: for now lets assume only credit card(no paypal)
-        #return baskets of all stores
+        # return baskets of all stores
         try:
             info_dict = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
-                                                  back_number, address)
+                                                       back_number, address)
             logging.info("Cart was purchased successfully. By username: " + user_name + ".")
             return Response(json.dumps(info_dict), True)
         except Exception as e:
@@ -489,7 +488,7 @@ class Service:
             logging.error(f"nominateStoreOwner Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def nominateStoreManager(self, username, nominated_username, store_name):  #TODO
+    def nominateStoreManager(self, username, nominated_username, store_name):  # TODO
         try:
             new_access = self.store_facade.nominateStoreManager(username, nominated_username, store_name)
             logging.info(
@@ -508,6 +507,7 @@ class Service:
         except Exception as e:
             logging.error(f"removeAccess Error: {str(e)}. By username: '{requester_username}'")
             return Response(e, False)
+
     def addPermission(self, storename, requesterID, nominated_username, permission):
         try:
             access = self.store_facade.addPermissions(storename, requesterID, nominated_username, permission)
@@ -519,7 +519,7 @@ class Service:
             return Response(e, False)
 
     def removePermissions(self, storename, requesterID, nominatedID,
-                        permission):  # TODO still don't know the implementation
+                          permission):  # TODO still don't know the implementation
         try:
             access = self.store_facade.removePermissions(storename, requesterID, nominatedID, permission)
             logging.info(
@@ -538,7 +538,7 @@ class Service:
         except Exception as e:
             logging.error(f"getPermissions Error: {str(e)}.")
             return Response(e, False)
-    
+
     def getPermissionsAsJson(self, storename, requesterID):  # TODO still don't know the implementation
         try:
             permissions = self.store_facade.getPermissionsAsJson(storename, requesterID)
@@ -549,10 +549,12 @@ class Service:
             logging.error(f"getPermissionsAsJson Error: {str(e)}.")
             return Response(e, False)
 
-    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
+    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={},
+                    discounts={}):
         try:
             discount = self.store_facade.addDiscount(storename, username, discount_type,
-                                                     percent=percent, level=level, level_name=level_name, rule=rule, discounts=discounts)
+                                                     percent=percent, level=level, level_name=level_name, rule=rule,
+                                                     discounts=discounts)
             logging.debug(
                 f"adding discount of type " + discount_type + ".")
             return Response(discount, True)
@@ -567,7 +569,6 @@ class Service:
         except Exception as e:
             logging.error(f"getDiscount Error: {str(e)}")
             return Response(e, False)
-
 
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         try:
@@ -613,7 +614,6 @@ class Service:
             logging.error(f"getStaffInfo Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-
     def getAllOnlineMembers(self, requesterID):
         try:
             users = self.store_facade.getAllOnlineMembers(requesterID)
@@ -648,7 +648,7 @@ class Service:
         for obj in list_of_objects:
             list_of_jsons.append(obj.toJson())
         return list_of_jsons
-    
+
     def getMemberInfo(self, requesterID, username):
         try:
             member, purchaseHistory = self.store_facade.getMemberInfo(requesterID, username)
@@ -659,7 +659,7 @@ class Service:
         except Exception as e:
             logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
-        
+
     def checkUsernameExistence(self, username):
         try:
             exist=self.store_facade.checkIfUsernameExists(username)
@@ -671,7 +671,7 @@ class Service:
         except Exception as e:
             logging.error(f"checkUsernameExistence Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
-        
+
     def getUserStores(self, username):
         try:
             store_list = self.store_facade.getUserStores(username)
@@ -684,3 +684,85 @@ class Service:
         except Exception as e:
             logging.error(f"getUserStores Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
+
+    # =================================================Messages=================================================
+    def sendMessageUsers(self, requester_id, receiver_id, subject, content, creation_date, status, file=None):
+        try:
+            message = self.store_facade.sendMessageUsers(requester_id, receiver_id, subject, content, creation_date, status, file)
+            # TODO save to database
+            logging.info(
+                "Message has been sent successfully. By username: " + requester_id + ". receiver_username: " + receiver_id + ".")
+            return Response(message.toJson(), True)
+        except Exception as e:
+            logging.error(f"sendMessage Error: {str(e)}. By username: '{requester_id}'")
+            return Response(e, False)
+
+    # def sendMessageFromStore(self, store_name, receiverID, subject, content, file):
+    #     try:
+    #         message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, file)
+    #         logging.info(
+    #             "Message has been sent successfully. By store_name: " + store_name + ". receiver_username: " + receiverID + ".")
+    #         return Response(message.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
+    #         return Response(e, False)
+    #
+    # def sendMessageToStore(self, messageID, requesterID, storeID, subject, content, file):
+    #     try:
+    #         message = self.store_facade.sendMessageToStore(messageID, requesterID, storeID, subject, content, file)
+    #         logging.info(
+    #             "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
+    #         return Response(message.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"sendMessage Error: {str(e)}. By username: '{requesterID}'")
+    #         return Response(e, False)
+
+    def getAllMessagesSent(self, requesterID, username):
+        try:
+            messages = self.store_facade.getAllMessagesSent(requesterID, username)
+            logging.debug(
+                f"fetching all the user's messages. By username: " + requesterID + ".")
+            return Response(JsonSerialize.toJsonAttributes(messages), True)
+        except Exception as e:
+            logging.error(f"getMessages Error: {str(e)}.")
+            return Response(e, False)
+
+    def getAllMessagesReceived(self, requesterID, username):
+        try:
+            messages = self.store_facade.getAllMessagesReceived(requesterID, username)
+            logging.debug(
+                f"fetching all the user's messages. By username: " + requesterID + ".")
+            return Response(JsonSerialize.toJsonAttributes(messages), True)
+        except Exception as e:
+            logging.error(f"getMessages Error: {str(e)}.")
+            return Response(e, False)
+
+    def readMessage(self, requesterID, messageID):
+        try:
+            message = self.store_facade.readMessage(requesterID, messageID)
+            logging.debug(
+                f"fetching all the user's messages. By username: " + requesterID + ".")
+            return Response(message.toJson(), True)
+        except Exception as e:
+            logging.error(f"readMessage Error: {str(e)}.")
+            return Response(e, False)
+
+    # def messageAsAdminToUser(self, admin_name, receiverID, message):
+    #     try:
+    #         message = self.store_facade.messageAsAdminToUser(admin_name, receiverID, message)
+    #         logging.info(
+    #             "Message has been sent successfully. By username: " + admin_name + ". receiver_username: " + receiverID + ".")
+    #         return Response(message.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"messageAsAdminToUser Error: {str(e)}. By username: '{admin_name}'")
+    #         return Response(e, False)
+    #
+    # def messageAsAdminToStore(self, admin_name, store_Name, message):
+    #     try:
+    #         message = self.store_facade.messageAsAdminToStore(admin_name, store_Name, message)
+    #         logging.info(
+    #             "Message has been sent successfully. By username: " + admin_name + ". store_name: " + store_Name + ".")
+    #         return Response(message.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"messageAsAdminToStore Error: {str(e)}. By username: '{admin_name}'")
+    #         return Response(e, False)
