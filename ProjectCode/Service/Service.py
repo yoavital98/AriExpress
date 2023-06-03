@@ -233,10 +233,10 @@ class Service:
 
     def productSearchByName(self, productName, username):  # and keywords
         try:
-            results = self.store_facade.productSearchByName(productName, username)
+            results = self.store_facade.productSearchByName(productName)
             logging.debug(
                 f"fetching all the products with keyname '{str(productName)}'. By username: " + username + ".")
-            return Response(JsonSerialize.toJsonAttributes(results), True)
+            return Response(results, True) #eddited by rubin - results is already json after modifing the facade function 1.6.23
         except Exception as e:
             logging.error(f"productSearchByName Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

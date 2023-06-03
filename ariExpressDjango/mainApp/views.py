@@ -659,7 +659,56 @@ def checkout(request):
         messages.error(request, "Error placing an order - "+ str(request.method))
         return HttpResponseRedirect('/cart')  
 
+def add_product_to_cart(request):
+    if request.method=='POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = BasketAddProductForm(request.POST)
+            if form.is_valid():
+                store = form.cleaned_data['store_name']
+                product_id = form.cleaned_data['product_id']
+                quantity = form.cleaned_data['quantity']
+                searched = form.cleaned_data['searched']
+                res = service.addToBasket(request.user.username, store, product_id, quantity)
+                if res.getStatus():
+                    messages.success(request, "Product added successfully")
+                    return searchpage(request)
+                else:
+                    messages.error(request, "Error adding product to cart res - " + str(res.getReturnValue()))
+                    return searchpage(request)
+            else:
+                messages.error(request, "Error adding product to cart form - " + str(form.errors))
+                return searchpage(request)
+        else:
+            messages.error(request, "You must be logged in to add products to cart")
+            return HttpResponseRedirect('/login')
+    else:
+        return redirect('mainApp:mainpage')
+
 #---------------------------------------------------------------------------------------------------------------------------------------#
+
+
+
+#-------------------------------------------------------Searchbar functionality---------------------------------------------------------#
+
+def searchpage(request):
+    if request.method == "POST":
+        service = Service()
+        searched = request.POST['searched']
+        res = service.productSearchByName(searched,request.user.username)
+        if res.getStatus():
+            products = res.getReturnValue()
+            return render(request, 'searchpage.html', {'searched': searched, 'products': products})
+        else:
+            messages.error(request, "Error searching for products - " + str(res.getReturnValue()))
+            return redirect('mainApp:mainpage')
+    else:
+        return redirect('mainApp:mainpage')
+
+
+#---------------------------------------------------------------------------------------------------------------------------------------#
+
+
 
 
 #-----------------------------------------------------------Helper Functions------------------------------------------------------------#

@@ -364,15 +364,19 @@ class StoreFacade:
 
     def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(str, list)
-        for keyword in splitted_keywords:
-            for cur_store in self.stores.values():
-                product_list = cur_store.searchProductByName(keyword)
-                if len(product_list) > 0:
+        search_results = TypedDict(str, list)        
+        for cur_store in self.stores.values(): 
+            product_list=[]
+            for keyword in splitted_keywords: 
+                product_list.extend(cur_store.searchProductByName(keyword))
+            if len(product_list) > 0:
                     # data_product_list = [DataProduct(prod) for prod in product_list]
-                    search_results[
-                        cur_store.get_store_name()] = product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+                    json_product_list = [prod.toJson() for prod in product_list]
+                    search_results[cur_store.get_store_name()] =  json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+        
         return search_results
+    
+
 
     def productSearchByCategory(self, category):
         search_results = TypedDict(str, list)
