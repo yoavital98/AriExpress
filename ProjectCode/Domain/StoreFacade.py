@@ -2,7 +2,6 @@ import json
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
-from ProjectCode.Domain.ExternalServices.MessageObjects.MessageObserver import MessageObserver
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -676,6 +675,13 @@ class StoreFacade:
         #     data_accesses_dict[key] = DataAccess(value)
         # return data_accesses_dict
 
+    def getStaffInfoForMessage(self, store_name):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        accesses_dict = cur_store.get_accesses()
+        return accesses_dict
+
     def getStoreManagerPermissions(self):
         pass
 
@@ -813,38 +819,34 @@ class StoreFacade:
 
 
     def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
-        # Register an observer for a user
-        # observer = MessageObserver(receiverID)
-        #MessageController().register_observer(receiverID, observer)
-        # Send a message to the user
-        message = MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
-        # The observer will be notified of the new message and can send a notification to the user
-        MessageController().get_observer(receiverID).notify()
+        return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
 
-    def sendMessageFromStore(self, messageID, store_name, receiverID, subject, content, file):
-        # Register an observer for a user
-        observer = MessageObserver(receiverID)
-        MessageController().register_observer(receiverID, observer)
-        # Send a message to the user
-        message = MessageController().send_message_from_store(store_name, receiverID, subject, content, file)
-        # The observer will be notified of the new message and can send a notification to the user
-        observer.notify(message)
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file):
+        # with purchase form AliExpress to user
+        return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
+    # TODO need to deny users from having a username which's a storename
 
-    def sendMessageToStore(self, messageID, requesterID, storeID, subject, content, file):
-        pass
 
-    def getAllMessagesSent(self, requesterID, username):
-        MessageController().get_messages_sent(requesterID, username)
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status,file):
+        # with purchase form AliExpress to store's founder
+        staff = self.getStaffInfoForMessage(storeID).keys()
+        message_list = []
+        for staff_member in staff:
+            message_list.append(MessageController().send_message(requesterID, staff_member, subject, content, creation_date, status, file))
+        return message_list
 
-    def getAllMessagesReceived(self, requesterID, username):
-        pass
+    def getAllMessagesSent(self, requesterID):
+        return MessageController().get_messages_sent(requesterID)
+
+    def getAllMessagesReceived(self, requesterID):
+        return MessageController().get_messages_received(requesterID)
 
     def readMessage(self, requesterID, messageID):
         pass
 
-    def messageAsAdminToUser(self, admin_name, receiverID, message):
-        pass
-
-    def messageAsAdminToStore(self, admin_name, store_Name, message):
-        pass
+    # def messageAsAdminToUser(self, admin_name, receiverID, message):
+    #     pass
+    #
+    # def messageAsAdminToStore(self, admin_name, store_Name, message):
+    #     pass
 

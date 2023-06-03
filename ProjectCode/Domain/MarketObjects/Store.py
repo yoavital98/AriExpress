@@ -70,6 +70,12 @@ class Store:
         access.setAccess("Founder")
         self.__accesses[username] = access
 
+    def getFounder(self):
+        for access in self.__accesses.values():
+            if access.getRole() == "Founder":
+                return access
+        return None
+
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
@@ -212,6 +218,7 @@ class Store:
         if not cur_access.canViewStaffInformation():
             raise Exception("You have no permission to view staff information")
         return self.__accesses
+
 
     def checkProductAvailability(self, product_id, quantity):
         cur_product : Product = self.__products[int(product_id)]

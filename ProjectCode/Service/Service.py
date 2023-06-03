@@ -747,22 +747,22 @@ class Service:
             logging.error(f"readMessage Error: {str(e)}.")
             return Response(e, False)
 
-    def messageAsAdminToUser(self, admin_name, receiverID, message):
-        try:
-            message = self.store_facade.messageAsAdminToUser(admin_name, receiverID, message)
-            logging.info(
-                "Message has been sent successfully. By username: " + admin_name + ". receiver_username: " + receiverID + ".")
-            return Response(message.toJson(), True)
-        except Exception as e:
-            logging.error(f"messageAsAdminToUser Error: {str(e)}. By username: '{admin_name}'")
-            return Response(e, False)
-
-    def messageAsAdminToStore(self, admin_name, store_Name, message):
-        try:
-            message = self.store_facade.messageAsAdminToStore(admin_name, store_Name, message)
-            logging.info(
-                "Message has been sent successfully. By username: " + admin_name + ". store_name: " + store_Name + ".")
-            return Response(message.toJson(), True)
-        except Exception as e:
-            logging.error(f"messageAsAdminToStore Error: {str(e)}. By username: '{admin_name}'")
-            return Response(e, False)
+    # def messageAsAdminToUser(self, admin_name, receiverID, message):
+    #     try:
+    #         message = self.store_facade.messageAsAdminToUser(admin_name, receiverID, message)
+    #         logging.info(
+    #             "Message has been sent successfully. By username: " + admin_name + ". receiver_username: " + receiverID + ".")
+    #         return Response(message.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"messageAsAdminToUser Error: {str(e)}. By username: '{admin_name}'")
+    #         return Response(e, False)
+    #
+    # def messageAsAdminToStore(self, admin_name, store_Name, message):
+    #     try:
+    #         message = self.store_facade.messageAsAdminToStore(admin_name, store_Name, message)
+    #         logging.info(
+    #             "Message has been sent successfully. By username: " + admin_name + ". store_name: " + store_Name + ".")
+    #         return Response(message.toJson(), True)
+    #     except Exception as e:
+    #         logging.error(f"messageAsAdminToStore Error: {str(e)}. By username: '{admin_name}'")
+    #         return Response(e, False)
