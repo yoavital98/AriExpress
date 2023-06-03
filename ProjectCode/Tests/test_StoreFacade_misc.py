@@ -6,6 +6,7 @@ from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp import LogicComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
@@ -862,20 +863,53 @@ class TestStoreFacade(TestCase):
 
     # getDiscount
     #TODO: Discounts
-    def test_getDiscount_success(self):
-        pass
 
-    def test_getDiscount_userNotLoggedIn_fail(self):
-        #TODO: should user be online to use this function? 
-        # or this function should be called from frontend?
-        pass
+    def test_addDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks :Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        discount = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product", level_name=oreo.get_product_id())
+        added_discount = self.my_store.getDiscount(1)
+        self.assertEqual(discount, added_discount)
+
+
+    def test_calculateSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.store_facade.createStore(self.member1.get_username(), "Store1")
+        self.store = self.store_facade.stores["Store1"]
+        self.access = self.store.get_accesses()[self.member1.get_username()]
+        self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
+        self.discount = self.store.addDiscount("Simple", percent=10, level="Product",
+                                               level_name=self.product.get_product_id())
+        self.product_dict = {self.product.get_product_id(): 1}
+        self.price_after_discount = self.store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
+        self.assertEqual(self.price_after_discount, 9)
+
+    def test_calculateConditionedDiscount_byCategory_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        cariot: Product = self.my_store.addProduct(access, "Cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                        "operator":">=", "quantity": 1,"category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                     "operator": ">=", "quantity": 1,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
+        discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
+                                               level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(450, price_after_discount_1)
 
     def test_getDiscount_storeNotExists_fail(self):
-        pass
+            pass
 
     def test_getDiscount_discountNotExists_fail(self):
-        pass
-    #purchaseCart
+            pass
+
+    # purchaseCart
+
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
         transaction_history = TransactionHistory()
         transaction_history.insertEmptyList("Amiel")
@@ -884,15 +918,16 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Amiel", "password789")
         self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
         self.store_facade.addToBasket("Amiel", "AriExpress",
-                                     1, 9)
+                                      1, 9)
         self.store_facade.addToBasket("YuvalMelamed", "AriExpress",
                                       1, 9)
         self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                        "some_address")
         with self.assertRaises(Exception):
-            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11", "554H",
+            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11",
+                                           "554H",
                                            "some_address")
-        amiel_transaction_list: list =transaction_history.get_User_Transactions("Amiel")
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
 
         # integrity that the transaction was successful for amiel
         self.assertTrue(len(amiel_transaction_list) == 1)
@@ -931,7 +966,6 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
         transaction_history.clearAllHistory()
-
     def test_purchaseCart_cardNumberInvalid_fail(self):
         pass
 
