@@ -1,6 +1,10 @@
 import datetime
 from typing import List
 
+from peewee import SqliteDatabase
+
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -10,14 +14,19 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import Discoun
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
-
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
+
+# ----- REPOSITORIES ----- #
+from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
 
 
 class Store:
 
-    def __init__(self, store_name):
+
+    def __init__(self, store_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__store_name = store_name
+        self.prods = ProductRepository(store_name)
         self.__products = TypedDict(int, Product)
         # TODO: policies
         self.active: bool = True
@@ -32,6 +41,21 @@ class Store:
         self.__lotteries = TypedDict(int, Lottery)
         self.__discount_policy = DiscountPolicy()
         self.__purchase_policy = PurchasePolicies()
+
+
+
+    def testing_orm(self):
+        db = SqliteDatabase('database.db')
+        db.connect()
+        StoreProduct = StoreModel.products.get_through_model()
+        db.drop_tables([ProductModel,StoreModel,StoreProduct])
+        db.create_tables([ProductModel,StoreModel,StoreProduct])
+        store_model = StoreModel.create(store_name=self.__store_name)
+
+        prod = Product(6, "test", 1, 1, "test")
+        self.prods[6] = prod
+
+
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
