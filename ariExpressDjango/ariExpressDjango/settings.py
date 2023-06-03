@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mainApp',
     'channels',
-    #'django_cleanup',
+    'django_cleanup',
+    'mathfilters',
 ]
 
 ASGI_APPLICATION = 'AriExpress.asgi.application'
