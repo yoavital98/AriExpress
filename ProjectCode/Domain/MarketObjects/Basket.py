@@ -2,13 +2,14 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
+import json
 
 
 class Basket:
     def __init__(self, username, store):
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id -> (product, quantity, price)
+        self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
         self.bids = TypedDict(int, Bid)
 
     def add_Product(self, product_id, product, quantity):
@@ -23,7 +24,7 @@ class Basket:
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         product: tuple = self.products[product_id]
-        self.products[product_id] = (product[0], quantity)
+        self.products[product_id] = (product[0], quantity, product[2])
 
     def remove_Product(self, product_ID):
         if self.products.keys().__contains__(product_ID):
@@ -83,10 +84,28 @@ class Basket:
         del self.bids[bid_id]
     # =======================JSON=======================#
 
+    def productsToJson(self):
+        data = {}
+        for attribute_id, attribute_value in self.products.items():
+            data[attribute_id] = {"product": attribute_value[0].toJson(),
+                                  "quantity": attribute_value[1],
+                                  "price": attribute_value[2]}
+        return json.dumps(data)
+
     def toJson(self):
         return {
             "username": self.username,
             "store": self.store.get_store_name(),
-            "products": JsonSerialize.toJsonAttributes(self.products),
+            "products": self.productsToJson(),
             "bids": JsonSerialize.toJsonAttributes(self.bids)
+        }
+    
+
+    
+
+    def singleProductToJson(self):
+        return {
+            "product": self[0],
+            "quantity": self[1],
+            "price": self[2],
         }

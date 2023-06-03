@@ -102,12 +102,18 @@ class StoreFacade:
 
     #  Members
     # private method, checks if the member is logged in
-
+    def checkIfMemberExists(self, user_name):
+        if not self.members.keys().__contains__(user_name):
+            raise Exception("user does not exists")
     def checkIfUserIsLoggedIn(self, user_name):
         return self.online_members.__contains__(user_name)
+    
+    # checks if username exists in the system
+    def checkIfUsernameExists(self, user_name):
+        return self.members.keys().__contains__(str(user_name))
 
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
-    def __getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
+    def getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
             if self.online_members.__contains__(str(user_name)):
                 return self.members.get(user_name)
@@ -115,12 +121,12 @@ class StoreFacade:
                 raise Exception("user is not logged in")
         else:
             if self.onlineGuests.keys().__contains__(str(user_name)):
-                return self.onlineGuests.get(user_name)
+                return self.onlineGuests.get(str(user_name))
             else:
                 raise Exception("user is not guest nor a member")
 
     # gets an online member.
-    def __getOnlineMemberOnly(self, user_name):
+    def getOnlineMemberOnly(self, user_name):
         if self.online_members.keys().__contains__(user_name):
             return self.online_members.get(user_name)
         else:
@@ -189,7 +195,7 @@ class StoreFacade:
     # guest and member
     # getting a User's basket
     def getBasket(self, user_name, store_name):
-        user = self.__getUserOrMember(user_name)
+        user = self.getUserOrMember(user_name)
         requested_basket = user.get_Basket(store_name)
         return requested_basket
         # return DataBasket(requested_basket)
@@ -197,7 +203,7 @@ class StoreFacade:
     # guest and member
     # getting a Users cart
     def getCart(self, username):
-        user: User = self.__getUserOrMember(username)
+        user: User = self.getUserOrMember(username)
         requested_cart = user.get_cart()
         return requested_cart
         # return DataCart(requested_cart)
@@ -205,7 +211,7 @@ class StoreFacade:
     # guest and member
     # adding a product to basket, checking with store if the item is available
     def addToBasket(self, username, store_name, product_id, quantity):
-        user: User = self.__getUserOrMember(username)
+        user: User = self.getUserOrMember(username)
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
@@ -220,7 +226,7 @@ class StoreFacade:
     # guest and member
     # deleting an item from a basket, if the item exists there
     def removeFromBasket(self, username, store_name, product_id):
-        user: User = self.__getUserOrMember(username)
+        user: User = self.getUserOrMember(username)
         remove_success = user.removeFromBasket(store_name, product_id)
         if remove_success:
             return remove_success
@@ -230,7 +236,7 @@ class StoreFacade:
     # guest and member
     # editing aa product quantity from a specific basket
     def editBasketQuantity(self, username, store_name, product_id, quantity):
-        user: User = self.__getUserOrMember(username)
+        user: User = self.getUserOrMember(username)
 
         answer = user.checkProductExistance(store_name, product_id)  # answer is boolean
         if answer:
@@ -247,7 +253,7 @@ class StoreFacade:
     # guest and member
     # getting all the items in the cart and makes a purchase, adding all the items to the Member history and the store's
     def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
-        user: User = self.__getUserOrMember(user_name)
+        user: User = self.getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
@@ -259,7 +265,7 @@ class StoreFacade:
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
     def placeBid(self, username, store_name, offer, product_id, quantity):
-        existing_member: Member = self.__getOnlineMemberOnly(username)
+        existing_member: Member = self.getOnlineMemberOnly(username)
         bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
         self.bid_id_counter += 1
         existing_member.addBidToBasket(bid)
@@ -269,7 +275,7 @@ class StoreFacade:
         # return DataBid(bid)
 
     def getAllBidsFromUser(self, username):
-        existing_member: Member = self.__getOnlineMemberOnly(username)
+        existing_member: Member = self.getOnlineMemberOnly(username)
         bids_set = existing_member.getAllBids()  # returns set of bids
         return bids_set
         # data_bids_list = [DataBid(bid) for bid in bids_set]
@@ -277,12 +283,12 @@ class StoreFacade:
 
     def purchaseConfirmedBid(self, username, store_name, bid_id, card_number, card_user_name, card_user_id, card_date,
                              back_number):
-        existing_member: Member = self.__getOnlineMemberOnly(username)
+        existing_member: Member = self.getOnlineMemberOnly(username)
         existing_member.get_cart().purchaseConfirmedBid(store_name, bid_id, card_number, card_user_name, card_user_id,
                                                         card_date, back_number, self.purchase_lock)
 
     def placeOfferInAuction(self, username, storename, auction_id, offer):
-        cur_member: Member = self.__getOnlineMemberOnly(username)
+        cur_member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(storename)
         if cur_store is None:
             raise Exception("No such store exists")
@@ -293,7 +299,7 @@ class StoreFacade:
 
     def participateInLottery(self, store_name, user_name, lottery_id, share):
         cur_store: Store = self.stores.get(store_name)
-        cur_member: Member = self.__getOnlineMemberOnly(user_name)
+        cur_member: Member = self.getOnlineMemberOnly(user_name)
         if cur_store is None:
             raise Exception("No such store exists")
         cur_lottery = cur_store.checkLotteryParticipationShare(lottery_id, share)
@@ -304,7 +310,7 @@ class StoreFacade:
 
     def ClaimAuctionPurchase(self, username, storename, auction_id, card_number, card_user_name, card_user_ID,
                              card_date, back_number):
-        cur_member: Member = self.__getOnlineMemberOnly(username)
+        cur_member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(storename)
         if cur_store is None:
             raise Exception("No such store exists")
@@ -357,15 +363,19 @@ class StoreFacade:
 
     def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(str, list)
-        for keyword in splitted_keywords:
-            for cur_store in self.stores.values():
-                product_list = cur_store.searchProductByName(keyword)
-                if len(product_list) > 0:
+        search_results = TypedDict(str, list)        
+        for cur_store in self.stores.values(): 
+            product_list=[]
+            for keyword in splitted_keywords: 
+                product_list.extend(cur_store.searchProductByName(keyword))
+            if len(product_list) > 0:
                     # data_product_list = [DataProduct(prod) for prod in product_list]
-                    search_results[
-                        cur_store.get_store_name()] = product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+                    json_product_list = [prod.toJson() for prod in product_list]
+                    search_results[cur_store.get_store_name()] =  json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+        
         return search_results
+    
+
 
     def productSearchByCategory(self, category):
         search_results = TypedDict(str, list)
@@ -384,7 +394,7 @@ class StoreFacade:
         transaction_history = TransactionHistory()
         if self.admins.keys().__contains__(requesterID):
             return transaction_history.get_Store_Transactions(store_name)
-        member: Member = self.__getOnlineMemberOnly(requesterID)
+        member: Member = self.getOnlineMemberOnly(requesterID)
         # TODO amiel this long line can be shortened with "checkIfHasAccess"
         if member.accesses.__contains__(store_name):
             return transaction_history.get_Store_Transactions(store_name)
@@ -395,7 +405,7 @@ class StoreFacade:
     # TODO: add check if user is loggedin to each function
 
     def createStore(self, username, store_name):
-        cur_member: Member = self.__getOnlineMemberOnly(username)
+        cur_member: Member = self.getOnlineMemberOnly(username)
         if cur_member is None:
             raise Exception("The user is not a member or not logged in")
         if self.stores.keys().__contains__(store_name):
@@ -411,7 +421,7 @@ class StoreFacade:
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
 
-        member: Member = self.__getOnlineMemberOnly(username)
+        member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
@@ -456,16 +466,18 @@ class StoreFacade:
         cur_store: Store = self.stores[store_name]
         if cur_store is None:
             raise Exception("No such store exists")
+        self.checkIfMemberExists(nominated_username)
         nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-            self.members[nominated_username].get_accesses()[store_name] = nominated_access
+
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Owner")
 
+        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
-
+        # TODO:
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores[store_name]
         if not self.checkIfUserIsLoggedIn(requester_username):
@@ -475,9 +487,10 @@ class StoreFacade:
         nominated_access = self.members[nominated_username].get_accesses().get(store_name)
         if nominated_access is None:
             nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-            self.members[nominated_username].get_accesses()[store_name] = nominated_access
+
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Manager")
+        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
@@ -515,6 +528,15 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         permissions: dict = cur_store.getPermissions(requester_username, nominated_username)
+        return permissions
+    
+    def getPermissionsAsJson(self, store_name, requester_username):
+        cur_store: Store = self.stores[store_name]
+        if not self.checkIfUserIsLoggedIn(requester_username):
+            raise Exception("User is not logged in")
+        if cur_store is None:
+            raise Exception("No such store exists")
+        permissions: dict = cur_store.getPermissionsAsJson(requester_username)
         return permissions
 
     def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={},
@@ -677,16 +699,36 @@ class StoreFacade:
 
     def closeStoreAsAdmin(self, admin_name, store_name):
         if self.admins.keys().__contains__(admin_name):
-            pass  # TODO: logic of closing a store as an admin amiel!
+            admin: Admin = self.admins.get(admin_name)
+            if admin.logged_In:
+                cur_store: Store = self.stores.get(store_name)
+                if cur_store is None:
+                    raise Exception("No such store exists")
+                cur_store.close_store_by_admin()
+            else:
+                raise Exception("admin is not logged in")
+        else:
+            raise Exception("no such admin exists")
+
+
+    def getAdmin(self, user_name):
+        if self.admins.keys().__contains__(user_name):
+            return self.admins.get(user_name)
+        else:
+            raise Exception("no admin was found")
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
+        password_validator = PasswordValidationService()
         if self.admins.keys().__contains__(username):
-            if self.password_validator.ValidatePassword(newPassword):
-                new_admin = Admin(newAdminName, newPassword, newEmail)
-                self.admins[newAdminName] = new_admin
-                return new_admin
+            if not self.admins.keys().__contains__(newAdminName):
+                if password_validator.ValidatePassword(newPassword):
+                    new_admin = Admin(newAdminName, newPassword, newEmail)
+                    self.admins[newAdminName] = new_admin
+                    return new_admin
+                else:
+                    raise Exception("password is too weak")
             else:
-                raise Exception("password is too weak")
+                raise Exception("Admin with the same name already exists")
         else:
             raise Exception("only an admin can add a new admin.")
 
@@ -752,3 +794,10 @@ class StoreFacade:
 
     def messageAsAdminToUser(self, self1, requesterID, memberName, subject, message):
         pass
+
+    def getUserStores(self, username):
+        stores_list = list()
+        for cur_store in self.stores.values():
+            if cur_store.get_accesses().get(username) is not None:
+                stores_list.append(cur_store)
+        return stores_list

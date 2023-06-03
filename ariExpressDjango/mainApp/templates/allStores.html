@@ -20,21 +20,21 @@
   }
 </style>
 <head>
-    <title>Store List</title>
+    <title>All Stores List</title>
   </head>
   <body>
-    <h1>My Stores</h1>
+    <h1>All Stores List</h1>
     <br><br><br>
     <ul>
-      {% for store_key, store_data in stores.items %}
+      {% for store in stores %}
         <li>
-          <form method="post" action="{% url 'mainApp:myshops_specific' store_data.store_name %}">
+          <form method="post" action="{% url 'mainApp:store_specific' store.store_name %}">
             {% csrf_token %}
             <input type="hidden" name="data" value="{{ store_data }}">
-            <button type="submit" class="link-button">{{ store_data.store_name }}</button>
+            <button type="submit" class="link-button">{{ store.store_name }}</button>
           </form>
 
-          <p>Active: {{ store_data.active }}</p>
+          <p>Active: {{ store.active }}</p>
                 <ul>
                     {% for product_key, product_data in store_data.products.items %}
                         <li>{{ product_data }}</li>

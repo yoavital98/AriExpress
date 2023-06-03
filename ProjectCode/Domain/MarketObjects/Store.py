@@ -67,7 +67,7 @@ class Store:
     #-------------Permissions----------------#
 
     def setFounder(self, username, access):
-        access.setFounder()
+        access.setAccess("Founder")
         self.__accesses[username] = access
 
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
@@ -126,10 +126,18 @@ class Store:
         nominated_access: Access = self.__accesses.get(nominated_username)
         if requester_access is None or nominated_access is None:
             raise Exception("No such access exists")
-        if requester_access == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
+        if requester_username == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
+        
+    # Get personal permissions for a given store
+    def getPermissionsAsJson(self, requester_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        if requester_access is None:
+            return {}
+        else:
+            return requester_access.get_access_state().get_permissionsAsJson()
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()
@@ -141,6 +149,7 @@ class Store:
         return product_to_add
 
     def deleteProduct(self, access, product_id):
+        product_id = int(product_id)
         access.canChangeProducts()
         if self.__products.get(product_id) is None:
             raise Exception("Product doesn't exists")
@@ -204,12 +213,13 @@ class Store:
         return self.__accesses
 
     def checkProductAvailability(self, product_id, quantity):
-
-        cur_product = self.__products[int(product_id)]
+        cur_product : Product = self.__products[int(product_id)]
         if cur_product is None:
             raise Exception("No such product exists")
-        if cur_product.quantity - quantity < 0:
+        if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
+        if quantity < 0:
+            raise Exception("quantity can't be under zero")
         return cur_product
 
     def searchProductByName(self, keyword):
@@ -457,33 +467,46 @@ class Store:
     def toJsonInfo(self):
         return {
             'store_name': self.__store_name,
-            'active': self.active
+            'active': str(self.active)
         }
 
     def toJsonProducts(self):
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active
+            'active': str(self.active),
+            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+
         }
 
     def toJsonAccesses(self):
         return {
-            'store_name': self.__store_name,
-            'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active,
-            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+            "store_name": self.__store_name,
+            "products": JsonSerialize.toJsonAttributes(self.__products),
+            "active": str(self.active),
+            # "accesses": JsonSerialize.toJsonAttributes(self.__accesses)
         }
 
     def toJsonAll(self):
         return {
-            'store_name': self.__store_name,
-            'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': self.active,
-            'accesses': JsonSerialize.toJsonAttributes(self.__accesses),
-            'bids': JsonSerialize.toJsonAttributes(self.__bids),
-            'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
-            'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
-            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
-            'discounts': self.__discount_policy.toJson()
+            "store_name": self.__store_name,
+            "products": JsonSerialize.toJsonAttributes(self.__products),
+            "active": str(self.active),
+            "accesses": JsonSerialize.toJsonAttributes(self.__accesses),
+            "bids": JsonSerialize.toJsonAttributes(self.__bids),
+            "bids_requests": JsonSerialize.toJsonAttributes(self.__bids_requests),
+            "auctions": JsonSerialize.toJsonAttributes(self.__auctions),
+            "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
+            "discounts": self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+

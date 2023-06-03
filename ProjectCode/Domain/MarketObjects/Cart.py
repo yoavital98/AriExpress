@@ -116,7 +116,8 @@ class Cart:
             if basket.getBasketSize() == 0 and basket.getBasketBidSize() == 0:
                 list_of_keys_to_clear.append(basketKey)
         for key in list_of_keys_to_clear:
-            del self.baskets[basketKey]
+            del self.baskets[key]
+
     def clearCartFromProducts(self):
         for basketKey in self.baskets.keys():
             basket: Basket = self.baskets[basketKey]
