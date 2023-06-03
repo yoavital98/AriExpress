@@ -233,10 +233,10 @@ class Service:
 
     def productSearchByName(self, productName, username):  # and keywords
         try:
-            results = self.store_facade.productSearchByName(productName, username)
+            results = self.store_facade.productSearchByName(productName)
             logging.debug(
                 f"fetching all the products with keyname '{str(productName)}'. By username: " + username + ".")
-            return Response(JsonSerialize.toJsonAttributes(results), True)
+            return Response(results, True) #eddited by rubin - results is already json after modifing the facade function 1.6.23
         except Exception as e:
             logging.error(f"productSearchByName Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -463,15 +463,15 @@ class Service:
             logging.info(
                 "Product has been removed successfully. By username: " + username + ". storename: " + storename + ". product_id: " + str(
                     product_id) + ".")
-            return Response(deleted_product_id.toJson(), True)
+            return Response(deleted_product_id, True)
         except Exception as e:
             logging.error(f"removeProductFromStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def editProductOfStore(self, username, storename,
+    def editProductOfStore(self, username, storename, product_id,
                            **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
-            changed_product = self.store_facade.editProductOfStore(username, storename, **kwargs)
+            changed_product = self.store_facade.editProductOfStore(username, storename, product_id, **kwargs)
             logging.debug(
                 f"Product has been edited successfully. By username: " + username + ". storename: " + storename + ".")
             return Response(changed_product.toJson(), True)
@@ -534,9 +534,19 @@ class Service:
             permissions = self.store_facade.getPermissions(storename, requesterID, nominatedID)
             logging.debug(
                 f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
-            return Response(json.dumps(permissions.keys()), True)
+            return Response(json.dumps(permissions), True)
         except Exception as e:
             logging.error(f"getPermissions Error: {str(e)}.")
+            return Response(e, False)
+    
+    def getPermissionsAsJson(self, storename, requesterID):  # TODO still don't know the implementation
+        try:
+            permissions = self.store_facade.getPermissionsAsJson(storename, requesterID)
+            logging.debug(
+                f"fetching all the store's permissions as json. By username: " + requesterID + ". nominated_username: ")
+            return Response(permissions, True)
+        except Exception as e:
+            logging.error(f"getPermissionsAsJson Error: {str(e)}.")
             return Response(e, False)
 
     def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
@@ -573,7 +583,7 @@ class Service:
             opened_store = self.store_facade.openStore(username, storename)
             logging.info(
                 "Store has been opened successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(opened_store.toJson(), True)
+            return Response(opened_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"openStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -583,7 +593,7 @@ class Service:
             closed_store = self.store_facade.closeStore(username, storename)
             logging.info(
                 "Store has been closed successfully. By username: " + username + ". storename: " + storename + ".")
-            return Response(closed_store.toJson(), True)
+            return Response(closed_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"closeStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -609,7 +619,7 @@ class Service:
             users = self.store_facade.getAllOnlineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
-            return Response(users, True)
+            return Response(json.dumps(users), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)
@@ -619,7 +629,7 @@ class Service:
             users = self.store_facade.getAllOfflineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
-            return Response(users, True)
+            return Response(json.dumps(users), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)

@@ -4,12 +4,14 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp imp
 class RuleComp(LogicComp):
 
     """
-        rule_type := "basket_total_price" | to be added
+        rule_type := "basket_total_price" | "amount_of_product" | "amount_of_category"
         product := product_id | -1 for non-specific product rule
         category := category name | "" for non specific category rule
         operator := ">=" | "<=" | "=="
         quantity := quantity of a product | total price
-        Example: ("basket_total_price", -1, "==", 100) --> basket total price equals 100 NIS.
+        Example: ("basket_total_price", -1, "", "==", 100)          --> basket total price equals 100 NIS.
+        Example: ("amount_of_product", 2, "", ">=", 5)              --> the amount of product with product_id of 2 is greater-equals than 5
+        Example: ("amount_of_category", -1, "fruit", "<=", 3)       --> the amount of product with category of "fruit" is less-equals than 3
 
     """
     def __init__(self, rule_type, product, operator, quantity, category):

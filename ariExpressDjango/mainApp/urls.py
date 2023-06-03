@@ -18,8 +18,15 @@ urlpatterns = [
     path(r'allstores/', views.viewAllStores, name="viewAllStores"),
     path(r'inbox/', views.inbox, name='inbox'),
     # path(r'resetpassword', views.reset_password, name='reset_password'),
-    path(r'mystores/<str:storename>/', views.mystores_specific, name='mystores_specific'),
+    path(r'store/<str:storename>/', views.store_specific, name='store_specific'),
     path(r'createStore/', views.createStore, name='createStore'),
+    # path(r'openStore/<str:storename>', views.openStore, name='openStore'),
+    # path(r'closeStore/<str:storename>', views.closeStore, name='closeStore'),
+    path(r'addNewProduct/<str:storename>', views.addNewProduct, name='addNewProduct'),
+    path(r'editProduct/<str:storename>', views.editProduct, name='editProduct'),
+    path(r'addNewDiscount/<str:storename>', views.addNewDiscount, name='addNewDiscount'),
+
+
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
     path(r'adminPage/', views.adminPage, name='adminPage'),
     path(r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
@@ -31,6 +38,11 @@ urlpatterns = [
     # path to view the message
     path (r'mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
     path(r'cart/', views.cart, name='cart'),
-
+    path(r'remove_basket_product', views.remove_basket_product, name='remove_basket_product'),
+    path(r'edit_basket_product', views.edit_basket_product, name='edit_basket_product'),
+    path(r'add_product_to_cart',views.add_product_to_cart, name='add_product_to_cart'),
+    path(r'checkoutpage/', views.checkoutpage, name='checkoutpage'),
+    path(r'checkout', views.checkout, name='checkout'),
+    path(r'searchpage/', views.searchpage, name='searchpage'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

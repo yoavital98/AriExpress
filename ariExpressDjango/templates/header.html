@@ -39,9 +39,9 @@
                                 Dropdown
                             </a>
                             <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'mainApp:viewAllStores'%}">All Stores</a></li>
                                 {% if user.is_authenticated %}
                                 <li><a class="dropdown-item" href="{% url 'mainApp:mystores'%}">My Stores</a></li>
-                                <li><a class="dropdown-item" href="{% url 'mainApp:viewAllStores'%}">All Stores</a></li>
                                 <li><a class="dropdown-item" href="{% url 'mainApp:createStore'%}">Create a new Store</a></li>
                                 {% endif %}
                                 <li><a class="dropdown-item" href="#">Action</a></li>
@@ -57,7 +57,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:inbox' %}">
-                                <i class="fas fa-bell"></i><span class="pending">{{usermessages.number}}</span>
+                                <i class="fas fa-bell"></i><span class="badge badge-pill badge-warning">{{usermessages.number}}</span>
                             </a>
                         </li>
                         {% else %}
@@ -79,9 +79,10 @@
                         </li>
                         {% endif %}
                     </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2 nav-search-form" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    <form class="d-flex" method="POST" role="search" action="{% url 'mainApp:searchpage' %}">
+                        {% csrf_token %}
+                        <input class="form-control me-2 nav-search-form" type="search" placeholder="I'm looking for..." aria-label="Search" name ="searched">
+                        <button class="btn btn-outline-success" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
                     </form>
                 </div>
             </div>

@@ -1,49 +1,65 @@
 {% extends 'base.html' %}
-{% block content %}
 
+{% block content %}
+{% load static %}
+<br>
 {% if user.is_authenticated %}
-<body>
-	<h1>{{ user.username }}'s cart <i class="fas fa-shopping-cart"></i></h1>
-</body>
+    <h1>{{ user.username }}'s cart  <i class="fa-solid fa-cart-shopping fa-xs"></i></h1>
 {% else %}
-  <p> My cart <i class="fas fa-shopping-cart"></i></p>
+    <p>My cart <i class="fa-light fa-cart-shopping"></i></p>
 {% endif %}
-<body>
+
 <br><br><br>
-<ul>
-    {% for basket in baskets %}
-    <li>
-        <h2>{{ basket.store}}</h2>
-        <table class="table table-hover">
-            <tr class="table-light">
-                <th>Name</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Actions</th>
-            </tr>
-      
-            {% for product in products[basket.store] %}
+{% if baskets %}
+  <ul>
+      {% for store, basket_products in products.items %}
+      <li style=" list-style-type: none;">
+          <h2 >{{ store }}</h2>
+          <table class="table table-hover">
+            <thead>
+              <tr class="table-light">
+                  <th style="width: 30%;">Name</th>
+                  <th style="width: 15%;">Quantity</th>
+                  <th style="width: 15%;">Price</th>
+                  <th style="width: 25%;">Categories</th>
+                  <th style="width: 15%;">Actions</th>
+              </tr>
+            </thead>
+              {% for product_id, product in basket_products.items.items %}
               <tr>
-                  <td>{{ product.name }}</td>
+                  <td>{{ product.product.name }}</td>
                   <td>{{ product.quantity }}</td>
                   <td>{{ product.price }}</td>
-                  <td>{{ product.categories }}</td>
+                  <td>{{ product.product.categories }}</td>
+
                   <td>
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-                      <button type="button" class="btn btn-outline-dark">Edit</button>
-                      <button type="button" class="btn btn-outline-dark">Remove</button>
-                    </div>
+                    <button class="btn btn-outline-dark btn-action" title="Edit Product" data-bs-toggle="modal" data-bs-target="#editProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product="{{ product }}">
+                      Edit <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-action" title="Remove Product" data-bs-toggle="modal" data-bs-target="#removeProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product-name="{{ product.product.name }}">
+                      Remove <i class="fas fa-trash-alt"></i>
+                    </button>
+                    
                   </td>
               </tr>
-            {% endfor %}
+              {% include 'products/removeProduct.html' %}
+              {% include 'products/editProduct.html' %}
+              {% endfor %}
           </table>
-    </li>
-    {% empty %}
-    <li>No baskets available.</li>
-    {% endfor %}
-</ul>
-</body>
-
-
+          <p>
+            <b>Total Price: {{ basket_products.total_price }}</b>
+          </p> 
+      </li>
+      <br><br>
+      {% empty %}
+      <li>No baskets available.</li>
+      {% endfor %}
+  </ul>
+  <button class="btn btn-light btn-outline-primary btn-action btn-lg" onclick="window.location.href='{% url 'mainApp:checkoutpage' %}'" title="purchase cart" style = "position: fixed; bottom: 20px; right: 20px;"> 
+    Checkout? <i class="fa-solid fa-bag-shopping fa-bounce"></i>
+  </button>
+{% else %}
+    <p>No items in the cart.</p>
+{% endif %}
 
 {% endblock %}

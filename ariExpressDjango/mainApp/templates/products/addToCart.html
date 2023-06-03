@@ -1,0 +1,143 @@
+{% extends 'baseModal.html' %}
+
+<!--Modal ID-->
+{% block modal-id %} id="addToCartModal{{storename}}{{product.id}}{{ searched }}" {% endblock modal-id %}
+
+<!--Modal title-->
+{% block modal-title %}{% endblock modal-title %}
+
+<!--Modal form-->
+{% block form %}
+<form method="POST" action="/add_product_to_cart" id="addProductToCartForm">
+    {% csrf_token %}
+    <div class="modal-body">
+        <input type="hidden" name="searched" value="{{ searched }}" id="searched">
+        <input type="hidden" name="store_name" value="{{ storename }}" id="store">
+        <input type="hidden" name="product_id" value="{{ product.id }}" id="product_id">
+
+        <div class="product__photo">
+            <div class="photo-container">
+                <div class="photo-main">
+                    <div class="controls">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/2324px-Banana-Single.jpg" alt="Product">
+                </div>
+            </div>
+        </div>
+        <div class="product__info">
+            <div class="title">
+                <h1>{{product.name}}</h1>
+                <span>Categories:{{product.categories}}</span>
+                <span><i class="fa-solid fa-store"></i> Store name: {{storename}} </span>
+            </div>
+            <div class="price">
+                $ <span>{{product.price}}</span>
+            </div>
+        </div>
+        <div class = "product-quantity">
+            <label for="quantity" class="form-label">choose quantity:</label>
+            <input type = "number" id = "quantity" name = "quantity" placeholder ="1" size="3" min="0" max="{{product.quantity}}" required>
+        </div>
+        <hr>
+        <div>
+            <button class="buy--btn" type="submit" id="submit" onclick="add_product_to_cart()">ADD TO CART <i class="fa-solid fa-basket-shopping"></i> &nbsp;&nbsp;</button>
+        </div>
+    </div>
+</form>
+<style>
+    .modal-body {
+        display: grid;
+        grid-template-rows: 1fr;
+        font-family: "Raleway", sans-serif;
+        background-color: #01e37f;
+    }
+
+    .product__photo {
+        position: relative;
+    }
+    
+    .photo-container {
+        position: absolute;
+        left: -2.5em;
+        display: grid;
+        grid-template-rows: 1fr;
+        width: 50%;
+        height: 50%;
+        border-radius: 6px;
+        box-shadow: 4px 4px 25px -2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .photo-main {
+        border-radius: 6px 6px 0 0;
+        background-color: #9be010;
+        background: radial-gradient(#e5f89e, #96e001);
+    
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8em;
+            color: #fff;
+    
+            i {
+                cursor: pointer;
+            }
+        }
+    
+        img {
+            position: absolute;
+            left: -3.5em;
+            top: 2em;
+            max-width: 50%;
+            filter: saturate(150%) contrast(120%) hue-rotate(10deg)
+                drop-shadow(1px 20px 10px rgba(0, 0, 0, 0.3));
+        }
+    }
+
+    .title {
+        h1 {
+            margin-bottom: 0.1em;
+            color:#4c4c4c;
+            font-size: 1.5em;
+            font-weight: 900;
+        }
+    
+        span {
+            font-size: 0.7em;
+            color:#a6a6a6;
+        }
+    }
+    
+    .price {
+        margin: 1.5em 0;
+        color: #ff3f40;
+        font-size: 1.2em;
+    
+        span {
+            padding-left: 0.15em;
+            font-size: 2.9em;
+        }
+    }
+    .buy--btn {
+        padding: 1.5em 3.1em;
+        border: none;
+        border-radius: 7px;
+        font-size: 0.8em;
+        font-weight: 700;
+        letter-spacing: 1.3px;
+        color: #fff;
+        background-color: #ff3f40;
+        box-shadow: 2px 2px 25px -7px #4c4c4c;
+        cursor: pointer;
+    
+        &:active {
+            transform: scale(0.97);
+        }
+    }
+    
+</style>
+{% endblock form %}
+
+<!--Modal footer-->
+{% block close %}{% endblock close %}

@@ -1,6 +1,10 @@
 import datetime
 from typing import List
 
+from peewee import SqliteDatabase
+
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -10,14 +14,19 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import Discoun
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
-
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
+
+# ----- REPOSITORIES ----- #
+from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
 
 
 class Store:
 
-    def __init__(self, store_name):
+
+    def __init__(self, store_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__store_name = store_name
+        self.prods = ProductRepository(store_name)
         self.__products = TypedDict(int, Product)
         # TODO: policies
         self.active: bool = True
@@ -33,6 +42,21 @@ class Store:
         self.__discount_policy = DiscountPolicy()
         self.__purchase_policy = PurchasePolicies()
 
+
+
+    def testing_orm(self):
+        db = SqliteDatabase('database.db')
+        db.connect()
+        StoreProduct = StoreModel.products.get_through_model()
+        db.drop_tables([ProductModel,StoreModel,StoreProduct])
+        db.create_tables([ProductModel,StoreModel,StoreProduct])
+        store_model = StoreModel.create(store_name=self.__store_name)
+
+        prod = Product(6, "test", 1, 1, "test")
+        self.prods[6] = prod
+
+
+
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
@@ -43,7 +67,7 @@ class Store:
     #-------------Permissions----------------#
 
     def setFounder(self, username, access):
-        access.setFounder()
+        access.setAccess("Founder")
         self.__accesses[username] = access
 
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
@@ -102,10 +126,18 @@ class Store:
         nominated_access: Access = self.__accesses.get(nominated_username)
         if requester_access is None or nominated_access is None:
             raise Exception("No such access exists")
-        if requester_access == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
+        if requester_username == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
+        
+    # Get personal permissions for a given store
+    def getPermissionsAsJson(self, requester_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        if requester_access is None:
+            return {}
+        else:
+            return requester_access.get_access_state().get_permissionsAsJson()
 
     def addProduct(self, access, name, quantity, price, categories):
         access.canChangeProducts()
@@ -117,6 +149,7 @@ class Store:
         return product_to_add
 
     def deleteProduct(self, access, product_id):
+        product_id = int(product_id)
         access.canChangeProducts()
         if self.__products.get(product_id) is None:
             raise Exception("Product doesn't exists")
@@ -126,7 +159,7 @@ class Store:
 
     def changeProduct(self, access, product_id, **kwargs):
         access.canChangeProducts()
-        cur_product = self.__products.get(product_id)
+        cur_product: Product = self.__products.get(product_id)
         if cur_product is None:
             raise Exception("Product doesn't exists")
         for k, v in kwargs.items():
@@ -134,6 +167,7 @@ class Store:
                 getattr(cur_product, k)
             except AttributeError:
                 raise Exception("No such attribute exists")
+            self.checkValue(v)
             setattr(cur_product, k, v)
         return cur_product
 
@@ -185,6 +219,8 @@ class Store:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
+        if quantity < 0:
+            raise Exception("quantity can't be under zero")
         return cur_product
 
     def searchProductByName(self, keyword):
@@ -439,26 +475,46 @@ class Store:
         return {
             'store_name': self.__store_name,
             'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': str(self.active)
+            'active': str(self.active),
+            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+
         }
 
     def toJsonAccesses(self):
         return {
-            'store_name': self.__store_name,
-            'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': str(self.active),
-            'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
+            "store_name": self.__store_name,
+            "products": JsonSerialize.toJsonAttributes(self.__products),
+            "active": str(self.active),
+            # "accesses": JsonSerialize.toJsonAttributes(self.__accesses)
         }
 
     def toJsonAll(self):
         return {
-            'store_name': self.__store_name,
-            'products': JsonSerialize.toJsonAttributes(self.__products),
-            'active': str(self.active),
-            'accesses': JsonSerialize.toJsonAttributes(self.__accesses),
-            'bids': JsonSerialize.toJsonAttributes(self.__bids),
-            'bids_requests': JsonSerialize.toJsonAttributes(self.__bids_requests),
-            'auctions': JsonSerialize.toJsonAttributes(self.__auctions),
-            'lotteries': JsonSerialize.toJsonAttributes(self.__lotteries),
-            'discounts': self.__discount_policy.toJson()
+            "store_name": self.__store_name,
+            "products": JsonSerialize.toJsonAttributes(self.__products),
+            "active": str(self.active),
+            "accesses": JsonSerialize.toJsonAttributes(self.__accesses),
+            "bids": JsonSerialize.toJsonAttributes(self.__bids),
+            "bids_requests": JsonSerialize.toJsonAttributes(self.__bids_requests),
+            "auctions": JsonSerialize.toJsonAttributes(self.__auctions),
+            "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
+            "discounts": self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+    def checkValue(self, value):
+        if isinstance(value,int):
+            if value <= 0:
+                raise Exception("value cannot be 0 or negative number")
+        else:
+            if isinstance(value,str):
+                if value == "":
+                    raise Exception("name or category cannot be empty")
