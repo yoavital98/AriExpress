@@ -30,8 +30,13 @@ socket.onmessage = function(event) {
 // Function to display the notification
 function displayNotification(notification) {
     // Update the UI to display the notification
-    // You can use a UI library or write custom JavaScript code to handle the UI update
     console.log('Notification:', notification);
+
+    // Access the notification-amount badge element
+    var badgeElement = document.querySelector('.notification-amount');
+
+    // Update the pending amount number in the badge
+    badgeElement.textContent = notification.unread_messages;
 }
 
 // Function to send a message (for testing purposes)
