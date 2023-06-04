@@ -25,7 +25,7 @@ class Member(User):
         return super().get_cart()
 
     def add_to_cart(self, username, store, product_id, product, quantity):
-        super().add_to_cart(username, store, product_id, product, quantity)
+        return super().add_to_cart(username, store, product_id, product, quantity)
 
     def get_Basket(self, store_name):
         return super().get_Basket(store_name)
@@ -34,7 +34,7 @@ class Member(User):
         return super().removeFromBasket(store_name, product_id)
 
     def edit_Product_Quantity(self, storename, product_id, quantity):
-        super().edit_Product_Quantity(storename, product_id, quantity)
+        return super().edit_Product_Quantity(storename, product_id, quantity)
 
     # -------------------------------------------------------------------------------
 
@@ -123,7 +123,7 @@ class Member(User):
     # =======================JSON=======================#
 
     def toJson(self):
-        data = {
+        return {
             "entrance_id": self.entrance_id,
             "username": self.user_name,
             "email": self.email

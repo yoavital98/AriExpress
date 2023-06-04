@@ -1,6 +1,8 @@
 import asyncio
+from datetime import date, datetime
+from sqlite3 import Date
 
-
+from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.MessageObjects.PurchaseReport import PurchaseReport
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -26,7 +28,7 @@ class Cart:
 
     def add_Product(self,username, store, product_id, product, quantity):
         if not self.baskets.keys().__contains__(store.get_store_name()):
-                basket_to_add = Basket(username, store)
+                basket_to_add = Basket(str(username), store)
                 self.baskets[store.get_store_name()] = basket_to_add
         basket: Basket = self.get_Basket(store.get_store_name())
         basket.add_Product(product_id, product, quantity)
@@ -116,7 +118,8 @@ class Cart:
             if basket.getBasketSize() == 0 and basket.getBasketBidSize() == 0:
                 list_of_keys_to_clear.append(basketKey)
         for key in list_of_keys_to_clear:
-            del self.baskets[basketKey]
+            del self.baskets[key]
+
     def clearCartFromProducts(self):
         for basketKey in self.baskets.keys():
             basket: Basket = self.baskets[basketKey]
@@ -127,25 +130,35 @@ class Cart:
             basket: Basket = self.baskets[storename]
             basket.clearBidFromBasket(bid_id)
 
-    def PurchaseCart(self, card_number, card_user_name, card_user_id, card_date, back_number, address, is_member):
+    def PurchaseCart(self, card_number, card_user_name, card_holder_id, card_date, cvv, address, is_member):
         payment_service = PaymentService()
         transaction_history = TransactionHistory()
         overall_price = 0  # overall price for the user
         stores_products_dict = TypedDict(str, list)  # store_name to list of tuples (productid,productname,quantity,price4unit)
         answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
+        # this checks if the credit card is valid!
+        try:
+            payment_service.validate_credit_card(card_number, card_date, cvv, card_holder_id)
+        except Exception as e:
+            raise Exception(e)
         if answer is True:  # means everything is ok to go
             purchaseReports = []
             for basket in self.get_baskets().values():  # all the baskets
                 products: list = basket.getProductsAsTuples()  # tupleList [(productid,productname,quantity,price4unit)]
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
                 #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
-                payment_service.pay(basket.store, card_number, card_user_name, card_user_id, card_date, back_number, price)
                 transaction_history.addNewStoreTransaction(self.username, basket.get_Store().get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
-                purchaseReports.append(PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price))
+                cur_purchase = PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price)
+                MessageController().send_message("AriExpress", basket.get_Store().getFounder(), "Purchase Received", cur_purchase, \
+                                                 datetime.now(), False, None)
+                purchaseReports.append(cur_purchase)
                 stores_products_dict[basket.store.get_store_name()] = products
                 overall_price += price
             if is_member:
                 transaction_history.addNewUserTransaction(self.username, stores_products_dict, overall_price)
+                MessageController().send_message("AriExpress", self.username, "Purchase Received", purchaseReports, \
+                                                 datetime.now(), False, None)
+
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {

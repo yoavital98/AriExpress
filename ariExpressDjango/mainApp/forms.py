@@ -30,3 +30,42 @@ class UserMessageform(ModelForm):
     class Meta:
         model = UserMessage
         fields = ['receiver', 'subject', 'content','file']
+
+
+class NewProductForm(forms.Form):
+    productName = forms.CharField(max_length=100)
+    productCategory = forms.CharField(max_length=100)
+    productPrice = forms.IntegerField()
+    productQuantity = forms.IntegerField()
+    
+# TODO: change name to something like BasketRemoveProductForm
+class BasketRemoveProductForm(forms.Form):
+    product_id = forms.IntegerField()
+    store_name = forms.CharField(max_length=100)
+
+# TODO: change name to something like BasketEditQuantityProductForm
+class BasketEditProductForm(forms.Form):
+    product_id = forms.IntegerField()
+    store_name = forms.CharField(max_length=100)
+    quantity = forms.IntegerField()
+
+class BasketAddProductForm(forms.Form):
+    product_id = forms.IntegerField()
+    store_name = forms.CharField(max_length=100)
+    quantity = forms.IntegerField()
+
+
+class CheckoutForm(forms.Form):
+    firstName = forms.CharField(max_length=100)
+    lastName = forms.CharField(max_length=100)
+    #email = forms.CharField(max_length=100)
+    address = forms.CharField(max_length=100)
+    country = forms.CharField(max_length=100)
+    state = forms.CharField(max_length=100)
+    #zip = forms.CharField(max_length=100)
+    cc_name = forms.CharField(max_length=100)
+    cc_number = forms.CharField(max_length=16)
+    cc_id = forms.CharField(max_length=9)
+    cc_expiration = forms.CharField(max_length=7)
+    cc_cvv = forms.CharField(max_length=3)
+

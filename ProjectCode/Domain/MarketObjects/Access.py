@@ -17,15 +17,19 @@ class Access:
         self.user = user
         self.store = store
         self.access_state = AccessState()
+        self.role = ""
 
 
     def setAccess(self, role):
         if role == "Owner":
             self.setOwner()
+            self.role = "Owner"
         elif role == "Manager":
-            self.setOwner()
+            self.setManager()
+            self.role = "Manager"
         elif role == "Founder":
             self.setFounder()
+            self.role = "Founder"
         else:
             raise Exception("No such role exists.")
 
@@ -109,12 +113,12 @@ class Access:
 
     # =======================JSON=======================#
     def toJson(self):
-        data = {
-            'user': self.user,
-            'store': self.store,
-            'nominated_by_username': self.nominated_by_username,
-            'nominations': JsonSerialize.toJsonAttributes(self.nominations),
-            'access_state': self.access_state.toJson()
+        return {
+            "user": self.user.toJson(),
+            "store": self.store.toJsonInfo(),
+            "nominated_by_username": self.nominated_by_username,
+            # "nominations": JsonSerialize.toJsonAttributes(self.nominations),
+            "role": self.role
+            # "access_state": self.access_state.toJson()
         }
-        return json.dumps(data)
 

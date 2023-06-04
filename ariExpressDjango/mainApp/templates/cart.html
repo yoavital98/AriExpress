@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+<br><br>
+{% if user.is_authenticated %}
+    <h1 style="text-align:center; font-size:300%;">{{ user.username }}'s cart  <i class="fa-solid fa-cart-shopping fa-xs"></i></h1>
+{% else %}
+    <p>My cart <i class="fa-light fa-cart-shopping"></i></p>
+{% endif %}
+
+<br><br><br>
+{% if baskets %}
+<div class="row justify-content-lg-center">
+  <div class="col-lg-9">
+      <ul>
+          {% for store, basket_products in products.items %}
+          <li style=" list-style-type: none;">
+              <h2 ><i class="fa-solid fa-store"></i> {{ store }}</h2>
+              <table class="table table-hover">
+                <thead>
+                  <tr class="table-primary">
+                      <th style="width: 30%;">Name</th>
+                      <th style="width: 15%;">Quantity</th>
+                      <th style="width: 15%;">Price</th>
+                      <th style="width: 25%;">Categories</th>
+                      <th style="width: 15%;">Actions</th>
+                  </tr>
+                </thead>
+                  {% for product_id, product in basket_products.items.items %}
+                  <tr>
+                      <td>{{ product.product.name }}</td>
+                      <td>{{ product.quantity }}</td>
+                      <td>{{ product.price }}</td>
+                      <td>{{ product.product.categories }}</td>
+
+                      <td>
+                        <button class="btn btn-outline-dark btn-action" title="Edit Product" data-bs-toggle="modal" data-bs-target="#editProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product="{{ product }}">
+                          Edit <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-action" title="Remove Product" data-bs-toggle="modal" data-bs-target="#removeProductModal{{ store }}{{ product_id }}" data-store="{{ store }}" data-product-id="{{ product_id }}" data-product-name="{{ product.product.name }}">
+                          Remove <i class="fas fa-trash-alt"></i>
+                        </button>
+                        
+                      </td>
+                  </tr>
+                  {% include 'products/removeProduct.html' %}
+                  {% include 'products/editProduct.html' %}
+                  {% endfor %}
+              </table>
+              <p style=" font-size:120%; color:#FF9800">
+                <b>Total Price: {{ basket_products.total_price }}</b>
+              </p> 
+          </li>
+          <br><br>
+          {% empty %}
+          <li>No baskets available.</li>
+          {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <button class="btn btn-light btn-outline-primary btn-action btn-lg" onclick="window.location.href='{% url 'mainApp:checkoutpage' %}'" title="purchase cart" style = "position: fixed; bottom: 20px; right: 20px;"> 
+    Checkout? <i class="fa-solid fa-bag-shopping fa-bounce"></i>
+  </button>
+{% else %}
+    <p style="text-align:center; font-size:150%;">No items in the cart.</p>
+{% endif %}
+
+{% endblock %}
