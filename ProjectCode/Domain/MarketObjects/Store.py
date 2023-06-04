@@ -242,6 +242,8 @@ class Store:
         return product_list
 
     def searchProductByCategory(self, category):
+        if category == "":
+            raise Exception("category cannot be empty")
         #cur_access: Access = self.__accesses[username]
         if not self.active: #and (cur_access is None or not cur_access.hasRole()):
             return {}

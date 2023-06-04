@@ -1626,32 +1626,82 @@ class TestStoreFacade(TestCase):
         pass
 
     # productSearchByCategory
-    def test_productSearchByCategory_success(self):
-        pass
+    def test_productSearchByCategory_sameStore_success(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByCategory("cookies")
+        products_list: list = products.get("AriExpress")
+        self.assertTrue(products_list.__contains__(oreo))
+        self.assertTrue(products_list.__contains__(kit_kat))
+        self.assertTrue(len(products_list) == 2)
 
-    def test_productSearchByCategory_userNotLoggedIn_fail(self):
-        # TODO: should it be success?
-        pass
+    def test_productSearchByCategory_diffrentStore_success(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByCategory("cookies")
+        products_list: list = products.get("AriExpress")
+        products_list2: list = products.get("AriNotExpress")
+        self.assertTrue(products_list.__contains__(oreo))
+        self.assertTrue(products_list2.__contains__(kit_kat))
+        self.assertTrue(len(products_list) == 1)
+        self.assertTrue(len(products_list) == 1)
+
 
     def test_productSearchByCategory_categoryNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByCategory("milkshake")
+        # the category doesn't exists, empty result
+        self.assertTrue(len(list(products.keys())) == 0)
 
     def test_productSearchByCategory_categoryIsEmpty_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        with self.assertRaises(Exception):
+            products = self.store_facade.productSearchByCategory("")
+        # the category doesn't exist, empty result
 
     # productSearchByName
-    def test_productSearchByName_success(self):
-        pass
+    def test_productSearchByName_sameStore_success(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        oreo2 = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByName("oreo")
+        products_list: list = products.get("AriExpress")
 
-    def test_productSearchByName_userNotLoggedIn_fail(self):
-        # TODO: should it be success?
-        pass
+        self.assertTrue(len(products_list) == 2)
 
-    def test_productSearchByName_categoryNotExists_fail(self):
-        pass
 
-    def test_productSearchByName_categoryIsEmpty_fail(self):
-        pass
+    def test_productSearchByName_NameNotExists_fail(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByName("milkshake")
+        # the category doesn't exists, empty result
+        self.assertTrue(len(list(products.keys())) == 0)
+
+
+
 
     # purchaseCart
     # Tests with 'invalid' means bad info/empty info/missing info
@@ -1694,22 +1744,45 @@ class TestStoreFacade(TestCase):
 
     # register
     def test_register_success(self):
-        pass
+        self.assertFalse(list(self.store_facade.members.keys()).__contains__("Yoav"))
+        member: Member = self.store_facade.register("Yoav", "password123", "yoav@gmail.com")
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Yoav"))
+        self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
 
     def test_register_usernameAlreadyExists_fail(self):
-        pass
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("Feliks", "password123", "yoav@gmail.com")
+
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
+        member: Member = self.store_facade.members.get("Feliks")
+        self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
+        self.assertFalse(member.password == "password123")
 
     def test_register_usernameIsEmpty_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("", "password123", "yoav@gmail.com")
+        self.assertFalse(list(self.store_facade.members.keys()).__contains__(""))
+
 
     def test_register_passwordIsEmpty_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("yoav", "", "yoav@gmail.com")
+        self.assertFalse(list(self.store_facade.members.keys()).__contains__(""))
 
     def test_register_emailIsEmpty_fail(self):
-        pass
+      pass
 
     def test_register_userAlreadyLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(list(self.store_facade.online_members.keys()).__contains__("Feliks"))
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("Feliks", "password123", "yoav@gmail.com")
+
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
+        member: Member = self.store_facade.members.get("Feliks")
+        self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
+        self.assertFalse(member.password == "password123")
     #todo: BIDS
     # rejectBid
     def test_rejectBid_success(self):
@@ -1894,6 +1967,7 @@ class TestStoreFacade(TestCase):
         pass
 
     # sendAlternativeBid
+    #todo: bids
     def test_sendAlternativeBid_success(self):
         pass
 

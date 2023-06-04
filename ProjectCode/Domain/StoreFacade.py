@@ -135,11 +135,13 @@ class StoreFacade:
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
         password_validator = PasswordValidationService()
-        if not self.members.keys().__contains__(str(user_name)):
+        if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):
             if password_validator.ValidatePassword(password):
                 new_member: Member = Member(str(0), user_name, password, email)
                 self.members[str(user_name)] = new_member
                 return new_member
+            else:
+                raise Exception("password is too weak")
         else:
             raise Exception("This username is already in the system")
 
