@@ -39,7 +39,6 @@ class Test_Use_Cases_2_1(TestCase):
     def setUp(self):
 
         self.Service = Service()
-        self.Service.openTheSystem("Ari")
 
     # Use Case 2.1.1
     def test_guest_visit_success(self):
@@ -80,7 +79,6 @@ class Test_Use_Case_2_1_4(TestCase):
 
     def setUp(self):
         self.Service = Service()
-        self.Service.openTheSystem("Ari")
         self.Service.register("username", "password", "email")
 
 
@@ -100,12 +98,14 @@ class Test_Use_Case_2_2(TestCase):
     def setUp(self):
 
         self.Service = Service()
-        self.Service.openTheSystem("Ari")
         self.Service.register("username", "password", "email")
-        self.Service.login("username", "password")
-        self.Service.openStore("username", "storename")
-        self.Service.addNewProductToStore("username", "storename", "product1", "category", 10, 10)
-        self.Service.addNewProductToStore("username", "storename", "product2", "category", 10, 10)
+        self.Service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il")
+        self.Service.logIn("username", "password")
+        res = self.Service.createStore("username", "roobs_store")
+        print(res.getReturnValue())
+        self.Service.addNewProductToStore("username", "roobs_store", "product1", "category", 10, 10)
+        self.Service.addNewProductToStore("username", "roobs_store", "product2", "category", 10, 10)
+        self.Service.logIn("rubin_krief", "h9reynWq")
 
         
 
@@ -122,6 +122,7 @@ class Test_Use_Case_2_2(TestCase):
             self.Service.getProductsByStore("storename_that_doesn't_exist")
         except Exception:
             pass
+
 
     #Use Case 2.2.2
     #Pre-conditions: User defined as guest is connected to the system
@@ -157,12 +158,18 @@ class Test_Use_Case_2_2(TestCase):
         product_id = products[0].get_product_id()
         self.Service.addToBasket(guest.get_username(), "storename", product_id, 1)
 
+
     def test_guest_add_product_to_cart_failure(self):
         guest = self.Service.loginAsGuest()
         try:
             self.Service.addToBasket(guest.get_username(), "storename", "product_id", 100)
         except Exception:
             pass
+
+    def test_user_add_product_to_cart_success(self):
+        res = self.Service.addToBasket("rubin_krief", "roobs_store", 1, 1)
+        print(res.getReturnValue())
+        self.assertTrue(res.getStatus())
 
 
 if __name__ == '__main__':

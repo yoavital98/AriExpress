@@ -1,0 +1,145 @@
+{% extends 'baseModal.html' %}
+
+{% block modal-size%}
+modal-md
+{% endblock modal-size %}
+
+<!--Modal ID-->
+{% block modal-id %} id="addToCartModal{{storename}}{{product.product_id}}" {% endblock modal-id %}
+
+<!--Modal title-->
+
+<!--Modal form-->
+{% block form %}
+<form method="POST" action="/add_product_to_cart" id="addProductToCartForm">
+    {% csrf_token %}
+    <div class="modal-body product-page">
+        <input type="hidden" name="store_name" value="{{ storename }}" id="store_name">
+        <input type="hidden" name="product_id" value="{{ product.product_id}}" id="product_id">
+        
+        <div class="container">
+            <br>
+            <div class="row">
+                <div class="col-md-8 mt-1 product__photo" >                    
+                    <div class="photo-container">
+                        <div class="controls">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                        <img class="img-responsive" src="https://www.bevi.com/static/files/0/ecommerce-default-product.png" alt="https://www.bevi.com/static/files/0/ecommerce-default-product.png">
+                    </div>                   
+                </div>
+                <div class="col-md-7 ms-auto">
+                    <div class="title">
+                        <h2>{{product.name}}</h2>
+                        <br>
+                        <p>Categories: {{product.categories}}</p>
+                        <p><i class="fa-solid fa-store"></i> Store name: {{storename}} </p>
+                    </div>
+                    <div class="price">
+                        <b> $ <span>{{product.price}}</span></b>
+                    </div>
+                    <div class = "product-quantity">
+                        <label for="quantity" class="form-label">choose quantity:</label>
+                        <input type = "number" id = "quantity" name = "quantity" placeholder ="1" size="3" min="0" max="{{product.quantity}}" required>
+                    </div>
+                    <hr>
+                    <div>
+                        <button class="buy--btn" type="submit" id="submit" onclick="add_product_to_cart()">ADD TO CART<i class="fa-solid fa-cart-plus fa-lg"></i>&nbsp;&nbsp;</button>
+                    </div>
+                </div>                
+            </div>
+            <br>
+        </div>
+    </div>
+</form>
+<style>
+    .modal-header {
+        border-bottom: none;
+    }
+    .product-page {
+        display: grid;
+        grid-template-rows: 1fr;
+        font-family: "Raleway", sans-serif;
+    }
+
+    .product__photo {
+        position: relative;
+        top: 3px;
+        left: -7.5em;
+        width: 90%;
+        max-height: 200px; /* Adjust this value as needed */
+    }
+
+    .photo-container {
+        position: absolute;
+        display: grid;
+        background-color: #fff;
+        grid-template-rows: 1fr;
+        width: 70%;
+        padding: 15px;
+        transition: all 0.2s ease-in-out;
+        border-radius: 6px;
+        box-shadow: 4px 4px 25px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    .photo-container .controls {
+        display: flex;
+        justify-content: space-between;       
+        color: #fff;
+    }
+
+    .photo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        border-radius: 2px 2px 0 0;
+    }
+
+    .title {
+        h2 {
+            margin-bottom: 0.1em;
+            color:#4c4c4c;
+            font-size: 2em;
+            font-weight: 900;
+        }
+    
+        p {
+            font-size: 0.7em;
+            color:#a6a6a6;
+        }
+    }
+    
+    .price {
+        margin: 1.5em 0;
+        color: #ff3f40;
+        font-size: 2.2em;
+    
+        span {
+            padding-left: 0.15em;
+            font-size: 3.9em;
+        }
+    }
+    .buy--btn {
+        display:block;
+        text-align:center;
+        padding: 1.5em 3.1em;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9em;
+        font-weight: 700;
+        letter-spacing: 1.3px;
+        color: #fff;
+        background-color: #FF9800;
+        box-shadow: 1px 1px 10px -1px #4c4c4c;
+    }
+
+    .modal-footer {
+        display: none;
+    }
+    
+</style>
+{% endblock form %}
+
+<!--Modal footer-->
+{% block close %}{% endblock close %}

@@ -16,6 +16,10 @@ class TransactionHistory:
             cls._instance.store_transactions = TypedDict(str, list)
             # Add any initialization code here
         return cls._instance
+    # insert empty list is a method for tests
+    def insertEmptyList(self, user_name):
+        self.user_transactions[user_name] = list()
+
 
     def addUserTransaction(self, transaction: UserTransaction):
         if transaction.get_username() in self.user_transactions.keys():
@@ -100,3 +104,5 @@ class TransactionHistory:
             transaction_list.append(transaction_data)
         data = {"transactions": transaction_list}
         return json.dumps(data)
+
+

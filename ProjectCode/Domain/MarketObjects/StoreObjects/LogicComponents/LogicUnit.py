@@ -27,7 +27,7 @@ class LogicUnit(LogicComp):
         self.left_rule = RuleComp(self.rule["rule_type"], self.rule["product_id"],
                                   self.rule["operator"], self.rule["quantity"], self.rule["category"])
 
-        if self.rule["child"]["rule"]["child"]:
+        if len(self.rule["child"]["rule"]["child"].values()) != 0:
             child_rule = self.rule["child"]["rule"]
             child_type = child_rule["child"]["rule"]["child"]["logic_type"]
             self.right_rule = LogicUnit(child_rule, child_type)
