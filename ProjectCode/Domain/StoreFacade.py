@@ -821,21 +821,15 @@ class StoreFacade:
     def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
         return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
 
-    # def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file):
-    #     # with purchase form AliExpress to user
-    #     return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
-    # # TODO need to deny users from having a username which's a storename
-    #
-    #
-    # def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status,file):
-    #     # with purchase form AliExpress to store's founder
-    #     return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
-    #
-    #     staff = self.getStaffInfoForMessage(storeID).keys()
-    #     message_list = []
-    #     for staff_member in staff:
-    #         message_list.append(MessageController().send_message(requesterID, staff_member, subject, content, creation_date, status, file))
-    #     return message_list
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file):
+        # with purchase form AliExpress to user
+        founder = self.getStoreFounder(store_name)
+        return MessageController().send_message(founder, receiverID, subject, content, creation_date, status, file)
+
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status,file):
+        # with purchase form AliExpress to store's founder
+        founder = self.getStoreFounder(storeID)
+        return MessageController().send_message(requesterID, founder, subject, content, creation_date, status, file)
 
     def getAllMessagesSent(self, requesterID):
         return MessageController().get_messages_sent(requesterID)
@@ -851,4 +845,8 @@ class StoreFacade:
     #
     # def messageAsAdminToStore(self, admin_name, store_Name, message):
     #     pass
-
+    def getStoreFounder(self, store_name):
+        if self.stores.keys().__contains__(store_name):
+            return self.stores[store_name].getFounder()
+        else:
+            raise Exception("no such store exists")
