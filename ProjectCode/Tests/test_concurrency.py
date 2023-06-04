@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from unittest import TestCase
 
+
 # def test_func_ten(func, *args, **kwargs):
 #     # Create a shared variable to track the success/failure of foo()
 #     result = {'success_count': 0, 'failure_count': 0}
@@ -72,6 +73,7 @@ def test_2_concurrent_actions(func1, func2, user1_args, user2_args):
 
     return result
 
+
 class TestStoreFacade(TestCase):
     def setup(self):
         # sets 3 users, 1 stores where user1 is founder, user2 is manager, user3 is costumer
@@ -98,7 +100,8 @@ class TestStoreFacade(TestCase):
             user1_args = ("user2", 123, "feliks", 123456789, 1, 111, "okokok")
             user2_args = ("user3", 123, "feliks", 123456789, 1, 111, "okokok")
 
-            result = test_2_concurrent_actions(self.store_facade.purchaseCart, self.store_facade.purchaseCart, user1_args, user2_args)
+            result = test_2_concurrent_actions(self.store_facade.purchaseCart, self.store_facade.purchaseCart,
+                                               user1_args, user2_args)
             # Check the result
             assert result['success_count'] == 1, "One function call should succeed"
             assert result['failure_count'] == 1, "One function call should fail"
@@ -114,42 +117,94 @@ class TestStoreFacade(TestCase):
             user1_args = ("user2", 123, "feliks", 123456789, 1, 111, "okokok")
             user2_args = ("user1", "store1", 1)
 
-            result = test_2_concurrent_actions(self.store_facade.purchaseCart, self.store_facade.removeProductFromStore, user1_args, user2_args)
+            result = test_2_concurrent_actions(self.store_facade.purchaseCart, self.store_facade.removeProductFromStore,
+                                               user1_args, user2_args)
             assert (result['success_count'] == 1 and result['failure_count'] == 1) or \
                    (result['success_count'] == 2)
-            "One function call should succeed and the other to fail OR both should succeed but the product is not in the store"
-            if(result['success_count'] == 2):
+            # One function call should succeed and the other to fail
+            # OR both should succeed but the product is not in the store
+            if result['success_count'] == 2:
                 with self.assertRaises(Exception):
+                    # The product should not be in the store
                     self.store_facade.getProduct("user2", "store1", 1)
+                with self.assertRaises(Exception):
+                    # The product should not be in user2's purchase history
+                    self.store_facade.getMemberPurchaseHistory("user2", "store1")
+
     def test_concurrent_nominateManager_sameNomineeTwice(self):
         # Create a test case where two managers simultaneously try to nominate themselves as the new manager for
         # a specific task or department. Validate that the system handles this concurrency correctly,
         # allowing only one manager to be nominated while preventing conflicts or inconsistencies.
+        # TODO this works but there's no denial of making same manager over again it seems ARI
         pass
+        # for _ in range(10):
+        #     self.setup()
+        #     user1_args = ("user1", "user3", "store1")
+        #     user2_args = ("user1", "user3", "store1")
+        #     result = test_2_concurrent_actions(self.store_facade.nominateStoreManager,
+        #                                        self.store_facade.nominateStoreManager,
+        #                                        user1_args, user2_args)
+        #     assert result['success_count'] == 1, "One function call should succeed"
+        #     assert result['failure_count'] == 1, "One function call should fail"
+
 
     def test_concurrent_editProduct_sameProductTwice(self):
         # Create a test case where two managers simultaneously try to edit the same product.
         # Validate that the system handles this concurrency correctly, allowing only one manager to edit the product
         # while preventing conflicts or inconsistencies.
-        pass
-
+        for _ in range(10):
+            self.setup()
+            self.store_facade.editProductOfStore("user1", "store1", 1, name= "Banana", quantity=5, price=1, categories="Fruits")
+            user1_args = ("user1", "store1", 1, {"name": "Banana", "quantity": 5, "price": 1, "categories": "Fruits"})
+            user2_args = ("user2", "store1", 1, {"name": "Apple", "quantity": 5, "price": 1, "categories": "Fruits"})
+            result = test_2_concurrent_actions(self.store_facade.editProductOfStore, self.store_facade.editProductOfStore,
+                                               user1_args, user2_args)
+            product_name = self.store_facade.getProduct("store1", 1, "user1").get_name()
+            assert product_name == "Apple" or product_name == "Banana", "One function call should succeed"
     def test_concurrent_addProduct_twice(self):
+
         # Create a test case where two managers simultaneously try to add the same product.
         # Validate that the system handles this concurrency correctly, allowing only one manager to add the product
         # while preventing conflicts or inconsistencies.
+        # TODO this works but there's no denial of making 2 products of the same name
         pass
+        # for _ in range(10):
+        #     self.setup()
+        #     user1_args = ("user1", "store1", "newProduct", 1, 10, "category")
+        #     user2_args = ("user2", "store1", "newProduct", 1, 10, "category")
+        #     result = test_2_concurrent_actions(self.store_facade.addNewProductToStore,
+        #                                        self.store_facade.addNewProductToStore,
+        #                                        user1_args, user2_args)
+        #     assert result['success_count'] == 1, "One function call should succeed"
+        #     assert result['failure_count'] == 1, "One function call should fail"
 
     def test_concurrent_addDiscount_twice(self):
         # Create a test case where two managers simultaneously try to add the same discount.
         # Validate that the system handles this concurrency correctly, allowing only one manager to add the discount
         # while preventing conflicts or inconsistencies.
-        pass
+        for _ in range(10):
+            self.setup()
+            user1_args = ("store1", "user1", "Simple", 20, "product", "product1", None, None)
+            user2_args = ("store1", "user2", "Simple", 20, "product", "product1", None, None)
+            result = test_2_concurrent_actions(self.store_facade.addDiscount,
+                                               self.store_facade.addDiscount,
+                                               user1_args, user2_args)
+            assert result['success_count'] == 1, "One function call should succeed"
+            assert result['failure_count'] == 1, "One function call should fail"
 
     def test_concurrent_registerTwice_sameName(self):
         # Create a test case where two users simultaneously try to register with the same username.
         # Validate that the system handles this concurrency correctly, allowing only one user to register
         # while preventing conflicts or inconsistencies.
-        pass
+        for _ in range(10):
+            self.setup()
+            user1_args = ("Onyankopon", "asdf1233", "feliks@f.com")
+            user2_args = ("Onyankopon", "asdf1233", "feliks@f.com")
+            result = test_2_concurrent_actions(self.store_facade.register, self.store_facade.register,
+                                               user1_args, user2_args)
+            assert result['success_count'] == 1, "One function call should succeed"
+            assert result['failure_count'] == 1, "One function call should fail"
+
 
 if __name__ == '__main__':
     unittest.main()
