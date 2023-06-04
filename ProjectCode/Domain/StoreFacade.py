@@ -340,24 +340,24 @@ class StoreFacade:
     def getStoresJson(self):
         return self.stores
 
-    def getProductsByStore(self, store_name):
+    def getProductsByStore(self, store_name, user_name):
         cur_store: Store = self.stores.get(
             store_name)  # TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         # Generate data dict
         # data_products = dict()
-        product_dict = cur_store.getProducts()
+        product_dict = cur_store.getProducts(str(user_name))
         return product_dict
         # for key, value in product_dict:
         #     data_products[key] = DataProduct(value)
         # return data_products
 
-    def getProduct(self, store_name, product_id):
+    def getProduct(self, store_name, product_id, user_name):
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product: Product = cur_store.getProductById(product_id)
+        cur_product: Product = cur_store.getProductById(product_id, str(user_name))
         # return DataProduct(cur_product)
         return cur_product
 
@@ -681,6 +681,8 @@ class StoreFacade:
     def logInAsAdmin(self, username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
+            if existing_admin.logged_In:
+                raise Exception("admin is already in the system")
             if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return existing_admin
@@ -691,7 +693,9 @@ class StoreFacade:
 
     def logOutAsAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
-            existing_admin: Admin = self.members[user_name]
+            existing_admin: Admin = self.admins[user_name]
+            if not existing_admin.logged_In:
+                raise Exception("Admin is not logged in")
             existing_admin.logOffAsAdmin()
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):

@@ -190,22 +190,29 @@ class Store:
     #     else:
     #         raise Exception("Member isn't the founder of the store")
 
-    def getProducts(self):
-        if self.active:
-            return self.__products
-        else:
-            raise Exception("Store is inactive")
-
-    def getProductById(self, product_id):
+    def getProducts(self, username):
+        cur_access: Access = self.__accesses.get(username)
         if not self.active:
+            if (cur_access is not None) and cur_access.hasRole():
+                return self.__products
+            else:
+                raise Exception("Store is inactive")
+        return self.__products
+
+    def getProductById(self, product_id,  username):
+        cur_access: Access = self.__accesses.get(username)
+        if not self.active:
+            if (cur_access is not None) and cur_access.hasRole():
+                if self.__products.keys().__contains__(product_id):
+                    return self.__products.get(product_id)
+                else:
+                    raise Exception("Product does not Exist")
             raise Exception("Store is inactive")
         if not self.__products.keys().__contains__(product_id):
             raise Exception("Product does not Exist")
         return self.__products.get(product_id)
 
     def getStaffInfo(self, username):
-        if not self.active:
-            raise Exception("Store is inactive")
         cur_access: Access = self.__accesses[username]
         if cur_access is None:
             raise Exception("Member has no access for that store")
