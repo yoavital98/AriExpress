@@ -141,10 +141,6 @@ def store_specific(request, storename):
         permissions = ast.literal_eval(str(permissions))
     else: permissions = {}
 
-    print(permissions)
-    print(storename)
-    print(username)
-
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
         if permissionCheck(username, storename, permissionName):
@@ -409,64 +405,17 @@ def addNewProduct(request, storename):
 
 
 def viewDiscounts(request, storename):
-    discounts = {1: {
-        'username': 'john',
-        'discount_type': 'Conditioned',
-        'percent': 50,
-        'rule': {
-            'rule_type': 'Rule Type',
-            'product_id': 'asd',
-            'operator': 'equal',
-            'quantity': 'asd',
-            'category': 'asd',
-            'child': {
-                'logic_type': 'XOR',
-                'rule': {
-                    'rule_type': 'Rule Type',
-                    'product_id': 'asd',
-                    'operator': 'greater',
-                    'quantity': 'asd',
-                    'category': 'asd',
-                    'child': {
-                        'logic_type': 'XOR',
-                        'rule': {
-                            'rule_type': 'Rule Type',
-                            'product_id': 'asd',
-                            'operator': 'greater',
-                            'quantity': 'asd',
-                            'category': 'asd',
-                            'child': None
-                        }
-                    }
-                }
-            }
-        },
-        'discounts': {
-            'discount1': {
-                'username': 'john',
-                'discount_type': 'Simple',
-                'amount': 10
-            },
-            'discount2': {
-                'username': 'john',
-                'discount_type': 'Simple',
-                'percent': 20
-            }
-        }
-    }, 2: {
-        'username': 'john',
-        'discount_type': 'Simple',
-        'percent': 50,
-        'rule': {},
-        'discounts': {}
-    }, 3: {
-        'username': 'aaa',
-        'discount_type': 'Simple',
-        'percent': 70,
-        'rule': {},
-        'discounts': {}
-    }}
-    return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+    service = Service()
+    permissionName = 'Discounts'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        actionRes = service.getAllDiscounts(storename)
+        if actionRes:
+            discounts = ast.literal_eval(str(actionRes.getReturnValue()))
+            return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+    
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
 
 
 def adminPage(request):

@@ -26,40 +26,41 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "apple", "fruit", "20", "3")
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
-        service.logOut("aaa")
-        service.logOut("Yoav")
+        # service.logOut("aaa")
+        # service.logOut("Yoav")
         #service.logIn("bbb", "asdf1233")
-        service.addDiscount("store123", "aaa", "Simple", 50, "Product", "1", {}, {})
         rules = {
-            'rule_type': 'Rule Type',
-            'product_id': 'asd',
-            'operator': 'equal',
-            'quantity': 'asd',
-            'category': 'asd',
-            'child': {
-                'logic_type': 'XOR',
-                'rule': {
-                    'rule_type': 'Rule Type',
-                    'product_id': 'asd',
-                    'operator': 'greater',
-                    'quantity': 'asd',
-                    'category': 'asd',
-                    'child':
-                        {
-                        'logic_type': 'XOR',
-                        'rule': {
-                            'rule_type': 'Rule Type',
-                            'product_id': 'asd',
-                            'operator': 'greater',
-                            'quantity': 'asd',
-                            'category': 'asd',
-                            'child': {}
+                'rule_type': 'Rule Type',
+                'product_id': '0',
+                'operator': '==',
+                'quantity': '5',
+                'category': 'asd',
+                'child': {
+                    'logic_type': 'XOR',
+                    'rule': {
+                        'rule_type': 'Rule Type',
+                        'product_id': '0',
+                        'operator': '>=',
+                        'quantity': '5',
+                        'category': 'asd',
+                        'child':
+                            {
+                            'logic_type': 'XOR',
+                            'rule': {
+                                'rule_type': 'Rule Type',
+                                'product_id': '0',
+                                'operator': '<=',
+                                'quantity': '5',
+                                'category': 'asd',
+                                'child': {}
+                            }
                         }
                     }
                 }
             }
-        }
-        service.addDiscount("store123", "aaa", "Conditioned", 20, "Category", "fruit", rules, {})
+        
+        print(service.addDiscount("store123", "aaa", "Simple", 50, "Product", "1", {}, {}).getStatus())
+        print(service.addDiscount("store123", "aaa", "Conditioned", 20, "Category", "fruit", rules, {}).getStatus())
 
         # service.logOut("aaa")
 

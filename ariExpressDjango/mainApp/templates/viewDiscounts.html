@@ -15,66 +15,9 @@
 
 <body>
   <h1>Discounts</h1>
-  {% for key, value in discounts.items %}
-  <h2>Discount: {{ key }}</h2>
-  <table class="table table-hover">
-      <tr class="table-light">
-          <th>Username</th>
-          <td>{{ value.username }}</td>
-      </tr>
-      <tr class="table-light">
-          <th>Discount Type</th>
-          <td>{{ value.discount_type }}</td>
-      </tr>
-      <tr class="table-light">
-          <th>Percent</th>
-          <td>{{ value.percent }}</td>
-      </tr>
-      <tr class="table-light">
-          <th>Amount</th>
-          <td>{{ value.amount }}</td>
-      </tr>
-      {% if value.rule %}
-      <tr class="table-light">
-          <th>Rule</th>
-          <td>
-              <table class="table table-hover">
-                  <tr>
-                      <th>Rule</th>
-                      <th>Logic Type</th>
-                      <th>Rule Type</th>
-                      <th>Product ID</th>
-                      <th>Operator</th>
-                      <th>Quantity</th>
-                      <th>Category</th>
-                  </tr>
-                  {% if value.rule %}
-                  <tr>
-                      <td>1</td>
-                      <td>{{ value.rule.logic_type }}</td>
-                      <td>{{ value.rule.rule_type }}</td>
-                      <td>{{ value.rule.product_id }}</td>
-                      <td>{{ value.rule.operator }}</td>
-                      <td>{{ value.rule.quantity }}</td>
-                      <td>{{ value.rule.category }}</td>
-                  </tr>
-                  {% endif %}
-                  {% if value.rule.child %}
-                  <tr>
-                      <td>2</td>
-                      <td>{{ value.rule.child.logic_type }}</td>
-                      <td>{{ value.rule.child.rule.rule_type }}</td>
-                      <td>{{ value.rule.child.rule.product_id }}</td>
-                      <td>{{ value.rule.child.rule.operator }}</td>
-                      <td>{{ value.rule.child.rule.quantity }}</td>
-                      <td>{{ value.rule.child.rule.category }}</td>
-                  </tr>
-                  {% endif %}
-              </table>
-          </td>
-      </tr>
-      {% endif %}
-  </table>
-  {% endfor %}
+    {% for key, value in discounts.items %}
+        <h3>{{ key }} : {{ value }}</h3>
+    {% endfor %}
+    <p>ugly but it works...</p>
 </body>
 {% endblock %}

@@ -123,6 +123,10 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Add new discount</button>
       </form>
+      <form method="post" action="{% url 'mainApp:viewDiscounts' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">View discounts</button>
+      </form>
       {% endif %}
     </div>
 </body>

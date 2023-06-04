@@ -29,7 +29,7 @@ class LogicUnit(LogicComp):
 
         if len(self.rule["child"]["rule"]["child"].values()) != 0:
             child_rule = self.rule["child"]["rule"]
-            child_type = child_rule["child"]["rule"]["child"]["logic_type"]
+            child_type = child_rule["child"]["logic_type"]
             self.right_rule = LogicUnit(child_rule, child_type)
             self.right_rule.parse()
         else:
