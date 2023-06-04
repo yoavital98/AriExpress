@@ -340,14 +340,14 @@ class StoreFacade:
     def getStoresJson(self):
         return self.stores
 
-    def getProductsByStore(self, store_name, username):
+    def getProductsByStore(self, store_name):
         cur_store: Store = self.stores.get(
             store_name)  # TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         # Generate data dict
         # data_products = dict()
-        product_dict = cur_store.getProducts(username)
+        product_dict = cur_store.getProducts()
         return product_dict
         # for key, value in product_dict:
         #     data_products[key] = DataProduct(value)

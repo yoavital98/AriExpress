@@ -1160,19 +1160,31 @@ class TestStoreFacade(TestCase):
 
     # getProductsByStore
     def test_getProductsByStore_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        products_dict = self.store_facade.getProductsByStore("AriExpress")
+        self.assertTrue(len(products_dict.keys()) == 1)
+        product: Product = list(products_dict.values())[0]
+        self.assertTrue(product == self.item_paper)
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        self.assertTrue(len(products_dict.keys()) == 2)
+        product: Product = list(products_dict.values())[1]
+        self.assertTrue(product == oreo)
 
-    def test_getProductsByStore_userNotLoggedIn_fail(self):
-        pass
+
 
     def test_getProductsByStore_storeNotExists_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            products_dict = self.store_facade.getProductsByStore("some_store")
 
     def test_getProductsByStore_storeIsClosed_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            products_dict = self.store_facade.getProductsByStore("some_store")
 
     # getPurchasePolicy
     def test_getPurchasePolicy_success(self):
+       # self.store_facade.addPurchasePolicy()
         pass
 
     def test_getPurchasePolicy_userNotLoggedIn_fail(self):
@@ -1191,20 +1203,36 @@ class TestStoreFacade(TestCase):
     # getStaffInfo
     # gets all the staff accesses
     def test_getStaffInfo_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        accesses = self.store_facade.getStaffInfo("Feliks", "AriExpress")
+        self.assertTrue(len(list(accesses.keys())) == 1)
+        access: Access = accesses.get("Feliks")
+        self.assertTrue(access.hasRole("Founder"))
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(len(list(accesses.keys())) == 2)
+        access: Access = accesses.get("Amiel")
+        self.assertTrue(access.hasRole("Owner"))
+        self.store_facade.nominateStoreManager("Feliks", "YuvalMelamed", "AriExpress")
+        self.assertTrue(len(list(accesses.keys())) == 3)
+        access: Access = accesses.get("YuvalMelamed")
+        self.assertTrue(access.hasRole("Manager"))
 
     def test_getStaffInfo_userNotLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            # Feliks is not logged in
+            accesses = self.store_facade.getStaffInfo("Feliks", "AriExpress")
 
     def test_getStaffInfo_storeNotExists_fail(self):
-        pass  
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # store does not exist
+            accesses = self.store_facade.getStaffInfo("Feliks", "some_store")
     def test_getStaffInfo_storeIsClosed_fail(self):
-        pass  
-
-    # getStoreManagerPermissions
-    def test_getStoreManagerPermissions_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            # store is closed
+         accesses = self.store_facade.getStaffInfo("Feliks", "some_store")
 
     # getStorePurchaseHistory
     def test_getStorePurchaseHistory_success(self):
@@ -1223,9 +1251,6 @@ class TestStoreFacade(TestCase):
     def test_getStores_success(self):
         pass
 
-    # getStoresJson
-    def test_getStoresJson_success(self):
-        pass
 
     # leaveAsGuest
     def test_leaveAsGuest_guest_success(self):
