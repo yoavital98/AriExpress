@@ -3,6 +3,8 @@ from typing import List
 
 from peewee import SqliteDatabase
 
+from ProjectCode.DAL.AccessModel import AccessModel
+from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -15,6 +17,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 import random
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
+from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
 
 # ----- REPOSITORIES ----- #
 from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
@@ -26,7 +29,6 @@ class Store:
     def __init__(self, store_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__store_name = store_name
-        self.prods = ProductRepository(store_name)
         self.__products = TypedDict(int, Product)
         # TODO: policies
         self.active: bool = True
@@ -42,25 +44,35 @@ class Store:
         self.__discount_policy = DiscountPolicy()
         self.__purchase_policy = PurchasePolicies()
 
+        #REPOSITORY FIELDS --- TO BE REPLACED
+        self.accesses_test = AccessRepository(store_name)
+        self.prods = ProductRepository(store_name)
+
+
+
 
 
     def testing_orm(self):
         db = SqliteDatabase('database.db')
         db.connect()
         StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([ProductModel,StoreModel,StoreProduct])
-        db.create_tables([ProductModel,StoreModel,StoreProduct])
+        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel])
+        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel])
         store_model = StoreModel.create(store_name=self.__store_name)
+        new_access = Access(self, None, "Founder")
+        new_access.setAccess("Founder")
+        self.accesses_test[self.__store_name] = new_access
+        print(self.accesses_test[None][0].get_role())
 
-        prod = Product(6, "test", 1, 1, "test")
-        self.prods[6] = prod
+        # prod = Product(6, "test", 1, 1, "test")
+        # self.prods[6] = prod
 
 
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
-            raise Exception("No such access exists in the store")
+            raise Exception("No such access aexists in the store")
         cur_access.canChangeStatus()
         self.active = status
 
@@ -462,6 +474,7 @@ class Store:
 
     def get_lottery(self):
         return self.__lotteries
+
 
     # =======================JSON=======================#
 

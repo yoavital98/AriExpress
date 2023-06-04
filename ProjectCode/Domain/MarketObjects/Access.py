@@ -98,6 +98,9 @@ class Access:
     def get_store(self):
         return self.store
 
+    def get_role(self):
+        return self.role
+
     def get_access_state(self):
         return self.access_state
 
