@@ -428,21 +428,7 @@ class TestStoreFacade(TestCase):
         self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     # approveBid
-    #TODO: BIDS
-    def test_approveBid_success(self):
-        pass
 
-    def test_approveBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_approveBid_storeNotExists_fail(self):
-        pass
-
-    def test_approveBid_userWithoutPermission_fail(self):
-        pass
-
-    def test_approveBid_bidNotExists_fail(self):
-        pass
 
 
     # ClaimAuctionPurchase
@@ -746,8 +732,142 @@ class TestStoreFacade(TestCase):
     # getAllBidsFromUser TODO:BIDS
     def test_getAllBidsFromUser_success(self):
         pass
-
+    # approveBid
     def test_getAllBidsFromUser_userNotLoggedIn_fail(self):
+        pass
+
+     # TODO: BIDS
+    def test_approveBid_success(self):
+        pass
+
+    def test_approveBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_approveBid_storeNotExists_fail(self):
+        pass
+
+    def test_approveBid_userWithoutPermission_fail(self):
+        pass
+
+    def test_approveBid_bidNotExists_fail(self):
+        pass
+    # placeBid
+
+    def test_placeBid_success(self):
+        pass
+
+    def test_placeBid_guestLoggedIn_fail(self):
+        pass
+
+    def test_placeBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_placeBid_storeNotExists_fail(self):
+        pass
+
+    def test_placeBid_storeIsClosed_fail(self):
+        pass
+
+    def test_placeBid_productNotExists_fail(self):
+        pass
+
+    def test_placeBid_productIsNotOnSale_fail(self):
+        pass
+
+    def test_placeBid_offerTooLow_fail(self):
+        pass
+
+    def test_placeBid_quantityInvalid_fail(self):
+        pass
+
+    def test_placeBid_userAlreadyPlacedBid_fail(self):
+        pass
+
+
+    # purchaseConfirmedBid
+    def test_purchaseConfirmedBid_success(self):
+        pass
+
+    def test_purchaseConfirmedBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardNumberInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardDateInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardNameInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardCcvInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_addressInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_productInBasketOutOfStock_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_productInBasketNotExists_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_bidNotConfirmed_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_bidNotExists_fail(self):
+        pass
+
+ # rejectBid
+
+    def test_rejectBid_success(self):
+        pass
+
+    def test_rejectBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_rejectBid_storeNotExists_fail(self):
+        pass
+
+    def test_rejectBid_storeIsClosed_fail(self):
+        pass
+
+    def test_rejectBid_bidNotExists_fail(self):
+        pass
+
+    def test_rejectBid_bidNotBelongToUser_fail(self):
+        pass
+
+    def test_rejectBid_bigAlreadyAccepted_fail(self):
+        pass
+
+    def test_rejectBid_bidAlreadyRejected_fail(self):
+        pass
+
+# sendAlternativeBid
+
+    def test_sendAlternativeBid_success(self):
+        pass
+
+    def test_sendAlternativeBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_sendAlternativeBid_storeNotExists_fail(self):
+        pass
+
+    def test_sendAlternativeBid_storeIsClosed_fail(self):
+        pass
+
+    def test_sendAlternativeBid_bidNotExists_fail(self):
+        pass
+
+    def test_sendAlternativeBid_bidAlreadyAccepted_fail(self):
+        pass
+
+    def test_sendAlternativeBid_bidAlreadyRejected_fail(self):
+        pass
+
+    def test_sendAlternativeBid_alternateBidIsLower_fail(self):
         pass
 
     # getAllOfflineMembers
@@ -1551,37 +1671,7 @@ class TestStoreFacade(TestCase):
     def test_participateInLottery_lotteryIsClosed_fail(self):
         pass
 
-    # placeBid
-    #TODO: Bids
-    def test_placeBid_success(self):
-        pass
 
-    def test_placeBid_guestLoggedIn_fail(self):
-        pass
-
-    def test_placeBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_placeBid_storeNotExists_fail(self):
-        pass
-
-    def test_placeBid_storeIsClosed_fail(self):
-        pass
-
-    def test_placeBid_productNotExists_fail(self):
-        pass
-
-    def test_placeBid_productIsNotOnSale_fail(self):
-        pass
-
-    def test_placeBid_offerTooLow_fail(self):
-        pass
-
-    def test_placeBid_quantityInvalid_fail(self):
-        pass
-
-    def test_placeBid_userAlreadyPlacedBid_fail(self):
-        pass
 
     # placeOfferInAuction
     def test_placeOfferInAuction_success(self):
@@ -1707,40 +1797,7 @@ class TestStoreFacade(TestCase):
     # Tests with 'invalid' means bad info/empty info/missing info
     # so each test can hold several smaller tests
 
-    # TODO: Bids!
-    # purchaseConfirmedBid
-    def test_purchaseConfirmedBid_success(self):
-        pass
 
-    def test_purchaseConfirmedBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardNumberInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardDateInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardNameInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardCcvInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_addressInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_productInBasketOutOfStock_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_productInBasketNotExists_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_bidNotConfirmed_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_bidNotExists_fail(self):
-        pass
 
     # register
     def test_register_success(self):
@@ -1783,54 +1840,91 @@ class TestStoreFacade(TestCase):
         member: Member = self.store_facade.members.get("Feliks")
         self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
         self.assertFalse(member.password == "password123")
-    #todo: BIDS
-    # rejectBid
-    def test_rejectBid_success(self):
-        pass
-
-    def test_rejectBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_rejectBid_storeNotExists_fail(self):
-        pass
-
-    def test_rejectBid_storeIsClosed_fail(self):
-        pass
-
-    def test_rejectBid_bidNotExists_fail(self):
-        pass
-
-    def test_rejectBid_bidNotBelongToUser_fail(self):
-        pass
-
-    def test_rejectBid_bigAlreadyAccepted_fail(self):
-        pass
-
-    def test_rejectBid_bidAlreadyRejected_fail(self):
-        pass
 
     # removeAccess
     def test_removeAccess_success(self):
-        pass
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
+        #integrity
+        self.assertFalse(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertFalse(self.my_store.get_accesses().keys().__contains__("Amiel"))
     def test_removeAccess_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.store_facade.logOut("Feliks")
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
+        # integrity
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
 
     def test_removeAccess_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Feliks", "Amiel", "somestore")
+        # integrity
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
 
-    def test_removeAccess_storeIsClosed_fail(self):
-        pass
+    def test_removeAccess_storeIsClosed_Success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.my_store.active = False
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        #with self.assertRaises(Exception):
+        self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
+        # integrity
+        self.assertFalse(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertFalse(self.my_store.get_accesses().keys().__contains__("Amiel"))
 
     def test_removeAccess_requesterIsRequstee_fail(self):
-        # yaani user ose removeAccess al atsmo inaal dinak
-        pass
+        feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+        #with self.assertRaises(Exception):
+        self.store_facade.removeAccess("Feliks", "Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+
 
     def test_removeAccess_requesterHasNoPermissions_fail(self):
-        pass
+        feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+        # with self.assertRaises(Exception):
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Amiel", "Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
 
     def test_removeAccess_requesteeHasNoAccess_fail(self):
-        pass
+        feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+        # with self.assertRaises(Exception):
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Amiel", "Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
 
     # removeFromBasket
     def test_removeFromBasket_success(self):
@@ -1902,7 +1996,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(basket.products.keys().__contains__(1))
 
 
-
+ # todo: ask amiel
     # removePermissions
     def test_removePermissions_success(self):
         pass
@@ -1927,10 +2021,20 @@ class TestStoreFacade(TestCase):
 
     # removeProductFromStore
     def test_removeProductFromStore_success(self):
-        pass
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        # item with id 1
+        prods = self.my_store.getProducts("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "Oreo", 10, 10, "Milk")
+        self.assertTrue(prods.keys().__contains__(1))
+        self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertFalse(prods.keys().__contains__(1))
     def test_removeProductFromStore_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        # item with id 1
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertFalse(prods.keys().__contains__(1))
 
     def test_removeProductFromStore_storeNotExists_fail(self):
         pass
@@ -1966,31 +2070,8 @@ class TestStoreFacade(TestCase):
         # TODO: check that the cart is transferred to the guest user
         pass
 
-    # sendAlternativeBid
-    #todo: bids
-    def test_sendAlternativeBid_success(self):
-        pass
 
-    def test_sendAlternativeBid_userNotLoggedIn_fail(self):
-        pass
 
-    def test_sendAlternativeBid_storeNotExists_fail(self):
-        pass
-
-    def test_sendAlternativeBid_storeIsClosed_fail(self):
-        pass
-
-    def test_sendAlternativeBid_bidNotExists_fail(self):
-        pass
-
-    def test_sendAlternativeBid_bidAlreadyAccepted_fail(self):
-        pass
-
-    def test_sendAlternativeBid_bidAlreadyRejected_fail(self):
-        pass
-
-    def test_sendAlternativeBid_alternateBidIsLower_fail(self):
-        pass
 
     # django_getAllStaffMembersNames(self, storename)
     def test_django_getAllStaffMembersNames_success(self):
