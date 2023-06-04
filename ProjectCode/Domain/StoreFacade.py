@@ -19,12 +19,16 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
+from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
+
+
 class StoreFacade:
     def __init__(self):
         # Store Data
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)  # dict of members
+        self.__members = MemberRepository()
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
@@ -41,6 +45,19 @@ class StoreFacade:
         self.admins["admin"] = first_admin
         # load data
         self.loadData()
+
+    # ------  ORM Tests  ------ #
+
+    def add_member(self, member):
+        self.__members[member.get_username()] = member
+
+    def get_member(self, username):
+        return self.__members[username]
+
+    def get_all_members(self):
+        return self.__members[None]
+
+
 
     # ------  System  ------ #
     def loadData(self):  # todo complete

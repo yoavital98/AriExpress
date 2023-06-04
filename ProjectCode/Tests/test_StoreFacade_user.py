@@ -1,6 +1,9 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.CartModel import CartModel
+from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.MarketObjects.StoreObjects import Product
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import *
@@ -30,7 +33,18 @@ class TestStoreFacade(TestCase):
         self.store_facade.logOut("John")
 
 
+    ########################### TEST ORM ###############################
 
+    def test_addNewUser(self):
+        db = SqliteDatabase('database.db')
+        db.connect()
+        db.drop_tables([MemberModel, CartModel, BasketModel])
+        db.create_tables([MemberModel, CartModel, BasketModel])
+        self.store_facade.add_member(Member(-1, "John", "password123", "john.doe@example.com"))
+        member: Member = self.store_facade.get_member("John")
+        self.assertEqual(member.get_username(), "John")
+        self.assertEqual(member.get_password(), "password123")
+        self.assertEqual(member.get_email(), "john.doe@example.com")
     # def test_load_data(self):
     #     self.fail()
     #
