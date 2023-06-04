@@ -16,6 +16,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 
 class Cart:
 
+
     def __init__(self, username):
         self.username = username
         self.baskets = TypedDict(str, Basket)

@@ -141,10 +141,6 @@ def store_specific(request, storename):
         permissions = ast.literal_eval(str(permissions))
     else: permissions = {}
 
-    print(permissions)
-    print(storename)
-    print(username)
-
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
         if permissionCheck(username, storename, permissionName):
@@ -407,6 +403,19 @@ def addNewProduct(request, storename):
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
 
+
+def viewDiscounts(request, storename):
+    service = Service()
+    permissionName = 'Discounts'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        actionRes = service.getAllDiscounts(storename)
+        if actionRes:
+            discounts = ast.literal_eval(str(actionRes.getReturnValue()))
+            return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+    
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
 
 
 def adminPage(request):

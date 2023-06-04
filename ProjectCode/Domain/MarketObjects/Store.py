@@ -136,7 +136,7 @@ class Store:
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
-        
+
     # Get personal permissions for a given store
     def getPermissionsAsJson(self, requester_username):
         requester_access: Access = self.__accesses.get(requester_username)
@@ -509,6 +509,17 @@ class Store:
             "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
             "discounts": self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+
 
     def close_store_by_admin(self):
         if self.closed_by_admin:
