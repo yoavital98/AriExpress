@@ -570,6 +570,7 @@ class Service:
             logging.error(f"getDiscount Error: {str(e)}")
             return Response(e, False)
 
+
     def getAllDiscounts(self, storename):
         try:
             discounts = self.store_facade.getAllDiscounts(storename)

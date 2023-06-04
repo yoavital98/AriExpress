@@ -408,6 +408,66 @@ def addNewProduct(request, storename):
         return redirect('mainApp:store_specific', storename=storename)
 
 
+def viewDiscounts(request, storename):
+    discounts = {1: {
+        'username': 'john',
+        'discount_type': 'Conditioned',
+        'percent': 50,
+        'rule': {
+            'rule_type': 'Rule Type',
+            'product_id': 'asd',
+            'operator': 'equal',
+            'quantity': 'asd',
+            'category': 'asd',
+            'child': {
+                'logic_type': 'XOR',
+                'rule': {
+                    'rule_type': 'Rule Type',
+                    'product_id': 'asd',
+                    'operator': 'greater',
+                    'quantity': 'asd',
+                    'category': 'asd',
+                    'child': {
+                        'logic_type': 'XOR',
+                        'rule': {
+                            'rule_type': 'Rule Type',
+                            'product_id': 'asd',
+                            'operator': 'greater',
+                            'quantity': 'asd',
+                            'category': 'asd',
+                            'child': None
+                        }
+                    }
+                }
+            }
+        },
+        'discounts': {
+            'discount1': {
+                'username': 'john',
+                'discount_type': 'Simple',
+                'amount': 10
+            },
+            'discount2': {
+                'username': 'john',
+                'discount_type': 'Simple',
+                'percent': 20
+            }
+        }
+    }, 2: {
+        'username': 'john',
+        'discount_type': 'Simple',
+        'percent': 50,
+        'rule': {},
+        'discounts': {}
+    }, 3: {
+        'username': 'aaa',
+        'discount_type': 'Simple',
+        'percent': 70,
+        'rule': {},
+        'discounts': {}
+    }}
+    return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+
 
 def adminPage(request):
     if request.user.is_superuser:
