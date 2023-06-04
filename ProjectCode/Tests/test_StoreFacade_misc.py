@@ -263,7 +263,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     # addPermissions
-    def test_nominateOwner_success(self):
+    def test_Owner_success(self):
         member_to_nominate: Member = self.store_facade.members.get("Amiel")
         # before
         self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
@@ -1190,7 +1190,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.closeStore("Feliks", "AriExpress")
         with self.assertRaises(Exception):
             products_dict = self.store_facade.getProductsByStore("some_store")
-
+    # TODO: amiel
     # getPurchasePolicy
     def test_getPurchasePolicy_success(self):
        # self.store_facade.addPurchasePolicy()
@@ -1499,16 +1499,35 @@ class TestStoreFacade(TestCase):
 
     # openStore
     def test_openStore_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.my_store.active)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+        self.store_facade.openStore("Feliks", "AriExpress")
+        #integrity
+        self.assertTrue(self.my_store.active)
 
     def test_openStore_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.my_store.active)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            self.store_facade.openStore("Feliks", "AriExpress")
+        # integrity
+        self.assertFalse(self.my_store.active)
 
-    def test_openStore_storeAlreadyExists_fail(self):
-        pass
 
     def test_openStore_storeNameIsEmpty_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.my_store.active)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+        with self.assertRaises(Exception):
+            self.store_facade.openStore("Feliks", "")
+        # integrity
+        self.assertFalse(self.my_store.active)
 
     # participateInLottery
     def test_participateInLottery_success(self):
@@ -1591,6 +1610,8 @@ class TestStoreFacade(TestCase):
         pass
 
     # productFilterByFeatures
+
+    #TODO: amiel did not implement it yet
     def test_productFilterByFeatures_success(self):
         pass
 
@@ -1689,7 +1710,7 @@ class TestStoreFacade(TestCase):
 
     def test_register_userAlreadyLoggedIn_fail(self):
         pass
-
+    #todo: BIDS
     # rejectBid
     def test_rejectBid_success(self):
         pass
