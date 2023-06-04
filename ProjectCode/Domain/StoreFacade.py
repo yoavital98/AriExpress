@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
@@ -19,6 +20,7 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
+
 class StoreFacade:
     def __init__(self):
         # Store Data
@@ -28,7 +30,8 @@ class StoreFacade:
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
-        self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
+        self.banned_members = TypedDict(str,
+                                        Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
         self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
@@ -106,6 +109,7 @@ class StoreFacade:
     def checkIfMemberExists(self, user_name):
         if not self.members.keys().__contains__(user_name):
             raise Exception("user does not exists")
+
     def checkIfUserIsLoggedIn(self, user_name):
         return self.online_members.__contains__(user_name)
 
@@ -366,17 +370,16 @@ class StoreFacade:
         splitted_keywords = keywords.split(" ")
         search_results = TypedDict(str, list)
         for cur_store in self.stores.values():
-            product_list=[]
+            product_list = []
             for keyword in splitted_keywords:
                 product_list.extend(cur_store.searchProductByName(keyword))
             if len(product_list) > 0:
-                    # data_product_list = [DataProduct(prod) for prod in product_list]
-                    json_product_list = [prod.toJson() for prod in product_list]
-                    search_results[cur_store.get_store_name()] =  json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
+                # data_product_list = [DataProduct(prod) for prod in product_list]
+                json_product_list = [prod.toJson() for prod in product_list]
+                search_results[
+                    cur_store.get_store_name()] = json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
 
         return search_results
-
-
 
     def productSearchByCategory(self, category):
         search_results = TypedDict(str, list)
@@ -479,6 +482,7 @@ class StoreFacade:
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
         # TODO:
+
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores[store_name]
         if not self.checkIfUserIsLoggedIn(requester_username):
@@ -502,6 +506,8 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         removed_usernames = cur_store.removeAccess(to_remove_username, requester_username)
+        MessageController.send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
+                                            + store_name + " have been removed", datetime.now(), None)
         return removed_usernames
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
@@ -650,6 +656,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
+        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now(), None)
+        for owner in cur_store.getOwners():
+            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now(), None)
         return cur_store
 
     def closeStore(self, username, store_name):
@@ -659,6 +668,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
+        MessageController().sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now(), None)
+        for owner in cur_store.getOwners():
+            MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now(), None)
         return cur_store
 
     def getStaffInfo(self, username, store_name):
@@ -718,7 +730,6 @@ class StoreFacade:
         else:
             raise Exception("no such admin exists")
 
-
     def getAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
             return self.admins.get(user_name)
@@ -772,7 +783,8 @@ class StoreFacade:
             if self.members.keys().__contains__(memberName):
                 if self.accesses.keys().__contains__(memberName):
                     self.members[memberName].logOut()
-                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN", "You have been banned from the system")  # TOdo : add message to login screen or something
+                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN",
+                                              "You have been banned from the system")  # TOdo : add message to login screen or something
                     banned_member = self.members.pop(memberName)
                     self.banned_members[memberName] = banned_member
                     return banned_member
@@ -795,7 +807,6 @@ class StoreFacade:
         else:
             raise Exception("only admin can return a member")
 
-
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
 
@@ -817,19 +828,18 @@ class StoreFacade:
 
     # ==================  Messages  ==================#
 
+    def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
+        return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
 
-    def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
-        return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
-
-    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file):
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
         # with purchase form AliExpress to user
         founder = self.getStoreFounder(store_name)
-        return MessageController().send_message(founder, receiverID, subject, content, creation_date, status, file)
+        return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
 
-    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status,file):
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
         # with purchase form AliExpress to store's founder
         founder = self.getStoreFounder(storeID)
-        return MessageController().send_message(requesterID, founder, subject, content, creation_date, status, file)
+        return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
 
     def getAllMessagesSent(self, requesterID):
         return MessageController().get_messages_sent(requesterID)
@@ -839,6 +849,23 @@ class StoreFacade:
 
     def readMessage(self, requesterID, messageID):
         return MessageController().read_message(requesterID, messageID)
+
+    # ==================  Notifications  ==================#
+
+    def sendNotificationToUser(self, receiverID, subject, content, creation_date, file):
+        # with purchase form AliExpress to user
+        return MessageController().send_notification(receiverID, subject, content, creation_date, file)
+
+    def sendNotificationToStore(self, storeID, subject, content, creation_date, file):
+        # with purchase form AliExpress to store's founder
+        founder = self.getStoreFounder(storeID)
+        return MessageController().send_notification(founder, subject, content, creation_date, file)
+
+    def getAllNotificationsReceived(self, requesterID):
+        return MessageController().get_notifications(requesterID)
+
+    def readNotification(self, requesterID, messageID):
+        return MessageController().read_notification(requesterID, messageID)
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
     #     pass

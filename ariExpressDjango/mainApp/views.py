@@ -488,10 +488,14 @@ def delete_message(request, usermessage_id):
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_as_read(request, usermessage_id):
-    message = UserMessage.objects.get(id=usermessage_id)
-    message.status = 'read'
-    message.save()
-    messages.success(request, "Message marked as read successfully")
+    # message = UserMessage.objects.get(id=usermessage_id)
+    # service = Service()
+    # username = request.POST.get('username', None)
+    # res = service.readMessage(username, usermessage_id)
+    # if res.getStatus():
+        # message.status = 'read'
+        # message.save()
+        # messages.success(request, "Message marked as read successfully")
     return HttpResponseRedirect('/inbox')
 
 
