@@ -16,63 +16,81 @@
   td:last-child {
       width: 25%;
   }
+  button.addtocart-btn{
+    color:#212121;
+    background:#fff;
+    text-align:center;
+    font-size: 16px;
+    border-radius:5%;
+    border:1px solid #212121;
+    transition: all 0.2s ease-in-out;
+}
+button.addtocart-btn:hover , button.addtocart-btn:active{
+    border-color: #FF9800;
+    background: #FF9800;
+    color: #fff;
+    text-decoration:none;
+}
+
 </style>
-
+<br><br>
 <body>
-    <h1 class="specialh1">{{ storename }} - {{ active }}</h1>
-    <br>
-    <table class="table table-hover">
-      <tr class="table-light">
-          <th>Product ID</th>
-          <th>Name</th>
-          <th>Quantity</th>
-          <th>Price</th>
-          <th>Categories</th>
-          <th>Actions</th>
-      </tr>
-
-      {% if products.items %}
-        {% for product_id, product in products.items %}
-          <tr>
-              <td>{{ product.product_id }}</td>
-              <td>{{ product.name }}</td>
-              <td>{{ product.quantity }}</td>
-              <td>{{ product.price }}</td>
-              <td>{{ product.categories }}</td>
-              <td>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-                  {% if "ProductChange" in permissions %}
-                  <form method="post" action="{% url 'mainApp:editProduct' storename %}">
-                      {% csrf_token %}
-                      <input type="hidden" name="product_id" value="{{ product.product_id }}">
-                      <input type="hidden" name="product_name" value="{{ product.name }}">
-                      <input type="hidden" name="product_quantity" value="{{ product.quantity }}">
-                      <input type="hidden" name="product_price" value="{{ product.price }}">
-                      <input type="hidden" name="product_categories" value="{{ product.categories }}">
-                      <button type="submit" class="btn btn-outline-dark" name="openEditProduct">Edit</button>
-                  </form>
-                  {% endif %}
-                  {% if "ProductChange" in permissions %}
-                  <form method="post" action="{% url 'mainApp:store_specific' storename %}">
-                      {% csrf_token %}
-                      <input type="hidden" name="product_id" value="{{ product.product_id }}">
-                      <button type="submit" class="btn btn-outline-dark" name="removeProduct">Remove</button>
-                  </form>
-                  {% endif %}
-                  <form method="post" action="#">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-dark" name="addToCart">Add to cart</button>
-                  </form>
-                </div>
-              </td>
+    <h1 class="specialh1" style="text-align:center; font-size:300%;">{{ storename }} - {{ active }}</h1>
+    <br><br>
+    <div class="row justify-content-lg-center">
+      <div class="col-xl-10">
+        <table class="table table-hover">
+          <tr class="table-light" style="text-align:center; font-size:20px;">
+              <th style = "width: 10%;">Product ID</th>
+              <th style = "width: 20%;">Name</th>
+              <th style = "width: 10%;">Quantity</th>
+              <th style = "width: 10%;">Price</th>
+              <th style = "width: 30%;">Categories</th>
+              <th style = "width: 20%;">Actions</th>
           </tr>
-        {% endfor %}
-      {% else %}
-        <tr>
-          <td colspan="6">No products in this store yet.</td>
-        </tr>
-      {% endif %}
-    </table>
+
+          {% if products.items %}
+            {% for product_id, product in products.items %}
+              <tr style=" font-size:16px;">
+                  <td style="text-align:center;">{{ product.product_id }}</td>
+                  <td style="text-align:center;">{{ product.name }}</td>
+                  <td style="text-align:center;">{{ product.quantity }}</td>
+                  <td style="text-align:center;">{{ product.price }}</td>
+                  <td style="text-align:center;">{{ product.categories }}</td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                      {% if "ProductChange" in permissions %}
+                      <form method="post" action="{% url 'mainApp:editProduct' storename %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                          <input type="hidden" name="product_name" value="{{ product.name }}">
+                          <input type="hidden" name="product_quantity" value="{{ product.quantity }}">
+                          <input type="hidden" name="product_price" value="{{ product.price }}">
+                          <input type="hidden" name="product_categories" value="{{ product.categories }}">
+                          <button type="submit" class="btn btn-outline-dark" name="openEditProduct">Edit</button>
+                      </form>
+                      {% endif %}
+                      {% if "ProductChange" in permissions %}
+                      <form method="post" action="{% url 'mainApp:store_specific' storename %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                          <button type="submit" class="btn btn-outline-dark" name="removeProduct">Remove</button>
+                      </form>
+                      {% endif %}
+                      <button class="addtocart-btn btn-action" name="addToCart" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}">Add to cart</button>
+                      {% include 'products/addToCart.html' with storename=storename product=product %}
+                    </div>
+                  </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6">No products in this store yet.</td>
+            </tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
 
     <br>
     <div class="d-flex justify-content-start">
