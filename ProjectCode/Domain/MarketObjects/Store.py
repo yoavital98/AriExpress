@@ -76,6 +76,13 @@ class Store:
                 return access.get_user()
         return None
 
+    def getOwners(self):
+        owners = []
+        for access in self.__accesses.values():
+            if access.getRole() == "Owner":
+                owners.append(access.get_user())
+        return owners
+
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
