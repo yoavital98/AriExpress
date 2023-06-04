@@ -103,13 +103,12 @@ def registerPage(request):
 
 
 def logout(request):
-    if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
     # if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
+    if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
         service = Service()
         actionRes = service.logOut(request.user.username)
         if actionRes.getStatus():
             logoutFunc(request)
-
             return redirect('mainApp:mainpage')
     elif request.user.username.startswith("GuestUser"):
         messages.success(request, ("Error: cannot logout as guest"))
