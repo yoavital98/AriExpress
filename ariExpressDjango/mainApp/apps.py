@@ -61,7 +61,7 @@ class MainappConfig(AppConfig):
         
         print(service.addDiscount("store123", "aaa", "Simple", 50, "Product", "1", {}, {}).getStatus())
         print(service.addDiscount("store123", "aaa", "Conditioned", 20, "Category", "fruit", rules, {}).getStatus())
-        service.nominateStoreManager("aaa", "bbb", "store123")
+        print(service.nominateStoreManager("aaa", "bbb", "store123").getStatus())
         # service.logOut("aaa")
 
         # TODO: remove the comments

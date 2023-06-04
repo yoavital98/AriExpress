@@ -126,19 +126,33 @@ def mystores(request):
 
 def viewStoreStaff(request, storename):
     username = request.user.username
-    permissionName = 'StaffInfo'
-    if permissionCheck(username, storename, permissionName):
-        service = Service()
-        actionRes = service.getStoreProductsInfo(storename)
+    service = Service()
+    if 'removeAccessButton' in request.POST:
+        requester_id = username
+        to_remove_id = request.POST.get('to_remove_id')
+        print(requester_id)
+        print(to_remove_id)
+        actionRes = service.removeAccess(requester_id, to_remove_id, storename)
         if actionRes.getStatus():
-            staff = actionRes.getReturnValue()['accesses']
-            staff = ast.literal_eval(str(staff))
-        return render(request, 'viewStoreStaff.html', {'staff': staff})
-
-
-    else:
-        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
-        return redirect('mainApp:store_specific', storename=storename)
+            messages.success(request, (f"{requester_id} has removed {to_remove_id} accesses"))
+            return redirect('mainApp:viewStoreStaff', storename=storename)
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:viewStoreStaff', storename=storename)
+    else:                               # just render page
+        permissionName = 'StaffInfo'
+        if permissionCheck(username, storename, permissionName):
+            actionRes = service.getStoreProductsInfo(storename)
+            if actionRes.getStatus():
+                staff = actionRes.getReturnValue()['accesses']
+                staff = ast.literal_eval(str(staff))
+            return render(request, 'viewStoreStaff.html', {'storename': storename, 'staff': staff})
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+            return redirect('mainApp:store_specific', storename=storename)
+        
+    messages.success(request, (f"Error: Something went wrong"))
+    return redirect('mainApp:store_specific', storename=storename)
 
 
 def viewAllStores(request):
