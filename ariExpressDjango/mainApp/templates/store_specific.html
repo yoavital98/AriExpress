@@ -77,7 +77,7 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
                           <button type="submit" class="btn btn-outline-dark" name="removeProduct">Remove</button>
                       </form>
                       {% endif %}
-                      <button class="addtocart-btn btn-action" name="addToCart" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}">Add to cart</button>
+                      <button class="addtocart-btn btn-action btn-outline-dark" name="addToCart" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}">Add to cart</button>
                       {% include 'products/addToCart.html' with storename=storename product=product %}
                     </div>
                   </td>
@@ -126,6 +126,12 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
       <form method="post" action="{% url 'mainApp:viewDiscounts' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">View discounts</button>
+      </form>
+      {% endif %}
+      {% if "StaffInfo" in permissions %}
+      <form method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">View Store Staff</button>
       </form>
       {% endif %}
     </div>

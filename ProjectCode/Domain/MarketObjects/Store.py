@@ -486,7 +486,6 @@ class Store:
             'products': JsonSerialize.toJsonAttributes(self.__products),
             'active': str(self.active),
             'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
-
         }
 
     def toJsonAccesses(self):
