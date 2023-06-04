@@ -82,6 +82,12 @@ class Store:
         access.setAccess("Founder")
         self.__accesses[username] = access
 
+    def getFounder(self):
+        for access in self.__accesses.values():
+            if access.getRole() == "Founder":
+                return access
+        return None
+
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
@@ -225,6 +231,7 @@ class Store:
             raise Exception("You have no permission to view staff information")
         return self.__accesses
 
+
     def checkProductAvailability(self, product_id, quantity):
         cur_product : Product = self.__products[int(product_id)]
         if cur_product is None:
@@ -294,6 +301,8 @@ class Store:
     def getDiscount(self, discount_id):
         return self.__discount_policy.getDiscount(discount_id)
 
+    def getAllDiscounts(self):
+        return self.__discount_policy.getAllDiscounts()
 
     def addPurchasePolicy(self,username, purchase_policy, rule, level="", level_name=""):
         cur_access: Access = self.__accesses.get(username)

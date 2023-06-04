@@ -1,7 +1,6 @@
 from peewee import *
 
 
-
 class ProductModel(Model):
 
     class Meta:

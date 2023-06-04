@@ -50,7 +50,6 @@ class BasketEditProductForm(forms.Form):
     quantity = forms.IntegerField()
 
 class BasketAddProductForm(forms.Form):
-    searched = forms.CharField(max_length=200)
     product_id = forms.IntegerField()
     store_name = forms.CharField(max_length=100)
     quantity = forms.IntegerField()

@@ -14,6 +14,7 @@ class MainappConfig(AppConfig):
         service.register("aaa", "asdf1233", "a@a.com") # for debug only
         service.register("bbb", "asdf1233", "a@a.com") # for debug only
         service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        service.register("Yoav", "XG5EsQtQ.J:k82G", "yoavital98@gmail.com") # for debug only
 
         service.logIn("bbb", "asdf1233")
         service.createStore("bbb", "TESTSTORE")
@@ -26,8 +27,8 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
         service.logOut("aaa")
-        
-        service.logIn("bbb", "asdf1233")
+        service.logOut("Yoav")
+        #service.logIn("bbb", "asdf1233")
 
         # TODO: remove the comments
         # service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")
