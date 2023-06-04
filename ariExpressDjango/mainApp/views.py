@@ -118,11 +118,27 @@ def mystores(request):
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
-        # print(storesInfoDict)
+        print(storesInfoDict[0])
         return render(request, 'mystores.html', {'stores': storesInfoDict})
     messages.success(request, ("Error: User is not logged in (django error)"))
     return redirect('mainApp:mainpage')
 
+
+def viewStoreStaff(request, storename):
+    username = request.user.username
+    permissionName = 'StaffInfo'
+    if permissionCheck(username, storename, permissionName):
+        service = Service()
+        actionRes = service.getStoreProductsInfo(storename)
+        if actionRes.getStatus():
+            staff = actionRes.getReturnValue()['accesses']
+            staff = ast.literal_eval(str(staff))
+        return render(request, 'viewStoreStaff.html', {'staff': staff})
+
+
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
 
 
 def viewAllStores(request):
