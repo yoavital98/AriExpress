@@ -27,7 +27,7 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
         service.logOut("aaa")
         
-        service.logIn("bbb", "asdf1233")
+        # service.logIn("bbb", "asdf1233")
 
         # TODO: remove the comments
         # service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")

@@ -27,14 +27,14 @@ def startpage(request):
     return render(request, "startpage.html")
 
 def mainpage(request):
+    createGuestIfNeeded(request)
     return render(request, 'mainpage.html')
 
 def login(request):
-    # service.logIn()
     msg = ""
     showMsg = False
     if request.method == 'POST':
-        if request.user.is_authenticated:
+        if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
             msg="A User is already logged in"
             form = None
         else:
@@ -46,10 +46,16 @@ def login(request):
                 res = service.logIn(username, password)
                 msg = res.getStatus()
                 if res.getStatus() == True:
-                    user = authenticate(request, username=username, password=password)
-                    msg="Logged in successfully"
-                    loginFunc(request, user)
-                    return redirect('mainApp:mainpage')
+                    if not request.user.username.startswith("GuestUser"):               # regular login
+                        user = authenticate(request, username=username, password=password)
+                        msg="Logged in successfully"
+                        loginFunc(request, user)
+                        return redirect('mainApp:mainpage')
+                    else:                                                               # guest to member login
+                        loggedin_username = guestToUser(request, username, password)
+                        if loggedin_username: return loggedin_username
+                        else: return False                                              # shouldn't happen
+
     else:
         form = loginForm()
         msg = ""
@@ -97,17 +103,21 @@ def registerPage(request):
 
 
 def logout(request):
-    msg = ""
-    showMsg = False
-    # if not request.user.is_authenticated:
-    #     msg="User isn't logged in"
-    #     form = None
-    # service = Service()
-    # res = service.logOut(username=request.user.username)
-    # msg = res.getReturnValue()
-    # if res.getStatus() == True:
-    logoutFunc(request)
-    return redirect('mainApp:mainpage')
+    if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
+    # if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
+        service = Service()
+        actionRes = service.logOut(request.user.username)
+        if actionRes.getStatus():
+            logoutFunc(request)
+
+            return redirect('mainApp:mainpage')
+    elif request.user.username.startswith("GuestUser"):
+        messages.success(request, ("Error: cannot logout as guest"))
+        return redirect('mainApp:mainpage')
+    else:
+        messages.success(request, ("Error: need to be logged in first"))
+        return redirect('mainApp:mainpage')
+
 
 
     
@@ -761,4 +771,67 @@ def permissionCheck(username, storename, permissionName):
         return True
     return False
 
+#returns False if user authenticated. Otherwise creates a new guest user and returns the username
+def createGuestIfNeeded(request):
+    if request.user.is_authenticated:
+        return False
+
+    
+    # user needs to be guest
+    # 1. create a new user in django
+    # 2. login to that user
+    else:   
+        service = Service()
+        actionRes = service.loginAsGuest()
+        guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
+
+        if actionRes.getStatus():
+            # form = CreateMemberForm(request.POST)
+            username = f"GuestUser{guestnumberdict['entrance_id']}"
+            password = "asdf1233"
+            # email = "guestmail@guest.com"
+            # form.save()
+            user = User.objects.create_user(username=username, password=password)
+            user = authenticate(request, username=username, password=password)
+            loginFunc(request, user)
+            return username
+
+# guest logges in as a user
+# 1. change guest to user in service
+# 2. logout of django
+# 3. login as the user in django
+# 4. remove the guest user from django
+# returns False if current user not a guest. Otherwise logges in as member and returns the username
+def guestToUser(request, username, password):
+    guestusername = request.user.username
+    if request.user.is_authenticated and guestusername.startswith("GuestUser"):
+        print("ok11")
+        service = Service()
+        guestnumber = get_number_at_end(guestusername)
+        actionRes = service.logInFromGuestToMember(guestnumber, username, password) # 1.
+        print("ok12")
+        if actionRes.getStatus():
+            print("ok13")
+            logoutFunc(request)                                                     # 2.
+            print("ok14")
+            user = authenticate(request, username=username, password=password)      
+            print("ok15")
+            loginFunc(request, user)                                                # 3.
+            print("ok16")
+            guestuser = User.objects.get(username=guestusername)
+            guestuser.delete()                                                      # 4.
+            ret = ast.literal_eval(str(actionRes.getReturnValue()))
+            return ret['entrance_id']
+
+    else: return False
+
+
+def get_number_at_end(string):
+    number = ""
+    for char in string[::-1]:
+        if char.isdigit():
+            number = char + number
+        else:
+            break
+    return int(number)
 #---------------------------------------------------------------------------------------------------------------------------------------#
