@@ -60,6 +60,8 @@ class DiscountPolicy:
             raise Exception("No such discount exists")
         return self.discounts[discount_id]
 
+    def getAllDiscounts(self):
+        return self.discounts
 
     # =======================JSON=======================#
 

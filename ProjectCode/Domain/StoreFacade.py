@@ -558,6 +558,13 @@ class StoreFacade:
             raise Exception("No such store exists")
         return cur_store.getDiscount(discount_id)
 
+    def getAllDiscounts(self, storename):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getAllDiscounts()
+
+
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         cur_store: Store = self.stores.get(storename)
         if cur_store is None:

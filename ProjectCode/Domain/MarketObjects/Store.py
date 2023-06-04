@@ -289,6 +289,8 @@ class Store:
     def getDiscount(self, discount_id):
         return self.__discount_policy.getDiscount(discount_id)
 
+    def getAllDiscounts(self):
+        return self.__discount_policy.getAllDiscounts()
 
     def addPurchasePolicy(self,username, purchase_policy, rule, level="", level_name=""):
         cur_access: Access = self.__accesses.get(username)
