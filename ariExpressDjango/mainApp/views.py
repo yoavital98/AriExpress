@@ -43,19 +43,24 @@ def login(request):
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
-                res = service.logIn(username, password)
-                msg = res.getStatus()
-                if res.getStatus() == True:
-                    if not request.user.username.startswith("GuestUser"):               # regular login
-                        user = authenticate(request, username=username, password=password)
-                        msg="Logged in successfully"
-                        loginFunc(request, user)
-                        request.session['guest'] = 0
-                        return redirect('mainApp:mainpage')
-                    else:                                                               # guest to member login
-                        loggedin_username = guestToUser(request, username, password)
-                        if loggedin_username: return loggedin_username
-                        else: return False                                              # shouldn't happen
+                if request.session['guest']:
+                    res = service.logIn(username, password)
+                    msg = res.getStatus()
+                    if res.getStatus() == True:
+                        if not request.session['guest']:                                    # regular login
+                            user = authenticate(request, username=username, password=password)
+                            msg="Logged in successfully"
+                            loginFunc(request, user)
+                            request.session['guest'] = 0
+                            return redirect('mainApp:mainpage')
+                        else:                                                               # guest to member login
+                            loggedin_username = guestToUser(request, username, password)
+                            if loggedin_username: return loggedin_username
+                            else: return False                                              # shouldn't happen
+                        
+                else:
+                    guestToUser(request, username, password)
+                    return redirect('mainApp:mainpage')
 
     else:
         form = loginForm()
@@ -106,7 +111,6 @@ def registerPage(request):
 
 def logout(request):
     # if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
-    print(request.session['guest'])
     if request.user.is_authenticated and not request.session['guest']:
         service = Service()
         actionRes = service.logOut(request.user.username)
@@ -823,7 +827,7 @@ def guestToUser(request, username, password):
             guestuser = User.objects.get(username=guestusername)
             guestuser.delete()                                                      # 4.
             request.session['guest'] = 1
-            print(request.session['guest'])
+            print(f"guest: {request.session['guest']}")
             ret = ast.literal_eval(str(actionRes.getReturnValue()))
             return ret['entrance_id']
 

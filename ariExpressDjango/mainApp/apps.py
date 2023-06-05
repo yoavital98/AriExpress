@@ -10,6 +10,7 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
+        
         service = Service()
         service.register("aaa", "asdf1233", "a@a.com") # for debug only
         service.register("bbb", "asdf1233", "a@a.com") # for debug only
