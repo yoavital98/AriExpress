@@ -37,36 +37,13 @@ class CartRepository(Repository):
     def __contains__(self, item):
          pass
 
+
     def get(self, pk=None):
-        def get(self, pk=None):
-            if pk is None:
-                cart_list = []
-                for cart_entry in self.model.select():
-                    cart = Cart(cart_entry.user_name)
-                    for basket_entry in cart_entry.baskets:
-                        basket = Basket(basket_entry.user_name, basket_entry.store_name)
-                        for product_basket_entry in basket_entry.products:
-                            product_entry = product_basket_entry.product
-                            product = Product(
-                                product_entry.product_id,
-                                product_entry.name,
-                                product_basket_entry.quantity,
-                                product_entry.price,
-                                product_entry.categories
-                            )
-                            basket.products[product.product_id] = (
-                                product,
-                                product_basket_entry.quantity,
-                                product_entry.price
-                            )
-                        cart.baskets[basket_entry.store_name] = basket
-                    cart_list.append(cart)
-                return cart_list
-            else:
-                cart_entry = self.model.get(user_name=pk)
+        if pk is None:
+            cart_list = []
+            for cart_entry in self.model.select():
                 cart = Cart(cart_entry.user_name)
                 for basket_entry in cart_entry.baskets:
-                    #todo: storename isnt right here, it should be the store itself
                     basket = Basket(basket_entry.user_name, basket_entry.store_name)
                     for product_basket_entry in basket_entry.products:
                         product_entry = product_basket_entry.product
@@ -83,7 +60,32 @@ class CartRepository(Repository):
                             product_entry.price
                         )
                     cart.baskets[basket_entry.store_name] = basket
-                return cart
+                cart_list.append(cart)
+            return cart_list
+        else:
+            cart_entry = self.model.get(user_name=pk)
+            cart = Cart(cart_entry.user_name)
+            for basket_entry in cart_entry.baskets:
+                #todo: storename isnt right here, it should be the store itself
+                basket = Basket(basket_entry.user_name, basket_entry.store_name)
+                for product_basket_entry in basket_entry.products:
+                    product_entry = product_basket_entry.product
+                    product = Product(
+                        product_entry.product_id,
+                        product_entry.name,
+                        product_basket_entry.quantity,
+                        product_entry.price,
+                        product_entry.categories
+                    )
+                    basket.products[product.product_id] = (
+                        product,
+                        product_basket_entry.quantity,
+                        product_entry.price
+                    )
+                cart.baskets[basket_entry.store_name] = basket
+            return cart
+
+
 
     def add(self, cart: Cart):
         cart_entry = self.model.create(user_name=cart.username)
