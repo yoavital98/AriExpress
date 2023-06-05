@@ -163,6 +163,7 @@ class StoreFacade:
             if password_validator.ValidatePassword(password):
                 new_member: Member = Member(str(0), user_name, password, email)
                 self.members[str(user_name)] = new_member
+                print(self.members)
                 return new_member
             else:
                 raise Exception("password is too weak")
