@@ -62,6 +62,8 @@ class Store:
         if cur_access is None:
             raise Exception("No such access exists in the store")
         cur_access.canChangeStatus()
+        if status == self.active:
+            raise Exception("store is already open or closed")
         self.active = status
 
     #-------------Permissions----------------#
@@ -195,7 +197,7 @@ class Store:
     #         raise Exception("Member isn't the founder of the store")
 
     def getProducts(self, username):
-        cur_access: Access = self.__accesses[username]
+        cur_access: Access = self.__accesses.get(username)
         if not self.active:
             if (cur_access is not None) and cur_access.hasRole():
                 return self.__products
@@ -203,9 +205,14 @@ class Store:
                 raise Exception("Store is inactive")
         return self.__products
 
-    def getProductById(self, product_id, username):
-        cur_access: Access = self.__accesses[username]
-        if not self.active and (cur_access is None or not cur_access.hasRole()):
+    def getProductById(self, product_id,  username):
+        cur_access: Access = self.__accesses.get(username)
+        if not self.active:
+            if (cur_access is not None) and cur_access.hasRole():
+                if self.__products.keys().__contains__(product_id):
+                    return self.__products.get(product_id)
+                else:
+                    raise Exception("Product does not Exist")
             raise Exception("Store is inactive")
         if not self.__products.keys().__contains__(product_id):
             raise Exception("Product does not Exist")
@@ -242,6 +249,8 @@ class Store:
         return product_list
 
     def searchProductByCategory(self, category):
+        if category == "":
+            raise Exception("category cannot be empty")
         #cur_access: Access = self.__accesses[username]
         if not self.active: #and (cur_access is None or not cur_access.hasRole()):
             return {}

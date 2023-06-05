@@ -69,13 +69,15 @@ class StoreFacade:
 
     def logInFromGuestToMember(self, entrance_id, user_name, password):
         password_validator = PasswordValidationService()
-        guest: Guest = self.onlineGuests.get(entrance_id)
+        guest: Guest = self.onlineGuests.get(str(entrance_id))
+        if guest is None:
+            raise Exception("Entrance id not found")
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
             existing_member: Member = self.members[user_name]
-            if password_validator.ConfirmePassword(password, existing_member.get_password()):
+            if password_validator.ConfirmPassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
-                existing_member.setEntranceId(guest.entrance_id)  # it's the same entrance id
+                existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
@@ -153,11 +155,13 @@ class StoreFacade:
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
         password_validator = PasswordValidationService()
-        if not self.members.keys().__contains__(str(user_name)):
+        if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):
             if password_validator.ValidatePassword(password):
                 new_member: Member = Member(str(0), user_name, password, email)
                 self.members[str(user_name)] = new_member
                 return new_member
+            else:
+                raise Exception("password is too weak")
         else:
             raise Exception("This username is already in the system")
 
@@ -204,8 +208,8 @@ class StoreFacade:
     # getting the user purchase history
     def getMemberPurchaseHistory(self, requesterID, username):
         transaction_history = TransactionHistory()
-        if self.checkIfUserIsLoggedIn(requesterID) and (
-                self.admins.keys().__contains__(requesterID) or requesterID == username):
+        if self.admins.keys().__contains__(requesterID) or (
+                  requesterID == username and self.checkIfUserIsLoggedIn(requesterID)):
             return transaction_history.get_User_Transactions(username)
         else:
             raise Exception("username isn't logged in")
@@ -358,24 +362,24 @@ class StoreFacade:
     def getStoresJson(self):
         return self.stores
 
-    def getProductsByStore(self, store_name, username):
+    def getProductsByStore(self, store_name, user_name):
         cur_store: Store = self.stores.get(
             store_name)  # TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         # Generate data dict
         # data_products = dict()
-        product_dict = cur_store.getProducts(username)
+        product_dict = cur_store.getProducts(str(user_name))
         return product_dict
         # for key, value in product_dict:
         #     data_products[key] = DataProduct(value)
         # return data_products
 
-    def getProduct(self, store_name, product_id, username):
+    def getProduct(self, store_name, product_id, user_name):
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product: Product = cur_store.getProductById(product_id, username)
+        cur_product: Product = cur_store.getProductById(product_id, str(user_name))
         # return DataProduct(cur_product)
         return cur_product
 
@@ -714,6 +718,8 @@ class StoreFacade:
     def logInAsAdmin(self, username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
+            if existing_admin.logged_In:
+                raise Exception("admin is already in the system")
             if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return existing_admin
@@ -724,7 +730,9 @@ class StoreFacade:
 
     def logOutAsAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
-            existing_admin: Admin = self.members[user_name]
+            existing_admin: Admin = self.admins[user_name]
+            if not existing_admin.logged_In:
+                raise Exception("Admin is not logged in")
             existing_admin.logOffAsAdmin()
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
