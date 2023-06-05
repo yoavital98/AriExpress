@@ -34,7 +34,7 @@ def login(request):
     msg = ""
     showMsg = False
     if request.method == 'POST':
-        if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
+        if request.user.is_authenticated and not request.session['guest']:
             msg="A User is already logged in"
             form = None
         else:
@@ -50,6 +50,7 @@ def login(request):
                         user = authenticate(request, username=username, password=password)
                         msg="Logged in successfully"
                         loginFunc(request, user)
+                        request.session['guest'] = 0
                         return redirect('mainApp:mainpage')
                     else:                                                               # guest to member login
                         loggedin_username = guestToUser(request, username, password)
@@ -88,6 +89,7 @@ def registerPage(request):
                     form.save()
                     user = authenticate(request, username=username, password=password)
                     loginFunc(request, user)
+                    request.session['guest'] = 0
                     return redirect('mainApp:mainpage')
 
 
@@ -104,13 +106,18 @@ def registerPage(request):
 
 def logout(request):
     # if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
-    if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
+    print(request.session['guest'])
+    if request.user.is_authenticated and not request.session['guest']:
         service = Service()
         actionRes = service.logOut(request.user.username)
         if actionRes.getStatus():
             logoutFunc(request)
+            request.session['guest'] = 0
             return redirect('mainApp:mainpage')
-    elif request.user.username.startswith("GuestUser"):
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mainpage')
+    elif request.session["guest"]:
         messages.success(request, ("Error: cannot logout as guest"))
         return redirect('mainApp:mainpage')
     else:
@@ -793,6 +800,7 @@ def createGuestIfNeeded(request):
             user = User.objects.create_user(username=username, password=password)
             user = authenticate(request, username=username, password=password)
             loginFunc(request, user)
+            request.session['guest'] = 1
             return username
 
 # guest logges in as a user
@@ -803,22 +811,19 @@ def createGuestIfNeeded(request):
 # returns False if current user not a guest. Otherwise logges in as member and returns the username
 def guestToUser(request, username, password):
     guestusername = request.user.username
-    if request.user.is_authenticated and guestusername.startswith("GuestUser"):
-        print("ok11")
+    if request.user.is_authenticated and request.session['guest']:
         service = Service()
         guestnumber = get_number_at_end(guestusername)
+        print(f"guestnumber: {guestnumber}")
         actionRes = service.logInFromGuestToMember(guestnumber, username, password) # 1.
-        print("ok12")
         if actionRes.getStatus():
-            print("ok13")
             logoutFunc(request)                                                     # 2.
-            print("ok14")
             user = authenticate(request, username=username, password=password)      
-            print("ok15")
             loginFunc(request, user)                                                # 3.
-            print("ok16")
             guestuser = User.objects.get(username=guestusername)
             guestuser.delete()                                                      # 4.
+            request.session['guest'] = 1
+            print(request.session['guest'])
             ret = ast.literal_eval(str(actionRes.getReturnValue()))
             return ret['entrance_id']
 

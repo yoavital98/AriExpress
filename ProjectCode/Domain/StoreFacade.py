@@ -186,11 +186,15 @@ class StoreFacade:
 
     # logout a member
     def logOut(self, username):
+        if self.admins.keys().__contains__(username):
+            self.logOutAsAdmin(username)
+            guest: Guest = self.returnToGuest(str(self.nextEntranceID))  # returns as a guest
+            self.nextEntranceID += 1
+            return guest
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             del self.online_members[username]  # deletes the user from the online users
             guest: Guest = self.returnToGuest(str(existing_member.get_entrance_id()))  # returns as a guest
-
             return guest
         else:
             raise Exception("Logout is not an option")
@@ -704,7 +708,7 @@ class StoreFacade:
 
     def logOutAsAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
-            existing_admin: Admin = self.members[user_name]
+            existing_admin: Admin = self.admins[user_name]
             existing_admin.logOffAsAdmin()
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
