@@ -135,6 +135,7 @@ class Service:
         try:
             member = self.store_facade.register(user_name, password, email)
             logging.info("Registered successfully. By username: " + user_name + ".")
+            print("aaa")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"register Error: {str(e)}.")

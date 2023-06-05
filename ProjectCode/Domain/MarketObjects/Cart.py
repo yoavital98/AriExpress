@@ -197,6 +197,8 @@ class Cart:
         else:
             raise Exception("Bid is not confirmed")
 
+    def setBaskets(self, baskets):
+        self.baskets = baskets
     # =======================JSON=======================#
 
     def toJson(self):
