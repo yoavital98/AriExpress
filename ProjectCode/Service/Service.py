@@ -709,25 +709,25 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By username: '{requester_id}'")
             return Response(e, False)
 
-    # def sendMessageFromStore(self, store_name, receiverID, subject, content, file):
-    #     try:
-    #         message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, file)
-    #         logging.info(
-    #             "Message has been sent successfully. By store_name: " + store_name + ". receiver_username: " + receiverID + ".")
-    #         return Response(message.toJson(), True)
-    #     except Exception as e:
-    #         logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
-    #         return Response(e, False)
-    #
-    # def sendMessageToStore(self, messageID, requesterID, storeID, subject, content, file):
-    #     try:
-    #         message = self.store_facade.sendMessageToStore(messageID, requesterID, storeID, subject, content, file)
-    #         logging.info(
-    #             "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
-    #         return Response(message.toJson(), True)
-    #     except Exception as e:
-    #         logging.error(f"sendMessage Error: {str(e)}. By username: '{requesterID}'")
-    #         return Response(e, False)
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file=None):
+        try:
+            message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, status, file)
+            logging.info(
+                "Message has been sent successfully. By store_name: " + store_name + ". receiver_username: " + receiverID + ".")
+            return Response(message.toJson(), True)
+        except Exception as e:
+            logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
+            return Response(e, False)
+
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status, file=None):
+        try:
+            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, status, file)
+            logging.info(
+                "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
+            return Response(message.toJson(), True)
+        except Exception as e:
+            logging.error(f"sendMessage Error: {str(e)}. By username: '{requesterID}'")
+            return Response(e, False)
 
     def getAllMessagesSent(self, requesterID, username):
         try:
