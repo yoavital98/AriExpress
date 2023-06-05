@@ -1,21 +1,49 @@
 import json
 import logging
+import os
+import inspect
+
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
+# ------------------------------------ Load config ------------------------------------ #
+@staticmethod
+def load_config(config_file):
+
+    with open(config_file, 'r') as f:
+        config_data = json.load(f)
+    for func_config in config_data:
+        for func_name, func_args in func_config.items():
+            functions = inspect.getmembers(Service, predicate=inspect.isfunction)
+            found_function = False
+            for name, func in functions:
+                if name == func_name:
+                    found_function = True
+                    args = func_args.get("args", [])
+                    instance = Service._instance
+                    if instance is not None:
+                        func(instance, *args)
+                    else:
+                        func(*args)
+            if not found_function:
+                print(f"Error: Function '{func_name}' not found in Service class.")     
+# ------------------------------------------------------------------------------------- #
 
 class Service:
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, config_file=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls.store_facade = StoreFacade()
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            # load info
+            if config_file is not None:
+                load_config(config_file)
         return cls._instance
 
     # ------  logger  ------ # < TODO cuurently without toJson
@@ -135,6 +163,7 @@ class Service:
         try:
             member = self.store_facade.register(user_name, password, email)
             logging.info("Registered successfully. By username: " + user_name + ".")
+            print("aaa")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"register Error: {str(e)}.")

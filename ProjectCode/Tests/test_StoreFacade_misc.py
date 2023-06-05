@@ -6,6 +6,7 @@ from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction imp
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 
+
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp import LogicComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
@@ -1805,6 +1806,7 @@ class TestStoreFacade(TestCase):
         member: Member = self.store_facade.register("Yoav", "password123", "yoav@gmail.com")
         self.assertTrue(list(self.store_facade.members.keys()).__contains__("Yoav"))
         self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
+
 
     def test_register_usernameAlreadyExists_fail(self):
         self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
