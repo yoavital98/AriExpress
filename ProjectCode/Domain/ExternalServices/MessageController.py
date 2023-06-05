@@ -8,7 +8,7 @@ from ProjectCode.Domain.ExternalServices.MessageObjects.Notfication import Notif
 
 def send_notification(user_id, type, message, pending_amount):
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.send)(f"{user_id}", {
+    async_to_sync(channel_layer.l.send)(f"{user_id}", {
         'type': type,
         'content': message,
         'unread_messages': pending_amount
@@ -28,7 +28,7 @@ class MessageController:
             cls._pending_notifications_amount = {}  # user_id to amount of pending messages
             cls.observers = []  # receiver_id to observer
             cls.msgCounter = 0
-            cls.notifcationCounter = 0
+            cls.notificationCounter = 0
         return cls._instance
 
     def send_message(self, requester_id, receiver_id, subject, content, creation_date, file=None):
@@ -71,10 +71,10 @@ class MessageController:
             self._inbox_messages[user_id] = []
         return [message.toJson() for message in self._inbox_messages[user_id]]
 
-    def send_notification(self, receiver_id, subject, content, creation_date, file=None):
-        message_id = self.notifcationCounter
-        self.notifcationCounter += 1
-        message = Notification(message_id, "AriExpress", receiver_id, subject, content, creation_date, file)
+    def send_notification(self, receiver_id, subject, content, creation_date):
+        message_id = self.notificationCounter
+        self.notificationCounter += 1
+        message = Notification(message_id, "AriExpress", receiver_id, subject, content, creation_date)
 
         if receiver_id not in self._inbox_messages.keys():
             self._inbox_messages[receiver_id] = []

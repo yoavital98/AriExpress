@@ -342,12 +342,10 @@ class Service:
             logging.error(f"editBasketQuantity Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def purchaseCart(self, user_name, card_number, card_user_name, card_user_ID, card_date,
-                     back_number, address):  # TODO: for now lets assume only credit card(no paypal)
+    def purchaseCart(self, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode):  # TODO: for now lets assume only credit card(no paypal)
         # return baskets of all stores
         try:
-            info_dict = self.store_facade.purchaseCart(user_name, card_number, card_user_name, card_user_ID, card_date,
-                                                       back_number, address)
+            info_dict = self.store_facade.purchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode)
             logging.info("Cart was purchased successfully. By username: " + user_name + ".")
             return Response(json.dumps(info_dict), True)
         except Exception as e:
@@ -377,12 +375,11 @@ class Service:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def purchaseConfirmedBid(self, username, storename, bid_id, card_number, card_user_name, card_user_ID, card_date,
-                             back_number):
+    def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+                             , address, city, country, zipcode):
         try:
-            self.store_facade.purchaseConfirmedBid(username, storename, bid_id, card_number, card_user_name,
-                                                   card_user_ID, card_date,
-                                                   back_number)
+            self.store_facade.purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+                             , address, city, country, zipcode)
             logging.info(
                 "Bid purchase was made successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
                     bid_id) + ".")
