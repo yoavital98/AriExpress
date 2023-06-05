@@ -12,6 +12,7 @@ from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
+from ProjectCode.Domain.Repository.BasketRepository import BasketRepository
 
 
 class Cart:
@@ -20,6 +21,9 @@ class Cart:
     def __init__(self, username):
         self.username = username
         self.baskets = TypedDict(str, Basket)
+
+        # REPOSITORY FIELD --- TO BE REPLACED
+        self.basket_test = BasketRepository()
 
     def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):
