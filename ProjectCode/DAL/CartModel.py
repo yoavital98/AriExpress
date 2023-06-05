@@ -1,5 +1,7 @@
 from peewee import *
 
+from ProjectCode.DAL.BasketModel import BasketModel
+
 
 class CartModel(Model):
 
@@ -8,5 +10,5 @@ class CartModel(Model):
         db_table = 'cart'
 
     user_name = CharField(max_length=100, primary_key=True)
-    #baskets = ManyToManyField(BasketModel, backref='cart')
+    store_name = CharField(max_length=100, primary_key=True)
 
