@@ -20,6 +20,7 @@ from django.contrib import messages # for displaying messages
 from django.core.paginator import Paginator # for pagination
 from datetime import datetime #used to get total msg per day
 from django.views.decorators.cache import cache_control # for disabling cache
+from django.utils import timezone
 
 
 
@@ -506,24 +507,21 @@ def send_message(request):
             receiver_username = form.cleaned_data['receiver']
             res = service.checkUsernameExistence(receiver_username)
             if res.getStatus():
-                # message = form.save(commit=False)
-                # message.sender = request.user.username
-                # message.save()
-                receiver_id = form.cleaned_data['receiver']
                 subject = form.cleaned_data['subject']
                 content = form.cleaned_data['content']
-                creation_date = form.cleaned_data['creation_date']
-                file = request.FILES
-                message_res = service.sendMessageUsers(request.user.username, receiver_id, subject, content, creation_date,"pending",file)
+                creation_date = datetime.now()
+                file = form.cleaned_data['file']
+                print(file)
+                message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date, file)
                 if message_res.getStatus():
                     messages.success(request, "Message sent successfully")
                     return HttpResponseRedirect('/inbox')
                 else:
-                    messages.error(request, "Error sending message through backend - "+message_res.getReturnValue())
+                    messages.error(request, "Error sending message through backend - "+str(message_res.getReturnValue()))
             else:
                 messages.error(request, "Invalid adresssee username - the message was not sent")
         else:
-            messages.error(request, "Invalid form submission")
+            messages.error(request, "Invalid form submission - "+form.errors.as_json())
     else:
         form = UserMessageform()
         messages.error(request, "Error sending message")
@@ -699,8 +697,7 @@ def checkout(request):
             service = Service()
             form = CheckoutForm(request.POST)
             if form.is_valid():
-                full_address = str(form.cleaned_data['address'])+", "+str(form.cleaned_data['country'])
-                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']), form.cleaned_data['cc_name'], int(form.cleaned_data['cc_id']), form.cleaned_data['cc_expiration'], int(form.cleaned_data['cc_cvv']), full_address)
+                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']), form.cleaned_data['address'], form.cleaned_data['city'], form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
                     return redirect('mainApp:mainpage')
