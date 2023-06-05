@@ -570,6 +570,18 @@ class Service:
             logging.error(f"getDiscount Error: {str(e)}")
             return Response(e, False)
 
+
+    def getAllDiscounts(self, storename):
+        try:
+            discounts = self.store_facade.getAllDiscounts(storename)
+            discounts_json = {}
+            for discount_id, discount in discounts.items():
+                discounts_json[discount_id] = discount.toJson()
+            return Response(json.dumps(discounts_json), True)
+        except Exception as e:
+            logging.error(f"getAllDiscounts Error: {str(e)}")
+            return Response(e, False)
+
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         try:
             policy = self.store_facade.addPurchasePolicy(storename, username, purchase_policy, rule, level, level_name)

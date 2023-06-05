@@ -18,8 +18,9 @@ def send_notification(user_id, type, message, pending_amount):
 class MessageController:
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         if cls._instance is None:
+            cls._instance = super().__new__(cls, *args, **kwargs)
             cls._inbox_messages = {}  # message_id to message
             cls._sent_messages = {}  # list of sent messages
             cls._inbox_notifications = {}  # message_id to message
