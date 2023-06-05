@@ -2,10 +2,12 @@ import unittest
 from unittest import TestCase
 
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
+from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp import LogicComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
@@ -32,6 +34,8 @@ class TestStoreFacade(TestCase):
         self.store_facade.addNewProductToStore("Feliks", "AriExpress", "paper", 10, 500, "paper")
         self.item_paper: Product = self.my_store.getProductById(1, "Feliks")
         self.store_facade.logOut("Feliks")
+        self.store_facade.onlineGuests.clear()
+        self.store_facade.nextEntranceID = 0
 
 
     # __getAdmin
@@ -63,6 +67,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(member.user_name == "Feliks" and member.email == "feliks@gmail.com")
 
     def test_getUserOrMember_getGuest_success(self):
+        self.store_facade.loginAsGuest()
         guest: Guest = self.store_facade.getUserOrMember(0)
         self.assertTrue(guest.get_entrance_id() == "0")
 
@@ -258,7 +263,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     # addPermissions
-    def test_addPermissions_Owner_success(self):
+    def test_Owner_success(self):
         member_to_nominate: Member = self.store_facade.members.get("Amiel")
         # before
         self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
@@ -271,7 +276,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
         self.assertTrue(access.hasRole("Owner"))
 
-    def test_addPermissions_Manager_success(self):
+    def test_nominateManager_success(self):
         member_to_nominate: Member = self.store_facade.members.get("Amiel")
         # before
         self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
@@ -284,7 +289,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
         self.assertTrue(access.hasRole("Manager"))
 
-    def test_addPermissions_nomineeNotExists_fail(self):
+    def test_nominate_nomineeNotExists_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         with self.assertRaises(Exception):
             self.store_facade.nominateStoreOwner("Feliks", "some_random_guy", "AriExpress")
@@ -293,13 +298,13 @@ class TestStoreFacade(TestCase):
 
 
 
-    def test_addPermissions_storeNotExists_fail(self):
+    def test_nominate_storeNotExists_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         with self.assertRaises(Exception):
             self.store_facade.nominateStoreOwner("Feliks", "Amiel", "some_store")
         self.assertFalse(self.store_facade.stores.keys().__contains__("some_store"))
 
-    def test_addPermissions_userWithoutPermission_Ownertry_fail(self):
+    def test_nominate_userWithoutPermission_Ownertry_fail(self):
         self.store_facade.logInAsMember("Amiel", "password789")
         with self.assertRaises(Exception):
             self.store_facade.nominateStoreOwner("Amiel","YuvalMelamed","AriExpress")
@@ -308,7 +313,7 @@ class TestStoreFacade(TestCase):
         yuval: Member = self.store_facade.members.get("YuvalMelamed")
         self.assertFalse(yuval.get_accesses().keys().__contains__("AriExpress"))
 
-    def test_addPermissions_userWithoutPermission_Managertry_fail(self):
+    def test_nominate_userWithoutPermission_Managertry_fail(self):
         self.store_facade.logInAsMember("Amiel", "password789")
         with self.assertRaises(Exception):
             self.store_facade.nominateStoreManager("Amiel","YuvalMelamed","AriExpress")
@@ -317,7 +322,7 @@ class TestStoreFacade(TestCase):
         yuval: Member = self.store_facade.members.get("YuvalMelamed")
         self.assertFalse(yuval.get_accesses().keys().__contains__("AriExpress"))
 
-    def test_addPermissions_nomineeAlreadyHasPermissions_fail(self):
+    def test_nominate_nomineeAlreadyHasBeenNominated_fail(self):
         member_to_nominate: Member = self.store_facade.members.get("Amiel")
         # before
         self.assertTrue(not member_to_nominate.accesses.keys().__contains__("AriExpress"))
@@ -423,21 +428,7 @@ class TestStoreFacade(TestCase):
         self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     # approveBid
-    #TODO: BIDS
-    def test_approveBid_success(self):
-        pass
 
-    def test_approveBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_approveBid_storeNotExists_fail(self):
-        pass
-
-    def test_approveBid_userWithoutPermission_fail(self):
-        pass
-
-    def test_approveBid_bidNotExists_fail(self):
-        pass
 
 
     # ClaimAuctionPurchase
@@ -514,7 +505,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             self.store_facade.closeStore("Feliks", "AriExpress")
             # check if store is still active
-        self.assertTrue(self.my_store.active)
+        self.assertFalse(self.my_store.active)
 
     # closeStoreAsAdmin
     def test_closeStoreAsAdmin_success(self):
@@ -567,6 +558,7 @@ class TestStoreFacade(TestCase):
 
 
     def test_editBasketQuantity_guest_success(self):
+        self.store_facade.loginAsGuest()
         guest: Guest = self.store_facade.onlineGuests.get("0")
         self.store_facade.addToBasket("0", "AriExpress", 1, 5)
         basket: Basket = guest.cart.baskets.get("AriExpress")
@@ -740,8 +732,142 @@ class TestStoreFacade(TestCase):
     # getAllBidsFromUser TODO:BIDS
     def test_getAllBidsFromUser_success(self):
         pass
-
+    # approveBid
     def test_getAllBidsFromUser_userNotLoggedIn_fail(self):
+        pass
+
+     # TODO: BIDS
+    def test_approveBid_success(self):
+        pass
+
+    def test_approveBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_approveBid_storeNotExists_fail(self):
+        pass
+
+    def test_approveBid_userWithoutPermission_fail(self):
+        pass
+
+    def test_approveBid_bidNotExists_fail(self):
+        pass
+    # placeBid
+
+    def test_placeBid_success(self):
+        pass
+
+    def test_placeBid_guestLoggedIn_fail(self):
+        pass
+
+    def test_placeBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_placeBid_storeNotExists_fail(self):
+        pass
+
+    def test_placeBid_storeIsClosed_fail(self):
+        pass
+
+    def test_placeBid_productNotExists_fail(self):
+        pass
+
+    def test_placeBid_productIsNotOnSale_fail(self):
+        pass
+
+    def test_placeBid_offerTooLow_fail(self):
+        pass
+
+    def test_placeBid_quantityInvalid_fail(self):
+        pass
+
+    def test_placeBid_userAlreadyPlacedBid_fail(self):
+        pass
+
+
+    # purchaseConfirmedBid
+    def test_purchaseConfirmedBid_success(self):
+        pass
+
+    def test_purchaseConfirmedBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardNumberInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardDateInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardNameInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_cardCcvInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_addressInvalid_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_productInBasketOutOfStock_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_productInBasketNotExists_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_bidNotConfirmed_fail(self):
+        pass
+
+    def test_purchaseConfirmedBid_bidNotExists_fail(self):
+        pass
+
+ # rejectBid
+
+    def test_rejectBid_success(self):
+        pass
+
+    def test_rejectBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_rejectBid_storeNotExists_fail(self):
+        pass
+
+    def test_rejectBid_storeIsClosed_fail(self):
+        pass
+
+    def test_rejectBid_bidNotExists_fail(self):
+        pass
+
+    def test_rejectBid_bidNotBelongToUser_fail(self):
+        pass
+
+    def test_rejectBid_bigAlreadyAccepted_fail(self):
+        pass
+
+    def test_rejectBid_bidAlreadyRejected_fail(self):
+        pass
+
+# sendAlternativeBid
+
+    def test_sendAlternativeBid_success(self):
+        pass
+
+    def test_sendAlternativeBid_userNotLoggedIn_fail(self):
+        pass
+
+    def test_sendAlternativeBid_storeNotExists_fail(self):
+        pass
+
+    def test_sendAlternativeBid_storeIsClosed_fail(self):
+        pass
+
+    def test_sendAlternativeBid_bidNotExists_fail(self):
+        pass
+
+    def test_sendAlternativeBid_bidAlreadyAccepted_fail(self):
+        pass
+
+    def test_sendAlternativeBid_bidAlreadyRejected_fail(self):
+        pass
+
+    def test_sendAlternativeBid_alternateBidIsLower_fail(self):
         pass
 
     # getAllOfflineMembers
@@ -812,6 +938,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(basket.store == self.my_store)
 
     def test_getBasket_guest_success(self):
+        self.store_facade.loginAsGuest()
         guest: Guest = self.store_facade.getUserOrMember(0)
         self.store_facade.addToBasket("0", "AriExpress", 1, 5)
         self.assertTrue(guest.cart.baskets.keys().__contains__(self.my_store.get_store_name()))
@@ -850,6 +977,7 @@ class TestStoreFacade(TestCase):
         cart: Cart = self.store_facade.getCart("Amiel")
         self.assertTrue(cart.username == "Amiel")
     def test_getCart_guest_success(self):
+        self.store_facade.loginAsGuest()
         guest: Guest = self.store_facade.getUserOrMember(0)
         cart: Cart = self.store_facade.getCart(0)
         self.assertTrue(cart.username == "0")
@@ -862,49 +990,87 @@ class TestStoreFacade(TestCase):
 
     # getDiscount
     #TODO: Discounts
-    def test_getDiscount_success(self):
-        pass
 
-    def test_getDiscount_userNotLoggedIn_fail(self):
-        #TODO: should user be online to use this function? 
-        # or this function should be called from frontend?
-        pass
+    def test_addDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks :Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        discount = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product", level_name=oreo.get_product_id())
+        added_discount = self.my_store.getDiscount(1)
+        self.assertEqual(discount, added_discount)
+
+
+    def test_calculateSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.store_facade.createStore(self.member1.get_username(), "Store1")
+        self.store = self.store_facade.stores["Store1"]
+        self.access = self.store.get_accesses()[self.member1.get_username()]
+        self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
+        self.discount = self.store.addDiscount("Simple", percent=10, level="Product",
+                                               level_name=self.product.get_product_id())
+        self.product_dict = {self.product.get_product_id(): 1}
+        self.price_after_discount = self.store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
+        self.assertEqual(self.price_after_discount, 9)
+
+    def test_calculateConditionedDiscount_byCategory_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        cariot: Product = self.my_store.addProduct(access, "Cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                        "operator":">=", "quantity": 1,"category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                     "operator": ">=", "quantity": 1,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
+        discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
+                                               level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(450, price_after_discount_1)
 
     def test_getDiscount_storeNotExists_fail(self):
-        pass
+            pass
 
     def test_getDiscount_discountNotExists_fail(self):
-        pass
-    #purchaseCart
+            pass
+
+    # purchaseCart
+
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
         transaction_history = TransactionHistory()
-        transaction_history.insertEmptyList("Amiel")
         # before
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToUser("YuvalMelamed")
+        transaction_history.insertEmptyListToStore("AriExpress")
         self.assertTrue(len(transaction_history.user_transactions.get("Amiel")) == 0)
         self.store_facade.logInAsMember("Amiel", "password789")
         self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
         self.store_facade.addToBasket("Amiel", "AriExpress",
-                                     1, 9)
+                                      1, 9)
         self.store_facade.addToBasket("YuvalMelamed", "AriExpress",
                                       1, 9)
         self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                        "some_address")
         with self.assertRaises(Exception):
-            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11", "554H",
+            self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "YuvalMelamed", "008234235", "12/11",
+                                           "554H",
                                            "some_address")
-        amiel_transaction_list: list =transaction_history.get_User_Transactions("Amiel")
-
-        # integrity that the transaction was successful for amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        yuval_transaction_list: list = transaction_history.get_User_Transactions("YuvalMelamed")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
         self.assertTrue(len(amiel_transaction_list) == 1)
+        self.assertTrue(len(ariExpress_transaction_list) == 1)
         # integrity that the transaction failed for Yuval
-        with self.assertRaises(Exception):
-            # 0 transactions means he cant get anything
-            transaction_history.get_User_Transactions("YuvalMelamed")
+        self.assertTrue(len(yuval_transaction_list) == 0)
         transaction_history.clearAllHistory()
 
     def test_purchaseCart_userNotLoggedIn_fail(self):
         transaction_history = TransactionHistory()
         self.store_facade.logInAsMember("Amiel", "password789")
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
         self.store_facade.addToBasket("Amiel", "AriExpress",
                                       1, 3)
 
@@ -918,56 +1084,162 @@ class TestStoreFacade(TestCase):
                                            "some_address")
             # integrity that the transaction failed for Amiel
         amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
         self.assertTrue(len(amiel_transaction_list) == 1)
+        self.assertTrue(len(ariExpress_transaction_list) == 1)
         transaction_history.clearAllHistory()
 
     def test_purchaseCart_cartWithoutBaskets_fail(self):
         transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
         self.store_facade.logInAsMember("Amiel", "password789")
         with self.assertRaises(Exception):
             self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                            "some_address")
             # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
+        transaction_history.clearAllHistory()
+    def test_purchaseCart_cardNumberInvalid_fail(self):
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 3)
         with self.assertRaises(Exception):
-            amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+            self.store_facade.purchaseCart("Amiel", "020345672", "Amiel saad", "123456789", "12/26", "555",
+                                           "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
         transaction_history.clearAllHistory()
 
-    def test_purchaseCart_cardNumberInvalid_fail(self):
-        pass
-
     def test_purchaseCart_cardDateInvalid_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 3)
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "/26", "555",
+                                           "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
+        transaction_history.clearAllHistory()
 
-    def test_purchaseCart_cardNameInvalid_fail(self):
-        pass
+
 
     def test_purchaseCart_cardCcvInvalid_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 3)
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "55",
+                                           "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        self.assertTrue(len(ariExpress_transaction_list) == 0)
+        transaction_history.clearAllHistory()
 
-    def test_purchaseCart_addressInvalid_fail(self):
-        pass
+
 
     def test_purchaseCart_productInBasketOutOfStock_fail(self):
-        pass
+        self.store_facade.loginAsGuest()
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        #guest adding to his cart and purchasing
+        self.store_facade.addToBasket(0, "AriExpress",
+                                      1, 10)
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 2)
+        self.store_facade.purchaseCart(0, "4580020345672134", "some guy", "123456789", "12/26", "555",
+                                           "some_address")
+        # there isn't enough in stock
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "some_address")
+            # integrity that the transaction failed for Amiel
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        ariExpress_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        # transaction did not go through!
+        self.assertTrue(len(amiel_transaction_list) == 0)
+        # the guest bought so there is a transaction in the store
+        self.assertTrue(len(ariExpress_transaction_list) == 1)
+        transaction_history.clearAllHistory()
 
-    def test_purchaseCart_productInBasketNotExists_fail(self):
-        pass
     # getMemberPurchaseHistory
     def test_getMemberPurchaseHistory_member_success(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        amiel_list: list = self.store_facade.getMemberPurchaseHistory("Amiel","Amiel")
+        # no transactions yet!
+        self.assertTrue(len(amiel_list) == 0)
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 2)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "some_address")
+        # the list should be updated to 1 there is a transaction!
+        self.assertTrue(len(amiel_list) == 1)
+    def test_getMemberPurchaseHistory_calledByAdmin_success(self):
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsAdmin("Ari", "password123")
+        amiel_list: list = self.store_facade.getMemberPurchaseHistory("Ari", "Amiel")
+        # no transactions yet!
+        self.assertTrue(len(amiel_list) == 0)
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 2)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "some_address")
+        # the list should be updated to 1 there is a transaction!
+        self.assertTrue(len(amiel_list) == 1)
+
 
     def test_getMemberPurchaseHistory_userNotLoggedIn_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        with self.assertRaises(Exception):
+            amiel_list: list = self.store_facade.getMemberPurchaseHistory("Amiel", "Amiel")
 
-    def test_getMemberPurchaseHistory_storeNotExists_fail(self):
-        pass
+
+
 
     def test_getMemberPurchaseHistory_userNotMember_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        with self.assertRaises(Exception):
+            amiel_list: list = self.store_facade.getMemberPurchaseHistory("some_guy", "some_guy")
 
     # getPermissions
+    # TODO: ask amiel
     def test_getPermissions_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        permissions = self.store_facade.getPermissions("AriExpress", "Feliks", "Amiel")
+        print("hi")
 
     def test_getPermissions_userNotLoggedIn_fail(self):
         pass
@@ -990,38 +1262,58 @@ class TestStoreFacade(TestCase):
 
     # getProduct
     def test_getProduct_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        product: Product = self.store_facade.getProduct("AriExpress", 1, "Feliks")
+        self.assertTrue(product == self.item_paper)
+        product2: Product = self.store_facade.getProduct("AriExpress", 2, "Feliks")
+        self.assertTrue(product2 == oreo)
 
-    def test_getProduct_userNotLoggedIn_fail(self):
-        pass
 
     def test_getProduct_storeNotExists_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            product: Product = self.store_facade.getProduct("some_store", 1)
 
     def test_getProduct_productNotExists_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            product: Product = self.store_facade.getProduct("AriExpress", 3)
 
     def test_getProduct_storeIsClosed_fail(self):
-        pass
-
-    def test_getProduct_productNotInStore_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        product: Product = self.store_facade.getProduct("AriExpress", 1, "Feliks")
+        self.assertTrue(product == self.item_paper)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            product: Product = self.store_facade.getProduct("AriExpress", 1, "Amiel")
 
     # getProductsByStore
     def test_getProductsByStore_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        products_dict = self.store_facade.getProductsByStore("AriExpress", "Feliks")
+        self.assertTrue(len(products_dict.keys()) == 1)
+        product: Product = list(products_dict.values())[0]
+        self.assertTrue(product == self.item_paper)
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        self.assertTrue(len(products_dict.keys()) == 2)
+        product: Product = list(products_dict.values())[1]
+        self.assertTrue(product == oreo)
 
-    def test_getProductsByStore_userNotLoggedIn_fail(self):
-        pass
+
 
     def test_getProductsByStore_storeNotExists_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            products_dict = self.store_facade.getProductsByStore("some_store")
 
     def test_getProductsByStore_storeIsClosed_fail(self):
-        pass
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            products_dict = self.store_facade.getProductsByStore("some_store")
+    # TODO: amiel
     # getPurchasePolicy
     def test_getPurchasePolicy_success(self):
+       # self.store_facade.addPurchasePolicy()
         pass
 
     def test_getPurchasePolicy_userNotLoggedIn_fail(self):
@@ -1038,130 +1330,274 @@ class TestStoreFacade(TestCase):
         pass
 
     # getStaffInfo
+    # gets all the staff accesses
     def test_getStaffInfo_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        accesses = self.store_facade.getStaffInfo("Feliks", "AriExpress")
+        self.assertTrue(len(list(accesses.keys())) == 1)
+        access: Access = accesses.get("Feliks")
+        self.assertTrue(access.hasRole("Founder"))
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(len(list(accesses.keys())) == 2)
+        access: Access = accesses.get("Amiel")
+        self.assertTrue(access.hasRole("Owner"))
+        self.store_facade.nominateStoreManager("Feliks", "YuvalMelamed", "AriExpress")
+        self.assertTrue(len(list(accesses.keys())) == 3)
+        access: Access = accesses.get("YuvalMelamed")
+        self.assertTrue(access.hasRole("Manager"))
 
     def test_getStaffInfo_userNotLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            # Feliks is not logged in
+            accesses = self.store_facade.getStaffInfo("Feliks", "AriExpress")
 
     def test_getStaffInfo_storeNotExists_fail(self):
-        pass  
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            # store does not exist
+            accesses = self.store_facade.getStaffInfo("Feliks", "some_store")
     def test_getStaffInfo_storeIsClosed_fail(self):
-        pass  
-
-    # getStoreManagerPermissions
-    def test_getStoreManagerPermissions_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            # store is closed
+         accesses = self.store_facade.getStaffInfo("Feliks", "some_store")
 
     # getStorePurchaseHistory
     def test_getStorePurchaseHistory_success(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
 
+        self.store_facade.logInAsMember("Feliks", "password456")
+        transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Feliks", "AriExpress")
+        self.assertTrue(len(transaction_history_of_ariexpress) == 0)
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 9)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "some_address")
+        transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(len(transaction_history_of_ariexpress) == 1)
+        transaction: StoreTransaction = transaction_history_of_ariexpress[0]
+        self.assertTrue(transaction.get_overall_price() == 4500)
+        transaction_history.clearAllHistory()
+
+    def test_getStorePurchaseHistory_Admin_success(self):
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        # Ari is an Admin!
+        self.store_facade.logInAsMember("Ari", "password123")
+        transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Ari", "AriExpress")
+        self.assertTrue(len(transaction_history_of_ariexpress) == 0)
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 9)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "some_address")
+        transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Ari", "AriExpress")
+        self.assertTrue(len(transaction_history_of_ariexpress) == 1)
+        transaction: StoreTransaction = transaction_history_of_ariexpress[0]
+        self.assertTrue(transaction.get_overall_price() == 4500)
+        transaction_history.clearAllHistory()
     def test_getStorePurchaseHistory_userNotLoggedIn_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Feliks", "AriExpress")
+        self.assertTrue(len(transaction_history_of_ariexpress) == 0)
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Feliks", "AriExpress")
+        transaction_history.clearAllHistory()
 
     def test_getStorePurchaseHistory_storeNotExists_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        with self.assertRaises(Exception):
+            transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Feliks", "some_store")
+        transaction_history.clearAllHistory()
 
-    def test_getStorePurchaseHistory_storeIsClosed_fail(self):
-        pass
 
     # getStores
     def test_getStores_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        stores = self.store_facade.getStores()
+        self.assertTrue(len(stores.keys()) == 1)
+        #integrity
+        self.store_facade.createStore("Feliks", "some_store")
+        self.assertTrue(len(stores.keys()) == 2)
+        self.assertTrue(stores.keys().__contains__("AriExpress") and stores.keys().__contains__("some_store"))
 
-    # getStoresJson
-    def test_getStoresJson_success(self):
-        pass
-
-    # leaveAsGuest
-    def test_leaveAsGuest_guest_success(self):
-        pass
-
-    def test_leaveAsGuest_member_fail(self):
-        pass
-
-    def test_leaveAsGuest_guestNotLoggedIn_fail(self):
-        pass
-
-    # loadData
 
     # logInAsAdmin
     def test_logInAsAdmin_success(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.assertTrue(ari.get_logged())
 
     def test_logInAsAdmin_userNotExists_fail(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("some_user", "password123")
+        #integrity
+        self.assertFalse(ari.get_logged())
 
     def test_logInAsAdmin_userNotAdmin_fail(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsAdmin("Feliks", "password456")
+        # integrity
+        self.assertFalse(ari.get_logged())
 
     def test_logInAsAdmin_wrongPassword_fail(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("Ari", "password12")
+        # integrity
+        self.assertFalse(ari.get_logged())
 
     def test_logInAsAdmin_adminAlreadyLoggedIn_fail(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        self.store_facade.logInAsMember("Ari", "password123")
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("Ari", "password123")
+        # integrity
+        self.assertTrue(ari.get_logged())
 
     # loginAsGuest
     def test_loginAsGuest_success(self):
-        pass
-
-    def test_loginAsGuest_userAlreadyLoggedIn_fail(self):
-        pass
+        guest_dict = self.store_facade.onlineGuests
+        self.store_facade.loginAsGuest()
+        #integrity
+        self.assertTrue(len(list(guest_dict.keys())) == 1)
 
     # logInAsMember
     def test_logInAsMember_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.store_facade.online_members.__contains__("Feliks"))
+        # integrity
+        self.assertFalse(self.store_facade.online_members.__contains__("Amiel"))
 
     def test_logInAsMember_userNotExists_fail(self):
-        pass
-
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("some_guy", "password456")
+        # integrity
+        self.assertFalse(self.store_facade.online_members.__contains__("Feliks"))
     def test_logInAsMember_wrongPassword_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("Feliks", "passord456")
+            # integrity
+        self.assertFalse(self.store_facade.online_members.__contains__("Feliks"))
 
     def test_logInAsMember_memberAlreadyLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.logInAsMember("Feliks", "some_password")
+            # integrity
+        self.assertFalse(self.store_facade.online_members.__contains__("Feliks"))
 
     # logInFromGuestToMember
     def test_logInFromGuestToMember_success(self):
-        pass
+        self.store_facade.loginAsGuest()
+        # from guest to memeber
+        self.store_facade.logInFromGuestToMember(0, "Feliks", "password456")
+        # integrity
+        self.assertTrue(self.store_facade.online_members.__contains__("Feliks"))
+        self.assertFalse(self.store_facade.onlineGuests.__contains__("0"))
+
 
     def test_logInFromGuestToMember_userNotExists_fail(self):
-        pass
+        self.store_facade.loginAsGuest()
+        # from guest to memeber
+        with self.assertRaises(Exception):
+            self.store_facade.logInFromGuestToMember(0, "some_guy", "password456")
+        # integrity
+        self.assertTrue(self.store_facade.onlineGuests.__contains__("0"))
 
     def test_logInFromGuestToMember_wrongPassword_fail(self):
-        pass
+        self.store_facade.loginAsGuest()
+        # from guest to memeber
+        with self.assertRaises(Exception):
+            self.store_facade.logInFromGuestToMember(0, "Feliks", "password45")
+        # integrity
+        self.assertTrue(self.store_facade.onlineGuests.__contains__("0"))
 
     def test_logInFromGuestToMember_memberAlreadyLoggedIn_fail(self):
-        pass
+        self.store_facade.loginAsGuest()
+        self.store_facade.logInFromGuestToMember(0, "Feliks", "password456")
+        # from guest to memeber
+        with self.assertRaises(Exception):
+            self.store_facade.logInFromGuestToMember(0, "Feliks", "password456")
+        # integrity
+        self.assertTrue(self.store_facade.online_members.__contains__("Feliks"))
+        self.assertFalse(self.store_facade.onlineGuests.__contains__("0"))
 
     def test_logInFromGuestToMember_notLoggedAsGuest_fail(self):
-        pass
+        # from guest to memeber
+        with self.assertRaises(Exception):
+            self.store_facade.logInFromGuestToMember(0, "Feliks", "password456")
+        # integrity
+        self.assertFalse(self.store_facade.online_members.keys().__contains__("Feliks"))
+        self.assertFalse(self.store_facade.onlineGuests.keys().__contains__("0"))
 
     def test_logInFromGuestToMember_checkIfCartIsSaved_success(self):
-        pass
-
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 9)
+        #returning to guest
+        self.store_facade.logOut("Amiel")
+        # logging back in
+        self.store_facade.logInFromGuestToMember(0, "Amiel", "password789")
+        # integrity
+        cart: Cart = self.store_facade.getCart("Amiel")
+        self.assertTrue(cart.baskets.keys().__contains__("AriExpress"))
+        basket: Basket = cart.baskets.get("AriExpress")
+        self.assertTrue(basket.products.keys().__contains__(1))
     # logOut
     def test_logOut_success(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.assertTrue(self.store_facade.online_members.keys().__contains__("Amiel"))
+        self.store_facade.logOut("Amiel")
+        self.assertFalse(self.store_facade.online_members.keys().__contains__("Amiel"))
+        #integrity
+        #back to guest
+        self.assertTrue(self.store_facade.onlineGuests.keys().__contains__("0"))
+
 
     def test_logOut_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.assertTrue(self.store_facade.online_members.keys().__contains__("Amiel"))
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.logOut("Amiel")
+        self.assertFalse(self.store_facade.online_members.keys().__contains__("Amiel"))
+        # integrity
+        # back to guest
+        self.assertTrue(self.store_facade.onlineGuests.keys().__contains__("0"))
 
-    def test_logOut_guestIsLoggedIn_fail(self):
-        # TODO: should it be success?
-        pass
+
 
     # logOutAsAdmin
     def test_logOutAsAdmin_success(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.assertTrue(ari.get_logged())
+        self.store_facade.logOutAsAdmin("Ari")
+        self.assertFalse(ari.get_logged())
 
-    def test_logOutAsAdmin_userLoggedInNotAdmin_fail(self):
-        pass
 
     def test_logOutAsAdmin_userNotLoggedIn_fail(self):
-        pass
+        ari: Admin = self.store_facade.admins.get("Ari")
+        self.store_facade.logInAsMember("Ari", "password123")
+        self.assertTrue(ari.get_logged())
+        self.store_facade.logOutAsAdmin("Ari")
+        with self.assertRaises(Exception):
+            self.store_facade.logOutAsAdmin("Ari")
+        self.assertFalse(ari.get_logged())
 
     # messageAsAdmin
     def test_messageAsAdmin_success(self):
@@ -1179,63 +1615,39 @@ class TestStoreFacade(TestCase):
     def test_messageAsAdmin_messageIsInvalid_fail(self):
         pass
 
-    # nominateStoreManager
-    def test_nominateStoreManager_success(self):
-        pass
 
-    def test_nominateStoreManager_userNotLoggedIn_fail(self):
-        pass
-
-    def test_nominateStoreManager_storeNotExists_fail(self):
-        pass
-
-    def test_nominateStoreManager_userNotExists_fail(self):
-        pass
-
-    def test_nominateStoreManager_nominatedAlreadyManager_fail(self):
-        pass
-
-    def test_nominateStoreManager_nominatedAlreadyOwner_fail(self):
-        pass
-
-    def test_nominateStoreManager_userHasNoPermissions_fail(self):
-        pass
-
-    # nominateStoreOwner
-    def test_nominateStoreOwner_success(self):
-        pass
-
-    def test_nominateStoreOwner_userNotLoggedIn_fail(self):
-        pass
-
-    def test_nominateStoreOwner_storeNotExists_fail(self):
-        pass
-
-    def test_nominateStoreOwner_userNotExists_fail(self):
-        pass
-
-    def test_nominateStoreOwner_nominatedAlreadyManager_fail(self):
-        # TODO: should it be success?
-        pass
-
-    def test_nominateStoreOwner_nominatedAlreadyOwner_fail(self):
-        pass
-
-    def test_nominateStoreOwner_userHasNoPermissions_fail(self):
-        pass
 
     # openStore
     def test_openStore_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.my_store.active)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+        self.store_facade.openStore("Feliks", "AriExpress")
+        #integrity
+        self.assertTrue(self.my_store.active)
 
     def test_openStore_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.my_store.active)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            self.store_facade.openStore("Feliks", "AriExpress")
+        # integrity
+        self.assertFalse(self.my_store.active)
 
-    def test_openStore_storeAlreadyExists_fail(self):
-        pass
 
     def test_openStore_storeNameIsEmpty_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(self.my_store.active)
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        self.assertFalse(self.my_store.active)
+        with self.assertRaises(Exception):
+            self.store_facade.openStore("Feliks", "")
+        # integrity
+        self.assertFalse(self.my_store.active)
 
     # participateInLottery
     def test_participateInLottery_success(self):
@@ -1259,36 +1671,7 @@ class TestStoreFacade(TestCase):
     def test_participateInLottery_lotteryIsClosed_fail(self):
         pass
 
-    # placeBid
-    def test_placeBid_success(self):
-        pass
 
-    def test_placeBid_guestLoggedIn_fail(self):
-        pass
-
-    def test_placeBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_placeBid_storeNotExists_fail(self):
-        pass
-
-    def test_placeBid_storeIsClosed_fail(self):
-        pass
-
-    def test_placeBid_productNotExists_fail(self):
-        pass
-
-    def test_placeBid_productIsNotOnSale_fail(self):
-        pass
-
-    def test_placeBid_offerTooLow_fail(self):
-        pass
-
-    def test_placeBid_quantityInvalid_fail(self):
-        pass
-
-    def test_placeBid_userAlreadyPlacedBid_fail(self):
-        pass
 
     # placeOfferInAuction
     def test_placeOfferInAuction_success(self):
@@ -1317,6 +1700,8 @@ class TestStoreFacade(TestCase):
         pass
 
     # productFilterByFeatures
+
+    #TODO: amiel did not implement it yet
     def test_productFilterByFeatures_success(self):
         pass
 
@@ -1331,183 +1716,287 @@ class TestStoreFacade(TestCase):
         pass
 
     # productSearchByCategory
-    def test_productSearchByCategory_success(self):
-        pass
+    def test_productSearchByCategory_sameStore_success(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByCategory("cookies")
+        products_list: list = products.get("AriExpress")
+        self.assertTrue(products_list.__contains__(oreo))
+        self.assertTrue(products_list.__contains__(kit_kat))
+        self.assertTrue(len(products_list) == 2)
 
-    def test_productSearchByCategory_userNotLoggedIn_fail(self):
-        # TODO: should it be success?
-        pass
+    def test_productSearchByCategory_diffrentStore_success(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByCategory("cookies")
+        products_list: list = products.get("AriExpress")
+        products_list2: list = products.get("AriNotExpress")
+        self.assertTrue(products_list.__contains__(oreo))
+        self.assertTrue(products_list2.__contains__(kit_kat))
+        self.assertTrue(len(products_list) == 1)
+        self.assertTrue(len(products_list) == 1)
+
 
     def test_productSearchByCategory_categoryNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByCategory("milkshake")
+        # the category doesn't exists, empty result
+        self.assertTrue(len(list(products.keys())) == 0)
 
     def test_productSearchByCategory_categoryIsEmpty_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        with self.assertRaises(Exception):
+            products = self.store_facade.productSearchByCategory("")
+        # the category doesn't exist, empty result
 
     # productSearchByName
-    def test_productSearchByName_success(self):
-        pass
+    def test_productSearchByName_sameStore_success(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        oreo2 = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByName("oreo")
+        products_list: list = products.get("AriExpress")
 
-    def test_productSearchByName_userNotLoggedIn_fail(self):
-        # TODO: should it be success?
-        pass
+        self.assertTrue(len(products_list) == 2)
 
-    def test_productSearchByName_categoryNotExists_fail(self):
-        pass
 
-    def test_productSearchByName_categoryIsEmpty_fail(self):
-        pass
+    def test_productSearchByName_NameNotExists_fail(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "AriNotExpress")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 500, 5, "cookies")
+        kit_kat = self.store_facade.addNewProductToStore("Feliks", "AriNotExpress", "lit-kat", 500, 5, "cookies")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "towel", 500, 5, "shower-items")
+        products = self.store_facade.productSearchByName("milkshake")
+        # the category doesn't exists, empty result
+        self.assertTrue(len(list(products.keys())) == 0)
+
+
+
 
     # purchaseCart
     # Tests with 'invalid' means bad info/empty info/missing info
     # so each test can hold several smaller tests
 
 
-    # purchaseConfirmedBid
-    def test_purchaseConfirmedBid_success(self):
-        pass
-
-    def test_purchaseConfirmedBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardNumberInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardDateInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardNameInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardCcvInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_addressInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_productInBasketOutOfStock_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_productInBasketNotExists_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_bidNotConfirmed_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_bidNotExists_fail(self):
-        pass
 
     # register
     def test_register_success(self):
-        pass
+        self.assertFalse(list(self.store_facade.members.keys()).__contains__("Yoav"))
+        member: Member = self.store_facade.register("Yoav", "password123", "yoav@gmail.com")
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Yoav"))
+        self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
 
     def test_register_usernameAlreadyExists_fail(self):
-        pass
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("Feliks", "password123", "yoav@gmail.com")
+
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
+        member: Member = self.store_facade.members.get("Feliks")
+        self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
+        self.assertFalse(member.password == "password123")
 
     def test_register_usernameIsEmpty_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("", "password123", "yoav@gmail.com")
+        self.assertFalse(list(self.store_facade.members.keys()).__contains__(""))
+
 
     def test_register_passwordIsEmpty_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("yoav", "", "yoav@gmail.com")
+        self.assertFalse(list(self.store_facade.members.keys()).__contains__(""))
 
     def test_register_emailIsEmpty_fail(self):
-        pass
+      pass
 
     def test_register_userAlreadyLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(list(self.store_facade.online_members.keys()).__contains__("Feliks"))
+        with self.assertRaises(Exception):
+            member: Member = self.store_facade.register("Feliks", "password123", "yoav@gmail.com")
 
-    # rejectBid
-    def test_rejectBid_success(self):
-        pass
-
-    def test_rejectBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_rejectBid_storeNotExists_fail(self):
-        pass
-
-    def test_rejectBid_storeIsClosed_fail(self):
-        pass
-
-    def test_rejectBid_bidNotExists_fail(self):
-        pass
-
-    def test_rejectBid_bidNotBelongToUser_fail(self):
-        pass
-
-    def test_rejectBid_bigAlreadyAccepted_fail(self):
-        pass
-
-    def test_rejectBid_bidAlreadyRejected_fail(self):
-        pass
+        self.assertTrue(list(self.store_facade.members.keys()).__contains__("Feliks"))
+        member: Member = self.store_facade.members.get("Feliks")
+        self.assertTrue(list(self.store_facade.members.values()).__contains__(member))
+        self.assertFalse(member.password == "password123")
 
     # removeAccess
     def test_removeAccess_success(self):
-        pass
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
+        #integrity
+        self.assertFalse(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertFalse(self.my_store.get_accesses().keys().__contains__("Amiel"))
     def test_removeAccess_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.store_facade.logOut("Feliks")
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
+        # integrity
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
 
     def test_removeAccess_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Feliks", "Amiel", "somestore")
+        # integrity
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
 
-    def test_removeAccess_storeIsClosed_fail(self):
-        pass
+    def test_removeAccess_storeIsClosed_Success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.my_store.active = False
+        self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        #with self.assertRaises(Exception):
+        self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
+        # integrity
+        self.assertFalse(amiel.accesses.keys().__contains__("AriExpress"))
+        self.assertFalse(self.my_store.get_accesses().keys().__contains__("Amiel"))
 
     def test_removeAccess_requesterIsRequstee_fail(self):
-        # yaani user ose removeAccess al atsmo inaal dinak
-        pass
+        feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Feliks", "Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+
 
     def test_removeAccess_requesterHasNoPermissions_fail(self):
-        pass
+        feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+        # with self.assertRaises(Exception):
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Amiel", "Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
 
     def test_removeAccess_requesteeHasNoAccess_fail(self):
-        pass
+        feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
+        amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
+        # with self.assertRaises(Exception):
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Amiel", "Feliks", "AriExpress")
+        # integrity
+        self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
+        self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
 
     # removeFromBasket
     def test_removeFromBasket_success(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks","password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        self.store_facade.addToBasket("Amiel", "AriExpress", 2, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        self.assertTrue(basket.products.keys().__contains__(1))
+        self.store_facade.removeFromBasket("Amiel", "AriExpress", 1)
+        self.assertFalse(basket.products.keys().__contains__(1))
+        self.assertTrue(basket.products.keys().__contains__(2))
+        self.store_facade.removeFromBasket("Amiel", "AriExpress", 2)
+        self.assertFalse(basket.products.keys().__contains__(2))
+        self.assertFalse(amiel.cart.baskets.__contains__("AriExpress"))
+
+
+
 
     def test_removeFromBasket_userNotLoggedIn_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        self.assertTrue(basket.products.keys().__contains__(1))
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.removeFromBasket("Amiel", "AriExpress", 1)
+        # integrity :
+        self.assertTrue(basket.products.keys().__contains__(1))
+
 
     def test_removeFromBasket_basketNotExists_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.assertFalse(amiel.cart.baskets.__contains__("AriExpress"))
+        with self.assertRaises(Exception):
+            self.store_facade.removeFromBasket("Amiel", "AriExpress", 1)
+        # integrity :
+        self.assertFalse(amiel.cart.baskets.__contains__("AriExpress"))
 
     def test_removeFromBasket_productNotExists_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        self.assertTrue(basket.products.keys().__contains__(1))
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.removeFromBasket("Amiel", "AriExpress", 2)
+        # integrity :
+        self.assertTrue(basket.products.keys().__contains__(1))
 
-    def test_removeFromBasket_storeNotExists_fail(self):
-        pass
-
-    def test_removeFromBasket_storeIsClosed_fail(self):
-        #TODO: should it be success?
-        pass
 
     def test_removeFromBasket_productNotInBasket_fail(self):
-        pass
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        self.assertTrue(basket.products.keys().__contains__(1))
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.removeFromBasket("Amiel", "AriExpress", 2)
+        # integrity :
+        self.assertTrue(basket.products.keys().__contains__(1))
 
-    # removeMember
-    def test_removeMember_success(self):
-        pass
 
-    def test_removeMember_userNotLoggedIn_fail(self):
-        pass
-
-    def test_removeMember_userNotAdmin_fail(self):
-        pass
-
-    def test_removeMember_memberNotExists_fail(self):
-        pass
-
-    def test_removeMember_memberIsOwner_success(self):
-        # TODO: need to check that it removes all accesses that member has appointed
-        pass
-
-    def test_removeMember_memberIsAdmin_fail(self):
-        # TODO: should it be success? can we use removeMember on admin?
-        pass
-
+ # todo: ask amiel
     # removePermissions
     def test_removePermissions_success(self):
         pass
@@ -1532,69 +2021,58 @@ class TestStoreFacade(TestCase):
 
     # removeProductFromStore
     def test_removeProductFromStore_success(self):
-        pass
-
+        self.store_facade.logInAsMember("Feliks", "password456")
+        # item with id 1
+        prods = self.my_store.getProducts("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "Oreo", 10, 10, "Milk")
+        self.assertTrue(prods.keys().__contains__(1))
+        self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertFalse(prods.keys().__contains__(1))
     def test_removeProductFromStore_userNotLoggedIn_fail(self):
-        pass
+        # item with id 1
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertTrue(prods.keys().__contains__(1))
 
     def test_removeProductFromStore_storeNotExists_fail(self):
-        pass
+        # item with id 1
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        with self.assertRaises(Exception):
+            self.store_facade.removeProductFromStore("Feliks", "some_store", 1)
+        self.assertTrue(prods.keys().__contains__(1))
 
-    def test_removeProductFromStore_storeIsClosed_fail(self):
-        pass
+    def test_removeProductFromStore_storeIsClosed_success(self):
+        # item with id 1
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertFalse(prods.keys().__contains__(1))
 
     def test_removeProductFromStore_productNotExists_fail(self):
-        pass
+        # item with id 2
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        with self.assertRaises(Exception):
+            self.store_facade.removeProductFromStore("Feliks", "AriExpress", 2)
+        self.assertTrue(prods.keys().__contains__(1))
 
-    def test_removeProductFromStore_productInBasket_success(self):
-        # TODO: check that product is deleted from baskets
-        pass
+
 
     def test_removeProductFromStore_productWithSpecialPolicies_success(self):
         # TODO: check that product is deleted properly
         pass
 
-    # returnToGuest
-    def test_returnToGuest_success(self):
-        pass
 
-    def test_returnToGuest_userNotLoggedIn_fail(self):
-        pass
 
-    def test_returnToGuest_userIsGuest_fail(self):
-        pass
 
-    def test_returnToGuest_userIsAdmin_fail(self):
-        pass
-
-    def test_returnToGuest_cartNotEmpty_success(self):
-        # TODO: check that the cart is transferred to the guest user
-        pass
-
-    # sendAlternativeBid
-    def test_sendAlternativeBid_success(self):
-        pass
-
-    def test_sendAlternativeBid_userNotLoggedIn_fail(self):
-        pass
-
-    def test_sendAlternativeBid_storeNotExists_fail(self):
-        pass
-
-    def test_sendAlternativeBid_storeIsClosed_fail(self):
-        pass
-
-    def test_sendAlternativeBid_bidNotExists_fail(self):
-        pass
-
-    def test_sendAlternativeBid_bidAlreadyAccepted_fail(self):
-        pass
-
-    def test_sendAlternativeBid_bidAlreadyRejected_fail(self):
-        pass
-
-    def test_sendAlternativeBid_alternateBidIsLower_fail(self):
-        pass
 
     # django_getAllStaffMembersNames(self, storename)
     def test_django_getAllStaffMembersNames_success(self):

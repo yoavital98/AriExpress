@@ -1,6 +1,8 @@
 import asyncio
+from datetime import date, datetime
+from sqlite3 import Date
 
-
+from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.MessageObjects.PurchaseReport import PurchaseReport
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -13,6 +15,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 
 
 class Cart:
+
 
     def __init__(self, username):
         self.username = username
@@ -146,11 +149,17 @@ class Cart:
                 price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
                 #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
                 transaction_history.addNewStoreTransaction(self.username, basket.get_Store().get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
-                purchaseReports.append(PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price))
+                cur_purchase = PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price)
+                MessageController().send_message("AriExpress", basket.get_Store().getFounder(), "Purchase Received", cur_purchase, \
+                                                 datetime.now(), False, None)
+                purchaseReports.append(cur_purchase)
                 stores_products_dict[basket.store.get_store_name()] = products
                 overall_price += price
             if is_member:
                 transaction_history.addNewUserTransaction(self.username, stores_products_dict, overall_price)
+                MessageController().send_message("AriExpress", self.username, "Purchase Received", purchaseReports, \
+                                                 datetime.now(), False, None)
+
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {

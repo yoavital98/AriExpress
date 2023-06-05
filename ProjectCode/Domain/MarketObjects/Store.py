@@ -1,10 +1,7 @@
 import datetime
 from typing import List
 
-from peewee import SqliteDatabase
 
-from ProjectCode.DAL.ProductModel import ProductModel
-from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -13,11 +10,23 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import DiscountPolicy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
-import random
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
+import random
+
+# ---- FOR ORM TEST PURPOSES (TO DELETE) ---- #
+
+from peewee import SqliteDatabase
+from ProjectCode.DAL.CartModel import CartModel
+from ProjectCode.DAL.AccessModel import AccessModel
+from ProjectCode.DAL.AccessStateModel import AccessStateModel
+from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.StoreModel import StoreModel
 
 # ----- REPOSITORIES ----- #
 from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
+from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
 
 
 class Store:
@@ -26,7 +35,6 @@ class Store:
     def __init__(self, store_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__store_name = store_name
-        self.prods = ProductRepository(store_name)
         self.__products = TypedDict(int, Product)
         # TODO: policies
         self.active: bool = True
@@ -42,26 +50,48 @@ class Store:
         self.__discount_policy = DiscountPolicy()
         self.__purchase_policy = PurchasePolicies()
 
+        #REPOSITORY FIELDS --- TO BE REPLACED
+        self.accesses_test = AccessRepository(store_name=store_name)
+        self.prods = ProductRepository(store_name)
 
 
-    def testing_orm(self):
+
+
+
+    def testing_orm(self, member, member2):
         db = SqliteDatabase('database.db')
         db.connect()
         StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([ProductModel,StoreModel,StoreProduct])
-        db.create_tables([ProductModel,StoreModel,StoreProduct])
+        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, CartModel, BasketModel])
+        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, CartModel, BasketModel])
         store_model = StoreModel.create(store_name=self.__store_name)
+        mem_model = MemberModel.create(user_name=member.get_username(), password=member.get_password(), email=member.get_email(), cart=CartModel.create(user_name=member.get_username()))
+        MemberModel.create(user_name=member2.get_username(), password=member2.get_password(), email=member2.get_email(), cart=CartModel.create(user_name=member2.get_username()))
 
-        prod = Product(6, "test", 1, 1, "test")
-        self.prods[6] = prod
+        new_access = Access(self, member, "Founder")
+        new_access.setAccess("Founder")
+        self.accesses_test[self.__store_name] = new_access
+
+        new_access2 = Access(self, member2, "Founder")
+        new_access2.setAccess("Manager")
+        self.accesses_test[self.__store_name] = new_access2
+
+        #del self.accesses_test['Ari']
+
+        print(self.accesses_test['Ari'])
+
+        # prod = Product(6, "test", 1, 1, "test")
+        # self.prods[6] = prod
 
 
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
-            raise Exception("No such access exists in the store")
+            raise Exception("No such access aexists in the store")
         cur_access.canChangeStatus()
+        if status == self.active:
+            raise Exception("store is already open or closed")
         self.active = status
 
     #-------------Permissions----------------#
@@ -69,6 +99,12 @@ class Store:
     def setFounder(self, username, access):
         access.setAccess("Founder")
         self.__accesses[username] = access
+
+    def getFounder(self):
+        for access in self.__accesses.values():
+            if access.getRole() == "Founder":
+                return access
+        return None
 
     def setAccess(self, nominated_access, requester_username, nominated_username, role):
         requester_access: Access = self.__accesses[requester_username]
@@ -130,7 +166,7 @@ class Store:
             return requester_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
-        
+
     # Get personal permissions for a given store
     def getPermissionsAsJson(self, requester_username):
         requester_access: Access = self.__accesses.get(requester_username)
@@ -189,7 +225,7 @@ class Store:
     #         raise Exception("Member isn't the founder of the store")
 
     def getProducts(self, username):
-        cur_access: Access = self.__accesses[username]
+        cur_access: Access = self.__accesses.get(username)
         if not self.active:
             if (cur_access is not None) and cur_access.hasRole():
                 return self.__products
@@ -197,9 +233,14 @@ class Store:
                 raise Exception("Store is inactive")
         return self.__products
 
-    def getProductById(self, product_id, username):
-        cur_access: Access = self.__accesses[username]
-        if not self.active and (cur_access is None or not cur_access.hasRole()):
+    def getProductById(self, product_id,  username):
+        cur_access: Access = self.__accesses.get(username)
+        if not self.active:
+            if (cur_access is not None) and cur_access.hasRole():
+                if self.__products.keys().__contains__(product_id):
+                    return self.__products.get(product_id)
+                else:
+                    raise Exception("Product does not Exist")
             raise Exception("Store is inactive")
         if not self.__products.keys().__contains__(product_id):
             raise Exception("Product does not Exist")
@@ -212,6 +253,7 @@ class Store:
         if not cur_access.canViewStaffInformation():
             raise Exception("You have no permission to view staff information")
         return self.__accesses
+
 
     def checkProductAvailability(self, product_id, quantity):
         cur_product : Product = self.__products[int(product_id)]
@@ -235,6 +277,8 @@ class Store:
         return product_list
 
     def searchProductByCategory(self, category):
+        if category == "":
+            raise Exception("category cannot be empty")
         #cur_access: Access = self.__accesses[username]
         if not self.active: #and (cur_access is None or not cur_access.hasRole()):
             return {}
@@ -282,6 +326,8 @@ class Store:
     def getDiscount(self, discount_id):
         return self.__discount_policy.getDiscount(discount_id)
 
+    def getAllDiscounts(self):
+        return self.__discount_policy.getAllDiscounts()
 
     def addPurchasePolicy(self,username, purchase_policy, rule, level="", level_name=""):
         cur_access: Access = self.__accesses.get(username)
@@ -463,6 +509,7 @@ class Store:
     def get_lottery(self):
         return self.__lotteries
 
+
     # =======================JSON=======================#
 
     def toJsonInfo(self):
@@ -477,7 +524,6 @@ class Store:
             'products': JsonSerialize.toJsonAttributes(self.__products),
             'active': str(self.active),
             'accesses': JsonSerialize.toJsonAttributes(self.__accesses)
-
         }
 
     def toJsonAccesses(self):
@@ -500,6 +546,17 @@ class Store:
             "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
             "discounts": self.__discount_policy.toJson()
         }
+
+    def close_store_by_admin(self):
+        if self.closed_by_admin:
+            raise Exception("Store already closed by admin")
+        else:
+            if not self.closed_by_admin and not self.active:
+                self.active = False
+            else:
+                self.active = False
+                self.closed_by_admin = True
+
 
     def close_store_by_admin(self):
         if self.closed_by_admin:

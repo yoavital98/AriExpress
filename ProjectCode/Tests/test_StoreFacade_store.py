@@ -42,9 +42,6 @@ class TestStoreFacade(TestCase):
     #         self.assertIsInstance(store, Store)
 
 
-    def test_Orm_to_delete(self):
-        self.store1.testing_orm()
-        #print("hi")
     def test_getStores_returnsStores_multiple(self):
         self.store_facade.logInAsMember("Ari", "password123")
         self.store_facade.createStore("Ari", "Store2")

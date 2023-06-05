@@ -1,6 +1,7 @@
 import json
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
+from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -18,6 +19,10 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
+from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
+from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
+
+
 class StoreFacade:
     def __init__(self):
         # Store Data
@@ -29,7 +34,7 @@ class StoreFacade:
         self.online_members = TypedDict(str, Member)  # dict from username to online members
         self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
-        self.message_controller = MessageController()  # Messanger
+        self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
@@ -41,6 +46,23 @@ class StoreFacade:
         # load data
         self.loadData()
 
+        # REPOSITORY FIELDS - TO BE REPLACED
+        self.members_test = MemberRepository()
+        self.stores_test = StoreRepository()
+
+    # ------  ORM Tests  ------ #
+
+    def add_member(self, member):
+        self.__members[member.get_username()] = member
+
+    def get_member(self, username):
+        return self.__members[username]
+
+    def get_all_members(self):
+        return self.__members[None]
+
+
+
     # ------  System  ------ #
     def loadData(self):  # todo complete
         pass
@@ -51,13 +73,15 @@ class StoreFacade:
 
     def logInFromGuestToMember(self, entrance_id, user_name, password):
         password_validator = PasswordValidationService()
-        guest: Guest = self.onlineGuests.get(entrance_id)
+        guest: Guest = self.onlineGuests.get(str(entrance_id))
+        if guest is None:
+            raise Exception("Entrance id not found")
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
             existing_member: Member = self.members[user_name]
-            if password_validator.ConfirmePassword(password, existing_member.get_password()):
+            if password_validator.ConfirmPassword(password, existing_member.get_password()):
                 existing_member.logInAsMember()
-                existing_member.setEntranceId(guest.entrance_id)  # it's the same entrance id
+                existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
@@ -107,7 +131,7 @@ class StoreFacade:
             raise Exception("user does not exists")
     def checkIfUserIsLoggedIn(self, user_name):
         return self.online_members.__contains__(user_name)
-    
+
     # checks if username exists in the system
     def checkIfUsernameExists(self, user_name):
         return self.members.keys().__contains__(str(user_name))
@@ -135,11 +159,13 @@ class StoreFacade:
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
         password_validator = PasswordValidationService()
-        if not self.members.keys().__contains__(str(user_name)):
+        if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):
             if password_validator.ValidatePassword(password):
                 new_member: Member = Member(str(0), user_name, password, email)
                 self.members[str(user_name)] = new_member
                 return new_member
+            else:
+                raise Exception("password is too weak")
         else:
             raise Exception("This username is already in the system")
 
@@ -186,8 +212,8 @@ class StoreFacade:
     # getting the user purchase history
     def getMemberPurchaseHistory(self, requesterID, username):
         transaction_history = TransactionHistory()
-        if self.checkIfUserIsLoggedIn(requesterID) and (
-                self.admins.keys().__contains__(requesterID) or requesterID == username):
+        if self.admins.keys().__contains__(requesterID) or (
+                  requesterID == username and self.checkIfUserIsLoggedIn(requesterID)):
             return transaction_history.get_User_Transactions(username)
         else:
             raise Exception("username isn't logged in")
@@ -340,41 +366,41 @@ class StoreFacade:
     def getStoresJson(self):
         return self.stores
 
-    def getProductsByStore(self, store_name, username):
+    def getProductsByStore(self, store_name, user_name):
         cur_store: Store = self.stores.get(
             store_name)  # TODO: change to "try and expect" instead of "if" because the first line returns exception
         if cur_store is None:
             raise Exception("No such store exists")
         # Generate data dict
         # data_products = dict()
-        product_dict = cur_store.getProducts(username)
+        product_dict = cur_store.getProducts(str(user_name))
         return product_dict
         # for key, value in product_dict:
         #     data_products[key] = DataProduct(value)
         # return data_products
 
-    def getProduct(self, store_name, product_id, username):
+    def getProduct(self, store_name, product_id, user_name):
         cur_store: Store = self.stores.get(store_name)
         if cur_store is None:
             raise Exception("No such store exists")
-        cur_product: Product = cur_store.getProductById(product_id, username)
+        cur_product: Product = cur_store.getProductById(product_id, str(user_name))
         # return DataProduct(cur_product)
         return cur_product
 
     def productSearchByName(self, keywords):  # and keywords
         splitted_keywords = keywords.split(" ")
-        search_results = TypedDict(str, list)        
-        for cur_store in self.stores.values(): 
+        search_results = TypedDict(str, list)
+        for cur_store in self.stores.values():
             product_list=[]
-            for keyword in splitted_keywords: 
+            for keyword in splitted_keywords:
                 product_list.extend(cur_store.searchProductByName(keyword))
             if len(product_list) > 0:
                     # data_product_list = [DataProduct(prod) for prod in product_list]
                     json_product_list = [prod.toJson() for prod in product_list]
                     search_results[cur_store.get_store_name()] =  json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
-        
+
         return search_results
-    
+
 
 
     def productSearchByCategory(self, category):
@@ -456,6 +482,7 @@ class StoreFacade:
         cur_access = self.members[username].get_accesses().get(store_name)
         if cur_access is None:
             raise Exception("The member doesn't have a permission for that action")
+
         changed_product = cur_store.changeProduct(cur_access, product_id, **kwargs)
         # return DataProduct(changed_product)
         return changed_product
@@ -529,7 +556,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         permissions: dict = cur_store.getPermissions(requester_username, nominated_username)
         return permissions
-    
+
     def getPermissionsAsJson(self, store_name, requester_username):
         cur_store: Store = self.stores[store_name]
         if not self.checkIfUserIsLoggedIn(requester_username):
@@ -556,6 +583,13 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         return cur_store.getDiscount(discount_id)
+
+    def getAllDiscounts(self, storename):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getAllDiscounts()
+
 
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         cur_store: Store = self.stores.get(storename)
@@ -674,6 +708,13 @@ class StoreFacade:
         #     data_accesses_dict[key] = DataAccess(value)
         # return data_accesses_dict
 
+    def getStaffInfoForMessage(self, store_name):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        accesses_dict = cur_store.get_accesses()
+        return accesses_dict
+
     def getStoreManagerPermissions(self):
         pass
 
@@ -681,6 +722,8 @@ class StoreFacade:
     def logInAsAdmin(self, username, password):
         if self.admins.keys().__contains__(username):
             existing_admin: Admin = self.admins[username]
+            if existing_admin.logged_In:
+                raise Exception("admin is already in the system")
             if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
                 return existing_admin
@@ -691,7 +734,9 @@ class StoreFacade:
 
     def logOutAsAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
-            existing_admin: Admin = self.members[user_name]
+            existing_admin: Admin = self.admins[user_name]
+            if not existing_admin.logged_In:
+                raise Exception("Admin is not logged in")
             existing_admin.logOffAsAdmin()
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
@@ -800,12 +845,47 @@ class StoreFacade:
         purchase_history = transaction_history.get_user_Transactions(user_name)
         return self.members[user_name], purchase_history
 
-    def messageAsAdminToUser(self, self1, requesterID, memberName, subject, message):
-        pass
-
     def getUserStores(self, username):
         stores_list = list()
         for cur_store in self.stores.values():
             if cur_store.get_accesses().get(username) is not None:
                 stores_list.append(cur_store)
         return stores_list
+
+    # ==================  Messages  ==================#
+
+
+    def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, status, file):
+        return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, status, file)
+
+    # def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file):
+    #     # with purchase form AliExpress to user
+    #     return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
+    # # TODO need to deny users from having a username which's a storename
+    #
+    #
+    # def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status,file):
+    #     # with purchase form AliExpress to store's founder
+    #     return MessageController().send_message(store_name, receiverID, subject, content, creation_date, status, file)
+    #
+    #     staff = self.getStaffInfoForMessage(storeID).keys()
+    #     message_list = []
+    #     for staff_member in staff:
+    #         message_list.append(MessageController().send_message(requesterID, staff_member, subject, content, creation_date, status, file))
+    #     return message_list
+
+    def getAllMessagesSent(self, requesterID):
+        return MessageController().get_messages_sent(requesterID)
+
+    def getAllMessagesReceived(self, requesterID):
+        return MessageController().get_messages_received(requesterID)
+
+    def readMessage(self, requesterID, messageID):
+        return MessageController().read_message(requesterID, messageID)
+
+    # def messageAsAdminToUser(self, admin_name, receiverID, message):
+    #     pass
+    #
+    # def messageAsAdminToStore(self, admin_name, store_Name, message):
+    #     pass
+
