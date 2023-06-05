@@ -35,11 +35,7 @@ def load_config(config_file):
                         func(instance, *args)
                     else:
                         func(*args)
-    # try:
-    #             func(*arguments)
-    #         except Exception as e:
-    #             print(f"Error executing command: {func_name}({arguments})")
-    #             print(f"Error message: {str(e)}")
+    
             
 # ------------------------------------- #
 
