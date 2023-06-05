@@ -73,6 +73,7 @@ class MainappConfig(AppConfig):
         # service.addToBasket("rubin_krief", "store123", 2, 5)
         # service.addToBasket("rubin_krief", "store123", 1, 3)
         # service.addToBasket("rubin_krief", "456store", 1, 2)
+        # service.logOut("rubin_krief")
 
         
         # from django.contrib.auth.models import User
