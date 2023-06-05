@@ -1,12 +1,7 @@
 import datetime
 from typing import List
 
-from peewee import SqliteDatabase
 
-from ProjectCode.DAL.AccessModel import AccessModel
-from ProjectCode.DAL.AccessStateModel import AccessStateModel
-from ProjectCode.DAL.ProductModel import ProductModel
-from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -15,12 +10,23 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import DiscountPolicy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
-import random
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
-from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
+import random
+
+# ---- FOR ORM TEST PURPOSES (TO DELETE) ---- #
+
+from peewee import SqliteDatabase
+from ProjectCode.DAL.CartModel import CartModel
+from ProjectCode.DAL.AccessModel import AccessModel
+from ProjectCode.DAL.AccessStateModel import AccessStateModel
+from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.StoreModel import StoreModel
 
 # ----- REPOSITORIES ----- #
 from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
+from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
 
 
 class Store:
@@ -45,24 +51,34 @@ class Store:
         self.__purchase_policy = PurchasePolicies()
 
         #REPOSITORY FIELDS --- TO BE REPLACED
-        self.accesses_test = AccessRepository(store_name)
+        self.accesses_test = AccessRepository(store_name=store_name)
         self.prods = ProductRepository(store_name)
 
 
 
 
 
-    def testing_orm(self):
+    def testing_orm(self, member, member2):
         db = SqliteDatabase('database.db')
         db.connect()
         StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel])
-        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel])
+        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, CartModel, BasketModel])
+        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, CartModel, BasketModel])
         store_model = StoreModel.create(store_name=self.__store_name)
-        new_access = Access(self, None, "Founder")
+        mem_model = MemberModel.create(user_name=member.get_username(), password=member.get_password(), email=member.get_email(), cart=CartModel.create(user_name=member.get_username()))
+        MemberModel.create(user_name=member2.get_username(), password=member2.get_password(), email=member2.get_email(), cart=CartModel.create(user_name=member2.get_username()))
+
+        new_access = Access(self, member, "Founder")
         new_access.setAccess("Founder")
         self.accesses_test[self.__store_name] = new_access
-        print(self.accesses_test[None][0].get_role())
+
+        new_access2 = Access(self, member2, "Founder")
+        new_access2.setAccess("Manager")
+        self.accesses_test[self.__store_name] = new_access2
+
+        #del self.accesses_test['Ari']
+
+        print(self.accesses_test['Ari'])
 
         # prod = Product(6, "test", 1, 1, "test")
         # self.prods[6] = prod

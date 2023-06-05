@@ -7,6 +7,7 @@ from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.User import User
+from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
 
 
 class Member(User):
@@ -19,6 +20,10 @@ class Member(User):
         self.user_name = user_name  # username
         self.password = password  # password
         self.email = email  # email
+
+        #REPOSITORY FIELDS - TO BE REPLACED
+        self.accesses_test = AccessRepository(username=user_name)
+
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):

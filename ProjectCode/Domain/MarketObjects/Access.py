@@ -19,6 +19,8 @@ class Access:
         self.access_state = AccessState()
         self.role = ""
 
+    def __str__(self):
+        return self.user.get_username() + " " + self.store.get_store_name() + " " + self.role + " " + self.nominated_by_username
 
     def setAccess(self, role):
         if role == "Owner":

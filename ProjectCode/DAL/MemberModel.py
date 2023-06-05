@@ -14,7 +14,7 @@ class MemberModel(Model):
     password = CharField(max_length=100)
     email = CharField(max_length=100)
     cart = ForeignKeyField(CartModel, backref='member')
-    # accesses = ManyToManyField(AccessModel, backref='member')
+    #accesses = ManyToManyField(AccessModel, backref='member')
     # auctions = ManyToManyField(AuctionModel, backref='member')
     # lotteries = ManyToManyField(LotteryModel, backref='member')
 
