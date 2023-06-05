@@ -8,7 +8,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
-# ------------ Load config ------------ #
+# ------------------------------------ Load config ------------------------------------ #
 @staticmethod
 def load_config(config_file):
     # try catch
@@ -37,7 +37,7 @@ def load_config(config_file):
                         func(*args)
     
             
-# ------------------------------------- #
+# ------------------------------------------------------------------------------------- #
 
 class Service:
     _instance = None
