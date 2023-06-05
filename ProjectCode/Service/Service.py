@@ -11,32 +11,24 @@ from ProjectCode.Domain.StoreFacade import StoreFacade
 # ------------------------------------ Load config ------------------------------------ #
 @staticmethod
 def load_config(config_file):
-    # try catch
-    # with open(config_file) as f:
-    #     for line in f:
-    #         try:
-    #             exec(line.strip())
-    #         except Exception as e:
-    #             print(f"Error executing command: {line}")
-    #             print(f"Error message: {str(e)}")
+
     with open(config_file, 'r') as f:
         config_data = json.load(f)
-
-    # Execute the functions based on the loaded configuration
-    functions = inspect.getmembers(Service, predicate=inspect.isfunction)
     for func_config in config_data:
         for func_name, func_args in func_config.items():
             functions = inspect.getmembers(Service, predicate=inspect.isfunction)
+            found_function = False
             for name, func in functions:
                 if name == func_name:
+                    found_function = True
                     args = func_args.get("args", [])
                     instance = Service._instance
                     if instance is not None:
                         func(instance, *args)
                     else:
                         func(*args)
-    
-            
+            if not found_function:
+                print(f"Error: Function '{func_name}' not found in Service class.")     
 # ------------------------------------------------------------------------------------- #
 
 class Service:
