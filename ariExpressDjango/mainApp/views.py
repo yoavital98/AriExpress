@@ -118,11 +118,41 @@ def mystores(request):
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
-        # print(storesInfoDict)
+        print(storesInfoDict[0])
         return render(request, 'mystores.html', {'stores': storesInfoDict})
     messages.success(request, ("Error: User is not logged in (django error)"))
     return redirect('mainApp:mainpage')
 
+
+def viewStoreStaff(request, storename):
+    username = request.user.username
+    service = Service()
+    if 'removeAccessButton' in request.POST:
+        requester_id = username
+        to_remove_id = request.POST.get('to_remove_id')
+        print(requester_id)
+        print(to_remove_id)
+        actionRes = service.removeAccess(requester_id, to_remove_id, storename)
+        if actionRes.getStatus():
+            messages.success(request, (f"{requester_id} has removed {to_remove_id} accesses"))
+            return redirect('mainApp:viewStoreStaff', storename=storename)
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:viewStoreStaff', storename=storename)
+    else:                               # just render page
+        permissionName = 'StaffInfo'
+        if permissionCheck(username, storename, permissionName):
+            actionRes = service.getStoreProductsInfo(storename)
+            if actionRes.getStatus():
+                staff = actionRes.getReturnValue()['accesses']
+                staff = ast.literal_eval(str(staff))
+            return render(request, 'viewStoreStaff.html', {'storename': storename, 'staff': staff})
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+            return redirect('mainApp:store_specific', storename=storename)
+        
+    messages.success(request, (f"Error: Something went wrong"))
+    return redirect('mainApp:store_specific', storename=storename)
 
 
 def viewAllStores(request):
@@ -140,10 +170,6 @@ def store_specific(request, storename):
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else: permissions = {}
-
-    print(permissions)
-    print(storename)
-    print(username)
 
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
@@ -407,6 +433,19 @@ def addNewProduct(request, storename):
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
 
+
+def viewDiscounts(request, storename):
+    service = Service()
+    permissionName = 'Discounts'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        actionRes = service.getAllDiscounts(storename)
+        if actionRes:
+            discounts = ast.literal_eval(str(actionRes.getReturnValue()))
+            return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+    
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
 
 
 def adminPage(request):
@@ -672,17 +711,16 @@ def add_product_to_cart(request):
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
                 quantity = form.cleaned_data['quantity']
-                searched = form.cleaned_data['searched']
                 res = service.addToBasket(request.user.username, store, product_id, quantity)
                 if res.getStatus():
                     messages.success(request, "Product added successfully")
-                    return searchpage(request)
+                    return redirect(request.META.get('HTTP_REFERER'))
                 else:
                     messages.error(request, "Error adding product to cart res - " + str(res.getReturnValue()))
-                    return searchpage(request)
+                    return redirect(request.META.get('HTTP_REFERER'))
             else:
                 messages.error(request, "Error adding product to cart form - " + str(form.errors))
-                return searchpage(request)
+                return redirect(request.META.get('HTTP_REFERER'))
         else:
             messages.error(request, "You must be logged in to add products to cart")
             return HttpResponseRedirect('/login')

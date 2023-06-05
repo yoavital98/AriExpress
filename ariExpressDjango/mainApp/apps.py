@@ -26,9 +26,43 @@ class MainappConfig(AppConfig):
         service.addNewProductToStore("aaa", "store123", "apple", "fruit", "20", "3")
         service.addNewProductToStore("aaa", "store123", "banana", "fruit", "30", "8")
         service.addNewProductToStore("aaa", "store123", "headphones", "electronics", "10", "700")
-        service.logOut("aaa")
-        service.logOut("Yoav")
+        # service.logOut("aaa")
+        # service.logOut("Yoav")
         #service.logIn("bbb", "asdf1233")
+        rules = {
+                'rule_type': 'Rule Type',
+                'product_id': '0',
+                'operator': '==',
+                'quantity': '5',
+                'category': 'asd',
+                'child': {
+                    'logic_type': 'XOR',
+                    'rule': {
+                        'rule_type': 'Rule Type',
+                        'product_id': '0',
+                        'operator': '>=',
+                        'quantity': '5',
+                        'category': 'asd',
+                        'child':
+                            {
+                            'logic_type': 'XOR',
+                            'rule': {
+                                'rule_type': 'Rule Type',
+                                'product_id': '0',
+                                'operator': '<=',
+                                'quantity': '5',
+                                'category': 'asd',
+                                'child': {}
+                            }
+                        }
+                    }
+                }
+            }
+        
+        print(service.addDiscount("store123", "aaa", "Simple", 50, "Product", "1", {}, {}).getStatus())
+        print(service.addDiscount("store123", "aaa", "Conditioned", 20, "Category", "fruit", rules, {}).getStatus())
+        print(service.nominateStoreManager("aaa", "bbb", "store123").getStatus())
+        # service.logOut("aaa")
 
         # TODO: remove the comments
         # service.addNewProductToStore("aaa", "456store", "banana", "fruit", "40", "5")

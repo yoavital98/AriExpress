@@ -31,7 +31,6 @@
     <tr class="table-light">
       <th>Store Name</th>
       <th>Active</th>
-      <th>Staff</th>
     </tr>
     {% for store in stores %}
       <tr class="table-light">
@@ -43,9 +42,6 @@
           </form>
         </td>
         <td>{{ store.active }}</td>
-        <td>
-
-        </td>
       </tr>
     {% empty %}
       <tr>
