@@ -93,12 +93,13 @@ modal-lg
         </div>
         <hr>
         <div class="d-grid gap-2 mt-3">
-            <button class="btn text-light" type="submit" id="submit" style="background-color:#0074fe;" onclick="sendMessage()" >Send message &nbsp;&nbsp;
+            <button class="btn text-light" type="submit" id="submit" style="background-color:#0074fe;" onclick="send_Message()" >Send message &nbsp;&nbsp;
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
     </div>
-    <input type="hidden" value="Pending" name="status">
+    <input type="hidden" value="pending" name="status">
+    <input type="hidden" value="{{user.username}}" name="sender">
        
       
 </form>

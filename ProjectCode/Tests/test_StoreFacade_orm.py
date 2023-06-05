@@ -7,9 +7,11 @@ from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.BasketModel import BasketModel
 from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.MarketObjects.Access import Access
+from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
@@ -34,13 +36,12 @@ class MyTestCase(unittest.TestCase):
         self.item_paper: Product = self.store1.getProductById(1, "Ari")
         self.oreo: Product = self.store1.getProductById(2, "Ari")
         self.store_facade.logOut("Ari")
-        db = SqliteDatabase('database.db', pragmas={'foreign_keys': 1})
+        db = SqliteDatabase('database.db')
         db.connect()
         StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, CartModel,
-                        BasketModel])
-        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, CartModel,
-                          BasketModel])
+        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel,
+                        BasketModel, ProductBasketModel])
+        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel])
 
     # ------ AccessRepository Tests ------
 
@@ -147,6 +148,14 @@ class MyTestCase(unittest.TestCase):
         self.store_facade.stores_test["Store2"] = self.store2
         print(self.store_facade.stores_test.keys())
         print(self.store_facade.stores_test.values())
+
+
+    # ------ BasketRepository Tests ------
+
+    def test_Orm_create_basket(self):
+        self.member1.cart.basket_test["Store1"] = Basket(self.member1.get_username(), self.store1)
+        basket = self.member1.cart.basket_test["Store1"]
+        basket.products_test[self.item_paper.get_product_id()] = (self.item_paper, 5, self.item_paper.get_price())
 
 if __name__ == '__main__':
     unittest.main()

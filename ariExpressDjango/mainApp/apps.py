@@ -10,9 +10,19 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
-        config_file = "../config.json"
-        service = Service(config_file)
-        # service = Service()
+#         config_file = "../config.json"
+#         config_file = "../config_purchaseCart.json"
+#         service = Service(config_file)
+        service = Service()
+        service.register("aaa", "asdf1233", "a@a.com") # for debug only
+        service.register("bbb", "asdf1233", "a@a.com") # for debug only
+        service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        service.register("roobink", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        service.register("Yoav", "XG5EsQtQ.J:k82G", "yoavital98@gmail.com") # for debug only
+        service.logOut("roobink")
+        service.logIn("bbb", "asdf1233")
+        service.createStore("bbb", "TESTSTORE")
+        service.logOut("bbb")
 
 
 
@@ -64,6 +74,7 @@ class MainappConfig(AppConfig):
         #         }
         #     }
         
+
         # print(service.addDiscount("store123", "aaa", "Simple", 50, "Product", "1", {}, {}).getStatus())
         # print(service.addDiscount("store123", "aaa", "Conditioned", 20, "Category", "fruit", rules, {}).getStatus())
         # print(service.nominateStoreManager("aaa", "bbb", "store123").getStatus())

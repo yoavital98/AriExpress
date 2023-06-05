@@ -41,6 +41,7 @@ class Message:
 
 #=============JSON================
     def toJson(self):
+
         if self._file is None:
             file_info = None
         else:
@@ -48,13 +49,19 @@ class Message:
                 "filename": self._file.name,
                 "path": self._file.path
             }
+            
+        if self._read:
+            read = "read"
+        else:
+            read = "pending"
+
         return {
             "id": self._id,
-            "sender_id": self._sender_id,
-            "receiver_id": self._receiver_id,
+            "sender": self._sender_id,
+            "receiver": self._receiver_id,
             "subject": self._subject,
             "content": self._content,
             "file": file_info,
-            "date": self._date,
-            "read": self._read
+            "creation_date": self._date,
+            "status": read
         }

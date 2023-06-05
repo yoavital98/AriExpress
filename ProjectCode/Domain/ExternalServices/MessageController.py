@@ -62,10 +62,14 @@ class MessageController:
         return None
 
     def get_messages_sent(self, user_id):
-        return [message for message in self._sent_messages[user_id]]
+        if user_id not in self._sent_messages.keys():
+            self._sent_messages[user_id] = []
+        return [message.toJson()  for message in self._sent_messages[user_id]]
 
     def get_messages_received(self, user_id):
-        return [message for message in self._inbox_messages[user_id]]
+        if user_id not in self._inbox_messages.keys():
+            self._inbox_messages[user_id] = []
+        return [message.toJson() for message in self._inbox_messages[user_id]]
 
     def send_notification(self, receiver_id, subject, content, creation_date):
         message_id = self.notificationCounter

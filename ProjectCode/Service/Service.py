@@ -724,9 +724,9 @@ class Service:
             return Response(e, False)
 
     # =================================================Messages=================================================
-    def sendMessageUsers(self, requester_id, receiver_id, subject, content, creation_date, status, file=None):
+    def sendMessageUsers(self, requester_id, receiver_id, subject, content, creation_date, file=None):
         try:
-            message = self.store_facade.sendMessageUsers(requester_id, receiver_id, subject, content, creation_date, status, file)
+            message = self.store_facade.sendMessageUsers(requester_id, receiver_id, subject, content, creation_date, file)
             # TODO save to database
             logging.info(
                 "Message has been sent successfully. By username: " + requester_id + ". receiver_username: " + receiver_id + ".")
@@ -737,7 +737,7 @@ class Service:
 
     def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file=None):
         try:
-            message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, status, file)
+            message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, file)
             logging.info(
                 "Message has been sent successfully. By store_name: " + store_name + ". receiver_username: " + receiverID + ".")
             return Response(message.toJson(), True)
@@ -760,17 +760,18 @@ class Service:
             messages = self.store_facade.getAllMessagesSent(requesterID, username)
             logging.debug(
                 f"fetching all the user's messages. By username: " + requesterID + ".")
-            return Response(JsonSerialize.toJsonAttributes(messages), True)
+            return Response(messages, True)
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
             return Response(e, False)
 
-    def getAllMessagesReceived(self, requesterID, username):
+    def getAllMessagesReceived(self, requesterID):
         try:
-            messages = self.store_facade.getAllMessagesReceived(requesterID, username)
+            messages = self.store_facade.getAllMessagesReceived(requesterID)
+            print(messages)
             logging.debug(
                 f"fetching all the user's messages. By username: " + requesterID + ".")
-            return Response(JsonSerialize.toJsonAttributes(messages), True)
+            return Response(messages, True)
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
             return Response(e, False)

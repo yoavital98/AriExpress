@@ -1,15 +1,8 @@
 
-from peewee import *
 
 from ProjectCode.DAL.BasketModel import BasketModel
-from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
-from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.StoreModel import StoreModel
-from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.MarketObjects.Basket import Basket
-from ProjectCode.Domain.MarketObjects.Cart import Cart
-from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.Repository.Repository import Repository
 
