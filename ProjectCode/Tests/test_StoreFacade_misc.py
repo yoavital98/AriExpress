@@ -182,7 +182,7 @@ class TestStoreFacade(TestCase):
         #after
         self.store_facade.addNewProductToStore("Feliks", "AriExpress", "shoes", 10, 500, "shoes")
         self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 2)
-        new_product: Product = self.my_store.getProductById(2)
+        new_product: Product = self.my_store.getProductById(2, "Feliks")
         self.assertTrue(new_product.get_name() == "shoes")
         
 
@@ -1541,8 +1541,8 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             self.store_facade.logInFromGuestToMember(0, "Feliks", "password456")
         # integrity
-        self.assertFalse(self.store_facade.online_members.__contains__("Feliks"))
-        self.assertFalse(self.store_facade.onlineGuests.__contains__("0"))
+        self.assertFalse(self.store_facade.online_members.keys().__contains__("Feliks"))
+        self.assertFalse(self.store_facade.onlineGuests.keys().__contains__("0"))
 
     def test_logInFromGuestToMember_checkIfCartIsSaved_success(self):
         self.store_facade.logInAsMember("Amiel", "password789")
@@ -1894,8 +1894,8 @@ class TestStoreFacade(TestCase):
         feliks: Member = self.store_facade.logInAsMember("Feliks", "password456")
         self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
         self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
-        #with self.assertRaises(Exception):
-        self.store_facade.removeAccess("Feliks", "Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.removeAccess("Feliks", "Feliks", "AriExpress")
         # integrity
         self.assertTrue(feliks.accesses.keys().__contains__("AriExpress"))
         self.assertTrue(self.my_store.get_accesses().keys().__contains__("Feliks"))
@@ -2029,46 +2029,47 @@ class TestStoreFacade(TestCase):
         self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
         self.assertFalse(prods.keys().__contains__(1))
     def test_removeProductFromStore_userNotLoggedIn_fail(self):
-        self.store_facade.logInAsMember("Feliks", "password456")
         # item with id 1
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertTrue(prods.keys().__contains__(1))
+
+    def test_removeProductFromStore_storeNotExists_fail(self):
+        # item with id 1
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        with self.assertRaises(Exception):
+            self.store_facade.removeProductFromStore("Feliks", "some_store", 1)
+        self.assertTrue(prods.keys().__contains__(1))
+
+    def test_removeProductFromStore_storeIsClosed_success(self):
+        # item with id 1
+        self.store_facade.logInAsMember("Feliks", "password456")
         prods = self.my_store.getProducts("Feliks")
         self.assertTrue(prods.keys().__contains__(1))
         self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
         self.assertFalse(prods.keys().__contains__(1))
 
-    def test_removeProductFromStore_storeNotExists_fail(self):
-        pass
-
-    def test_removeProductFromStore_storeIsClosed_fail(self):
-        pass
-
     def test_removeProductFromStore_productNotExists_fail(self):
-        pass
+        # item with id 2
+        self.store_facade.logInAsMember("Feliks", "password456")
+        prods = self.my_store.getProducts("Feliks")
+        self.assertTrue(prods.keys().__contains__(1))
+        with self.assertRaises(Exception):
+            self.store_facade.removeProductFromStore("Feliks", "AriExpress", 2)
+        self.assertTrue(prods.keys().__contains__(1))
 
-    def test_removeProductFromStore_productInBasket_success(self):
-        # TODO: check that product is deleted from baskets
-        pass
+
 
     def test_removeProductFromStore_productWithSpecialPolicies_success(self):
         # TODO: check that product is deleted properly
         pass
 
-    # returnToGuest
-    def test_returnToGuest_success(self):
-        pass
-
-    def test_returnToGuest_userNotLoggedIn_fail(self):
-        pass
-
-    def test_returnToGuest_userIsGuest_fail(self):
-        pass
-
-    def test_returnToGuest_userIsAdmin_fail(self):
-        pass
-
-    def test_returnToGuest_cartNotEmpty_success(self):
-        # TODO: check that the cart is transferred to the guest user
-        pass
 
 
 
