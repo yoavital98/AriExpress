@@ -444,12 +444,19 @@ def homepage_guest(request):
 
 @login_required(login_url='/login')
 def inbox(request):
-    all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
-    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-    paginator = Paginator(all_user_messages, 5)
-    page = request.GET.get('page')
-    all_messages = paginator.get_page(page)
-    return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
+    service = Service()
+    #all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
+    #pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+    all_user_messages = service.getAllMessagesReceived(request.user.username)
+    if all_user_messages.getStatus():
+        all_user_messages = all_user_messages.getReturnValue()
+        paginator = Paginator(all_user_messages, 5)
+        page = request.GET.get('page')
+        all_messages = paginator.get_page(page)
+        return render(request, 'inbox.html',{'usermessages': all_messages})
+    else:
+        messages.error(request, "Error: " + str(all_user_messages.getReturnValue()))
+        return redirect('mainApp:mainpage')
 
 
 def send_message(request):
@@ -460,11 +467,20 @@ def send_message(request):
             receiver_username = form.cleaned_data['receiver']
             res = service.checkUsernameExistence(receiver_username)
             if res.getStatus():
-                message = form.save(commit=False)
-                message.sender = request.user.username
-                message.save()
-                messages.success(request, "Message sent successfully")
-                return HttpResponseRedirect('/inbox')
+                # message = form.save(commit=False)
+                # message.sender = request.user.username
+                # message.save()
+                receiver_id = form.cleaned_data['receiver']
+                subject = form.cleaned_data['subject']
+                content = form.cleaned_data['content']
+                creation_date = form.cleaned_data['creation_date']
+                file = request.FILES
+                message_res = service.sendMessageUsers(request.user.username, receiver_id, subject, content, creation_date,"pending",file)
+                if message_res.getStatus():
+                    messages.success(request, "Message sent successfully")
+                    return HttpResponseRedirect('/inbox')
+                else:
+                    messages.error(request, "Error sending message through backend - "+message_res.getReturnValue())
             else:
                 messages.error(request, "Invalid adresssee username - the message was not sent")
         else:
@@ -496,6 +512,12 @@ def mark_as_read(request, usermessage_id):
         # message.status = 'read'
         # message.save()
         # messages.success(request, "Message marked as read successfully")
+    service = Service()
+    res = service.readMessage(request.user.username, usermessage_id)
+    if res.getStatus():
+        messages.success(request, "Message marked as read successfully")
+    else:
+        messages.error(request, "Error marking message as read - "+res.getReturnValue())
     return HttpResponseRedirect('/inbox')
 
 
@@ -509,12 +531,6 @@ def check_username(request):
             return JsonResponse({'status': True})
         else:
             return JsonResponse({'status': False})
-
-@login_required(login_url='/login')
-def notifications(request):
-    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-
-
 
 #---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
