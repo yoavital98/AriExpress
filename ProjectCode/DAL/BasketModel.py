@@ -1,7 +1,5 @@
 from peewee import *
 
-from ProjectCode.DAL.CartModel import CartModel
-from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.StoreModel import StoreModel
 
 
