@@ -44,6 +44,13 @@ INSTALLED_APPS = [
     'mathfilters',
 ]
 
+CHANNEL_LAYERS = {
+    "default": {
+        "DEFAULT_CHANNEL_LAYER": "channels.layers.InMemoryChannelLayer",
+        "CONFIG": {},
+    },
+}
+
 ASGI_APPLICATION = 'AriExpress.asgi.application'
 
 MIDDLEWARE = [

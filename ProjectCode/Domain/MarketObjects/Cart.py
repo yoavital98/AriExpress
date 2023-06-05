@@ -5,6 +5,7 @@ from sqlite3 import Date
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.MessageObjects.PurchaseReport import PurchaseReport
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
+from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
@@ -16,7 +17,6 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 
 class Cart:
 
-
     def __init__(self, username):
         self.username = username
         self.baskets = TypedDict(str, Basket)
@@ -27,10 +27,10 @@ class Cart:
         else:
             raise Exception("Basket does not exists")
 
-    def add_Product(self,username, store, product_id, product, quantity):
+    def add_Product(self, username, store, product_id, product, quantity):
         if not self.baskets.keys().__contains__(store.get_store_name()):
-                basket_to_add = Basket(str(username), store)
-                self.baskets[store.get_store_name()] = basket_to_add
+            basket_to_add = Basket(str(username), store)
+            self.baskets[store.get_store_name()] = basket_to_add
         basket: Basket = self.get_Basket(store.get_store_name())
         basket.add_Product(product_id, product, quantity)
         return basket
@@ -38,7 +38,7 @@ class Cart:
     def removeFromBasket(self, store_name, product_id):
         if self.baskets.keys().__contains__(store_name):
             basket: Basket = self.baskets[store_name]
-            answer: bool = basket.remove_Product(product_id) # answer = true if item is successfully removed
+            answer: bool = basket.remove_Product(product_id)  # answer = true if item is successfully removed
             if (basket.getBasketSize() == 0) and (basket.getBasketBidSize() == 0):
                 del self.baskets[store_name]
             return answer
@@ -131,66 +131,95 @@ class Cart:
             basket: Basket = self.baskets[storename]
             basket.clearBidFromBasket(bid_id)
 
-    def PurchaseCart(self, card_number, card_user_name, card_holder_id, card_date, cvv, address, is_member):
+    def PurchaseCart(self, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, is_member):
         payment_service = PaymentService()
+        supply_service = SupplyService()
         transaction_history = TransactionHistory()
+        message_controller = MessageController()
         overall_price = 0  # overall price for the user
         stores_products_dict = TypedDict(str, list)  # store_name to list of tuples (productid,productname,quantity,price4unit)
         answer = self.checkAllItemsInCart()  # answer = True or False, if True then purchasing is available
-        # this checks if the credit card is valid!
         try:
-            payment_service.validate_credit_card(card_number, card_date, cvv, card_holder_id)
+            payment_service.perform_handshake()
+            supply_service.perform_handshake()
         except Exception as e:
             raise Exception(e)
-        if answer is True:  # means everything is ok to go
-            purchaseReports = []
+        if answer:  # means everything is ok to go
+            purchaseReports = {}
+            exp_month, exp_year = card_date.split("/")
             for basket in self.get_baskets().values():  # all the baskets
                 products: list = basket.getProductsAsTuples()  # tupleList [(productid,productname,quantity,price4unit)]
-                price = basket.purchaseBasket()  # price of a single basket  #TODO:amiel ; needs to have supply approval
-                #shipment_date = self.supply_service.checkIfAvailable(basket.store, address,products)  # TODO: Ari, there should be an address probaby
-                transaction_history.addNewStoreTransaction(self.username, basket.get_Store().get_store_name(), products, price)  # make a new transaction and add it to the store history and user history
+                price = basket.calculateBasketPrice()  # price of a single basket
                 cur_purchase = PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price)
-                MessageController().sendNotificationToStore(basket.get_Store().getFounder(), "Purchase Received",\
-                                                            cur_purchase, datetime.now(), None)
-                purchaseReports.append(cur_purchase)
-                stores_products_dict[basket.store.get_store_name()] = products
+                purchaseReports[basket.get_Store().get_store_name()] = cur_purchase
+                stores_products_dict[basket.get_Store().get_store_name()] = products
                 overall_price += price
+            transaction_id = payment_service.pay(card_number, exp_month, exp_year, card_user_full_name, ccv,
+                                                 card_holder_id)
+            supply_id = supply_service.dispatch_supply(card_user_full_name, address, city, country, zipcode)
+            message_header = "Regular Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
+            for basket in self.get_baskets().values():  # purchase all the baskets
+                basket.purchaseBasket()
             if is_member:
-                transaction_history.addNewUserTransaction(self.username, stores_products_dict, overall_price)
-                MessageController().sendNotificationToUser(self.username, "Purchase Received", purchaseReports, datetime.now(), None)
-
+                transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
+                                                          stores_products_dict, overall_price)
+                message_controller.sendNotificationToUser(self.username, message_header, purchaseReports, datetime.now())
+            for purchase in purchaseReports:  # all the baskets
+                transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
+                                                           purchase.getStorename(), purchase.getProducts(), \
+                                                           purchase.getTotalBasketPayment())
+                message_controller.sendNotificationToStore(purchase.getStorename(), message_header, datetime.now())
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {
-            "purchaseReports": purchaseReports,
-            "overallPrice": overall_price}
+                "message": "Regular Purchase was successful",
+                "transaction_id": transaction_id,
+                "supply_id": supply_id,
+                "purchaseReports": purchaseReports,
+                "overallPrice": overall_price
+            }
         else:
-            raise Exception("There is a problem with the items quantity or existance in the store")
+            raise Exception("There is a problem with the items quantity or existence in the store")
 
-    def purchaseConfirmedBid(self, store_name, bid_id, card_number, card_user_name, card_user_id, card_date,
-                             back_number, lock):
+    def purchaseConfirmedBid(self, bid_id, store_name, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id
+                             , address, city, country, zipcode):
         payment_service = PaymentService()
+        supply_service = SupplyService()
         transaction_history = TransactionHistory()
+        message_controller = MessageController()
         bid: Bid = self.getBid(store_name, bid_id)
         if bid.get_status() == 1:
             # async with lock:
             answer = self.checkItemInCartForBid(bid)
+            try:
+                payment_service.perform_handshake()
+                supply_service.perform_handshake()
+            except Exception as e:
+                raise Exception(e)
             if answer:
+                exp_month, exp_year = card_date.split("/")
                 basket: Basket = self.baskets.get(store_name)
                 store: Store = basket.get_Store()
                 product: Product = store.get_products()[bid.get_product()]
-                item_name = product.name
-                tuple_for_history = (item_name, bid.get_quantity())
-                payment_service.pay(bid.get_storename(), card_number, card_user_name, card_user_id, card_date,
-                                    back_number, bid.get_offer())
+                single_product_dict = {store_name : product}
+                transaction_id = payment_service.pay(card_number, exp_month, exp_year, card_user_full_name, ccv,
+                                                     card_holder_id)
+                supply_id = supply_service.dispatch_supply(card_user_full_name, address, city, country, zipcode)
                 store.purchaseBid(bid_id)
-                transaction_history.addNewStoreTransaction(self.username, bid.get_storename(), tuple_for_history,
-                                                           bid.get_offer())
-
-                dict_for_history = TypedDict(str, tuple)
-                dict_for_history[store_name] = tuple_for_history
-                transaction_history.addNewUserTransaction(self.username, dict_for_history, bid.get_offer())
+                message_header = "Bid Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
+                transaction_history.addNewUserTransaction(transaction_id, supply_id, user_name, single_product_dict, bid.get_offer())
+                transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,
+                                                           single_product_dict, bid.get_offer())
+                message_controller.sendNotificationToUser(user_name, message_header, single_product_dict, datetime.now())
+                message_controller.sendNotificationToStore(store_name, message_header, single_product_dict, datetime.now())
                 self.clearBidFromBasket(store_name, bid_id)
+                return {
+                    "message": "Bid Purchase was successful",
+                    "transaction_id": transaction_id,
+                    "supply_id": supply_id,
+                    "single_product_dict": single_product_dict,
+                    "price": bid.get_offer()
+                }
             else:
                 raise Exception("there was a problem with the Bid or the quantity in the store")
         else:
@@ -198,6 +227,7 @@ class Cart:
 
     def setBaskets(self, baskets):
         self.baskets = baskets
+
     # =======================JSON=======================#
 
     def toJson(self):

@@ -1,4 +1,6 @@
-import re
+import requests
+
+
 class PaymentService:
 
     _instance = None
@@ -9,31 +11,59 @@ class PaymentService:
             # Add any initialization code here
         return cls._instance
 
-    def validate_credit_card(self, card_number, expiration_date, cvv, cardholder_id):
-        # Validate card number
-        if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
-            raise Exception("credit card number isn't valid")
 
-        # Validate expiration date
-        pattern = r"\d{2}/\d{2}"
-        if not re.match(pattern, expiration_date):
-            raise Exception("card date isn't valid")
+    def perform_handshake(self):
+        post_data = {
+            "action_type": "handshake"
+        }
 
-        # Validate CVV
-        if not cvv.isdigit() or len(cvv) != 3:
-            raise Exception("CVV isn't valid")
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
 
-        # Validate cardholder ID
-        if not cardholder_id.isdigit() or len(cardholder_id) != 9:
-            raise Exception("card holder ID isn't valid")
+        if response.status_code == 200:
+            return True
+        else:
+            raise Exception("Handshake request with PaymentService failed")
 
-        # All checks passed, return True for a valid credit card
-        return True
+    def pay(self, card_number, month, year, holder, ccv, id):
+        # if price > 20000:
+        #     raise Exception("Price too high, please contact your credit card company")
 
-    def pay(self, store, card_number, card_user_name, card_user_ID, card_date, back_number, price): #TODO: Pass all the arguments
-        if price > 20000:
-            raise Exception("price too high, please contect your credit card company")
-        return True
+        post_data = {
+            "action_type": "pay",
+            "card_number": card_number,
+            "month": month,
+            "year": year,
+            "holder": holder,
+            "ccv": ccv,
+            "id": id
+        }
 
-    def call(self):
-        return True
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            transaction_id = int(response.text)
+            if transaction_id == -1:
+                raise Exception("Payment transaction failed")
+            else:
+                return transaction_id
+        else:
+            raise Exception("Payment request failed")
+
+
+    def cancel_pay(self, transaction_id):
+        post_data = {
+            "action_type": "cancel_pay",
+            "transaction_id": str(transaction_id)
+        }
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            cancellation_result = int(response.text)
+            if cancellation_result == -1:
+                raise Exception("Payment cancellation failed")
+            else:
+                return True
+        else:
+            raise Exception("Payment cancellation request failed")

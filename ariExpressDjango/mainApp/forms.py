@@ -62,7 +62,7 @@ class CheckoutForm(forms.Form):
     address = forms.CharField(max_length=100)
     country = forms.CharField(max_length=100)
     state = forms.CharField(max_length=100)
-    #zip = forms.CharField(max_length=100)
+    #zipcode = forms.CharField(max_length=100)
     cc_name = forms.CharField(max_length=100)
     cc_number = forms.CharField(max_length=16)
     cc_id = forms.CharField(max_length=9)
