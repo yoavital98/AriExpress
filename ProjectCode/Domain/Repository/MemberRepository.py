@@ -12,13 +12,22 @@ class MemberRepository(Repository):
         self.model = MemberModel
 
     def __getitem__(self, user_name):
-        return self.get(user_name)
+        try:
+            return self.get(user_name)
+        except Exception as e:
+            raise Exception("MemberRepository: __getitem__ failed: " + str(e))
 
     def __setitem__(self, key, value): #key is meaningless
-        return self.add(value)
+        try:
+            return self.add(value)
+        except Exception as e:
+            raise Exception("MemberRepository: __setitem__ failed: " + str(e))
 
     def __delitem__(self, key):
-        return self.remove(key)
+        try:
+            return self.remove(key)
+        except Exception as e:
+            raise Exception("MemberRepository: __delitem__ failed: " + str(e))
 
     def __contains__(self, item):
          pass
@@ -40,4 +49,12 @@ class MemberRepository(Repository):
         return member
 
     def remove(self, pk):
-        pass
+        user_entry = MemberModel.get(MemberModel.user_name == pk)
+        user_entry.cart.delete_instance()
+        user_entry.delete_instance()
+
+    def keys(self):
+        return [member.user_name for member in MemberModel.select()]
+
+    def values(self):
+        return self.get()

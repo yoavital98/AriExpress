@@ -54,6 +54,12 @@ class AccessState(ABC):
         else:
             self.permissions[name] = func
 
+    #permission is a list of string permissions
+    def setPermissions(self, permissions):
+        for permission in permissions:
+            self.addPermission(permission)
+
+
     def get_permissions(self):
         return self.permissions
     

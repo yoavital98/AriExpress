@@ -20,6 +20,7 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
+from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
 
 
 class StoreFacade:
@@ -28,7 +29,6 @@ class StoreFacade:
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = TypedDict(str, Admin)  # dict of admins
         self.members = TypedDict(str, Member)  # dict of members
-        self.__members = MemberRepository()
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
@@ -45,6 +45,10 @@ class StoreFacade:
         self.admins["admin"] = first_admin
         # load data
         self.loadData()
+
+        # REPOSITORY FIELDS - TO BE REPLACED
+        self.members_test = MemberRepository()
+        self.stores_test = StoreRepository()
 
     # ------  ORM Tests  ------ #
 
