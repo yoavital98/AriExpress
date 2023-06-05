@@ -48,7 +48,7 @@
     "addToBasket": {"args": ["bbb", "store123", "3", "1"]}
   },
   {
-    "logOut": {"args": ["aaa"]}
+    "logOut": {"args": ["bbb"]}
   }
 ]
 
