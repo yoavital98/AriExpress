@@ -23,14 +23,17 @@ class RuleComp(LogicComp):
         self.quantity = quantity
 
     def checkIfSatisfy(self, product, basket, total_price):
-        if self.category != "" and self.category not in product.get_categories():
-            return False
-        if self.product_id != -1 and self.product_id != product.get_product_id():
-            return False
+        # if self.category != "" and self.category not in product.get_categories():
+        #     return False
+        # if self.product_id != -1 and self.product_id != product.get_product_id():
+        #     return False
         if self.rule_type == "basket_total_price":
             return self.basketTotalPrice(total_price)
         elif self.rule_type == "amount_of_product":
-            return self.amoutOfProduct(basket[product.get_product_id()])
+            for product_id, product_quantity in basket.items():
+                if int(product_id) == self.product_id and self.amoutOfProduct(product_quantity):
+                    return True
+            return False
 
     #TODO: add base rules
 

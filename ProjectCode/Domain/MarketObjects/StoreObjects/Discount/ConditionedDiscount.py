@@ -30,6 +30,10 @@ class ConditionedDiscount(Policy):
 
     #returns price for a product after discount
     def calculate(self, product, basket, total_price):
+        if self.level == "Category" and self.level_name not in product.get_categories():
+            return 0
+        elif self.level == "Product" and self.level_name != product.get_product_id():
+            return 0
         if self.logic_comp.checkIfSatisfy(product, basket, total_price):
             return self.percent
         else:
