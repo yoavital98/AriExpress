@@ -36,7 +36,7 @@ class Store:
         self.__bids_requests = TypedDict(str, List[Bid])
         self.__auctions = TypedDict(int, Auction)
         self.__lotteries = TypedDict(int, Lottery)
-        self.__discount_policy = DiscountPolicy()
+        self.__discount_policy = DiscountPolicy(store_name)
         self.__purchase_policy = PurchasePolicies()
 
         #REPOSITORY FIELDS --- TO BE REPLACED
@@ -493,6 +493,9 @@ class Store:
 
     def get_lottery(self):
         return self.__lotteries
+
+    def get_discount_policy(self):
+        return self.__discount_policy
 
 
     # =======================JSON=======================#

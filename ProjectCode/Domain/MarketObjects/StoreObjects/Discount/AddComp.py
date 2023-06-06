@@ -4,8 +4,9 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount impor
 
 
 class AddComp(Policy):
-    def __init__(self, discount_dict):
+    def __init__(self, discount_dict, discount_id=-1):
         super().__init__("", "")
+        self.discount_id = discount_id
         self.discount_dict = discount_dict
         self.childs = list()
 
@@ -40,3 +41,23 @@ class AddComp(Policy):
             new_discount.parse()
             self.addChild(new_discount)
 
+    def get_discount_id(self):
+        return self.discount_id
+
+    def get_discount_type(self):
+        return "Add"
+
+    def get_percent(self):
+        return 0
+
+    def get_level(self):
+        return self.level
+
+    def get_level_name(self):
+        return self.level_name
+
+    def get_rule(self):
+        return {}
+
+    def get_discount_dict(self):
+        return self.discount_dict
