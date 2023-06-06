@@ -53,27 +53,15 @@ class StoreFacade:
         password_validator = PasswordValidationService()
         entrance_id = str(entrance_id)
         guest: Guest = self.onlineGuests.get(entrance_id)
-        print((self.onlineGuests.items()))
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
-            print(guest)
-            print("ok1")
             existing_member: Member = self.members[user_name]
-            print("ok2")
             if password_validator.ConfirmPassword(password, existing_member.get_password()):
-                print("ok3")
                 existing_member.logInAsMember()
-                print("ok4")
-                print(existing_member.entrance_id)
-                print("kkkkkk")
-                print(type(guest.get_entrance_id()))
                 existing_member.setEntranceId(guest.entrance_id)  # it's the same entrance id
-                print("ok5")
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
-                print("ok6")
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
-                print("ok7")
                 return existing_member
                 # return DataMember(existing_member)
             else:

@@ -32,45 +32,55 @@ def mainpage(request):
 
 def login(request):
     msg = ""
-    showMsg = False
+    # login form is sent
     if request.method == 'POST':
-        if request.user.is_authenticated and not request.session['guest']:
-            msg="A User is already logged in"
-            form = None
-        else:
-            service = Service()
+        if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
+            messages.success(request, ("Error: A User is already logged in"))
+            return render(request, 'login.html', {'form': loginForm()})
+        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in                                                       # 
+            # service = Service()
             form = loginForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
-                if request.session['guest']:
-                    res = service.logIn(username, password)
-                    msg = res.getStatus()
-                    if res.getStatus() == True:
-                        if not request.session['guest']:                                    # regular login
-                            user = authenticate(request, username=username, password=password)
-                            msg="Logged in successfully"
-                            loginFunc(request, user)
-                            request.session['guest'] = 0
-                            return redirect('mainApp:mainpage')
-                        else:                                                               # guest to member login
-                            loggedin_username = guestToUser(request, username, password)
-                            if loggedin_username: return loggedin_username
-                            else: return False                                              # shouldn't happen
-                        
-                else:
-                    guestToUser(request, username, password)
+                check = guestToUser(request, username, password)
+                if check:
+                    print("ok100")
+                    request.session['guest'] = 0
+                    messages.success(request, (f"{check} Logged in successfully"))
                     return redirect('mainApp:mainpage')
+                else:
+                    print("ok101")
+                    request.session['guest'] = 1
+                    messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
+                    return redirect('mainApp:login')
 
-    else:
-        form = loginForm()
-        msg = ""
-        showMsg = True
+                # if request.session['guest']:
+                #     res = service.logIn(username, password)
+                #     if res.getStatus() == True:
+                #         if not request.session['guest']:                                        # regular login
+                #             user = authenticate(request, username=username, password=password)
+                #             loginFunc(request, user)
+                #             request.session['guest'] = 0
+                #             messages.success(request, (f"{username} Logged in successfully"))
+                #             return redirect('mainApp:mainpage')
+                #         else:                                                                   # guest to member login
+                #             loggedin_username = guestToUser(request, username, password)
+                #             if loggedin_username: return loggedin_username
+                #             else: return False                                                  # shouldn't happen
+                        
+                # else:
+                #     guestToUser(request, username, password)
+                #     return redirect('mainApp:mainpage')
+            else:
+                messages.success(request, ("Error: login form is not valid"))    
+        else:
+            messages.success(request, ("Error: something went wrong with the login"))
 
 
-    return render(request, 'login.html', {'form': form,
-                                          'msg': msg,
-                                          'showMsg': showMsg})
+    # render the login page
+    form = loginForm()
+    return render(request, 'login.html', {'form': form})
 
 
 
@@ -116,7 +126,7 @@ def logout(request):
         actionRes = service.logOut(request.user.username)
         if actionRes.getStatus():
             logoutFunc(request)
-            request.session['guest'] = 0
+            request.session['guest'] = 1
             return redirect('mainApp:mainpage')
         else:
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
@@ -161,9 +171,9 @@ def store_specific(request, storename):
         permissions = ast.literal_eval(str(permissions))
     else: permissions = {}
 
-    print(permissions)
-    print(storename)
-    print(username)
+    # print(permissions)
+    # print(storename)
+    # print(username)
 
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
@@ -826,10 +836,12 @@ def guestToUser(request, username, password):
             loginFunc(request, user)                                                # 3.
             guestuser = User.objects.get(username=guestusername)
             guestuser.delete()                                                      # 4.
-            request.session['guest'] = 1
+            request.session['guest'] = 0
             print(f"guest: {request.session['guest']}")
-            ret = ast.literal_eval(str(actionRes.getReturnValue()))
-            return ret['entrance_id']
+            print(f"new username: {request.user.username}")
+            return request.user.username
+            # ret = ast.literal_eval(str(actionRes.getReturnValue()))
+            # return ret['entrance_id']
 
     else: return False
 
