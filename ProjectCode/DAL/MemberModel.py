@@ -4,6 +4,7 @@ from peewee import *
 # from ProjectCode.DAL.AuctionModel import AuctionModel
 # from ProjectCode.DAL.LotteryModel import LotteryModel
 
+
 class MemberModel(Model):
 
     class Meta:

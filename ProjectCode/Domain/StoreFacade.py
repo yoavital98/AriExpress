@@ -20,7 +20,8 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
-
+from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
+from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
 
@@ -60,6 +61,8 @@ class StoreFacade:
         #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
         self.members_test = MemberRepository()
         self.stores_test = StoreRepository()
+        self.admins_test = AdminRepository()
+        self.onlineGuests_test = GuestRepository()
 
 
     # ------  System  ------ #

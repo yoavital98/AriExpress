@@ -38,9 +38,11 @@ class Member(User):
     def removeFromBasket(self, store_name, product_id):
         return super().removeFromBasket(store_name, product_id)
 
-    def edit_Product_Quantity(self, storename, product_id, quantity):
-        return super().edit_Product_Quantity(storename, product_id, quantity)
+    def edit_Product_Quantity(self, store_name, product_id, quantity):
+        return super().edit_Product_Quantity(store_name, product_id, quantity)
 
+    def setCart(self, cart: Cart):
+        super().setCart(cart)
     # -------------------------------------------------------------------------------
 
     def logInAsMember(self):

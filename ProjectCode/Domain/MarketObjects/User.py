@@ -29,3 +29,6 @@ class User(ABC):
 
     def get_entrance_id(self):
         return self.entrance_id
+
+    def setCart(self, cart :Cart):
+        self.cart = cart

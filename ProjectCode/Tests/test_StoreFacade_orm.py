@@ -4,7 +4,9 @@ from peewee import SqliteDatabase
 
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
+from ProjectCode.DAL.AdminModel import AdminModel
 from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.GuestModel import GuestModel
 #from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
@@ -15,6 +17,8 @@ from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
+from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
+from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
@@ -40,8 +44,8 @@ class MyTestCase(unittest.TestCase):
         db = SqliteDatabase('database.db')
         db.connect()
         #StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel])
-        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel])
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, AdminModel, GuestModel])
+        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, AdminModel, GuestModel])
 
     # ------ AccessRepository Tests ------
 
@@ -156,6 +160,60 @@ class MyTestCase(unittest.TestCase):
         print(self.member1.cart.basket_test[None])
 
         del [self.member1.cart.basket_test["Store1"]]
+
+    # ------ AdminRepository Tests ------
+    def test_Orm_create_and_get_admin(self):
+        admin: Admin = Admin("Ari", "password", "a@a")
+        admin2: Admin = Admin("Rubs", "password", "rubbbs@gmail.com")# create and get
+        self.store_facade.admins_test[admin.get_username()] = admin
+        print(self.store_facade.admins_test.get(admin.get_username()).get_username())
+        print(self.store_facade.admins_test.get(admin.get_username()).get_password())
+        print(self.store_facade.admins_test.get(admin.get_username()).get_email())
+        self.store_facade.admins_test[admin2.get_username()] = admin2
+        print(self.store_facade.admins_test.get(admin2.get_username()).get_username())
+        print(self.store_facade.admins_test.get(admin2.get_username()).get_password())
+        print(self.store_facade.admins_test.get(admin2.get_username()).get_email())
+
+    def test_Orm_del_and_contains_admin(self):
+        admin: Admin = Admin("Ari", "password", "a@a")
+        admin2: Admin = Admin("Rubs", "password", "rubbbs@gmail.com")  # create and get
+        self.store_facade.admins_test[admin.get_username()] = admin
+        self.store_facade.admins_test[admin2.get_username()] = admin2
+        self.store_facade.admins_test.__delitem__("Ari")
+        print(self.store_facade.admins_test.__contains__("Ari"))
+        print(self.store_facade.admins_test.__contains__("Rubs"))
+
+    def test_Orm_keys_admin(self):
+        admin: Admin = Admin("Ari", "password", "a@a")
+        admin2: Admin = Admin("Rubs", "password", "rubbbs@gmail.com")  # create and get
+        self.store_facade.admins_test[admin.get_username()] = admin
+        self.store_facade.admins_test[admin2.get_username()] = admin2
+        print(self.store_facade.admins_test.keys())
+
+    # ------ GuestRepository Tests ------
+    def test_Orm_createAndGet_guest(self):
+        guest: Guest = Guest("0")
+        guest2: Guest = Guest("1")
+        self.store_facade.onlineGuests_test[guest.get_entrance_id()] = guest
+        self.store_facade.onlineGuests_test[guest2.get_entrance_id()] = guest2
+        print(self.store_facade.onlineGuests_test.get("0").get_entrance_id())
+        print(self.store_facade.onlineGuests_test.get("1").get_entrance_id())
+
+    def test_Orm_del_and_contains_admin(self):
+        guest: Guest = Guest("0")
+        guest2: Guest = Guest("1")
+        self.store_facade.onlineGuests_test[guest.get_entrance_id()] = guest
+        self.store_facade.onlineGuests_test[guest2.get_entrance_id()] = guest2
+        self.store_facade.onlineGuests_test.__delitem__("0")
+        print(self.store_facade.onlineGuests_test.__contains__("0"))
+        print(self.store_facade.onlineGuests_test.__contains__("1"))
+    def test_Orm_keys_guest(self):
+        guest: Guest = Guest("0")
+        guest2: Guest = Guest("1")
+        self.store_facade.onlineGuests_test[guest.get_entrance_id()] = guest
+        self.store_facade.onlineGuests_test[guest2.get_entrance_id()] = guest2
+        print(self.store_facade.onlineGuests_test.keys())
+
 
 if __name__ == '__main__':
     unittest.main()
