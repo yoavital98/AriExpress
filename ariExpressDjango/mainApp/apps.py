@@ -74,6 +74,7 @@ class MainappConfig(AppConfig):
         #         }
         #     }
         
+        # service.logIn("bbb", "asdf1233")
 
         # print(service.addDiscount("store123", "aaa", "Simple", 50, "Product", "1", {}, {}).getStatus())
         # print(service.addDiscount("store123", "aaa", "Conditioned", 20, "Category", "fruit", rules, {}).getStatus())

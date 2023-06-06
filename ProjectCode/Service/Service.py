@@ -98,6 +98,16 @@ class Service:
         except Exception as e:
             logging.error(f"addAdmin Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
+        
+    def checkIfAdmin(self, username):
+        try:
+            admin = self.store_facade.getAdmin(username)
+            logging.info(
+                f"Admin has been found successfully, {username} is an admin")
+            return Response(admin.toJson(), True)
+        except Exception as e:
+            logging.error(f"checkIfAdmin Error: {str(e)}. Checking username: '{username}'")
+            return Response(e, False)
 
     def removePermissionFreeMember(self, username, memberName):
         try:
@@ -177,13 +187,21 @@ class Service:
         except Exception as e:
             logging.error(f"logIn Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
+        
+    def logInFromGuestToMember(self, entrance_id, username, password):
+        try:
+            member = self.store_facade.logInFromGuestToMember(entrance_id, username, password)
+            logging.info("Logged in successfully. By username: " + username + ".")
+            return Response(member.toJson(), True)
+        except Exception as e:
+            logging.error(f"logInFromGuestToMember Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
 
     def logOut(self, username):
         try:
             guest = self.store_facade.logOut(username)
-            data = {'username': username, 'entrance_id': guest.getEntranceId()}
-            logging.info(f"Logged out successfully. By username: " + username + ". Became a guest with id: " + str(
-                guest.getEntranceId()) + ".")
+            data = {'username': username, 'entrance_id': guest.get_entrance_id()}
+            logging.info(f"Logged out successfully. By username: " + username + ". Became a guest with id: " + str(guest.get_entrance_id()) + ".")
             return Response(json.dumps(data), True)
         except Exception as e:
             logging.error(f"logOut Error: {str(e)}. By username: '{username}'")
