@@ -34,9 +34,19 @@ function displayNotification(notification) {
 
     // Access the notification-amount badge element
     var badgeElement = document.querySelector('.notification-amount');
+    
+    var badgeText = badgeElement.textContent;
 
-    // Update the pending amount number in the badge
-    badgeElement.textContent = notification.unread_messages;
+    // Extract the number from the badge text
+    var regex = /(\d+)/;
+    var match = regex.exec(badgeText);
+    var currentAmount = match ? parseInt(match[0]) : 0;
+
+    // Calculate the new pending amount by adding the current amount and the unread messages from the notification
+    var newAmount = currentAmount + notification.unread_messages;
+
+    // Update the badge text content with the new amount
+    badgeElement.textContent = newAmount.toString();
 }
 
 // Function to send a message (for testing purposes)

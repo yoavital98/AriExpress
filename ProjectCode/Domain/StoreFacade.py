@@ -1,8 +1,8 @@
 import json
 from datetime import datetime
 
+from ProjectCode.DAL.SystemModel import SystemModel
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
-from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
@@ -20,7 +20,8 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
-
+from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
+from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
 
@@ -41,6 +42,7 @@ class StoreFacade:
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
+
         self.bid_id_counter = 0  # bid counter
         # Admin
         first_admin: Admin = Admin("admin", "12341234", "a@a.com")
@@ -49,21 +51,18 @@ class StoreFacade:
         # load data
         self.loadData()
 
+        # handshake with supply service and payment service
+        self.supply_service = SupplyService()
+        self.payment_service = PaymentService()
+        self.supply_service.perform_handshake()
+        self.payment_service.perform_handshake()
+
         # REPOSITORY FIELDS - TO BE REPLACED
+        #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
         self.members_test = MemberRepository()
         self.stores_test = StoreRepository()
-
-    # ------  ORM Tests  ------ #
-
-    def add_member(self, member):
-        self.__members[member.get_username()] = member
-
-    def get_member(self, username):
-        return self.__members[username]
-
-    def get_all_members(self):
-        return self.__members[None]
-
+        self.admins_test = AdminRepository()
+        self.onlineGuests_test = GuestRepository()
 
 
     # ------  System  ------ #
@@ -79,6 +78,7 @@ class StoreFacade:
         guest: Guest = self.onlineGuests.get(str(entrance_id))
         if guest is None:
             raise Exception("Entrance id not found")
+
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
             existing_member: Member = self.members[user_name]
@@ -203,11 +203,15 @@ class StoreFacade:
 
     # logout a member
     def logOut(self, username):
+        if self.admins.keys().__contains__(username):
+            self.logOutAsAdmin(username)
+            guest: Guest = self.returnToGuest(str(self.nextEntranceID))  # returns as a guest
+            self.nextEntranceID += 1
+            return guest
         if self.members.keys().__contains__(username):
             existing_member: Member = self.members[username]
             del self.online_members[username]  # deletes the user from the online users
             guest: Guest = self.returnToGuest(str(existing_member.get_entrance_id()))  # returns as a guest
-
             return guest
         else:
             raise Exception("Logout is not an option")
@@ -282,16 +286,15 @@ class StoreFacade:
 
     # guest and member
     # getting all the items in the cart and makes a purchase, adding all the items to the Member history and the store's
-    def purchaseCart(self, user_name, card_number, card_user_name, card_user_id, card_date, back_number, address):
+    def purchaseCart(self, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode):
         user: User = self.getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
-                                                    address, True)
+                return user.get_cart().PurchaseCart(card_number, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
         else:
             with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(card_number, card_user_name, card_user_id, card_date, back_number,
-                                                    address, False)
+                return user.get_cart().PurchaseCart(card_number, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
+
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
     def placeBid(self, username, store_name, offer, product_id, quantity):
@@ -311,11 +314,11 @@ class StoreFacade:
         # data_bids_list = [DataBid(bid) for bid in bids_set]
         # return data_bids_list
 
-    def purchaseConfirmedBid(self, username, store_name, bid_id, card_number, card_user_name, card_user_id, card_date,
-                             back_number):
+    def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+                             , address, city, country, zipcode):
         existing_member: Member = self.getOnlineMemberOnly(username)
-        existing_member.get_cart().purchaseConfirmedBid(store_name, bid_id, card_number, card_user_name, card_user_id,
-                                                        card_date, back_number, self.purchase_lock)
+        existing_member.get_cart().purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+                             , address, city, country, zipcode)
 
     def placeOfferInAuction(self, username, storename, auction_id, offer):
         cur_member: Member = self.getOnlineMemberOnly(username)
@@ -701,9 +704,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        MessageController().sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now(), None)
+        MessageController().sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now(), None)
+            MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now())
         return cur_store
 
     def getStaffInfo(self, username, store_name):
@@ -869,12 +872,10 @@ class StoreFacade:
         return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
 
     def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
-        # with purchase form AliExpress to user
         founder = self.getStoreFounder(store_name)
         return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
 
     def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
-        # with purchase form AliExpress to store's founder
         founder = self.getStoreFounder(storeID)
         return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
 
@@ -889,14 +890,14 @@ class StoreFacade:
 
     # ==================  Notifications  ==================#
 
-    def sendNotificationToUser(self, receiverID, subject, content, creation_date, file):
+    def sendNotificationToUser(self, receiverID, subject, content, creation_date):
         # with purchase form AliExpress to user
-        return MessageController().send_notification(receiverID, subject, content, creation_date, file)
+        return MessageController().send_notification(receiverID, subject, content, creation_date)
 
-    def sendNotificationToStore(self, storeID, subject, content, creation_date, file):
+    def sendNotificationToStore(self, storeID, subject, content, creation_date):
         # with purchase form AliExpress to store's founder
         founder = self.getStoreFounder(storeID)
-        return MessageController().send_notification(founder, subject, content, creation_date, file)
+        return MessageController().send_notification(founder, subject, content, creation_date)
 
     def getAllNotificationsReceived(self, requesterID):
         return MessageController().get_notifications(requesterID)

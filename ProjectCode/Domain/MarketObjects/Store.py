@@ -36,7 +36,7 @@ class Store:
         self.__bids_requests = TypedDict(str, List[Bid])
         self.__auctions = TypedDict(int, Auction)
         self.__lotteries = TypedDict(int, Lottery)
-        self.__discount_policy = DiscountPolicy()
+        self.__discount_policy = DiscountPolicy(store_name)
         self.__purchase_policy = PurchasePolicies()
 
         #REPOSITORY FIELDS --- TO BE REPLACED
@@ -254,6 +254,25 @@ class Store:
                 product_list.append(prod)
         return product_list
 
+
+    def calculateBasketPrice(self, products_dict): #tup(product,qunaiity)
+        #need to add a user arguments so we will be able to check policies
+        new_product_dict = TypedDict(int, int) # (id,quantity)
+        for product_id, product_tuple in products_dict.items():
+            new_product_dict[product_id] = product_tuple[1]
+        overall_price = 0
+        price_after_discounts = 0
+        for product_id, product_quantity in new_product_dict.items():
+            cur_product = self.__products[product_id]
+            if cur_product is None:
+                raise Exception("No such product exists")
+            overall_price += cur_product.price * product_quantity
+
+        for product_id, product_quantity in new_product_dict.items():
+            cur_product: Product = self.__products[product_id]
+            price_after_discounts += product_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict,
+                                                                                          overall_price)
+        return price_after_discounts
 
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
@@ -474,6 +493,9 @@ class Store:
 
     def get_lottery(self):
         return self.__lotteries
+
+    def get_discount_policy(self):
+        return self.__discount_policy
 
 
     # =======================JSON=======================#

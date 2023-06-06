@@ -4,16 +4,21 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddCo
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
 from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
+from ProjectCode.Domain.Repository.DiscountRepository import DiscountRepository
 
 
 class DiscountPolicy:
 
     # IMPORTANT!!: only root discount have an ID
     # for example: child of Add discount wont have an ID
-    def __init__(self):
+    def __init__(self, store_name):
         self.discounts = TypedDict(int, Policy)  #(discountId, disType)
         self.discount_id = 0
+        self.store_name = store_name
 
+        # ORM FIRLEDS --- TO BE REPLACED
+
+        self.discounts_test = DiscountRepository(store_name)
     """
         kwargs := 
             discount_type := Conditioned | Simple | Coupon | Max | Add

@@ -4,6 +4,7 @@ from django.forms import ModelForm
 from .models import Member , UserMessage
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class loginForm(forms.Form):
     username = forms.CharField(max_length=100)
@@ -25,11 +26,14 @@ class NominateUserForm(ModelForm):
     field = forms.ChoiceField(choices=CHOICES)
 
 
-class UserMessageform(ModelForm):
+class UserMessageform(forms.Form):
+    sender = forms.CharField(max_length=50)
     file = forms.FileField(required=False)
-    class Meta:
-        model = UserMessage
-        fields = ['receiver', 'subject', 'content','file']
+    receiver = forms.CharField(max_length=100)
+    subject = forms.CharField(max_length=100)
+    content = forms.CharField(max_length=1000)
+    creation_date = forms.DateTimeField(required=False)
+    status = forms.CharField(max_length=10)
 
 
 class NewProductForm(forms.Form):
@@ -61,8 +65,8 @@ class CheckoutForm(forms.Form):
     #email = forms.CharField(max_length=100)
     address = forms.CharField(max_length=100)
     country = forms.CharField(max_length=100)
-    state = forms.CharField(max_length=100)
-    #zip = forms.CharField(max_length=100)
+    city = forms.CharField(max_length=100)
+    zip = forms.CharField(max_length=100)
     cc_name = forms.CharField(max_length=100)
     cc_number = forms.CharField(max_length=16)
     cc_id = forms.CharField(max_length=9)

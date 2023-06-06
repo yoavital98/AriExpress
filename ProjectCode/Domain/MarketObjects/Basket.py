@@ -82,6 +82,9 @@ class Basket:
     def purchaseBasket(self):
         return self.store.purchaseBasket(self.products)
 
+    def calculateBasketPrice(self):
+        return self.store.calculateBasketPrice(self.products)
+
     def clearProducts(self):
         self.products.clear()
 

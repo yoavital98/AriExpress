@@ -2,6 +2,7 @@
 
 from ProjectCode.DAL.BasketModel import BasketModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
+from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.Repository.Repository import Repository
@@ -44,44 +45,49 @@ class ProductBasketRepository(Repository):
             products = []
             query = self.model.select()
             for product_basket_entry in query:
-                product_entry = product_basket_entry.product
-                product: Product = Product(product_entry.product_id,
-                                           product_entry.product_name,
-                                           product_entry.quantity,
-                                           product_entry.price,
-                                           product_entry.categories)
-                quantity = product_basket_entry.quantity
-                price = product_basket_entry.price
-                products.append((product, quantity, price))
+                product_basket = self.__createDomainObject(product_basket_entry)
+                products.append(product_basket)
             return products
         else:
             product_basket_entry = self.model.get(self.model.product_id == pk)
-            product_entry = product_basket_entry.product
-            product: Product = Product(product_entry.product_id,
-                                       product_entry.product_name,
-                                       product_entry.quantity,
-                                       product_entry.price,
-                                       product_entry.categories)
-            quantity = product_basket_entry.quantity
-            price = product_basket_entry.price
-            to_return = (product, quantity, price)
+            to_return = self.__createDomainObject(product_basket_entry)
             return to_return
+
+    def __createDomainObject(self, product_basket_entry):
+        product_entry = product_basket_entry.product_model
+        product: Product = Product(product_entry.product_id,
+                                   product_entry.name,
+                                   product_entry.quantity,
+                                   product_entry.price,
+                                   product_entry.categories)
+        quantity = product_basket_entry.quantity
+        price = product_basket_entry.price
+        to_return = (product, quantity, price)
+        return to_return
 
     def add(self, product_data):
         store_entry = StoreModel.get_by_id(self.store_name)
-        basket_query = self.model.get(BasketModel.user_name == self.user_name, BasketModel.store == store_entry)
+        basket_query = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == store_entry)
         product, quantity, price = product_data
-        product_query = store_entry.products.get(product_id=product.product_id)
-        self.model.create(product_id=product.get_product_id(),
-                          quantity=quantity,
-                          price=price,
-                          basket=basket_query,
-                          product=product_query)
+        product_basket_entry = self.model.get_or_none(product.get_product_id())
+        if product_basket_entry is not None:
+            #update
+            product_basket_entry.quantity = quantity
+            product_basket_entry.price = price
+            product_basket_entry.save()
+        else:
+            #create
+            product_query = ProductModel.get(ProductModel.product_id == product.get_product_id(), ProductModel.store == store_entry)
+            self.model.create(product_id=product.get_product_id(),
+                              quantity=quantity,
+                              price=price,
+                              basket=basket_query,
+                              product_model=product_query)
         return product_data
 
     def remove(self, pk):
-        cart_entry = self.model.get(product_id=pk)
-        cart_entry.delete_instance()
+        product_basket_entry = self.model.get(product_id=pk)
+        product_basket_entry.delete_instance()
         return True
 
 

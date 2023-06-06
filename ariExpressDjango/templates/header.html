@@ -54,7 +54,7 @@
                                 <li><a class="dropdown-item" href="#">Something else here</a></li>
                             </ul>
                         </li>
-                        {% if user.is_authenticated %}
+                        {% if request.session.guest is 0 or user.is_superuser %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
                         </li>
@@ -63,7 +63,8 @@
                                 <i class="fas fa-bell"></i><span class="badge badge-pill badge-warning notification-amount" name="notification-amount"></span>
                             </a>
                         </li>
-                        {% else %}
+                        {% endif %}
+                        {% if request.session.guest is 1 %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:login' %}">Login</a>
                         </li>

@@ -20,6 +20,7 @@ from django.contrib import messages # for displaying messages
 from django.core.paginator import Paginator # for pagination
 from datetime import datetime #used to get total msg per day
 from django.views.decorators.cache import cache_control # for disabling cache
+from django.utils import timezone
 
 
 
@@ -27,87 +28,131 @@ def startpage(request):
     return render(request, "startpage.html")
 
 def mainpage(request):
+    createGuestIfNeeded(request)
     return render(request, 'mainpage.html')
 
 def login(request):
-    # service.logIn()
     msg = ""
-    showMsg = False
+    # login form is sent
     if request.method == 'POST':
-        if request.user.is_authenticated:
-            msg="A User is already logged in"
-            form = None
-        else:
-            service = Service()
+        if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
+            messages.success(request, ("Error: A User is already logged in"))
+            return render(request, 'login.html', {'form': loginForm()})
+        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in    
+            # service = Service()
             form = loginForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
-                res = service.logIn(username, password)
-                msg = res.getStatus()
-                if res.getStatus() == True:
-                    user = authenticate(request, username=username, password=password)
-                    msg="Logged in successfully"
-                    loginFunc(request, user)
-                    return redirect('mainApp:mainpage')
-    else:
-        form = loginForm()
-        msg = ""
-        showMsg = True
+                if Service().checkIfAdmin(username).getStatus():
+                    actionRes = Service().logIn(username, password)
+                    if actionRes.getStatus():
+                        user = authenticate(request, username=username, password=password)
+                        loginFunc(request, user)
+                        request.session['guest'] = 0
+                        messages.success(request, (f"{username} Logged in successfully"))
+                        return redirect('mainApp:mainpage')
+                    else:
+                        request.session['guest'] = 1
+                        messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                        return redirect('mainApp:login')
+                else: 
+                    check = guestToUser(request, username, password)
+                    if check:
+                        request.session['guest'] = 0
+                        messages.success(request, (f"{check} Logged in successfully"))
+                        return redirect('mainApp:mainpage')
+                    else:
+                        request.session['guest'] = 1
+                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
+                        return redirect('mainApp:login')
+
+                # if request.session['guest']:
+                #     res = service.logIn(username, password)
+                #     if res.getStatus() == True:
+                #         if not request.session['guest']:                                        # regular login
+                #             user = authenticate(request, username=username, password=password)
+                #             loginFunc(request, user)
+                #             request.session['guest'] = 0
+                #             messages.success(request, (f"{username} Logged in successfully"))
+                #             return redirect('mainApp:mainpage')
+                #         else:                                                                   # guest to member login
+                #             loggedin_username = guestToUser(request, username, password)
+                #             if loggedin_username: return loggedin_username
+                #             else: return False                                                  # shouldn't happen
+                        
+                # else:
+                #     guestToUser(request, username, password)
+                #     return redirect('mainApp:mainpage')
+            else:
+                messages.success(request, ("Error: login form is not valid"))    
+        else:
+            messages.success(request, ("Error: something went wrong with the login"))
 
 
-    return render(request, 'login.html', {'form': form,
-                                          'msg': msg,
-                                          'showMsg': showMsg})
+    # render the login page
+    form = loginForm()
+    return render(request, 'login.html', {'form': form})
 
 
 
 def registerPage(request):
-    msg = ""
-    showMsg = False
+
     if request.method == 'POST':
         service = Service()
-        if request.user.is_authenticated:
-            msg="A User is already logged in"
-            form = None
-        else:
+        if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
+            messages.success(request, ("Error: A User is already logged in"))
+            return render(request, 'login.html', {'form': loginForm()})
+        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in                                                       # 
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password1']
                 email = form.cleaned_data['email']
                 res = service.register(username, password, email)
-                msg = res.getReturnValue()
-                if res.getStatus() == True:
+                if res.getStatus():
                     form.save()
-                    user = authenticate(request, username=username, password=password)
-                    loginFunc(request, user)
-                    return redirect('mainApp:mainpage')
+                    # user = authenticate(request, username=username, password=password)
+                    # loginFunc(request, user)
+                    request.session['guest'] = 1
+                    check = guestToUser(request, username, password)
+                    if check:
+                        request.session['guest'] = 0
+                        return redirect('mainApp:mainpage')
+                    else:
+                        User.objects.filter(username=username).delete()                         # remove the created user from django
+                        messages.success(request, (f"Error: register was successful but there is a login error"))   
+                else:
+                    messages.success(request, (f"Error: {res.getReturnValue()}"))   
+            else:
+                messages.success(request, ("Error: register form is not valid"))    
+        else:
+            messages.success(request, ("Error: something went wrong with the register"))
 
-
-    else:
-        form = CreateMemberForm()
-        msg = ""
-        showMsg = True
-
-
-    return render(request, 'register.html', {'form': form,
-                                          'msg': msg,
-                                          'showMsg': showMsg})
+    # render the register page
+    form = CreateMemberForm()
+    return render(request, 'register.html', {'form': form})
 
 
 def logout(request):
-    msg = ""
-    showMsg = False
-    # if not request.user.is_authenticated:
-    #     msg="User isn't logged in"
-    #     form = None
-    # service = Service()
-    # res = service.logOut(username=request.user.username)
-    # msg = res.getReturnValue()
-    # if res.getStatus() == True:
-    logoutFunc(request)
-    return redirect('mainApp:mainpage')
+    # if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
+    if request.user.is_authenticated and not request.session['guest']:
+        service = Service()
+        actionRes = service.logOut(request.user.username)
+        if actionRes.getStatus():
+            logoutFunc(request)
+            request.session['guest'] = 1
+            return redirect('mainApp:mainpage')
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mainpage')
+    elif request.session["guest"]:
+        messages.success(request, ("Error: cannot logout as guest"))
+        return redirect('mainApp:mainpage')
+    else:
+        messages.success(request, ("Error: need to be logged in first"))
+        return redirect('mainApp:mainpage')
+
 
 
     
@@ -170,6 +215,10 @@ def store_specific(request, storename):
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else: permissions = {}
+
+    # print(permissions)
+    # print(storename)
+    # print(username)
 
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
@@ -483,12 +532,19 @@ def homepage_guest(request):
 
 @login_required(login_url='/login')
 def inbox(request):
-    all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
-    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-    paginator = Paginator(all_user_messages, 5)
-    page = request.GET.get('page')
-    all_messages = paginator.get_page(page)
-    return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
+    service = Service()
+    #all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
+    #pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+    all_user_messages = service.getAllMessagesReceived(request.user.username)
+    if all_user_messages.getStatus():
+        all_user_messages = all_user_messages.getReturnValue()
+        paginator = Paginator(all_user_messages, 5)
+        page = request.GET.get('page')
+        all_messages = paginator.get_page(page)
+        return render(request, 'inbox.html',{'usermessages': all_messages})
+    else:
+        messages.error(request, "Error: " + str(all_user_messages.getReturnValue()))
+        return redirect('mainApp:mainpage')
 
 
 def send_message(request):
@@ -499,15 +555,21 @@ def send_message(request):
             receiver_username = form.cleaned_data['receiver']
             res = service.checkUsernameExistence(receiver_username)
             if res.getStatus():
-                message = form.save(commit=False)
-                message.sender = request.user.username
-                message.save()
-                messages.success(request, "Message sent successfully")
-                return HttpResponseRedirect('/inbox')
+                subject = form.cleaned_data['subject']
+                content = form.cleaned_data['content']
+                creation_date = datetime.now()
+                file = form.cleaned_data['file']
+                print(file)
+                message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date, file)
+                if message_res.getStatus():
+                    messages.success(request, "Message sent successfully")
+                    return HttpResponseRedirect('/inbox')
+                else:
+                    messages.error(request, "Error sending message through backend - "+str(message_res.getReturnValue()))
             else:
                 messages.error(request, "Invalid adresssee username - the message was not sent")
         else:
-            messages.error(request, "Invalid form submission")
+            messages.error(request, "Invalid form submission - "+form.errors.as_json())
     else:
         form = UserMessageform()
         messages.error(request, "Error sending message")
@@ -535,6 +597,12 @@ def mark_as_read(request, usermessage_id):
         # message.status = 'read'
         # message.save()
         # messages.success(request, "Message marked as read successfully")
+    service = Service()
+    res = service.readMessage(request.user.username, usermessage_id)
+    if res.getStatus():
+        messages.success(request, "Message marked as read successfully")
+    else:
+        messages.error(request, "Error marking message as read - "+res.getReturnValue())
     return HttpResponseRedirect('/inbox')
 
 
@@ -548,12 +616,6 @@ def check_username(request):
             return JsonResponse({'status': True})
         else:
             return JsonResponse({'status': False})
-
-@login_required(login_url='/login')
-def notifications(request):
-    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-
-
 
 #---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
@@ -683,8 +745,7 @@ def checkout(request):
             service = Service()
             form = CheckoutForm(request.POST)
             if form.is_valid():
-                full_address = str(form.cleaned_data['address'])+", "+str(form.cleaned_data['country'])
-                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']), form.cleaned_data['cc_name'], int(form.cleaned_data['cc_id']), form.cleaned_data['cc_expiration'], int(form.cleaned_data['cc_cvv']), full_address)
+                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']), form.cleaned_data['address'], form.cleaned_data['city'], form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
                     return redirect('mainApp:mainpage')
@@ -803,4 +864,64 @@ def permissionCheck(username, storename, permissionName):
         return True
     return False
 
+#returns False if user authenticated. Otherwise creates a new guest user and returns the username
+def createGuestIfNeeded(request):
+    if request.user.is_authenticated:
+        return False
+
+    
+    # user needs to be guest
+    # 1. create a new user in django
+    # 2. login to that user
+    else:   
+        service = Service()
+        actionRes = service.loginAsGuest()
+        guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
+
+        if actionRes.getStatus():
+            # form = CreateMemberForm(request.POST)
+            username = f"GuestUser{guestnumberdict['entrance_id']}"
+            password = "asdf1233"
+            # email = "guestmail@guest.com"
+            # form.save()
+            user = User.objects.create_user(username=username, password=password)
+            user = authenticate(request, username=username, password=password)
+            loginFunc(request, user)
+            request.session['guest'] = 1
+            return username
+
+# guest logges in as a user
+# 1. change guest to user in service
+# 2. logout of django
+# 3. login as the user in django
+# 4. remove the guest user from django
+# returns False if current user not a guest. Otherwise logges in as member and returns the username
+def guestToUser(request, username, password):
+    guestusername = request.user.username
+    if request.user.is_authenticated and request.session['guest']:
+        service = Service()
+        guestnumber = get_number_at_end(guestusername)
+        actionRes = service.logInFromGuestToMember(guestnumber, username, password) # 1.
+        if actionRes.getStatus():
+            logoutFunc(request)                                                     # 2.
+            user = authenticate(request, username=username, password=password)      
+            loginFunc(request, user)                                                # 3.
+            guestuser = User.objects.get(username=guestusername)
+            guestuser.delete()                                                      # 4.
+            request.session['guest'] = 0
+            return request.user.username
+            # ret = ast.literal_eval(str(actionRes.getReturnValue()))
+            # return ret['entrance_id']
+
+    else: return False
+
+
+def get_number_at_end(string):
+    number = ""
+    for char in string[::-1]:
+        if char.isdigit():
+            number = char + number
+        else:
+            break
+    return int(number)
 #---------------------------------------------------------------------------------------------------------------------------------------#

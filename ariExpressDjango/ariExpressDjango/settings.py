@@ -44,6 +44,13 @@ INSTALLED_APPS = [
     'mathfilters',
 ]
 
+CHANNEL_LAYERS = {
+    "default": {
+        "DEFAULT_CHANNEL_LAYER": "channels.layers.InMemoryChannelLayer",
+        "CONFIG": {},
+    },
+}
+
 ASGI_APPLICATION = 'AriExpress.asgi.application'
 
 MIDDLEWARE = [
@@ -69,6 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
             ],
         },
     },
@@ -133,3 +141,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #MEDIA
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# TODO: check those lines
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_EXPIRE_AT_BROWSER_CLOSE=True
+
+#CHANNELS
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        "CONFIG": {},
+    },
+}
+

@@ -11,7 +11,6 @@ from ProjectCode.Service.Response import Response
 
 class Test_Use_Cases_1(TestCase):
     def setUp(self):
-
         self.Service = Service()
 
     # ----------------------sysyem functionality tests----------------------
