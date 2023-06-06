@@ -51,7 +51,7 @@
                                 <li><a class="dropdown-item" href="#">Something else here</a></li>
                             </ul>
                         </li>
-
+                        {% if request.session.guest is 0 %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
                         </li>
@@ -60,7 +60,7 @@
                                 <i class="fas fa-bell"></i><span class="badge badge-pill badge-warning">{{usermessages.number}}</span>
                             </a>
                         </li>
-
+                        {% endif %}
                         {% if request.session.guest is 1 %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:login' %}">Login</a>
