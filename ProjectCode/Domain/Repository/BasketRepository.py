@@ -10,8 +10,9 @@ from ProjectCode.Domain.Repository.Repository import Repository
 
 class BasketRepository(Repository):
 
-    def __init__(self):
+    def __init__(self, user_name):
         self.model = BasketModel
+        self.user_name = user_name
 
     def __getitem__(self, store_name):
         try:
@@ -21,7 +22,7 @@ class BasketRepository(Repository):
 
     def __setitem__(self, key, value): #key is meaningless
         try:
-            return self.add(value)
+            return self.add(key, value)
         except Exception as e:
             raise Exception("BasketsRepository: __setitem__ failed: " + str(e))
 
@@ -41,68 +42,47 @@ class BasketRepository(Repository):
         if pk is None:
             basket_list = []
             for basket_entry in self.model.select():
-                basket = Basket(basket_entry.user_name, Store(basket_entry.store.store_name))
-                for product_basket_entry in basket_entry.products:
-                    product_entry = product_basket_entry.product
-                    product = Product(
-                        product_entry.product_id,
-                        product_entry.name,
-                        product_basket_entry.quantity,
-                        product_entry.price,
-                        product_entry.categories
-                    )
-                    basket.products[product.product_id] = (
-                        product,
-                        product_basket_entry.quantity,
-                        product_entry.price
-                    )
+                basket = self.__createDomainObject(basket_entry)
                 basket_list.append(basket)
             return basket_list
         else:
-            basket_entry = self.model.get(store=pk)
-            basket = Basket(basket_entry.user_name, basket_entry.store)
-            for product_basket_entry in basket_entry.products:
-                product_entry = product_basket_entry.product
-                product = Product(
-                    product_entry.product_id,
-                    product_entry.name,
-                    product_basket_entry.quantity,
-                    product_entry.price,
-                    product_entry.categories
-                )
-                basket.products[product.product_id] = (
-                    product,
-                    product_basket_entry.quantity,
-                    product_entry.price
-                )
+            basket_entry = self.model.get(BasketModel.store==pk, BasketModel.user_name==self.user_name)
+            basket = self.__createDomainObject(basket_entry)
             return basket
 
-    def add(self, basket: Basket):
-        store_entry = StoreModel.get_by_id(basket.store.get_store_name())
+    def __createDomainObject(self, basket_entry):
+        basket = Basket(basket_entry.user_name, Store(basket_entry.store.store_name))
+        for product_basket_entry in basket_entry.products:
+            product_entry = product_basket_entry.product_model
+            product = Product(
+                product_entry.product_id,
+                product_entry.name,
+                product_basket_entry.quantity,
+                product_entry.price,
+                product_entry.categories
+            )
+            basket.products[product.product_id] = (
+                product,
+                product_basket_entry.quantity,
+                product_entry.price
+            )
+        return basket
+
+    def add(self, key, basket: Basket):
+        store_entry = StoreModel.get(StoreModel.store_name == key)
         basket_entry = self.model.create(user_name=basket.username, store=store_entry)
         return basket
-        # for product_id, product_info in basket.products.items():
-        #     product = product_info[0]  # product object
-        #     quantity = product_info[1]
-        #     price = product_info[2]
-        #     product_entry = ProductBasketModel.create(
-        #         product_id=product.product_id,
-        #         name=product.name,
-        #         quantity=quantity,
-        #         price=product.price,
-        #         categories=product.categories
-        #     )
-        #    ProductBasketModel.create(quantity=quantity, product=product_entry, basket=basket_entry, price=price)
-        return True
 
     def remove(self, pk):
-        cart_entry = self.model.get(user_name=pk)
-        cart_entry.delete_instance()
+        basket_entry = self.model.get(BasketModel.store == pk, BasketModel.user_name == self.user_name)
+        for product_basket_entry in basket_entry.products:
+            product_basket_entry.delete_instance()
+        basket_entry.delete_instance()
         return True
 
 
     def keys(self):
-        return [basket.store.get_store_name() for basket in BasketModel.select()]
+        return [basket.store.store_name for basket in BasketModel.select()]
 
     def values(self):
         return self.get()

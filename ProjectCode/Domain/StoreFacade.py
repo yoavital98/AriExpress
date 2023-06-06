@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from ProjectCode.DAL.SystemModel import SystemModel
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
@@ -41,6 +42,7 @@ class StoreFacade:
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
+
         self.bid_id_counter = 0  # bid counter
         # Admin
         first_admin: Admin = Admin("admin", "12341234", "a@a.com")
@@ -50,20 +52,9 @@ class StoreFacade:
         self.loadData()
 
         # REPOSITORY FIELDS - TO BE REPLACED
+        #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
         self.members_test = MemberRepository()
         self.stores_test = StoreRepository()
-
-    # ------  ORM Tests  ------ #
-
-    def add_member(self, member):
-        self.__members[member.get_username()] = member
-
-    def get_member(self, username):
-        return self.__members[username]
-
-    def get_all_members(self):
-        return self.__members[None]
-
 
 
     # ------  System  ------ #

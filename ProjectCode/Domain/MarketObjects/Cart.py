@@ -23,7 +23,7 @@ class Cart:
         self.baskets = TypedDict(str, Basket)
 
         # REPOSITORY FIELD --- TO BE REPLACED
-        self.basket_test = BasketRepository()
+        self.basket_test = BasketRepository(username)
 
     def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):
