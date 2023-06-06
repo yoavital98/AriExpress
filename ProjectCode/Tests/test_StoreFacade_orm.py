@@ -5,11 +5,12 @@ from peewee import SqliteDatabase
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.BasketModel import BasketModel
-from ProjectCode.DAL.CartModel import CartModel
+#from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.StoreModel import StoreModel
+from ProjectCode.DAL.SystemModel import SystemModel
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Store import Store
@@ -38,17 +39,14 @@ class MyTestCase(unittest.TestCase):
         self.store_facade.logOut("Ari")
         db = SqliteDatabase('database.db')
         db.connect()
-        StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel,
-                        BasketModel, ProductBasketModel])
-        db.create_tables([ProductModel, StoreModel, StoreProduct, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel])
+        #StoreProduct = StoreModel.products.get_through_model()
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel])
+        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel])
 
     # ------ AccessRepository Tests ------
 
     def test_Orm_access_del(self):
-        cart_model = CartModel.create(user_name=self.member1.user_name)
-        MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email,
-                           cart=cart_model)
+        MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email)
         StoreModel.create(store_name="Store1")
         access = Access(self.store1, self.member1, "Ari")
         access.setAccess("Founder")
@@ -59,9 +57,7 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_Orm_user_access(self):
-        cart_model = CartModel.create(user_name=self.member1.user_name)
-        MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email,
-                           cart=cart_model)
+        MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email)
         StoreModel.create(store_name="Store1")
         access = Access(self.store1, self.member1, "Ari")
         access.setAccess("Founder")
@@ -69,9 +65,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(self.member1.accesses_test[None][0].__str__(),"Ari Store1 Founder Ari")
 
     def test_Orm_user_keys(self):
-        cart_model = CartModel.create(user_name=self.member1.user_name)
-        MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email,
-                           cart=cart_model)
+        MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email)
         StoreModel.create(store_name="Store1")
         access = Access(self.store1, self.member1, "Ari")
         access.setAccess("Founder")
@@ -81,9 +75,8 @@ class MyTestCase(unittest.TestCase):
     def test_Orm_store_access_keys(self):
         StoreModel.create(store_name=self.store1.get_store_name())
         MemberModel.create(user_name=self.member1.get_username(), password=self.member1.get_password(),
-                                       email=self.member1.get_email(), cart=CartModel.create(user_name=self.member1.get_username()))
-        MemberModel.create(user_name=self.member2.get_username(), password=self.member2.get_password(), email=self.member2.get_email(),
-                           cart=CartModel.create(user_name=self.member2.get_username()))
+                                       email=self.member1.get_email())
+        MemberModel.create(user_name=self.member2.get_username(), password=self.member2.get_password(), email=self.member2.get_email())
 
         new_access = Access(self.store1, self.member1, "Ari")
         new_access.setAccess("Founder")
@@ -93,10 +86,9 @@ class MyTestCase(unittest.TestCase):
     def test_Orm_store_access_values(self):
         StoreModel.create(store_name=self.store1.get_store_name())
         MemberModel.create(user_name=self.member1.get_username(), password=self.member1.get_password(),
-                           email=self.member1.get_email(), cart=CartModel.create(user_name=self.member1.get_username()))
+                           email=self.member1.get_email())
         MemberModel.create(user_name=self.member2.get_username(), password=self.member2.get_password(),
-                           email=self.member2.get_email(),
-                           cart=CartModel.create(user_name=self.member2.get_username()))
+                           email=self.member2.get_email())
 
         new_access = Access(self.store1, self.member1, "Ari")
         new_access.setAccess("Founder")
@@ -153,9 +145,17 @@ class MyTestCase(unittest.TestCase):
     # ------ BasketRepository Tests ------
 
     def test_Orm_create_basket(self):
+        self.store_facade.stores_test["Store1"] = self.store1
         self.member1.cart.basket_test["Store1"] = Basket(self.member1.get_username(), self.store1)
         basket = self.member1.cart.basket_test["Store1"]
+        self.store1.prods[self.item_paper.get_product_id()] = self.item_paper
         basket.products_test[self.item_paper.get_product_id()] = (self.item_paper, 5, self.item_paper.get_price())
+        print(basket.products_test[self.item_paper.get_product_id()])
+        print(basket.products_test[None])
+        print(self.member1.cart.basket_test["Store1"])
+        print(self.member1.cart.basket_test[None])
+
+        del [self.member1.cart.basket_test["Store1"]]
 
 if __name__ == '__main__':
     unittest.main()

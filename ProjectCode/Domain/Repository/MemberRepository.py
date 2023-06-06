@@ -1,6 +1,6 @@
 from peewee import *
 
-from ProjectCode.DAL.CartModel import CartModel
+#from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Domain.Repository.Repository import Repository
@@ -44,8 +44,7 @@ class MemberRepository(Repository):
             return member_obj
 
     def add(self, member: Member):
-        cart = CartModel.create(user_name=member.get_username())
-        member_entry = self.model.create(user_name=member.get_username(), password=member.get_password() ,email=member.get_email(), cart=cart)
+        member_entry = self.model.create(user_name=member.get_username(), password=member.get_password() ,email=member.get_email())
         return member
 
     def remove(self, pk):

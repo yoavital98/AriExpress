@@ -9,8 +9,9 @@ class ProductBasketModel(Model):
         database = SqliteDatabase('database.db')
         db_table = 'product_basket'
 
-    product_id = IntegerField()
+
+    product_id = IntegerField(primary_key=True)
     quantity = IntegerField()
-    product = ForeignKeyField(ProductModel)
+    product_model = ForeignKeyField(ProductModel, backref='product_basket')
     basket = ForeignKeyField(BasketModel, backref='products')
     price = DoubleField()
