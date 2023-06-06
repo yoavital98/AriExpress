@@ -11,29 +11,29 @@ class StoreTransactionRepository(Repository):
     def __init__(self):
         self.model = StoreTransactionModel
 
-    def __getitem__(self, user_name):
+    def __getitem__(self, store_name):
         try:
-            return self.get(user_name)
+            return self.get(store_name)
         except Exception as e:
-            raise Exception("StoreRepository: __getitem__ failed: " + str(e))
+            raise Exception("StoreTransactionRepository: __getitem__ failed: " + str(e))
 
     def __setitem__(self, key, value): #key is meaningless
         try:
             return self.add(value)
         except Exception as e:
-            raise Exception("StoreRepository: __setitem__ failed: " + str(e))
+            raise Exception("StoreTransactionRepository: __setitem__ failed: " + str(e))
 
     def __delitem__(self, key):
         try:
             return self.remove(key)
         except Exception as e:
-            raise Exception("StoreRepository: __delitem__ failed: " + str(e))
+            raise Exception("StoreTransactionRepository: __delitem__ failed: " + str(e))
 
     def __contains__(self, key):
         try:
             return self.contains(key)
         except Exception as e:
-            raise Exception("StoreRepository: __delitem__ failed: " + str(e))
+            raise Exception("StoreTransactionRepository: __delitem__ failed: " + str(e))
 
     def get(self, pk=None):
         query = self.model.select()
