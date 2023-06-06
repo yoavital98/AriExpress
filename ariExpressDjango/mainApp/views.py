@@ -37,23 +37,34 @@ def login(request):
         if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in                                                       # 
+        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in    
             # service = Service()
             form = loginForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
-                check = guestToUser(request, username, password)
-                if check:
-                    print("ok100")
-                    request.session['guest'] = 0
-                    messages.success(request, (f"{check} Logged in successfully"))
-                    return redirect('mainApp:mainpage')
-                else:
-                    print("ok101")
-                    request.session['guest'] = 1
-                    messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
-                    return redirect('mainApp:login')
+                if Service().checkIfAdmin(username).getStatus():
+                    actionRes = Service().logIn(username, password)
+                    if actionRes.getStatus():
+                        user = authenticate(request, username=username, password=password)
+                        loginFunc(request, user)
+                        request.session['guest'] = 0
+                        messages.success(request, (f"{username} Logged in successfully"))
+                        return redirect('mainApp:mainpage')
+                    else:
+                        request.session['guest'] = 1
+                        messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                        return redirect('mainApp:login')
+                else: 
+                    check = guestToUser(request, username, password)
+                    if check:
+                        request.session['guest'] = 0
+                        messages.success(request, (f"{check} Logged in successfully"))
+                        return redirect('mainApp:mainpage')
+                    else:
+                        request.session['guest'] = 1
+                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
+                        return redirect('mainApp:login')
 
                 # if request.session['guest']:
                 #     res = service.logIn(username, password)
@@ -85,38 +96,41 @@ def login(request):
 
 
 def registerPage(request):
-    msg = ""
-    showMsg = False
+
     if request.method == 'POST':
         service = Service()
-        if request.user.is_authenticated:
-            msg="A User is already logged in"
-            form = None
-        else:
+        if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
+            messages.success(request, ("Error: A User is already logged in"))
+            return render(request, 'login.html', {'form': loginForm()})
+        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in                                                       # 
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password1']
                 email = form.cleaned_data['email']
                 res = service.register(username, password, email)
-                msg = res.getReturnValue()
-                if res.getStatus() == True:
+                if res.getStatus():
                     form.save()
-                    user = authenticate(request, username=username, password=password)
-                    loginFunc(request, user)
-                    request.session['guest'] = 0
-                    return redirect('mainApp:mainpage')
+                    # user = authenticate(request, username=username, password=password)
+                    # loginFunc(request, user)
+                    request.session['guest'] = 1
+                    check = guestToUser(request, username, password)
+                    if check:
+                        request.session['guest'] = 0
+                        return redirect('mainApp:mainpage')
+                    else:
+                        User.objects.filter(username=username).delete()                         # remove the created user from django
+                        messages.success(request, (f"Error: register was successful but there is a login error"))   
+                else:
+                    messages.success(request, (f"Error: {res.getReturnValue()}"))   
+            else:
+                messages.success(request, ("Error: register form is not valid"))    
+        else:
+            messages.success(request, ("Error: something went wrong with the register"))
 
-
-    else:
-        form = CreateMemberForm()
-        msg = ""
-        showMsg = True
-
-
-    return render(request, 'register.html', {'form': form,
-                                          'msg': msg,
-                                          'showMsg': showMsg})
+    # render the register page
+    form = CreateMemberForm()
+    return render(request, 'register.html', {'form': form})
 
 
 def logout(request):
@@ -828,7 +842,6 @@ def guestToUser(request, username, password):
     if request.user.is_authenticated and request.session['guest']:
         service = Service()
         guestnumber = get_number_at_end(guestusername)
-        print(f"guestnumber: {guestnumber}")
         actionRes = service.logInFromGuestToMember(guestnumber, username, password) # 1.
         if actionRes.getStatus():
             logoutFunc(request)                                                     # 2.
@@ -837,8 +850,6 @@ def guestToUser(request, username, password):
             guestuser = User.objects.get(username=guestusername)
             guestuser.delete()                                                      # 4.
             request.session['guest'] = 0
-            print(f"guest: {request.session['guest']}")
-            print(f"new username: {request.user.username}")
             return request.user.username
             # ret = ast.literal_eval(str(actionRes.getReturnValue()))
             # return ret['entrance_id']

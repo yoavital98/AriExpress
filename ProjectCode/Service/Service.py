@@ -72,6 +72,16 @@ class Service:
         except Exception as e:
             logging.error(f"addAdmin Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
+        
+    def checkIfAdmin(self, username):
+        try:
+            admin = self.store_facade.getAdmin(username)
+            logging.info(
+                f"Admin has been found successfully, {username} is an admin")
+            return Response(admin.toJson(), True)
+        except Exception as e:
+            logging.error(f"checkIfAdmin Error: {str(e)}. Checking username: '{username}'")
+            return Response(e, False)
 
     def removePermissionFreeMember(self, username, memberName):
         try:

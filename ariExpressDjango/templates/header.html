@@ -51,7 +51,7 @@
                                 <li><a class="dropdown-item" href="#">Something else here</a></li>
                             </ul>
                         </li>
-                        {% if request.session.guest is 0 %}
+                        {% if request.session.guest is 0 or user.is_superuser %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
                         </li>
