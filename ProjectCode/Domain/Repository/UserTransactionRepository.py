@@ -1,6 +1,6 @@
 from peewee import *
 
-from ProjectCode.DAL.ProductStoreTransaction import ProductStoreTransactionModel
+from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
 from ProjectCode.DAL.StoreOfUserTransactionModel import StoreOfUserTransactionModel
 from ProjectCode.DAL.UserTransactionModel import UserTransactionModel
 from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
@@ -16,25 +16,25 @@ class UserTransactionRepository(Repository):
         try:
             return self.get(user_name)
         except Exception as e:
-            raise Exception("StoreTransactionRepository: __getitem__ failed: " + str(e))
+            raise Exception("UserTransactionRepository: __getitem__ failed: " + str(e))
 
     def __setitem__(self, key, value): #key is meaningless
         try:
             return self.add(value)
         except Exception as e:
-            raise Exception("StoreTransactionRepository: __setitem__ failed: " + str(e))
+            raise Exception("UserTransactionRepository: __setitem__ failed: " + str(e))
 
     def __delitem__(self, key):
         try:
             return self.remove(key)
         except Exception as e:
-            raise Exception("StoreTransactionRepository: __delitem__ failed: " + str(e))
+            raise Exception("UserTransactionRepository: __delitem__ failed: " + str(e))
 
     def __contains__(self, key):
         try:
             return self.contains(key)
         except Exception as e:
-            raise Exception("StoreRepository: __delitem__ failed: " + str(e))
+            raise Exception("UserTransactionRepository: __delitem__ failed: " + str(e))
 
     def get(self, pk=None):
         if pk is None:

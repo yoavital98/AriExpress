@@ -5,7 +5,7 @@ from ProjectCode.DAL.StoreOfUserTransactionModel import StoreOfUserTransactionMo
 from ProjectCode.DAL.StoreTransactionModel import StoreTransactionModel
 
 
-class ProductStoreTransactionModel(Model):
+class ProductUserTransactionModel(Model):
 
     class Meta:
         database = SqliteDatabase('database.db')

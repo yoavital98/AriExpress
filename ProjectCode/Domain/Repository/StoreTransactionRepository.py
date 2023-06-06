@@ -1,6 +1,6 @@
 from peewee import *
 
-from ProjectCode.DAL.ProductStoreTransaction import ProductStoreTransactionModel
+from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
 from ProjectCode.DAL.StoreTransactionModel import StoreTransactionModel
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.Repository.Repository import Repository
@@ -82,6 +82,7 @@ class StoreTransactionRepository(Repository):
                 quantity=product[2],
                 price=product[3],
                 store_transaction=transaction_model
+                #todo: product id is not primary key
             )
             product_model.save()
 

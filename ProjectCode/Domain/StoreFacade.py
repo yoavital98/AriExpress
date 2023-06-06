@@ -6,6 +6,7 @@ from ProjectCode.Domain.ExternalServices.MessageController import MessageControl
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
+from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 # -------MarketObjects Imports-------#
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -24,6 +25,8 @@ from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
 from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
+from ProjectCode.Domain.Repository.StoreTransactionRepository import StoreTransactionRepository
+from ProjectCode.Domain.Repository.UserTransactionRepository import UserTransactionRepository
 
 
 class StoreFacade:
@@ -63,6 +66,8 @@ class StoreFacade:
         self.stores_test = StoreRepository()
         self.admins_test = AdminRepository()
         self.onlineGuests_test = GuestRepository()
+        self.user_transactions_test = UserTransactionRepository()
+        self.store_transactions_test = StoreTransactionRepository()
 
 
     # ------  System  ------ #
