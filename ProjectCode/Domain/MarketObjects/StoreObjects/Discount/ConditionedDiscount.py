@@ -14,14 +14,19 @@ class ConditionedDiscount(Policy):
                  child: {logic_type: "OR" | "XOR" | "AND", rule: rule} }
         logic_comp := LogicUnit | RuleComp
     """
-    def __init__(self, percent, level, level_name, rule):
+    def __init__(self, percent, level, level_name, rule, discount_id=-1):
         super().__init__(level, level_name)
+        self.discount_id = discount_id
         self.rule = rule
         self.percent = percent
         self.logic_comp: LogicComp = None
         #self.percent = percent
         #self.level = level
         #self.level_name = level_name
+
+
+    def __str__(self):
+        return "ConditionedDiscount: " + str(self.percent) + "% off " + str(self.level) + " " + str(self.level_name) + " if " + str(self.rule)
 
     #returns price for a product after discount
     def calculate(self, product, basket, total_price):
@@ -38,6 +43,27 @@ class ConditionedDiscount(Policy):
             self.logic_comp.parse()
         else:
             self.logic_comp = RuleComp(self.rule["rule_type"], self.rule["product_id"], self.rule["operator"], self.rule["quantity"], self.rule["category"])
+
+    def get_discount_id(self):
+        return self.discount_id
+
+    def get_discount_type(self):
+        return "Conditioned"
+
+    def get_percent(self):
+        return self.percent
+
+    def get_level(self):
+        return self.level
+
+    def get_level_name(self):
+        return self.level_name
+
+    def get_rule(self):
+        return self.rule
+
+    def get_discount_dict(self):
+        return {}
 
     # =======================JSON=======================#
 
