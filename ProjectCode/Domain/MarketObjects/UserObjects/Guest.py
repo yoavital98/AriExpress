@@ -1,3 +1,4 @@
+from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.User import User
 
 
@@ -20,4 +21,6 @@ class Guest(User):
     def get_entrance_id(self):
         return super().get_entrance_id()
 
+    def setCart(self, cart: Cart):
+        super().setCart(cart)
 

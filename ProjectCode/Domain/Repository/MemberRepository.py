@@ -1,8 +1,15 @@
 from peewee import *
 
+from ProjectCode.DAL.BasketModel import BasketModel
 #from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.Domain.MarketObjects.Basket import Basket
+from ProjectCode.Domain.MarketObjects.Cart import Cart
+from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
+from ProjectCode.Domain.Repository.BasketRepository import BasketRepository
 from ProjectCode.Domain.Repository.Repository import Repository
 
 
@@ -37,6 +44,7 @@ class MemberRepository(Repository):
             member_list = []
             for entry in self.model.select():
                 member_list.append(Member(-1, entry.user_name, entry.password, entry.email))
+
             return member_list
         else:
             entry = self.model.get(self.model.user_name == pk)
@@ -57,3 +65,40 @@ class MemberRepository(Repository):
 
     def values(self):
         return self.get()
+
+    def getCart(self, user_name):
+        # Create an empty cart
+        cart = Cart(user_name)
+
+        # Get the basket entries for the given user_name
+        basket_entries = BasketModel.select().where(BasketModel.user_name == user_name)
+
+        for basket_entry in basket_entries:
+
+            basket = Basket(basket_entry.user_name, basket_entry.store)
+
+            # get the product entries for the current basket
+            product_entries = (
+                ProductBasketModel.select()
+                .join(ProductModel)
+                .where(
+                    ProductBasketModel.basket == basket_entry,
+                    ProductModel.store == basket_entry.store
+                )
+            )
+
+            for product_entry in product_entries:
+                product = Product(
+                    product_entry.product_model.product_id,
+                    product_entry.product_model.name,
+                    product_entry.product_model.quantity,  # Use quantity from ProductModel
+                    product_entry.product_model.price,
+                    product_entry.product_model.categories
+                )
+
+                # Add the product to the basket with the quantity from the ProductBasketModel
+                basket.add_Product(product_entry.product_id, product, product_entry.quantity)
+
+            cart.baskets[basket_entry.store.store_name] = basket
+
+        return cart
