@@ -7,6 +7,7 @@ from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
 from ProjectCode.DAL.BasketModel import BasketModel
 from ProjectCode.DAL.GuestModel import GuestModel
+from ProjectCode.DAL.DiscountModel import DiscountModel
 #from ProjectCode.DAL.CartModel import CartModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
@@ -16,6 +17,8 @@ from ProjectCode.DAL.SystemModel import SystemModel
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
+from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
@@ -40,12 +43,20 @@ class MyTestCase(unittest.TestCase):
         self.store_facade.addNewProductToStore("Ari", "Store1", "oreo", 10, 10, "food")
         self.item_paper: Product = self.store1.getProductById(1, "Ari")
         self.oreo: Product = self.store1.getProductById(2, "Ari")
-        self.store_facade.logOut("Ari")
+
+
+        self.sub_rule = {"rule_type": "amount_of_product", "product_id": self.item_paper.get_product_id(),
+                         "operator": ">=", "quantity": 1, "category": "", "child": {}}
+        self.rule = {"rule_type": "amount_of_product", "product_id": self.oreo.get_product_id(),
+                     "operator": ">=", "quantity": 1, "category": "",
+                     "child": {"logic_type": "OR", "rule": self.sub_rule}}
+        self.discount = ConditionedDiscount(10, "Product", self.oreo.get_product_id(), self.rule)
+        self.discount2 = SimpleDiscount(10, "Basket", "")
         db = SqliteDatabase('database.db')
         db.connect()
         #StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, AdminModel, GuestModel])
-        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, AdminModel, GuestModel])
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel])
 
     # ------ AccessRepository Tests ------
 
@@ -214,6 +225,24 @@ class MyTestCase(unittest.TestCase):
         self.store_facade.onlineGuests_test[guest2.get_entrance_id()] = guest2
         print(self.store_facade.onlineGuests_test.keys())
 
+    # ------ DiscountRepository Tests ------
+
+    def test_Orm_create_discount(self):
+        self.store_facade.stores_test["Store1"] = self.store1
+        self.store1.prods[self.item_paper.get_product_id()] = self.item_paper
+        self.store1.prods[self.oreo.get_product_id()] = self.oreo
+        self.store1.get_discount_policy().discounts_test[1] = self.discount
+        print(self.store1.get_discount_policy().discounts_test[1].rule["rule_type"])
+
+        del self.store1.get_discount_policy().discounts_test[1]
+
+    def test_Orm_multiple_discounts(self):
+        self.store_facade.stores_test["Store1"] = self.store1
+        self.store1.prods[self.item_paper.get_product_id()] = self.item_paper
+        self.store1.prods[self.oreo.get_product_id()] = self.oreo
+        self.store1.get_discount_policy().discounts_test[1] = self.discount
+        self.store1.get_discount_policy().discounts_test[2] = self.discount2
+        print(self.store1.get_discount_policy().discounts_test[None])
 
 if __name__ == '__main__':
     unittest.main()
