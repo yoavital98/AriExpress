@@ -1,6 +1,18 @@
 import json
 from datetime import datetime
 
+from peewee import SqliteDatabase
+
+from ProjectCode.DAL.AccessModel import AccessModel
+from ProjectCode.DAL.AccessStateModel import AccessStateModel
+from ProjectCode.DAL.AdminModel import AdminModel
+from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.DiscountModel import DiscountModel
+from ProjectCode.DAL.GuestModel import GuestModel
+from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.DAL.SystemModel import SystemModel
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
@@ -29,14 +41,43 @@ from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
 class StoreFacade:
     def __init__(self):
         # Store Data
+        # self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
+        # self.admins = TypedDict(str, Admin)  # dict of admins
+        # self.members = TypedDict(str, Member)  # dict of members
+        # self.onlineGuests = TypedDict(str, Guest)  # dict of users
+        # self.stores = TypedDict(str, Store)  # dict of stores
+        # self.online_members = TypedDict(str, Member)  # dict from username to online members
+        # self.banned_members = TypedDict(str,
+        #                                 Member)  # dict from username to banned users Todo opt: special home page for banned users
+        # # Services
+        # self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
+        # # Data
+        # self.accesses = TypedDict(str, Access)  # optional TODO check key type
+        # self.nextEntranceID = 0  # guest ID counter
+        #
+        # self.bid_id_counter = 0  # bid counter
+        # # Admin
+        # first_admin: Admin = Admin("admin", "12341234", "a@a.com")
+        # # first_admin.logInAsAdmin() # added by rubin to prevent deadlock
+        # self.admins["admin"] = first_admin
+        # # load data
+        # self.loadData()
+
+        db = SqliteDatabase('database.db')
+        db.connect()
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+                        ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        db.create_tables(
+            [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+             ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
-        self.admins = TypedDict(str, Admin)  # dict of admins
-        self.members = TypedDict(str, Member)  # dict of members
-        self.onlineGuests = TypedDict(str, Guest)  # dict of users
-        self.stores = TypedDict(str, Store)  # dict of stores
-        self.online_members = TypedDict(str, Member)  # dict from username to online members
-        self.banned_members = TypedDict(str,
-                                        Member)  # dict from username to banned users Todo opt: special home page for banned users
+        self.admins = AdminRepository() # dict of admins
+        self.members = MemberRepository()  # dict of members
+        self.onlineGuests = GuestRepository()  # dict of users
+        self.stores = StoreRepository()  # dict of stores
+        self.online_members = MemberRepository(online=True)  # dict from username to online members
+        self.banned_members = MemberRepository(banned=True)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
         self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
@@ -59,10 +100,10 @@ class StoreFacade:
 
         # REPOSITORY FIELDS - TO BE REPLACED
         #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
-        self.members_test = MemberRepository()
-        self.stores_test = StoreRepository()
-        self.admins_test = AdminRepository()
-        self.onlineGuests_test = GuestRepository()
+        # self.members_test = MemberRepository()
+        # self.stores_test = StoreRepository()
+        # self.admins_test = AdminRepository()
+        # self.onlineGuests_test = GuestRepository()
 
 
     # ------  System  ------ #
@@ -444,10 +485,10 @@ class StoreFacade:
             raise Exception("Store name already taken")
 
         cur_store = Store(store_name)
-        new_access = Access(cur_store, cur_member, username)
-        cur_member.accesses[store_name] = new_access
-        cur_store.setFounder(cur_member.get_username(), new_access)
         self.stores[store_name] = cur_store
+        new_access = Access(cur_store, cur_member, username)
+        #cur_member.accesses[store_name] = new_access -- ORM CHANGE
+        cur_store.setFounder(cur_member.get_username(), new_access)
         return cur_store
         # return DataStore(cur_store)
 

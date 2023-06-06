@@ -9,13 +9,18 @@ from ProjectCode.Domain.Repository.ProductBasketRepository import ProductBasketR
 
 class Basket:
     def __init__(self, username, store):
+        # self.username = username
+        # self.store: Store = store
+        # self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
+        # self.bids = TypedDict(int, Bid) # Bid id -> Bid
+
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
-        self.bids = TypedDict(int, Bid) # Bid id -> Bid
+        self.products = ProductBasketRepository(username, store.get_store_name())  # product id : int -> (product: Product, quantity: int, price: double)
+        self.bids = TypedDict(int, Bid)  # Bid id -> Bid
 
         # REPOSITORY FIELD --- TO BE REPLACED
-        self.products_test = ProductBasketRepository(username, store.get_store_name())
+        #self.products_test = ProductBasketRepository(username, store.get_store_name())
 
     def add_Product(self, product_id, product, quantity):
         if quantity <= 0:

@@ -12,8 +12,14 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.OwnerState import OwnerState
 class Access:
 
     def __init__(self, store, user, nominated_by_username):
+        # self.nominated_by_username = nominated_by_username
+        # self.nominations = TypedDict(str, Access) #username, Access
+        # self.user = user
+        # self.store = store
+        # self.access_state = AccessState()
+        # self.role = ""
         self.nominated_by_username = nominated_by_username
-        self.nominations = TypedDict(str, Access) #username, Access
+        self.nominations = TypedDict(str, Access)  # username, Access
         self.user = user
         self.store = store
         self.access_state = AccessState()

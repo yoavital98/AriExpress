@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -22,13 +22,30 @@ class Store:
 
 
     def __init__(self, store_name, *args, **kwargs):
+        # super().__init__(*args, **kwargs)
+        # self.__store_name = store_name
+        # self.__products = TypedDict(int, Product)
+        # # TODO: policies
+        # self.active: bool = True
+        # self.closed_by_admin: bool = False
+        # self.__accesses = TypedDict(str, Access)
+        # self.product_id_counter = 0
+        # self.auction_id_counter = 0
+        # self.lottery_id_counter = 0
+        # self.__bids = TypedDict(int, Bid)
+        # self.__bids_requests = TypedDict(str, List[Bid])
+        # self.__auctions = TypedDict(int, Auction)
+        # self.__lotteries = TypedDict(int, Lottery)
+        # self.__discount_policy = DiscountPolicy(store_name)
+        # self.__purchase_policy = PurchasePolicies()
+
         super().__init__(*args, **kwargs)
         self.__store_name = store_name
-        self.__products = TypedDict(int, Product)
+        self.__products = ProductRepository(store_name)
         # TODO: policies
         self.active: bool = True
         self.closed_by_admin: bool = False
-        self.__accesses = TypedDict(str, Access)
+        self.__accesses = AccessRepository(store_name=store_name)
         self.product_id_counter = 0
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
@@ -40,8 +57,8 @@ class Store:
         self.__purchase_policy = PurchasePolicies()
 
         #REPOSITORY FIELDS --- TO BE REPLACED
-        self.accesses_test = AccessRepository(store_name=store_name)
-        self.prods = ProductRepository(store_name)
+        # self.accesses_test = AccessRepository(store_name=store_name)
+        # self.prods = ProductRepository(store_name)
 
 
     def setStoreStatus(self, status, requester_username):
@@ -145,7 +162,7 @@ class Store:
         access.canChangeProducts()
         if name == "":
             raise Exception("product name cannot be empty")
-        self.product_id_counter += 1
+        self.inc_product_id_counter()
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
         self.__products.__setitem__(self.product_id_counter, product_to_add)
         return product_to_add
@@ -455,6 +472,12 @@ class Store:
     def getAllStaffMembersNames(self):
         return self.get_accesses().keys()
 
+    def inc_product_id_counter(self):
+        self.product_id_counter += 1
+        store_entry = StoreModel.get_by_id(self.__store_name)
+        store_entry.product_id_counter = self.product_id_counter
+        store_entry.save()
+
     def get_store_name(self):
         return self.__store_name
 
@@ -497,6 +520,12 @@ class Store:
     def get_discount_policy(self):
         return self.__discount_policy
 
+    def set_counters(self, active, closed_by_admin, product_id_counter, auction_id_counter, lottery_id_counter):
+        self.active = active
+        self.closed_by_admin = closed_by_admin
+        self.product_id_counter = product_id_counter
+        self.auction_id_counter = auction_id_counter
+        self.lottery_id_counter = lottery_id_counter
 
     # =======================JSON=======================#
 

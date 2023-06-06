@@ -29,6 +29,13 @@ from ProjectCode.Domain.StoreFacade import StoreFacade
 class MyTestCase(unittest.TestCase):
 
     def setUp(self):
+        # db = SqliteDatabase('database.db')
+        # db.connect()
+        # db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                 ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        # db.create_tables(
+        #     [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #      ProductBasketModel, DiscountModel, AdminModel, GuestModel])
         self.store_facade = StoreFacade()
         self.store_facade.register("Ari", "password123", "ari@gmail.com")
         self.store_facade.register("Jane", "password456", "jane.doe@example.com")
@@ -52,11 +59,7 @@ class MyTestCase(unittest.TestCase):
                      "child": {"logic_type": "OR", "rule": self.sub_rule}}
         self.discount = ConditionedDiscount(10, "Product", self.oreo.get_product_id(), self.rule)
         self.discount2 = SimpleDiscount(10, "Basket", "")
-        db = SqliteDatabase('database.db')
-        db.connect()
-        #StoreProduct = StoreModel.products.get_through_model()
-        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel])
-        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+
 
     # ------ AccessRepository Tests ------
 
@@ -109,6 +112,13 @@ class MyTestCase(unittest.TestCase):
         new_access.setAccess("Founder")
         self.store1.accesses_test[self.member1.get_username()] = new_access
         print(self.store1.accesses_test.values())
+
+
+    # def test_Orm_store_items(self):
+    #     self.store_facade.stores["Hi"] = Store("Hi")
+    #     self.store_facade.stores["Bye"] = Store("Bye")
+    #     for key, value in self.store_facade.stores.items():
+    #         print(key, value.get_store_name())
 
     # ------ MemberRepository Tests ------
 

@@ -65,3 +65,7 @@ class GuestRepository(Repository):
 
     def getCart(self, entrance_id):
         pass
+
+    def clear(self):
+        for entry in self.model.select():
+            entry.delete_instance()

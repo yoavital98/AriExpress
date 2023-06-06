@@ -12,13 +12,18 @@ class DiscountPolicy:
     # IMPORTANT!!: only root discount have an ID
     # for example: child of Add discount wont have an ID
     def __init__(self, store_name):
-        self.discounts = TypedDict(int, Policy)  #(discountId, disType)
+        #backup
+        # self.discounts = TypedDict(int, Policy)  #(discountId, disType)
+        # self.discount_id = 0
+        # self.store_name = store_name
+
+        self.discounts = DiscountRepository(store_name)  # (discountId, disType)
         self.discount_id = 0
         self.store_name = store_name
 
         # ORM FIRLEDS --- TO BE REPLACED
 
-        self.discounts_test = DiscountRepository(store_name)
+        # self.discounts_test = DiscountRepository(store_name)
     """
         kwargs := 
             discount_type := Conditioned | Simple | Coupon | Max | Add

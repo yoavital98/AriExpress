@@ -34,14 +34,19 @@ class StoreRepository(Repository):
             store_entry = StoreModel.select()
             store_list = []
             for store in store_entry:
-                store_list.append(Store(store.store_name))
+                store_obj = Store(store.store_name)
+                store_obj.set_counters(store.active, store.closed_by_admin, store.product_id_counter, store.auction_id_counter, store.lottery_id_counter)
+                store_list.append(store_obj)
             return store_list
         else:
             store_entry = StoreModel.get(StoreModel.store_name == pk)
-            return Store(store_entry.store_name)
+            store_obj = Store(store_entry.store_name)
+            store_obj.set_counters(store_entry.active, store_entry.closed_by_admin, store_entry.product_id_counter, store_entry.auction_id_counter,
+                               store_entry.lottery_id_counter)
+            return store_obj
 
     def add(self, store):
-        StoreModel.create(store_name=store.get_store_name())
+        StoreModel.create(store_name=store.get_store_name(), active=store.active, closed_by_admin=store.closed_by_admin, product_id_counter=store.product_id_counter)
         return store
 
     def remove(self, pk):
@@ -55,3 +60,7 @@ class StoreRepository(Repository):
 
     def values(self):
         return self.get()
+
+    def items(self):
+        for key, value in zip(self.keys(), self.values()):
+            yield key, value

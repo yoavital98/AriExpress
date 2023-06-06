@@ -19,11 +19,14 @@ from ProjectCode.Domain.Repository.BasketRepository import BasketRepository
 class Cart:
 
     def __init__(self, username):
+        # self.username = username
+        # self.baskets = TypedDict(str, Basket)
+
         self.username = username
-        self.baskets = TypedDict(str, Basket)
+        self.baskets = BasketRepository(username)
 
         # REPOSITORY FIELD --- TO BE REPLACED
-        self.basket_test = BasketRepository(username)
+        # self.basket_test = BasketRepository(username)
 
     def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):

@@ -107,9 +107,9 @@ class AccessRepository(Repository):
 
     def keys(self):
         if self.store_name is None: #-> then return list of storenames
-            return [access.store.store_name for access in MemberModel.get(MemberModel.user_name == self.username).accesses]
+            return [ StoreModel.get_by_id(access.store).store_name for access in MemberModel.get(MemberModel.user_name == self.username).accesses]
         else: #-> then return list of usernames
-            return [access.user.user_name for access in StoreModel.get(StoreModel.store_name == self.store_name).accesses]
+            return [ MemberModel.get_by_id(access.user).user_name for access in StoreModel.get(StoreModel.store_name == self.store_name).accesses]
 
 
     def values(self):
