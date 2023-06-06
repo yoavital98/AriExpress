@@ -1,4 +1,4 @@
-from sqlite3 import Date
+import requests
 
 
 class SupplyService:
@@ -10,8 +10,52 @@ class SupplyService:
             # Add any initialization code here
         return cls._instance
 
-    def checkIfAvailable(self, store, user, products):
-        return Date(2023, 12, 12)
+    def perform_handshake(self):
+        post_data = {
+            "action_type": "handshake"
+        }
 
-    def call(self):
-        return True
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            return True
+        else:
+            raise Exception("Handshake request with SupplyService failed")
+
+    def dispatch_supply(self, name, address, city, country, zipcode):
+        post_data = {
+            "action_type": "supply",
+            "name": name,
+            "address": address,
+            "city": city,
+            "country": country,
+            "zipcode": zipcode
+        }
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            transaction_id = int(response.text)
+            if transaction_id == -1:
+                raise Exception("Supply transaction failed")
+            else:
+                return transaction_id
+        else:
+            raise Exception("Supply request failed")
+
+    def cancel_supply(self, transaction_id):
+        post_data = {
+            "action_type": "cancel_supply",
+            "transaction_id": str(transaction_id)
+        }
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            cancellation_result = int(response.text)
+            if cancellation_result == -1:
+                raise Exception("Supply cancellation failed")
+            else:
+                return True
+        else:
+            raise Exception("Supply cancellation request failed")

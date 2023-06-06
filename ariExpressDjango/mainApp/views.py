@@ -14,12 +14,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 import json
 import ast
-from django.contrib.auth.decorators import login_required 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
 from django.contrib import messages # for displaying messages
 from django.core.paginator import Paginator # for pagination
 from datetime import datetime #used to get total msg per day
 from django.views.decorators.cache import cache_control # for disabling cache
+from django.utils import timezone
 
 
 
@@ -162,16 +163,46 @@ def mystores(request):
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
-        # print(storesInfoDict)
+        print(storesInfoDict[0])
         return render(request, 'mystores.html', {'stores': storesInfoDict})
     messages.success(request, ("Error: User is not logged in (django error)"))
     return redirect('mainApp:mainpage')
 
 
+def viewStoreStaff(request, storename):
+    username = request.user.username
+    service = Service()
+    if 'removeAccessButton' in request.POST:
+        requester_id = username
+        to_remove_id = request.POST.get('to_remove_id')
+        print(requester_id)
+        print(to_remove_id)
+        actionRes = service.removeAccess(requester_id, to_remove_id, storename)
+        if actionRes.getStatus():
+            messages.success(request, (f"{requester_id} has removed {to_remove_id} accesses"))
+            return redirect('mainApp:viewStoreStaff', storename=storename)
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:viewStoreStaff', storename=storename)
+    else:                               # just render page
+        permissionName = 'StaffInfo'
+        if permissionCheck(username, storename, permissionName):
+            actionRes = service.getStoreProductsInfo(storename)
+            if actionRes.getStatus():
+                staff = actionRes.getReturnValue()['accesses']
+                staff = ast.literal_eval(str(staff))
+            return render(request, 'viewStoreStaff.html', {'storename': storename, 'staff': staff})
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+            return redirect('mainApp:store_specific', storename=storename)
+        
+    messages.success(request, (f"Error: Something went wrong"))
+    return redirect('mainApp:store_specific', storename=storename)
+
 
 def viewAllStores(request):
     service = Service()
-    storesInfo = service.getStoresBasicInfo() 
+    storesInfo = service.getStoresBasicInfo()
     string_data = storesInfo.getReturnValue()
     storesInfoDict = ast.literal_eval(str(string_data))
     return render(request, 'allStores.html', {'stores': storesInfoDict})
@@ -196,13 +227,13 @@ def store_specific(request, storename):
             if actionRes.getStatus():
                 messages.success(request, ("Store is now open."))
                 return redirect('mainApp:store_specific', storename=storename)
-            else: 
+            else:
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                 return redirect('mainApp:mystores')
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
-        
+
     if 'closeStore' in request.POST:
         permissionName = 'StatusChange'
         if permissionCheck(username, storename, permissionName):
@@ -210,13 +241,13 @@ def store_specific(request, storename):
             if actionRes.getStatus():
                 messages.success(request, ("Store is now closed."))
                 return redirect('mainApp:store_specific', storename=storename)
-            else: 
+            else:
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                 return redirect('mainApp:mystores')
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
-        
+
     if 'removeProduct' in request.POST:
         permissionName = 'ProductChange'
         if permissionCheck(username, storename, permissionName):
@@ -225,23 +256,23 @@ def store_specific(request, storename):
             if actionRes.getStatus():
                 messages.success(request, ("Product has been removed"))
                 return redirect('mainApp:store_specific', storename=storename)
-            else: 
+            else:
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                 return redirect('mainApp:mystores')
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
-        
+
     else:
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
         context = ast.literal_eval(str(products))
         products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
         active = "Open" if context['active'].lower() == "true" else "Closed"
-        return render(request, 'store_specific.html', {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})  
+        return render(request, 'store_specific.html', {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})
     # else:
     #     return redirect('mainApp:mainpage')
-    
+
 
 # def openStore(request, storename):
 #     if request.method == 'POST' and request.user.is_authenticated:
@@ -250,11 +281,11 @@ def store_specific(request, storename):
 #         if actionRes.getStatus():
 #             messages.success(request, ("Store is now open."))
 #             return redirect('mainApp:store_specific', storename=storename)
-#         else: 
+#         else:
 #             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 #             return redirect('mainApp:mystores')
 #     return redirect('mainApp:mainpage')
-        
+
 
 # def closeStore(request, storename):
 #     if request.method == 'POST' and request.user.is_authenticated:
@@ -263,7 +294,7 @@ def store_specific(request, storename):
 #         if actionRes.getStatus():
 #             messages.success(request, ("Store is now closed."))
 #             return redirect('mainApp:store_specific', storename=storename)
-#         else: 
+#         else:
 #             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 #             return redirect('mainApp:mystores')
 #     return redirect('mainApp:mainpage')
@@ -284,7 +315,7 @@ def editProduct(request, storename):
             if actionRes.getStatus():
                 messages.success(request, ("Product has been edited"))
                 return redirect('mainApp:store_specific', storename=storename)
-            
+
         return render(request, 'editProduct.html', {'storename': storename,
                                                     'product_name': product_name,
                                                     'product_quantity': product_quantity,
@@ -325,7 +356,7 @@ def addNewDiscount(request, storename): # Discounts
                         del request.session['rulesData']
                 else:
                     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-                
+
 
             if discountTypeInt == 3:
                 pass
@@ -378,7 +409,7 @@ def createStore(request):
             return redirect('mainApp:mainpage')
     else:
         return render(request, 'createStore.html', {})
-    
+
 
 def nominateUser(request, storename):
     service = Service()
@@ -413,7 +444,7 @@ def nominateUser(request, storename):
 
         else:
             return render(request, 'nominateUser.html', {'storename': storename})
-    
+
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
@@ -450,7 +481,20 @@ def addNewProduct(request, storename):
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
+
+
+def viewDiscounts(request, storename):
+    service = Service()
+    permissionName = 'Discounts'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        actionRes = service.getAllDiscounts(storename)
+        if actionRes:
+            discounts = ast.literal_eval(str(actionRes.getReturnValue()))
+            return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
     
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
 
 
 def adminPage(request):
@@ -488,12 +532,19 @@ def homepage_guest(request):
 
 @login_required(login_url='/login')
 def inbox(request):
-    all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
-    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-    paginator = Paginator(all_user_messages, 5)
-    page = request.GET.get('page')
-    all_messages = paginator.get_page(page)
-    return render(request, 'inbox.html',{'usermessages': all_messages, 'pending': pending})
+    service = Service()
+    #all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
+    #pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+    all_user_messages = service.getAllMessagesReceived(request.user.username)
+    if all_user_messages.getStatus():
+        all_user_messages = all_user_messages.getReturnValue()
+        paginator = Paginator(all_user_messages, 5)
+        page = request.GET.get('page')
+        all_messages = paginator.get_page(page)
+        return render(request, 'inbox.html',{'usermessages': all_messages})
+    else:
+        messages.error(request, "Error: " + str(all_user_messages.getReturnValue()))
+        return redirect('mainApp:mainpage')
 
 
 def send_message(request):
@@ -504,19 +555,25 @@ def send_message(request):
             receiver_username = form.cleaned_data['receiver']
             res = service.checkUsernameExistence(receiver_username)
             if res.getStatus():
-                message = form.save(commit=False)
-                message.sender = request.user.username
-                message.save()
-                messages.success(request, "Message sent successfully")
-                return HttpResponseRedirect('/inbox')
+                subject = form.cleaned_data['subject']
+                content = form.cleaned_data['content']
+                creation_date = datetime.now()
+                file = form.cleaned_data['file']
+                print(file)
+                message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date, file)
+                if message_res.getStatus():
+                    messages.success(request, "Message sent successfully")
+                    return HttpResponseRedirect('/inbox')
+                else:
+                    messages.error(request, "Error sending message through backend - "+str(message_res.getReturnValue()))
             else:
                 messages.error(request, "Invalid adresssee username - the message was not sent")
         else:
-            messages.error(request, "Invalid form submission")
+            messages.error(request, "Invalid form submission - "+form.errors.as_json())
     else:
         form = UserMessageform()
         messages.error(request, "Error sending message")
-    return HttpResponseRedirect('/inbox')   
+    return HttpResponseRedirect('/inbox')
 
 
 @login_required(login_url='/login')
@@ -532,10 +589,20 @@ def delete_message(request, usermessage_id):
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_as_read(request, usermessage_id):
-    message = UserMessage.objects.get(id=usermessage_id)
-    message.status = 'read'
-    message.save()
-    messages.success(request, "Message marked as read successfully")
+    # message = UserMessage.objects.get(id=usermessage_id)
+    # service = Service()
+    # username = request.POST.get('username', None)
+    # res = service.readMessage(username, usermessage_id)
+    # if res.getStatus():
+        # message.status = 'read'
+        # message.save()
+        # messages.success(request, "Message marked as read successfully")
+    service = Service()
+    res = service.readMessage(request.user.username, usermessage_id)
+    if res.getStatus():
+        messages.success(request, "Message marked as read successfully")
+    else:
+        messages.error(request, "Error marking message as read - "+res.getReturnValue())
     return HttpResponseRedirect('/inbox')
 
 
@@ -548,13 +615,7 @@ def check_username(request):
         if res.getStatus():
             return JsonResponse({'status': True})
         else:
-            return JsonResponse({'status': False}) 
-
-@login_required(login_url='/login')
-def notifications(request):
-    pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-
-
+            return JsonResponse({'status': False})
 
 #---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
@@ -614,8 +675,8 @@ def remove_basket_product(request):
     else:
         form = BasketRemoveProductForm()
         messages.error(request, "Error removing product from cart - "+ str(request.method))
-        return HttpResponseRedirect('/cart')  
-    
+        return HttpResponseRedirect('/cart')
+
 @login_required(login_url='/login')
 def edit_basket_product(request):
     if request.method == 'POST':
@@ -642,8 +703,8 @@ def edit_basket_product(request):
     else:
         form = BasketEditProductForm()
         messages.error(request, "Error editting product quantity - "+ str(request.method))
-        return HttpResponseRedirect('/cart')  
-    
+        return HttpResponseRedirect('/cart')
+
 
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -675,7 +736,7 @@ def checkoutpage(request):
     else:
         messages.error(request, "You must be logged in to checkout")
         return HttpResponseRedirect('/login')
-    
+
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def checkout(request):
@@ -684,8 +745,7 @@ def checkout(request):
             service = Service()
             form = CheckoutForm(request.POST)
             if form.is_valid():
-                full_address = str(form.cleaned_data['address'])+", "+str(form.cleaned_data['country'])
-                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']), form.cleaned_data['cc_name'], int(form.cleaned_data['cc_id']), form.cleaned_data['cc_expiration'], int(form.cleaned_data['cc_cvv']), full_address)
+                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']), form.cleaned_data['address'], form.cleaned_data['city'], form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
                     return redirect('mainApp:mainpage')
@@ -701,7 +761,7 @@ def checkout(request):
     else:
         form = BasketEditProductForm()
         messages.error(request, "Error placing an order - "+ str(request.method))
-        return HttpResponseRedirect('/cart')  
+        return HttpResponseRedirect('/cart')
 
 def add_product_to_cart(request):
     if request.method=='POST':
@@ -712,17 +772,16 @@ def add_product_to_cart(request):
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
                 quantity = form.cleaned_data['quantity']
-                searched = form.cleaned_data['searched']
                 res = service.addToBasket(request.user.username, store, product_id, quantity)
                 if res.getStatus():
                     messages.success(request, "Product added successfully")
-                    return searchpage(request)
+                    return redirect(request.META.get('HTTP_REFERER'))
                 else:
                     messages.error(request, "Error adding product to cart res - " + str(res.getReturnValue()))
-                    return searchpage(request)
+                    return redirect(request.META.get('HTTP_REFERER'))
             else:
                 messages.error(request, "Error adding product to cart form - " + str(form.errors))
-                return searchpage(request)
+                return redirect(request.META.get('HTTP_REFERER'))
         else:
             messages.error(request, "You must be logged in to add products to cart")
             return HttpResponseRedirect('/login')

@@ -1,52 +1,102 @@
 from datetime import datetime
 from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from ProjectCode.Domain.ExternalServices.MessageObjects.Notfication import Notification
+
+
+def send_notification(user_id, type, message, pending_amount):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.l.send)(f"{user_id}", {
+        'type': type,
+        'content': message,
+        'unread_messages': pending_amount
+    })
 
 
 class MessageController:
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._messages = {}
-            cls._instance._observers = {}
+            cls._instance = super().__new__(cls, *args, **kwargs)
+            cls._inbox_messages = {}  # message_id to message
+            cls._sent_messages = {}  # list of sent messages
+            cls._inbox_notifications = {}  # message_id to message
+            cls._pending_messages_amount = {}  # user_id to amount of pending messages
+            cls._pending_notifications_amount = {}  # user_id to amount of pending messages
+            cls.observers = []  # receiver_id to observer
+            cls.msgCounter = 0
+            cls.notificationCounter = 0
         return cls._instance
 
-    def send_message(self, message_id, sender_id, receiver_id, subject, content, date=None, file=None):
-        if date is None:
-            date = datetime.datetime.now()
-        message = Message(message_id, sender_id, receiver_id, subject, content, date, file, False)
-        self._messages[message_id] = message
-        self.notify_observers(receiver_id, message)
+    def send_message(self, requester_id, receiver_id, subject, content, creation_date, file=None):
+        message_id = self.msgCounter
+        self.msgCounter += 1
+        message = Message(message_id, requester_id, receiver_id, subject, content, creation_date, file)
+
+        if receiver_id not in self._inbox_messages.keys():
+            self._inbox_messages[receiver_id] = []
+        self._inbox_messages[receiver_id].append(message)
+
+        if receiver_id not in self._pending_messages_amount.keys():
+            self._pending_messages_amount[receiver_id] = 0
+        self._pending_messages_amount[receiver_id] = self._pending_messages_amount[receiver_id] + 1
+
+        if requester_id not in self._sent_messages.keys():
+            self._sent_messages[requester_id] = []
+        self._sent_messages[requester_id].append(message)
+
+        send_notification(receiver_id, "message", "You have a new Message.", self._pending_messages_amount[receiver_id])
+
         return message
 
-    def get_all_messages_sent(self, requester_id, username):
-        return [message for message in self._messages.values()
-                if message.sender_id == requester_id and message.sender_id == username]
+    def read_message(self, user_id, message_id):
+        for message in self._inbox_messages[user_id]:
+            if message.get_id() == message_id:
+                if not message.is_read():
+                    message.mark_as_read()
+                    self._pending_messages_amount[user_id] = self._pending_messages_amount[user_id] - 1
+                return message
+        return None
 
-    def get_all_messages_received(self, requester_id, username):
-        return [message for message in self._messages.values()
-                if message.receiver_id == requester_id and message.receiver_id == username]
+    def get_messages_sent(self, user_id):
+        if user_id not in self._sent_messages.keys():
+            self._sent_messages[user_id] = []
+        return [message.toJson()  for message in self._sent_messages[user_id]]
 
-    def read_message(self, requester_id, message_id):
-        message = self._messages.get(message_id)
-        if message is None:
-            return None
-        if message.receiver_id != requester_id:
-            return None
-        message.read = True
+    def get_messages_received(self, user_id):
+        if user_id not in self._inbox_messages.keys():
+            self._inbox_messages[user_id] = []
+        return [message.toJson() for message in self._inbox_messages[user_id]]
+
+    def send_notification(self, receiver_id, subject, content, creation_date):
+        message_id = self.notificationCounter
+        self.notificationCounter += 1
+        message = Notification(message_id, "AriExpress", receiver_id, subject, content, creation_date)
+
+        if receiver_id not in self._inbox_messages.keys():
+            self._inbox_messages[receiver_id] = []
+        self._inbox_messages[receiver_id].append(message)
+
+        if receiver_id not in self._pending_notifications_amount.keys():
+            self._pending_notifications_amount[receiver_id] = 0
+        self._pending_notifications_amount[receiver_id] = self._pending_notifications_amount[receiver_id] + 1
+
+        send_notification(receiver_id, "notification", "You have a new Notification.",
+                          self._pending_notifications_amount[receiver_id])
+
         return message
 
-    def register_observer(self, user_id, observer):
-        if user_id not in self._observers:
-            self._observers[user_id] = []
-        self._observers[user_id].append(observer)
+    def read_notification(self, user_id, message_id):
+        for message in self._inbox_notifications[user_id]:
+            if message.get_id() == message_id:
+                if not message.is_read():
+                    message.mark_as_read()
+                    self._pending_notifications_amount[user_id] = self._pending_notifications_amount[user_id] - 1
+                return message
+        return None
 
-    def remove_observer(self, user_id, observer):
-        if user_id in self._observers:
-            self._observers[user_id].remove(observer)
-
-    def notify_observers(self, user_id, message):
-        if user_id in self._observers:
-            for observer in self._observers[user_id]:
-                observer.notify(message)
+    def get_notifications(self, user_id):
+        return [message for message in self._inbox_notifications[user_id]]

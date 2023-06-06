@@ -4,6 +4,8 @@ from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
 import json
 
+from ProjectCode.Domain.Repository.ProductBasketRepository import ProductBasketRepository
+
 
 class Basket:
     def __init__(self, username, store):
@@ -11,6 +13,9 @@ class Basket:
         self.store: Store = store
         self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
         self.bids = TypedDict(int, Bid) # Bid id -> Bid
+
+        # REPOSITORY FIELD --- TO BE REPLACED
+        self.products_test = ProductBasketRepository(username, store.get_store_name())
 
     def add_Product(self, product_id, product, quantity):
         if quantity <= 0:
@@ -76,6 +81,9 @@ class Basket:
 
     def purchaseBasket(self):
         return self.store.purchaseBasket(self.products)
+
+    def calculateBasketPrice(self):
+        return self.store.calculateBasketPrice(self.products)
 
     def clearProducts(self):
         self.products.clear()

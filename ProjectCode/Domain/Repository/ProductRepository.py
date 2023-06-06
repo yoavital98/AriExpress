@@ -32,19 +32,30 @@ class ProductRepository(Repository):
                 product_list.append(Product(product.product_id, product.name, product.quantity, product.price, product.categories))
             return product_list
         else:
-            StoreProduct = StoreModel.products.get_through_model()
-            joined = ProductModel.select().join(StoreProduct).join(StoreModel)\
-                .where(
-                       (StoreProduct.storemodel_id == self.store_name) &
-                       (StoreProduct.productmodel_id == pk))
-            product = joined[0]
-            product_obj = Product(product.product_id, product.name, product.quantity, product.price, product.categories)
-            return product_obj
+            store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
+            product_entry = ProductModel.get(ProductModel.product_id == pk, ProductModel.store == store_entry)
+            product = Product(product_entry.product_id, product_entry.name, product_entry.quantity, product_entry.price, product_entry.categories)
+            return product
+            # StoreProduct = StoreModel.products.get_through_model()
+            # joined = ProductModel.select().join(StoreProduct).join(StoreModel)\
+            #     .where(
+            #            (StoreProduct.storemodel_id == self.store_name) &
+            #            (StoreProduct.productmodel_id == pk))
+            # product = joined[0]
+            # product_obj = Product(product.product_id, product.name, product.quantity, product.price, product.categories)
+            # return product_obj
 
     def add(self, product: Product):
-        model = ProductModel.create(product_id=product.get_product_id(), name=product.get_name(), quantity=product.get_quantity(), price=product.get_price(), categories=product.get_categories())
-        store = StoreModel.get(StoreModel.store_name == self.store_name)
-        store.products.add(model)
+        product_entry = ProductModel.get_or_none(ProductModel.product_id == product.get_product_id())
+        if product_entry is None:
+            store = StoreModel.get(StoreModel.store_name == self.store_name)
+            product_entry = ProductModel.create(product_id=product.get_product_id(), store=store, name=product.get_name(), quantity=product.get_quantity(), price=product.get_price(), categories=product.get_categories())
+        else:
+            product_entry.name = product.get_name()
+            product_entry.quantity = product.get_quantity()
+            product_entry.price = product.get_price()
+            product_entry.categories = product.get_categories()
+            product_entry.save()
         return product
 
     def remove(self, pk):
@@ -52,3 +63,9 @@ class ProductRepository(Repository):
         store = StoreModel.get(StoreModel.store_name == self.store_name)
         store.products.remove(model)
         model.delete_instance()
+
+    def keys(self):
+        return [ product.product_id for product in StoreModel.get(StoreModel.store_name == self.store_name).products]
+
+    def values(self):
+        return self.get()
