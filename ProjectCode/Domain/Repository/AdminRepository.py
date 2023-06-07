@@ -48,7 +48,15 @@ class AdminRepository(Repository):
             return admin
 
     def add(self, admin: Admin):
-        admin_entry = self.model.create(user_name=admin.get_username(), password=admin.get_password(), email=admin.get_email(), logged_in =admin.get_logged())
+        admin_entry = self.model.get_or_none(self.model.user_name == admin.get_username())
+        if admin_entry is not None:
+            #update
+            admin_entry.password = admin.get_password()
+            admin_entry.email = admin.get_email()
+            admin_entry.logged_in = admin.get_logged()
+            admin_entry.save()
+            return admin
+        self.model.create(user_name=admin.get_username(), password=admin.get_password(), email=admin.get_email(), logged_in =admin.get_logged())
         return admin
 
     def remove(self, pk):

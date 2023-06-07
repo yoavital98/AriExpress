@@ -106,74 +106,74 @@ class TestStoreFacade(TestCase):
             self.store_facade.addAdmin("Ari", "Ari", "pass", "yoav@gmail.com")
     
     # addAuction
-    def test_addAuction_success(self):
-        pass
-
-    def test_addAuction_userNotLoggedIn_fail(self):
-        pass
-
-    def test_addAuction_storeNotExists_fail(self):
-        pass
-
-    def test_addAuction_userWithoutPermission_fail(self):
-        pass
-
-    def test_addAuction_productNotExists_fail(self):
-        pass
-
-    def test_addAuction_startingPriceLessEqualZero_fail(self):
-        pass
-
-    def test_addAuction_durationLessEqualZero_fail(self):
-        pass
-
-    def test_addAuction_productAlreadyInAuction_fail(self):
-        pass
-
-    # addDiscount
-    def test_addDiscount_success(self):
-        pass
-
-    def test_addDiscount_userNotLoggedIn_fail(self):
-        pass
-
-    def test_addDiscount_storeNotExists_fail(self):
-        pass
-
-    def test_addDiscount_userWithoutPermission_fail(self):
-        pass
-
-    def test_addDiscount_productNotExists_fail(self):
-        pass
-
-    def test_addDiscount_productAlreadyInDiscount_fail(self):
-        #TODO: check if this is legal - should it fail or success?
-        pass
-
-    def test_addDiscount_invalidDiscountType_fail(self):
-        pass
-
-    def test_addDiscount_invalidDiscountPercentage_fail(self):
-        pass
-
-    # addLottery
-    def test_addLottery_success(self):
-        pass
-
-    def test_addLottery_userNotLoggedIn_fail(self):
-        pass
-
-    def test_addLottery_storeNotExists_fail(self):
-        pass
-
-    def test_addLottery_userWithoutPermission_fail(self):
-        pass
-
-    def test_addLottery_productNotExists_fail(self):
-        pass
-
-    def test_addLottery_productAlreadyInLottery_fail(self):
-        pass
+    # def test_addAuction_success(self):
+    #     pass
+    #
+    # def test_addAuction_userNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_addAuction_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_addAuction_userWithoutPermission_fail(self):
+    #     pass
+    #
+    # def test_addAuction_productNotExists_fail(self):
+    #     pass
+    #
+    # def test_addAuction_startingPriceLessEqualZero_fail(self):
+    #     pass
+    #
+    # def test_addAuction_durationLessEqualZero_fail(self):
+    #     pass
+    #
+    # def test_addAuction_productAlreadyInAuction_fail(self):
+    #     pass
+    #
+    # # addDiscount
+    # def test_addDiscount_success(self):
+    #     pass
+    #
+    # def test_addDiscount_userNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_addDiscount_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_addDiscount_userWithoutPermission_fail(self):
+    #     pass
+    #
+    # def test_addDiscount_productNotExists_fail(self):
+    #     pass
+    #
+    # def test_addDiscount_productAlreadyInDiscount_fail(self):
+    #     #TODO: check if this is legal - should it fail or success?
+    #     pass
+    #
+    # def test_addDiscount_invalidDiscountType_fail(self):
+    #     pass
+    #
+    # def test_addDiscount_invalidDiscountPercentage_fail(self):
+    #     pass
+    #
+    # # addLottery
+    # def test_addLottery_success(self):
+    #     pass
+    #
+    # def test_addLottery_userNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_addLottery_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_addLottery_userWithoutPermission_fail(self):
+    #     pass
+    #
+    # def test_addLottery_productNotExists_fail(self):
+    #     pass
+    #
+    # def test_addLottery_productAlreadyInLottery_fail(self):
+    #     pass
 
     # addNewProductToStore
     def test_addNewProductToStore_success(self):
@@ -339,20 +339,20 @@ class TestStoreFacade(TestCase):
         self.assertTrue(access.hasRole("Owner"))
 
     # addPurchasePolicy
-    def test_addPurchasePolicy_success(self):
-        pass
-
-    def test_addPurchasePolicy_userNotLoggedIn_fail(self):
-        pass
-
-    def test_addPurchasePolicy_storeNotExists_fail(self):
-        pass
-
-    def test_addPurchasePolicy_userWithoutPermission_fail(self):
-        pass
-
-    def test_addPurchasePolicy_invalidPolicy_fail(self):
-        pass
+    # def test_addPurchasePolicy_success(self):
+    #     pass
+    #
+    # def test_addPurchasePolicy_userNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_addPurchasePolicy_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_addPurchasePolicy_userWithoutPermission_fail(self):
+    #     pass
+    #
+    # def test_addPurchasePolicy_invalidPolicy_fail(self):
+    #     pass
 
     # addToBasket
     def test_addToBasket_success(self):
@@ -433,27 +433,27 @@ class TestStoreFacade(TestCase):
 
 
     # ClaimAuctionPurchase
-    def test_ClaimAuctionPurchase_success(self):
-        pass
-
-    def test_ClaimAuctionPurchase_userNotLoggedIn_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_storeNotExists_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_userWithoutPermission_fail(self):
-        #TODO: should there be permissions? - should it fail or success?
-        pass
-
-    def test_ClaimAuctionPurchase_auctionNotExists_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_auctionNotEnded_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_auctionAlreadyClaimed_fail(self):
-        pass
+    # def test_ClaimAuctionPurchase_success(self):
+    #     pass
+    #
+    # def test_ClaimAuctionPurchase_userNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_ClaimAuctionPurchase_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_ClaimAuctionPurchase_userWithoutPermission_fail(self):
+    #     #TODO: should there be permissions? - should it fail or success?
+    #     pass
+    #
+    # def test_ClaimAuctionPurchase_auctionNotExists_fail(self):
+    #     pass
+    #
+    # def test_ClaimAuctionPurchase_auctionNotEnded_fail(self):
+    #     pass
+    #
+    # def test_ClaimAuctionPurchase_auctionAlreadyClaimed_fail(self):
+    #     pass
 
     # closeStore
     def test_closeStore_success(self):
@@ -636,10 +636,11 @@ class TestStoreFacade(TestCase):
         # before
         self.assertTrue(product.quantity == 10)
         self.assertTrue(product.price == 500)
-        self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, quantity = 4 , price = 25)
+        self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, quantity=4 , price=25)
         # after
-        self.assertTrue(product.quantity == 4)
-        self.assertTrue(product.price == 25)
+        edited_product: Product = self.my_store.getProductById(1, "Feliks")
+        self.assertTrue(edited_product.quantity == 4)
+        self.assertTrue(edited_product.price == 25)
 
     def test_editProductOfStore_userNotLoggedIn_fail(self):
         product: Product = self.my_store.getProductById(1, "Feliks")
@@ -727,6 +728,8 @@ class TestStoreFacade(TestCase):
         product: Product = self.my_store.getProductById(1, "Feliks")
         self.assertTrue(product.price == 500)
         self.store_facade.editProductOfStore("Feliks", "AriExpress", 1, price=1000)
+        product: Product = self.my_store.getProductById(1, "Feliks")
+        product_in_basket: Product = basket.products.get(1)[0]
         self.assertTrue(product.price == 1000)
         self.assertTrue(product_in_basket.price == 1000)
 
@@ -1003,15 +1006,15 @@ class TestStoreFacade(TestCase):
 
 
     def test_calculateSimpleDiscount_success(self):
-        self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.createStore(self.member1.get_username(), "Store1")
-        self.store = self.store_facade.stores["Store1"]
-        self.access = self.store.get_accesses()[self.member1.get_username()]
-        self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
-        self.discount = self.store.addDiscount("Simple", percent=10, level="Product",
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+
+        self.product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        self.discount = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product",
                                                level_name=self.product.get_product_id())
         self.product_dict = {self.product.get_product_id(): 1}
-        self.price_after_discount = self.store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
+        self.price_after_discount = self.my_store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
         self.assertEqual(self.price_after_discount, 9)
 
     def test_calculateConditionedDiscount_byCategory_success(self):
@@ -1254,7 +1257,6 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Feliks", "password456")
         self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
         permissions = self.store_facade.getPermissions("AriExpress", "Feliks", "Amiel")
-        print("hi")
 
     def test_getPermissions_userNotLoggedIn_fail(self):
         pass
@@ -1327,6 +1329,7 @@ class TestStoreFacade(TestCase):
             products_dict = self.store_facade.getProductsByStore("some_store")
     # TODO: amiel
     # getPurchasePolicy
+
     def test_getPurchasePolicy_success(self):
        # self.store_facade.addPurchasePolicy()
         pass
@@ -1665,6 +1668,8 @@ class TestStoreFacade(TestCase):
         self.assertFalse(self.my_store.active)
 
     # participateInLottery
+    #TODO: undo
+
     def test_participateInLottery_success(self):
         pass
 
@@ -1978,11 +1983,11 @@ class TestStoreFacade(TestCase):
     def test_removeFromBasket_basketNotExists_fail(self):
         amiel: Member = self.store_facade.members.get("Amiel")
         self.store_facade.logInAsMember("Amiel", "password789")
-        self.assertFalse(amiel.cart.baskets.__contains__("AriExpress"))
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
         with self.assertRaises(Exception):
             self.store_facade.removeFromBasket("Amiel", "AriExpress", 1)
         # integrity :
-        self.assertFalse(amiel.cart.baskets.__contains__("AriExpress"))
+        self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
     def test_removeFromBasket_productNotExists_fail(self):
         amiel: Member = self.store_facade.members.get("Amiel")
@@ -2013,27 +2018,29 @@ class TestStoreFacade(TestCase):
 
 
  # todo: ask amiel
+    #todo: undo
+
     # removePermissions
-    def test_removePermissions_success(self):
-        pass
-
-    def test_removePermissions_userNotLoggedIn_fail(self):
-        pass
-
-    def test_removePermissions_storeNotExists_fail(self):
-        pass
-
-    def test_removePermissions_storeIsClosed_fail(self):
-        pass
-
-    def test_removePermissions_requesterHasNoPermissions_fail(self):
-        pass
-
-    def test_removePermissions_requesteeHasNoAccess_fail(self):
-        pass
-
-    def test_removePermissions_permissionsInvalid_fail(self):
-        pass
+    # def test_removePermissions_success(self):
+    #     pass
+    #
+    # def test_removePermissions_userNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_removePermissions_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_removePermissions_storeIsClosed_fail(self):
+    #     pass
+    #
+    # def test_removePermissions_requesterHasNoPermissions_fail(self):
+    #     pass
+    #
+    # def test_removePermissions_requesteeHasNoAccess_fail(self):
+    #     pass
+    #
+    # def test_removePermissions_permissionsInvalid_fail(self):
+    #     pass
 
     # removeProductFromStore
     def test_removeProductFromStore_success(self):
@@ -2082,67 +2089,67 @@ class TestStoreFacade(TestCase):
 
 
 
-    def test_removeProductFromStore_productWithSpecialPolicies_success(self):
-        # TODO: check that product is deleted properly
-        pass
+    # def test_removeProductFromStore_productWithSpecialPolicies_success(self):
+    #     # TODO: check that product is deleted properly
+    #     pass
 
 
 
-
+    #TODO: undo
 
     # django_getAllStaffMembersNames(self, storename)
-    def test_django_getAllStaffMembersNames_success(self):
-        pass
-
-    def test_django_getAllStaffMembersNames_storeNotExists_fail(self):
-        pass
-
-    def test_django_getAllStaffMembersNames_storeIsClosed_fail(self):
-        pass
-
-    # messageAsAdminToUser(admin_name, receiverID, message)
-    def test_messageAsAdminToUser_receiverIsAdmin_success(self):
-        pass
-
-    def test_messageAsAdminToUser_receiverIsGuest_success(self):
-        pass
-
-    def test_messageAsAdminToUser_receiverIsMember_success(self):
-        pass
-
-    def test_messageAsAdminToUser_adminNotExists_fail(self):
-        pass
-
-    def test_messageAsAdminToUser_adminNotLoggedIn_fail(self):
-        pass
-
-    def test_messageAsAdminToUser_receiverNotExists_fail(self):
-        pass
-
-    def test_messageAsAdminToUser_receiverIsStore_fail(self):
-        pass
-
-    # messageAsAdminToStore(admin_name, store_Name, message)
-    def test_messageAsAdminToStore_receiverIsStore_success(self):
-        pass
-
-    def test_messageAsAdminToStore_receiverIsAdmin_fail(self):
-        pass
-
-    def test_messageAsAdminToStore_receiverIsGuest_fail(self):
-        pass
-
-    def test_messageAsAdminToStore_receiverIsMember_fail(self):
-        pass
-
-    def test_messageAsAdminToStore_adminNotExists_fail(self):
-        pass
-
-    def test_messageAsAdminToStore_adminNotLoggedIn_fail(self):
-        pass
-
-    def test_messageAsAdminToStore_storeNotExists_fail(self):
-        pass
+    # def test_django_getAllStaffMembersNames_success(self):
+    #     pass
+    #
+    # def test_django_getAllStaffMembersNames_storeNotExists_fail(self):
+    #     pass
+    #
+    # def test_django_getAllStaffMembersNames_storeIsClosed_fail(self):
+    #     pass
+    #
+    # # messageAsAdminToUser(admin_name, receiverID, message)
+    # def test_messageAsAdminToUser_receiverIsAdmin_success(self):
+    #     pass
+    #
+    # def test_messageAsAdminToUser_receiverIsGuest_success(self):
+    #     pass
+    #
+    # def test_messageAsAdminToUser_receiverIsMember_success(self):
+    #     pass
+    #
+    # def test_messageAsAdminToUser_adminNotExists_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToUser_adminNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToUser_receiverNotExists_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToUser_receiverIsStore_fail(self):
+    #     pass
+    #
+    # # messageAsAdminToStore(admin_name, store_Name, message)
+    # def test_messageAsAdminToStore_receiverIsStore_success(self):
+    #     pass
+    #
+    # def test_messageAsAdminToStore_receiverIsAdmin_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToStore_receiverIsGuest_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToStore_receiverIsMember_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToStore_adminNotExists_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToStore_adminNotLoggedIn_fail(self):
+    #     pass
+    #
+    # def test_messageAsAdminToStore_storeNotExists_fail(self):
+    #     pass
 
     # ----------------------------------------------------------------------------------
 

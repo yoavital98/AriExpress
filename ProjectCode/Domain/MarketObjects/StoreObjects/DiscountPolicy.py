@@ -54,7 +54,7 @@ class DiscountPolicy:
             pass
         else:
             raise Exception("No such discount type exists")
-        discount.parse()
+        #discount.parse() -- orm change
         self.discount_id += 1
         self.discounts[self.discount_id] = discount
         return discount

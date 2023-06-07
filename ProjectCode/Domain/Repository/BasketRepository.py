@@ -70,7 +70,13 @@ class BasketRepository(Repository):
 
     def add(self, key, basket: Basket):
         store_entry = StoreModel.get(StoreModel.store_name == key)
-        basket_entry = self.model.create(user_name=basket.username, store=store_entry)
+        basket_entry = self.model.get_or_none(BasketModel.store == key, BasketModel.user_name == self.user_name)
+        if basket_entry is None:
+            #create
+            self.model.create(user_name=basket.username, store=store_entry)
+        else:
+            #update
+            pass
         return basket
 
     def remove(self, pk):

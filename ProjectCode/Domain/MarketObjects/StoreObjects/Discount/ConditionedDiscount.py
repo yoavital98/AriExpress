@@ -20,6 +20,7 @@ class ConditionedDiscount(Policy):
         self.rule = rule
         self.percent = percent
         self.logic_comp: LogicComp = None
+        self.parse()
         #self.percent = percent
         #self.level = level
         #self.level_name = level_name

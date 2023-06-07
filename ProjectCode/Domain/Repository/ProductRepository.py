@@ -49,8 +49,7 @@ class ProductRepository(Repository):
         store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
         product_entry = ProductModel.get_or_none(ProductModel.product_id == product.get_product_id(), ProductModel.store == store_entry)
         if product_entry is None:
-            store = StoreModel.get(StoreModel.store_name == self.store_name)
-            product_entry = ProductModel.create(product_id=product.get_product_id(), store=store, name=product.get_name(), quantity=product.get_quantity(), price=product.get_price(), categories=product.get_categories())
+            product_entry = ProductModel.create(product_id=product.get_product_id(), store=store_entry, name=product.get_name(), quantity=product.get_quantity(), price=product.get_price(), categories=product.get_categories())
         else:
             product_entry.name = product.get_name()
             product_entry.quantity = product.get_quantity()

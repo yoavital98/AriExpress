@@ -61,6 +61,9 @@ class Store:
         # self.prods = ProductRepository(store_name)
 
 
+    def __eq__(self, other):
+        return self.__store_name == other.get_store_name()
+
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
@@ -188,6 +191,7 @@ class Store:
                 raise Exception("No such attribute exists")
             self.checkValue(v)
             setattr(cur_product, k, v)
+        self.__products[product_id] = cur_product
         return cur_product
 
     # TODO: may cause problem for unknown reasons

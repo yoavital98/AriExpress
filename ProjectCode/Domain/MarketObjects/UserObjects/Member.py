@@ -32,6 +32,13 @@ class Member(User):
         #REPOSITORY FIELDS - TO BE REPLACED
         #self.accesses_test = AccessRepository(username=user_name)
 
+    def __str__(self):
+        return "Member: " + self.user_name + " " + self.email
+
+    def __eq__(self, other):
+        if isinstance(other, Member):
+            return self.user_name == other.user_name and self.password == other.password and self.email == other.email
+        return False
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):

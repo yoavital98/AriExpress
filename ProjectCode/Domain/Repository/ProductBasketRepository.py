@@ -49,7 +49,8 @@ class ProductBasketRepository(Repository):
                 products.append(product_basket)
             return products
         else:
-            product_basket_entry = self.model.get(self.model.product_id == pk)
+            basket_entry = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)
+            product_basket_entry = self.model.get(self.model.product_id == pk, self.model.basket == basket_entry)
             to_return = self.__createDomainObject(product_basket_entry)
             return to_return
 
@@ -69,7 +70,7 @@ class ProductBasketRepository(Repository):
         store_entry = StoreModel.get_by_id(self.store_name)
         basket_query = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == store_entry)
         product, quantity, price = product_data
-        product_basket_entry = self.model.get_or_none(product.get_product_id())
+        product_basket_entry = self.model.get_or_none(self.model.product_id == product.get_product_id(), self.model.basket == basket_query)
         if product_basket_entry is not None:
             #update
             product_basket_entry.quantity = quantity
@@ -86,13 +87,15 @@ class ProductBasketRepository(Repository):
         return product_data
 
     def remove(self, pk):
-        product_basket_entry = self.model.get(product_id=pk)
+        basket_entry = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)
+        product_basket_entry = self.model.get(self.model.product_id == pk, self.model.basket == basket_entry)
         product_basket_entry.delete_instance()
         return True
 
 
     def keys(self):
-        return [p.product_id for p in ProductBasketModel.select()]
+        query = self.model.select().where(self.model.basket == BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name))
+        return [p.product_id for p in query]
 
     def values(self):
         return self.get()

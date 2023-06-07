@@ -77,9 +77,11 @@ class AccessRepository(Repository):
                 access_list.append(self.__createDomainObject(access, store_dom, member_dom))
             return access_list
         else:
-            user_entry = MemberModel.get(MemberModel.user_name == self.username)
-            store_entry = StoreModel.get(StoreModel.store_name == pk)
-            access_entry = AccessModel.get(AccessModel.store == store_entry, AccessModel.user == user_entry)
+            user_entry = MemberModel.get_or_none(MemberModel.user_name == self.username)
+            store_entry = StoreModel.get_or_none(StoreModel.store_name == pk)
+            access_entry = AccessModel.get_or_none(AccessModel.store == store_entry, AccessModel.user == user_entry)
+            if user_entry is None or store_entry is None or access_entry is None:
+                return None
             return self.__createDomainObject(access_entry, Store(pk), Member(-1, user_entry.user_name, user_entry.password, user_entry.email))
 
     def __createDomainObject(self, access_entry, store_dom, user_dom):
@@ -89,10 +91,20 @@ class AccessRepository(Repository):
         return access_dom
 
     def add(self, access):
+
         store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
         permissions = access.get_access_state().get_permissions().keys()
         user_entry = MemberModel.get(MemberModel.user_name == access.get_user().get_username())
+        access_entry = AccessModel.get_or_none(AccessModel.store == store_entry, AccessModel.user == user_entry)
         access_state_entry = AccessStateModel.create(permissions=','.join(permissions), state=access.get_role())
+
+        if access_entry is not None:
+            #update
+            access_entry.access_state = access_state_entry
+            access_entry.role = access.get_role()
+            access_entry.nominated_by_username = access.get_nominated_by_username()
+            access_entry.save()
+            return access
         AccessModel.create(store=store_entry, user=user_entry, nominated_by_username=access.get_nominated_by_username(), role=access.get_role(), access_state=access_state_entry)
         return access
 
@@ -109,7 +121,9 @@ class AccessRepository(Repository):
         if self.store_name is None: #-> then return list of storenames
             return [ StoreModel.get_by_id(access.store).store_name for access in MemberModel.get(MemberModel.user_name == self.username).accesses]
         else: #-> then return list of usernames
-            return [ MemberModel.get_by_id(access.user).user_name for access in StoreModel.get(StoreModel.store_name == self.store_name).accesses]
+            store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
+            access_query = AccessModel.select().where(AccessModel.store == store_entry)
+            return [ MemberModel.get_by_id(access.user).user_name for access in access_query]
 
 
     def values(self):

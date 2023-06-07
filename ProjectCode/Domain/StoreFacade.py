@@ -175,7 +175,7 @@ class StoreFacade:
             raise Exception("user does not exists")
 
     def checkIfUserIsLoggedIn(self, user_name):
-        return self.online_members.__contains__(user_name)
+        return self.online_members.keys().__contains__(user_name)
 
     # checks if username exists in the system
     def checkIfUsernameExists(self, user_name):
@@ -184,7 +184,7 @@ class StoreFacade:
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
-            if self.online_members.__contains__(str(user_name)):
+            if self.online_members.keys().__contains__(str(user_name)):
                 return self.members.get(user_name)
             else:
                 raise Exception("user is not logged in")
@@ -548,10 +548,8 @@ class StoreFacade:
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Owner")
 
-        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
-        # TODO:
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores[store_name]
@@ -565,8 +563,6 @@ class StoreFacade:
 
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Manager")
-        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
-        # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
     def removeAccess(self, requester_username, to_remove_username, store_name):
@@ -745,7 +741,7 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        MessageController().sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now())
+        self.sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now())
         for owner in cur_store.getOwners():
             MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now())
         return cur_store
@@ -782,6 +778,7 @@ class StoreFacade:
                 raise Exception("admin is already in the system")
             if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
+                self.admins[username] = existing_admin
                 return existing_admin
             else:
                 raise Exception("admin name or password does not match")
@@ -850,8 +847,8 @@ class StoreFacade:
             admin: Admin = self.admins.get(user_name)
             if admin.logged_In:
                 member_list = []
-                for member in self.members:
-                    if member not in self.online_members:
+                for member in self.members.values():
+                    if member not in self.online_members.values():
                         member_list.append(member)
                 return member_list
             else:

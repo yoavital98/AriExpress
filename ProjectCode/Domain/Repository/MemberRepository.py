@@ -90,6 +90,10 @@ class MemberRepository(Repository):
         return True
 
     def keys(self):
+        if self.online:
+            return [member.user_name for member in MemberModel.select().where(MemberModel.logged_in == True)]
+        elif self.banned:
+            return [member.user_name for member in MemberModel.select().where(MemberModel.banned == True)]
         return [member.user_name for member in MemberModel.select()]
 
     def values(self):
