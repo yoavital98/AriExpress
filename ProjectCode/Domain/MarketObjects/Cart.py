@@ -173,12 +173,12 @@ class Cart:
             if is_member:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
                                                           stores_products_dict, overall_price)
-                message_controller.sendNotificationToUser(self.username, message_header, purchaseReports, datetime.now())
-            for purchase in purchaseReports:  # all the baskets
+                MessageController().send_notification(self.username, message_header, purchaseReports, datetime.now())
+            for purchase in purchaseReports.values():  # all the baskets
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
                                                            purchase.getStorename(), purchase.getProducts(), \
                                                            purchase.getTotalBasketPayment())
-                message_controller.sendNotificationToStore(purchase.getStorename(), message_header, datetime.now())
+                MessageController().send_notification(purchase.getStorename(), message_header, purchase, datetime.now())
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {

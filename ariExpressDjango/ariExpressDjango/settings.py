@@ -44,12 +44,6 @@ INSTALLED_APPS = [
     'mathfilters',
 ]
 
-CHANNEL_LAYERS = {
-    "default": {
-        "DEFAULT_CHANNEL_LAYER": "channels.layers.InMemoryChannelLayer",
-        "CONFIG": {},
-    },
-}
 
 ASGI_APPLICATION = 'AriExpress.asgi.application'
 
@@ -149,6 +143,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE=True
 #CHANNELS
 CHANNEL_LAYERS = {
     "default": {
+# DEFAULT_CHANNEL_LAYER
         "BACKEND": "channels.layers.InMemoryChannelLayer",
         "CONFIG": {},
     },
