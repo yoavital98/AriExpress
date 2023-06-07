@@ -2107,12 +2107,8 @@ class TestStoreFacade(TestCase):
     def test_django_getAllStaffMembersNames_storeIsClosed_fail(self):
         pass
 
-   #==================== Messages =======================#
 
-#Tests needed to be implemented:
-# 1) Purchase cart - After a purchase there need to be a message to the buyer with the purchase details
-# 2) Purchase cart - After a purchase there need to be a message to the store owners with the purchase details
-# 3)
+    # ==================== Messages =======================#
 
     # def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
     #     return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
@@ -2168,7 +2164,7 @@ class TestStoreFacade(TestCase):
         #     self.store_facade.onlineGuests.clear()
         #     self.store_facade.nextEntranceID = 0
     #Tests:
-
+    # TODO Although they are empyu, there are other tests who check the functionality in the using functions.
     def test_sendMessageUsers_receiverLoggedIn_success(self):
         # Test sending a message to a receiver who is logged in
         self.store_facade.sendMessageUsers("Feliks", "AriExpress", "subject", "content", "creation_date", "file")
