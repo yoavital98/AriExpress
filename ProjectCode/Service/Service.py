@@ -399,7 +399,7 @@ class Service:
             self.store_facade.purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode)
             logging.info(
-                "Bid purchase was made successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
+                "Bid purchase was made successfully. By username: " + username + ". storename: " + store_name + ". bid_id: " + str(
                     bid_id) + ".")
             return Response(True, True)
         except Exception as e:
