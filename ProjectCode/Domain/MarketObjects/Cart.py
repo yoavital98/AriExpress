@@ -158,9 +158,15 @@ class Cart:
                 purchaseReports[basket.get_Store().get_store_name()] = cur_purchase
                 stores_products_dict[basket.get_Store().get_store_name()] = products
                 overall_price += price
-            transaction_id = payment_service.pay(card_number, exp_month, exp_year, card_user_full_name, ccv,
+            try:
+                transaction_id = payment_service.pay(card_number, exp_month, exp_year, card_user_full_name, ccv,
                                                  card_holder_id)
-            supply_id = supply_service.dispatch_supply(card_user_full_name, address, city, country, zipcode)
+            except Exception as e:
+                raise Exception(e)
+            try:
+                supply_id = supply_service.dispatch_supply(card_user_full_name, address, city, country, zipcode)
+            except Exception as e:
+                raise Exception(e)
             message_header = "Regular Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
             for basket in self.get_baskets().values():  # purchase all the baskets
                 basket.purchaseBasket()

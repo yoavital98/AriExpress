@@ -1,6 +1,7 @@
 from peewee import *
 
 from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
+from ProjectCode.DAL.ProductUserTransactionModel import ProductUserTransactionModel
 from ProjectCode.DAL.StoreOfUserTransactionModel import StoreOfUserTransactionModel
 from ProjectCode.DAL.UserTransactionModel import UserTransactionModel
 from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
@@ -49,8 +50,8 @@ class UserTransactionRepository(Repository):
                     StoreOfUserTransactionModel.transaction == transaction
             ):
                 products = []
-                for product in ProductStoreTransactionModel.select().where(
-                        ProductStoreTransactionModel.store == store
+                for product in ProductUserTransactionModel.select().where(
+                        ProductUserTransactionModel.store == store
                 ):
                     products.append((
                         product.product_id,
@@ -71,48 +72,56 @@ class UserTransactionRepository(Repository):
         return user_transactions
 
     def add(self, user_transaction: UserTransaction):
-        transaction = self.model.create(
-            transaction_id=user_transaction.get_transaction_id(),
-            supply_id=user_transaction.get_supply_id(),
-            username=user_transaction.get_username(),
-            overall_price=user_transaction.get_overall_price(),
-            date=user_transaction.get_date()
-        )
-
-        for store_name, products in user_transaction.get_products().items():
-            store = StoreOfUserTransactionModel.create(
-                store_name=store_name,
-                transaction=transaction
+        try:
+            transaction = self.model.create(
+                transaction_id=user_transaction.get_transaction_id(),
+                supply_id=user_transaction.get_supply_id(),
+                username=user_transaction.get_username(),
+                overall_price=user_transaction.get_overall_price(),
+                date=user_transaction.get_date()
             )
-            for product in products:
-                ProductStoreTransactionModel.create(
-                    product_id=product[0],
-                    product_name=product[1],
-                    quantity=product[2],
-                    price=product[3],
-                    store=store
-                )
 
+            for store_name, products in user_transaction.get_products().items():
+                store = StoreOfUserTransactionModel.create(
+                    store_name=store_name,
+                    transaction=transaction
+                )
+                for product in products:
+                    ProductUserTransactionModel.create(
+                        product_id=product[0],
+                        product_name=product[1],
+                        quantity=product[2],
+                        price=product[3],
+                        store=store  # Set the correct foreign key reference
+                    )
+        except Exception as e:
+            raise Exception("UserTransactionRepository: add failed: " + str(e))
 
     def remove(self, pk):
-        transactions = self.model.select().where(self.model.username == pk)
+        transactions = self.model.select().where(self.model.transaction_id == pk)
+
         for transaction in transactions:
             stores = StoreOfUserTransactionModel.select().where(
                 StoreOfUserTransactionModel.transaction == transaction
             )
+
             for store in stores:
-                ProductStoreTransactionModel.delete().where(
-                    ProductStoreTransactionModel.store == store
-                ).execute()
-            StoreOfUserTransactionModel.delete().where(
-                StoreOfUserTransactionModel.transaction == transaction
-            ).execute()
-        transactions.delete().execute()
+                products = ProductUserTransactionModel.select().where(
+                    ProductUserTransactionModel.store == store
+                )
+
+                for product in products:
+                    product.delete_instance()
+
+                store.delete_instance()
+
+            transaction.delete_instance()
+
     def keys(self):
-        return [transaction.user_name for transaction in self.model.select()]
+        return [transaction.username for transaction in self.model.select()]
     def values(self):
         return self.get()
 
-    def contains(self, user_name):
-        query = self.model.select().where(self.model.username == user_name)
+    def contains(self, transaction_id):
+        query = self.model.select().where(self.model.transaction_id == transaction_id)
         return query.exists()

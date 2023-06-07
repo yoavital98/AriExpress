@@ -39,7 +39,7 @@ class StoreTransactionRepository(Repository):
         query = self.model.select()
 
         if pk is not None:
-            query = query.where(self.model.store_name == pk)
+            query = query.where(self.model.user_name == pk)
 
         transactions = []
         for store_transaction in query:
@@ -57,14 +57,15 @@ class StoreTransactionRepository(Repository):
                 store_transaction.store_name,
                 product_list,
                 store_transaction.overall_price,
-            ).set_date(store_transaction.date)
+            )
+            transaction.set_date(store_transaction.date)
             transactions.append(transaction)
 
         return transactions
 
     def add(self, store_transaction: StoreTransaction):
         # Create StoreTransactionModel object
-        transaction_model = StoreTransactionModel(
+        transaction_model = StoreTransactionModel.create(
             transaction_id=store_transaction.get_transaction_id(),
             supply_id=store_transaction.get_supply_id(),
             user_name=store_transaction.get_username(),
@@ -72,11 +73,10 @@ class StoreTransactionRepository(Repository):
             overall_price=store_transaction.get_overall_price(),
             date=store_transaction.get_date()
         )
-        transaction_model.save()
 
         # Create ProductStoreTransactionModel objects
         for product in store_transaction.get_products():
-            product_model = ProductStoreTransactionModel(
+            product_model = ProductStoreTransactionModel.create(
                 product_id=product[0],
                 product_name=product[1],
                 quantity=product[2],
@@ -84,20 +84,15 @@ class StoreTransactionRepository(Repository):
                 store_transaction=transaction_model
                 #todo: product id is not primary key
             )
-            product_model.save()
 
     def remove(self, pk):
-        # Retrieve the store transactions by storename
-        transactions = self.model.select().where(self.model.transaction_id == pk)
+        # Delete the product store transactions
+        ProductStoreTransactionModel.delete().where(
+            ProductStoreTransactionModel.store_transaction == pk
+        ).execute()
 
-        # Delete the store transactions
-        transactions.delete_instance()
-
-        # Delete associated product store transactions manually
-        for transaction in transactions:
-            products = transaction.product_store_transaction
-            for product in products:
-                product.delete_instance()
+        # Delete the store transaction
+        self.model.delete().where(self.model.transaction_id == pk).execute()
 
     def keys(self):
         query = self.model.select(self.model.store_name).distinct()
@@ -107,6 +102,6 @@ class StoreTransactionRepository(Repository):
     def values(self):
         return self.get()
 
-    def contains(self, store_name):
-        query = self.model.select().where(self.model.store_name == store_name)
+    def contains(self, transaction_id):
+        query = self.model.select().where(self.model.transaction_id == transaction_id)
         return query.exists()

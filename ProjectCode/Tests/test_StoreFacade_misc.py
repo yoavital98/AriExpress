@@ -1052,7 +1052,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.addToBasket("YuvalMelamed", "AriExpress",
                                       1, 9)
         self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
-                                       "some_address", "be'er sheva", "Israel", "1234567")
+                                       "9 Janny", "be'er sheva", "Israel", "1234567")
         yuval_cart = self.store_facade.getCart("YuvalMelamed")
         with self.assertRaises(Exception):
             self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "12/26", "Yuval Melamed", "554", "008234235",

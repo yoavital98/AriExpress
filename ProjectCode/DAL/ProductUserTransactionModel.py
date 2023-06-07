@@ -11,7 +11,7 @@ class ProductUserTransactionModel(Model):
         database = SqliteDatabase('database.db')
         db_table = 'product_user_transaction'
 
-    product_id = IntegerField(primary_key=True)
+    product_id = IntegerField()
     product_name = CharField(max_length=100)
     quantity = IntegerField()
     price = DoubleField()
