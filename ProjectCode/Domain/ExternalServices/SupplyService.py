@@ -29,7 +29,7 @@ class SupplyService:
             "address": address,
             "city": city,
             "country": country,
-            "zipcode": zipcode
+            "zip": zipcode
         }
 
         response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
