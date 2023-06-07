@@ -697,9 +697,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now(), None)
+        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now(), None)
+            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
         return cur_store
 
     def closeStore(self, username, store_name):
@@ -709,9 +709,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        MessageController().sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now())
+        self.sendNotificationToUser(cur_store.getFounder().get_username(), "Store Closed", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now())
+            self.sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
         return cur_store
 
     def getStaffInfo(self, username, store_name):
