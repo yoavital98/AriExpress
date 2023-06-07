@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.MarketObjects.Basket import Basket
@@ -1040,6 +1041,7 @@ class TestStoreFacade(TestCase):
 
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
         transaction_history = TransactionHistory()
+
         # before
         transaction_history.insertEmptyListToUser("Amiel")
         transaction_history.insertEmptyListToUser("YuvalMelamed")
@@ -1053,6 +1055,11 @@ class TestStoreFacade(TestCase):
                                       1, 9)
         self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
                                        "some_address", "be'er sheva", "Israel", "1234567")
+        # check that message was sent to Amiel and to AriExpress
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        yuval_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        self.assertEqual()
+
         yuval_cart = self.store_facade.getCart("YuvalMelamed")
         with self.assertRaises(Exception):
             self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "12/26", "Yuval Melamed", "554", "008234235",
@@ -2100,48 +2107,166 @@ class TestStoreFacade(TestCase):
     def test_django_getAllStaffMembersNames_storeIsClosed_fail(self):
         pass
 
-    # messageAsAdminToUser(admin_name, receiverID, message)
-    def test_messageAsAdminToUser_receiverIsAdmin_success(self):
+   #==================== Messages =======================#
+
+#Tests needed to be implemented:
+# 1) Purchase cart - After a purchase there need to be a message to the buyer with the purchase details
+# 2) Purchase cart - After a purchase there need to be a message to the store owners with the purchase details
+# 3)
+
+    # def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
+    #     return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
+    #
+    # def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
+    #     founder = self.getStoreFounder(store_name)
+    #     return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
+    #
+    # def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
+    #     founder = self.getStoreFounder(storeID)
+    #     return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
+    #
+    # def getAllMessagesSent(self, requesterID):
+    #     return MessageController().get_messages_sent(requesterID)
+    #
+    # def getAllMessagesReceived(self, requesterID):
+    #     return MessageController().get_messages_received(requesterID)
+    #
+    # def readMessage(self, requesterID, messageID):
+    #     return MessageController().read_message(requesterID, messageID)
+    #
+    # # ==================  Notifications  ==================#
+    #
+    # def sendNotificationToUser(self, receiverID, subject, content, creation_date):
+    #     # with purchase form AliExpress to user
+    #     return MessageController().send_notification(receiverID, subject, content, creation_date)
+    #
+    # def sendNotificationToStore(self, storeID, subject, content, creation_date):
+    #     # with purchase form AliExpress to store's founder
+    #     founder = self.getStoreFounder(storeID)
+    #     return MessageController().send_notification(founder, subject, content, creation_date)
+    #
+    # def getAllNotificationsReceived(self, requesterID):
+    #     return MessageController().get_notifications(requesterID)
+    #
+    # def readNotification(self, requesterID, messageID):
+    #     return MessageController().read_notification(requesterID, messageID)
+
+        # def setUp(self):
+        #     self.store_facade = StoreFacade()
+        #     self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
+        #     self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
+        #     self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
+        #     self.store_facade.register("Amiel", "password789", "amiel@gmail.com")
+        #     self.store_facade.register("YuvalMelamed", "PussyDestroyer69", "fuck@gmail.com")
+        #     self.store_facade.loginAsGuest()
+        #     self.store_facade.logInAsMember("Feliks", "password456")
+        #     self.store_facade.createStore("Feliks", "AriExpress")
+        #     self.my_store: Store = self.store_facade.stores.get("AriExpress")
+        #     self.store_facade.addNewProductToStore("Feliks", "AriExpress", "paper", 10, 500, "paper")
+        #     self.item_paper: Product = self.my_store.getProductById(1, "Feliks")
+        #     self.store_facade.logOut("Feliks")
+        #     self.store_facade.onlineGuests.clear()
+        #     self.store_facade.nextEntranceID = 0
+    #Tests:
+
+    def test_sendMessageUsers_receiverLoggedIn_success(self):
+        # Test sending a message to a receiver who is logged in
+        self.store_facade.sendMessageUsers("Feliks", "AriExpress", "subject", "content", "creation_date", "file")
+
+    def test_sendMessageUsers_receiverNotLoggedIn_success(self):
+        # Test sending a message to a receiver who is not logged in
         pass
 
-    def test_messageAsAdminToUser_receiverIsGuest_success(self):
+    def test_sendMessageUsers_requesterNotLoggedIn_fail(self):
+        # Test sending a message when the requester is not logged in
         pass
 
-    def test_messageAsAdminToUser_receiverIsMember_success(self):
+    def test_sendMessageUsers_receiverNotExists_fail(self):
+        # Test sending a message to a receiver who does not exist
         pass
 
-    def test_messageAsAdminToUser_adminNotExists_fail(self):
+    def test_sendMessageUsers_receiverIsGuest_fail(self):
+        # Test sending a message to a receiver who is a guest user
         pass
 
-    def test_messageAsAdminToUser_adminNotLoggedIn_fail(self):
+    def test_readMessage_messageExists_success(self):
+        # Test reading a message that exists in the inbox
         pass
 
-    def test_messageAsAdminToUser_receiverNotExists_fail(self):
+    def test_readMessage_messageNotExists_fail(self):
+        # Test reading a message that does not exist in the inbox
         pass
 
-    def test_messageAsAdminToUser_receiverIsStore_fail(self):
+    def test_getMessagesSent_validUserId_success(self):
+        # Test getting sent messages for a valid user ID
         pass
 
-    # messageAsAdminToStore(admin_name, store_Name, message)
-    def test_messageAsAdminToStore_receiverIsStore_success(self):
+    def test_getMessagesSent_invalidUserId_fail(self):
+        # Test getting sent messages for an invalid user ID
         pass
 
-    def test_messageAsAdminToStore_receiverIsAdmin_fail(self):
+    def test_getMessagesReceived_validUserId_success(self):
+        # Test getting received messages for a valid user ID
         pass
 
-    def test_messageAsAdminToStore_receiverIsGuest_fail(self):
+    def test_getMessagesReceived_invalidUserId_fail(self):
+        # Test getting received messages for an invalid user ID
         pass
 
-    def test_messageAsAdminToStore_receiverIsMember_fail(self):
+    def test_readNotification_notificationExists_success(self):
+        # Test reading a notification that exists in the inbox
         pass
 
-    def test_messageAsAdminToStore_adminNotExists_fail(self):
+    def test_readNotification_notificationNotExists_fail(self):
+        # Test reading a notification that does not exist in the inbox
         pass
 
-    def test_messageAsAdminToStore_adminNotLoggedIn_fail(self):
+    def test_getNotifications_validUserId_success(self):
+        # Test getting notifications for a valid user ID
         pass
 
-    def test_messageAsAdminToStore_storeNotExists_fail(self):
+    def test_getNotifications_invalidUserId_fail(self):
+        # Test getting notifications for an invalid user ID
+        pass
+
+    def test_sendNotificationToUser_receiverLoggedIn_success(self):
+        # Test sending a notification to a receiver who is logged in
+        pass
+
+    def test_sendNotificationToUser_receiverNotLoggedIn_success(self):
+        # Test sending a notification to a receiver who is not logged in
+        pass
+
+    def test_sendNotificationToUser_requesterNotLoggedIn_fail(self):
+        # Test sending a notification when the requester is not logged in
+        pass
+
+    def test_sendNotificationToUser_receiverNotExists_fail(self):
+        # Test sending a notification to a receiver who does not exist
+        pass
+
+    def test_sendNotificationToUser_receiverIsGuest_fail(self):
+            # Test sending a notification to a receiver who is a guest user
+        pass
+
+    def test_sendNotificationToStore_receiverLoggedIn_success(self):
+        # Test sending a notification to a receiver who is logged in
+        pass
+
+    def test_sendNotificationToStore_receiverNotLoggedIn_success(self):
+        # Test sending a notification to a receiver who is not logged in
+        pass
+
+    def test_sendNotificationToStore_requesterNotLoggedIn_fail(self):
+        # Test sending a notification when the requester is not logged in
+        pass
+
+    def test_sendNotificationToStore_receiverNotExists_fail(self):
+        # Test sending a notification to a receiver who does not exist
+        pass
+
+    def test_sendNotificationToStore_receiverIsGuest_fail(self):
+            # Test sending a notification to a receiver who is a guest user
         pass
 
     # ----------------------------------------------------------------------------------
