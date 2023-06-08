@@ -8,7 +8,7 @@ from ProjectCode.Domain.ExternalServices.MessageObjects.Notfication import Notif
 
 def send_notification(user_id, type, message, pending_amount):
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.l.send)(f"{user_id}", {
+    async_to_sync(channel_layer.send)(f"{user_id}", {
         'type': type,
         'content': message,
         'unread_messages': pending_amount

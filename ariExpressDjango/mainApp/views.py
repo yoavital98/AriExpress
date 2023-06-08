@@ -602,7 +602,7 @@ def mark_as_read(request, usermessage_id):
     if res.getStatus():
         messages.success(request, "Message marked as read successfully")
     else:
-        messages.error(request, "Error marking message as read - "+res.getReturnValue())
+        messages.error(request, "Error marking message as read - "+str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
 

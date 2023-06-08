@@ -9,7 +9,6 @@
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
     <link href="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous" rel="stylesheet">
     {% load static %}
-    <script src="{% static 'ariExpressDjango/ariExpressDjango/static/notification.js' %}"></script>
     <style>
         .nav-search-form {
             width: 450px !important;
@@ -19,6 +18,24 @@
             background-color: #FF0000 !important;
             color: #FFFFFF !important;
         }
+
+        #notification-btn {
+            font-size: 16px;
+        }
+        .notification-amount {
+            position: absolute;
+            border-radius: 50%;
+            font-size: 13px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            margin-top: -35px;
+            margin-left: 10px;
+            background-color: red;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
@@ -59,8 +76,8 @@
                             <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'mainApp:inbox' %}">
-                                <i class="fas fa-bell"></i><span class="badge badge-pill badge-warning notification-amount" name="notification-amount"></span>
+                            <a class="nav-link" href="{% url 'mainApp:inbox' %}" id="notification-btn">
+                                <i class="fas fa-bell"></i><span class="notification-amount" name="notification-amount">5</span>
                             </a>
                         </li>
                         {% endif %}
@@ -90,6 +107,7 @@
                     </form>
                 </div>
             </div>
+            <script src="{% static 'ariExpressDjango/ariExpressDjango/static/notification.js' %}"></script>
         </nav>
     </header>
 

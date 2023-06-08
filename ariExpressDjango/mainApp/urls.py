@@ -37,7 +37,7 @@ urlpatterns = [
     # path to delete the message
     path(r'delete_message/<str:usermessage_id>', views.delete_message, name='delete_message'),
     # path to view the message
-    path (r'mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
+    path (r'inbox/mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
     path(r'cart/', views.cart, name='cart'),
     path(r'remove_basket_product', views.remove_basket_product, name='remove_basket_product'),
     path(r'edit_basket_product', views.edit_basket_product, name='edit_basket_product'),
