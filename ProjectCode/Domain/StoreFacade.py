@@ -6,6 +6,7 @@ from ProjectCode.Domain.ExternalServices.MessageController import MessageControl
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
+from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 # -------MarketObjects Imports-------#
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -24,6 +25,8 @@ from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
 from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
+from ProjectCode.Domain.Repository.StoreTransactionRepository import StoreTransactionRepository
+from ProjectCode.Domain.Repository.UserTransactionRepository import UserTransactionRepository
 
 
 class StoreFacade:
@@ -63,6 +66,8 @@ class StoreFacade:
         self.stores_test = StoreRepository()
         self.admins_test = AdminRepository()
         self.onlineGuests_test = GuestRepository()
+        self.user_transactions_test = UserTransactionRepository()
+        self.store_transactions_test = StoreTransactionRepository()
 
 
     # ------  System  ------ #
@@ -290,10 +295,10 @@ class StoreFacade:
         user: User = self.getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(card_number, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
+                return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
         else:
             with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(card_number, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
+                return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
 
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
@@ -692,9 +697,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now(), None)
+        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now(), None)
+            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
         return cur_store
 
     def closeStore(self, username, store_name):
@@ -704,9 +709,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        MessageController().sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now())
+        self.sendNotificationToUser(cur_store.getFounder().get_username(), "Store Closed", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now())
+            self.sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
         return cur_store
 
     def getStaffInfo(self, username, store_name):

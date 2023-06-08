@@ -1,0 +1,63 @@
+[
+  {
+    "register": {"args": ["aaa", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["bbb", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["ccc", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["ddd", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["eee", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["fff", "asdf1233", "a@a.com"]}
+  },
+  {
+    "logIn": {"args": ["aaa", "asdf1233"]}
+  },
+  {
+    "createStore": {"args": ["aaa", "store123"]}
+  },
+  {
+    "createStore": {"args": ["aaa", "456store"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["aaa", "store123", "apple", "fruit", "20", "3"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["aaa", "store123", "banana", "fruit", "30", "8"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["aaa", "store123", "headphones", "electronics", "10", "700"]}
+  },
+  {
+    "logIn": {"args": ["aaa", "asdf1233"]}
+  },
+  {
+    "nominateStoreManager": {"args": ["aaa", "bbb", "store123"]}
+  },
+  {
+    "nominateStoreManager": {"args": ["aaa", "ccc", "store123"]}
+  },
+  {
+    "nominateStoreManager": {"args": ["aaa", "ddd", "store123"]}
+  },
+  {
+    "nominateStoreOwner": {"args": ["aaa", "eee", "store123"]}
+  },
+  {
+    "nominateStoreOwner": {"args": ["aaa", "fff", "store123"]}
+  },
+  {
+    "logOut": {"args": ["aaa"]}
+  }
+]
+
+
+
+        
