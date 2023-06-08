@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 
+from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.MarketObjects.Basket import Basket
@@ -458,7 +459,10 @@ class TestStoreFacade(TestCase):
     # closeStore
     def test_closeStore_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
+        Feliks_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
         self.store_facade.closeStore("Feliks", "AriExpress")
+        Feliks_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertEqual(Feliks_Messages_count_before + 1, Feliks_Messages_count_after, "Feliks should be notified")
         self.assertFalse(self.my_store.active)
 
 
@@ -1040,6 +1044,7 @@ class TestStoreFacade(TestCase):
 
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
         transaction_history = TransactionHistory()
+
         # before
         transaction_history.insertEmptyListToUser("Amiel")
         transaction_history.insertEmptyListToUser("YuvalMelamed")
@@ -1051,8 +1056,15 @@ class TestStoreFacade(TestCase):
                                       1, 9)
         self.store_facade.addToBasket("YuvalMelamed", "AriExpress",
                                       1, 9)
+        Amiel_Messages_count_before = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_before = MessageController().get_notifications("AriExpress").__len__()
+        YuvalMelamed_Messages_count_before = MessageController().get_notifications("YuvalMelamed").__len__()
         self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
                                        "some_address", "be'er sheva", "Israel", "1234567")
+        # check that message was sent to Amiel and to AriExpress
+        amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        yuval_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
+        self.assertEqual()
         yuval_cart = self.store_facade.getCart("YuvalMelamed")
         with self.assertRaises(Exception):
             self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "12/26", "Yuval Melamed", "554", "008234235",
@@ -1066,7 +1078,13 @@ class TestStoreFacade(TestCase):
         # integrity that the transaction failed for Yuval
         self.assertTrue(len(yuval_transaction_list) == 0)
         self.assertEqual(yuval_cart, self.store_facade.getCart("YuvalMelamed"))
-        transaction_history.clearAllHistory()
+        transaction_history.clearAllHistory() #why?
+        Amiel_Messages_count_after = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_after = MessageController().get_notifications("AriExpress").__len__()
+        YuvalMelamed_Messages_count_after = MessageController().get_notifications("YuvalMelamed").__len__()
+        self.assertEqual(AriExpress_Messages_count_after, AriExpress_Messages_count_before+1, "AriExpress should be notified")
+        self.assertEqual(Amiel_Messages_count_after, Amiel_Messages_count_before+1, "Amiel should be notified")
+        self.assertEqual(YuvalMelamed_Messages_count_after, YuvalMelamed_Messages_count_before, "YuvalMelamed shouldn't be notified")
 
     def test_purchaseCart_userNotLoggedIn_fail(self):
         transaction_history = TransactionHistory()
@@ -1630,13 +1648,24 @@ class TestStoreFacade(TestCase):
     def test_messageAsAdmin_messageIsInvalid_fail(self):
         pass
 
-
+        # Amiel_Messages_count_before = MessageController().get_notifications("Amiel").__len__()
+        # AriExpress_Messages_count_before = MessageController().get_notifications("AriExpress").__len__()
+        # YuvalMelamed_Messages_count_before = MessageController().get_notifications("YuvalMelamed").__len__()
+        # Amiel_Messages_count_after = MessageController().get_notifications("Amiel").__len__()
+        # AriExpress_Messages_count_after = MessageController().get_notifications("AriExpress").__len__()
+        # YuvalMelamed_Messages_count_after = MessageController().get_notifications("YuvalMelamed").__len__()
+        # self.assertEqual(AriExpress_Messages_count_after, AriExpress_Messages_count_before+1, "AriExpress should be notified")
+        # self.assertEqual(Amiel_Messages_count_after, Amiel_Messages_count_before+1, "Amiel should be notified")
+        # self.assertEqual(YuvalMelamed_Messages_count_after, YuvalMelamed_Messages_count_before, "YuvalMelamed shouldn't be notified")
 
     # openStore
     def test_openStore_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         self.assertTrue(self.my_store.active)
+        Feliks_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
         self.store_facade.closeStore("Feliks", "AriExpress")
+        Feliks_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertEqual(Feliks_Messages_count_after, Feliks_Messages_count_before + 1, "Feliks should be notified")
         self.assertFalse(self.my_store.active)
         self.store_facade.openStore("Feliks", "AriExpress")
         #integrity
@@ -1647,11 +1676,14 @@ class TestStoreFacade(TestCase):
         self.assertTrue(self.my_store.active)
         self.store_facade.closeStore("Feliks", "AriExpress")
         self.assertFalse(self.my_store.active)
+        Feliks_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
         self.store_facade.logOut("Feliks")
         with self.assertRaises(Exception):
             self.store_facade.openStore("Feliks", "AriExpress")
         # integrity
         self.assertFalse(self.my_store.active)
+        Feliks_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertEqual(Feliks_Messages_count_before, Feliks_Messages_count_after, "Feliks shouldn't be notified")
 
 
     def test_openStore_storeNameIsEmpty_fail(self):
@@ -1864,10 +1896,15 @@ class TestStoreFacade(TestCase):
         self.store_facade.nominateStoreManager("Feliks", "Amiel", "AriExpress")
         self.assertTrue(amiel.accesses.keys().__contains__("AriExpress"))
         self.assertTrue(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        Amiel_Notification_count_before = MessageController().get_notifications("Amiel").__len__()
         self.store_facade.removeAccess("Feliks", "Amiel", "AriExpress")
         #integrity
         self.assertFalse(amiel.accesses.keys().__contains__("AriExpress"))
         self.assertFalse(self.my_store.get_accesses().keys().__contains__("Amiel"))
+        Amiel_Notification_count_after = MessageController().get_notifications("Amiel").__len__()
+        self.assertEqual(Amiel_Notification_count_before + 1, Amiel_Notification_count_after, "Amiel should get be notified")
+
+
     def test_removeAccess_userNotLoggedIn_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         amiel: Member = self.store_facade.logInAsMember("Amiel", "password789")
@@ -2100,48 +2137,162 @@ class TestStoreFacade(TestCase):
     def test_django_getAllStaffMembersNames_storeIsClosed_fail(self):
         pass
 
-    # messageAsAdminToUser(admin_name, receiverID, message)
-    def test_messageAsAdminToUser_receiverIsAdmin_success(self):
+
+    # ==================== Messages =======================#
+
+    # def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
+    #     return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
+    #
+    # def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
+    #     founder = self.getStoreFounder(store_name)
+    #     return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
+    #
+    # def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
+    #     founder = self.getStoreFounder(storeID)
+    #     return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
+    #
+    # def getAllMessagesSent(self, requesterID):
+    #     return MessageController().get_messages_sent(requesterID)
+    #
+    # def getAllMessagesReceived(self, requesterID):
+    #     return MessageController().get_messages_received(requesterID)
+    #
+    # def readMessage(self, requesterID, messageID):
+    #     return MessageController().read_message(requesterID, messageID)
+    #
+    # # ==================  Notifications  ==================#
+    #
+    # def sendNotificationToUser(self, receiverID, subject, content, creation_date):
+    #     # with purchase form AliExpress to user
+    #     return MessageController().send_notification(receiverID, subject, content, creation_date)
+    #
+    # def sendNotificationToStore(self, storeID, subject, content, creation_date):
+    #     # with purchase form AliExpress to store's founder
+    #     founder = self.getStoreFounder(storeID)
+    #     return MessageController().send_notification(founder, subject, content, creation_date)
+    #
+    # def getAllNotificationsReceived(self, requesterID):
+    #     return MessageController().get_notifications(requesterID)
+    #
+    # def readNotification(self, requesterID, messageID):
+    #     return MessageController().read_notification(requesterID, messageID)
+
+        # def setUp(self):
+        #     self.store_facade = StoreFacade()
+        #     self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
+        #     self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
+        #     self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
+        #     self.store_facade.register("Amiel", "password789", "amiel@gmail.com")
+        #     self.store_facade.register("YuvalMelamed", "PussyDestroyer69", "fuck@gmail.com")
+        #     self.store_facade.loginAsGuest()
+        #     self.store_facade.logInAsMember("Feliks", "password456")
+        #     self.store_facade.createStore("Feliks", "AriExpress")
+        #     self.my_store: Store = self.store_facade.stores.get("AriExpress")
+        #     self.store_facade.addNewProductToStore("Feliks", "AriExpress", "paper", 10, 500, "paper")
+        #     self.item_paper: Product = self.my_store.getProductById(1, "Feliks")
+        #     self.store_facade.logOut("Feliks")
+        #     self.store_facade.onlineGuests.clear()
+        #     self.store_facade.nextEntranceID = 0
+    #Tests:
+    # TODO Although they are empyu, there are other tests who check the functionality in the using functions.
+    def test_sendMessageUsers_receiverLoggedIn_success(self):
+        # Test sending a message to a receiver who is logged in
+        self.store_facade.sendMessageUsers("Feliks", "AriExpress", "subject", "content", "creation_date", "file")
+
+    def test_sendMessageUsers_receiverNotLoggedIn_success(self):
+        # Test sending a message to a receiver who is not logged in
         pass
 
-    def test_messageAsAdminToUser_receiverIsGuest_success(self):
+    def test_sendMessageUsers_requesterNotLoggedIn_fail(self):
+        # Test sending a message when the requester is not logged in
         pass
 
-    def test_messageAsAdminToUser_receiverIsMember_success(self):
+    def test_sendMessageUsers_receiverNotExists_fail(self):
+        # Test sending a message to a receiver who does not exist
         pass
 
-    def test_messageAsAdminToUser_adminNotExists_fail(self):
+    def test_sendMessageUsers_receiverIsGuest_fail(self):
+        # Test sending a message to a receiver who is a guest user
         pass
 
-    def test_messageAsAdminToUser_adminNotLoggedIn_fail(self):
+    def test_readMessage_messageExists_success(self):
+        # Test reading a message that exists in the inbox
         pass
 
-    def test_messageAsAdminToUser_receiverNotExists_fail(self):
+    def test_readMessage_messageNotExists_fail(self):
+        # Test reading a message that does not exist in the inbox
         pass
 
-    def test_messageAsAdminToUser_receiverIsStore_fail(self):
+    def test_getMessagesSent_validUserId_success(self):
+        # Test getting sent messages for a valid user ID
         pass
 
-    # messageAsAdminToStore(admin_name, store_Name, message)
-    def test_messageAsAdminToStore_receiverIsStore_success(self):
+    def test_getMessagesSent_invalidUserId_fail(self):
+        # Test getting sent messages for an invalid user ID
         pass
 
-    def test_messageAsAdminToStore_receiverIsAdmin_fail(self):
+    def test_getMessagesReceived_validUserId_success(self):
+        # Test getting received messages for a valid user ID
         pass
 
-    def test_messageAsAdminToStore_receiverIsGuest_fail(self):
+    def test_getMessagesReceived_invalidUserId_fail(self):
+        # Test getting received messages for an invalid user ID
         pass
 
-    def test_messageAsAdminToStore_receiverIsMember_fail(self):
+    def test_readNotification_notificationExists_success(self):
+        # Test reading a notification that exists in the inbox
         pass
 
-    def test_messageAsAdminToStore_adminNotExists_fail(self):
+    def test_readNotification_notificationNotExists_fail(self):
+        # Test reading a notification that does not exist in the inbox
         pass
 
-    def test_messageAsAdminToStore_adminNotLoggedIn_fail(self):
+    def test_getNotifications_validUserId_success(self):
+        # Test getting notifications for a valid user ID
         pass
 
-    def test_messageAsAdminToStore_storeNotExists_fail(self):
+    def test_getNotifications_invalidUserId_fail(self):
+        # Test getting notifications for an invalid user ID
+        pass
+
+    def test_sendNotificationToUser_receiverLoggedIn_success(self):
+        # Test sending a notification to a receiver who is logged in
+        pass
+
+    def test_sendNotificationToUser_receiverNotLoggedIn_success(self):
+        # Test sending a notification to a receiver who is not logged in
+        pass
+
+    def test_sendNotificationToUser_requesterNotLoggedIn_fail(self):
+        # Test sending a notification when the requester is not logged in
+        pass
+
+    def test_sendNotificationToUser_receiverNotExists_fail(self):
+        # Test sending a notification to a receiver who does not exist
+        pass
+
+    def test_sendNotificationToUser_receiverIsGuest_fail(self):
+            # Test sending a notification to a receiver who is a guest user
+        pass
+
+    def test_sendNotificationToStore_receiverLoggedIn_success(self):
+        # Test sending a notification to a receiver who is logged in
+        pass
+
+    def test_sendNotificationToStore_receiverNotLoggedIn_success(self):
+        # Test sending a notification to a receiver who is not logged in
+        pass
+
+    def test_sendNotificationToStore_requesterNotLoggedIn_fail(self):
+        # Test sending a notification when the requester is not logged in
+        pass
+
+    def test_sendNotificationToStore_receiverNotExists_fail(self):
+        # Test sending a notification to a receiver who does not exist
+        pass
+
+    def test_sendNotificationToStore_receiverIsGuest_fail(self):
+            # Test sending a notification to a receiver who is a guest user
         pass
 
     # ----------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ class MessageController:
             self._sent_messages[requester_id] = []
         self._sent_messages[requester_id].append(message)
 
-        send_notification(receiver_id, "message", "You have a new Message.", self._pending_messages_amount[receiver_id])
+        # send_notification(receiver_id, "message", "You have a new Message.", self._pending_messages_amount[receiver_id])
 
         return message
 
@@ -76,16 +76,16 @@ class MessageController:
         self.notificationCounter += 1
         message = Notification(message_id, "AriExpress", receiver_id, subject, content, creation_date)
 
-        if receiver_id not in self._inbox_messages.keys():
-            self._inbox_messages[receiver_id] = []
-        self._inbox_messages[receiver_id].append(message)
+        if receiver_id not in self._inbox_notifications.keys():
+            self._inbox_notifications[receiver_id] = []
+        self._inbox_notifications[receiver_id].append(message)
 
         if receiver_id not in self._pending_notifications_amount.keys():
             self._pending_notifications_amount[receiver_id] = 0
         self._pending_notifications_amount[receiver_id] = self._pending_notifications_amount[receiver_id] + 1
 
-        send_notification(receiver_id, "notification", "You have a new Notification.",
-                          self._pending_notifications_amount[receiver_id])
+        # send_notification(receiver_id, "notification", "You have a new Notification.",
+        #                   self._pending_notifications_amount[receiver_id])
 
         return message
 
@@ -99,4 +99,6 @@ class MessageController:
         return None
 
     def get_notifications(self, user_id):
-        return [message for message in self._inbox_notifications[user_id]]
+        if user_id not in self._inbox_notifications.keys():
+            self._inbox_notifications[user_id] = []
+        return [message.toJson() for message in self._inbox_notifications[user_id]]
