@@ -192,7 +192,7 @@ class StoreFacade:
                 existing_member: Member = self.members[username]
                 if password_validator.ConfirmPassword(password, existing_member.get_password()):
                     existing_member.logInAsMember()
-                    existing_member.setEntranceId(self.nextEntranceID)
+                    existing_member.setEntranceId(str(self.nextEntranceID))
                     self.nextEntranceID += 1
                     self.online_members[username] = existing_member  # indicates that the user is logged in
                     return existing_member
@@ -250,7 +250,7 @@ class StoreFacade:
     # guest and member
     # adding a product to basket, checking with store if the item is available
     def addToBasket(self, username, store_name, product_id, quantity):
-        user: User = self.getUserOrMember(username)
+        user: User = self.getUserOrMember(str(username))
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")

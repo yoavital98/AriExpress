@@ -10,7 +10,7 @@ class Guest(User):
         return super().get_cart()
 
     def add_to_cart(self,username, storename, productID, product, quantity):
-        super().add_to_cart(username, storename, productID, product, quantity)
+        return super().add_to_cart(username, storename, productID, product, quantity)
 
     def get_Basket(self, storename):
         return super().get_Basket(storename)
