@@ -310,11 +310,11 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            basket = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
-            return Response(basket.toJson(), True)
+            return Response(answer.toJson(), True)
         except Exception as e:
             logging.error(f"addToBasket Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

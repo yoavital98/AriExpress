@@ -23,7 +23,7 @@ class Basket:
         if not self.products.keys().__contains__(product_id):
             self.products[product_id] = (product, quantity, product.get_price())
         else:
-            raise Exception ("product already exists in the basket")
+            raise Exception("product already exists in the basket")
 
     def edit_Product_Quantity(self, product_id, quantity):
         if quantity <= 0:

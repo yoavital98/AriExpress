@@ -167,16 +167,21 @@ class Test_Use_Case_2_2(TestCase):
 
 
     def test_guest_add_product_to_cart_failure(self):
-        guest = self.Service.loginAsGuest()
-        try:
-            self.Service.addToBasket(guest.get_username(), "storename", "product_id", 100)
-        except Exception:
-            pass
-
-    def test_user_add_product_to_cart_success(self):
-        res = self.Service.addToBasket("rubin_krief", "roobs_store", 1, 1)
-        print(res.getReturnValue())
+        res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 0, 5)
+        self.assertFalse(res_added_product.getStatus())
+
+    def test_member_add_product_to_cart_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('Feliks', "AriExpress", 0, 5)
+        self.assertFalse(res_added_product.getStatus())
+
+
+
+
+
 
 
 if __name__ == '__main__':
