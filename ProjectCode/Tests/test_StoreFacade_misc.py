@@ -1201,13 +1201,6 @@ class TestStoreFacade(TestCase):
         self.assertEqual(self.price_after_discount, 9)
 
 
-
-    def test_getDiscount_storeNotExists_fail(self):
-            pass
-
-    def test_getDiscount_discountNotExists_fail(self):
-            pass
-
     # purchaseCart
 
     def test_purchaseCart_oneSuccessOneFail_notEnoughSupply(self):
@@ -1504,7 +1497,7 @@ class TestStoreFacade(TestCase):
 
     def test_getProductsByStore_storeNotExists_fail(self):
         with self.assertRaises(Exception):
-            products_dict = self.store_facade.getProductsByStore("some_store")
+            products_dict = self.store_facade.getProductsByStore("some_store", "Feliks")
 
     def test_getProductsByStore_storeIsClosed_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -1514,11 +1507,11 @@ class TestStoreFacade(TestCase):
     # TODO: amiel
     # getPurchasePolicy
     def test_getPurchasePolicy_success(self):
-       # self.store_facade.addPurchasePolicy()
+     # self.store_facade.addPurchasePolicy()
         pass
 
+
     def test_getPurchasePolicy_userNotLoggedIn_fail(self):
-        # TODO: should it be success?
         pass
 
     def test_getPurchasePolicy_storeNotExists_fail(self):
