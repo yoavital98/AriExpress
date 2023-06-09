@@ -173,7 +173,6 @@ class Service:
         try:
             member = self.store_facade.register(user_name, password, email)
             logging.info("Registered successfully. By username: " + user_name + ".")
-            print("aaa")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"register Error: {str(e)}.")
@@ -329,11 +328,11 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            basket = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
-            return Response(basket.toJson(), True)
+            return Response(answer.toJson(), True)
         except Exception as e:
             logging.error(f"addToBasket Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
