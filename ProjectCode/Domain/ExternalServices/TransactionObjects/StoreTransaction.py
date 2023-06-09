@@ -19,6 +19,8 @@ class StoreTransaction:
     def get_storename(self):
         return self._store_name
 
+    def set_date(self, date):
+        _date = date
     def get_products(self):
         return self._products
 

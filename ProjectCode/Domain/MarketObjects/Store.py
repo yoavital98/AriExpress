@@ -61,14 +61,14 @@ class Store:
 
     def getFounder(self):
         for access in self.__accesses.values():
-            if access.getRole() == "Founder":
+            if access.get_role() == "Founder":
                 return access.get_user()
         return None
 
     def getOwners(self):
         owners = []
         for access in self.__accesses.values():
-            if access.getRole() == "Owner":
+            if access.get_role() == "Owner":
                 owners.append(access.get_user())
         return owners
 
