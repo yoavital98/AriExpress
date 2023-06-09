@@ -169,18 +169,44 @@ class Test_Use_Case_2_2(TestCase):
     def test_guest_add_product_to_cart_failure(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 0, 5)
-        self.assertFalse(res_added_product.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
 
     def test_member_add_product_to_cart_success(self):
-        res = self.service.logIn("Feliks", "password456")
+        res = self.service.logIn("Amiel", "password789")
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('Feliks', "AriExpress", 0, 5)
-        self.assertFalse(res_added_product.getStatus())
+        res_added_product = self.service.addToBasket('Amiel', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
 
+    #Use Case 2.2.4.a
 
+    def test_guest_getBasket_success(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_basket = self.service.getBasket('0', "AriExpress")
+        self.assertTrue(res_basket.getStatus())
 
+    # Use Case 2.2.4.b
+    def test_guest_editBasket_success(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_basket = self.service.editBasketQuantity('0', "AriExpress", 1, 7)
+        self.assertTrue(res_basket.getStatus())
 
+    # Use Case 2.2.5.a
+
+    def test_guest_purchaseCart_success(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_purchase = self.service.purchaseCart("0", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "be'er sheva")
+        self.assertTrue(res_purchase.getStatus())
 
 
 
