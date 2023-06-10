@@ -274,6 +274,30 @@ class Store:
                                                                                           overall_price)
         return price_after_discounts
 
+    def checkBasketValidity(self, basket, product_to_add, quantity):
+        relevant_product_info = dict()
+        for product_id, product_tuple in basket.items():
+            relevant_product_info[product_id] = product_tuple[1]
+        relevant_product_info[product_to_add.get_product_id()] = quantity
+        overall_price = self.calculateBasketBasePrice(relevant_product_info)
+        #TODO: last argument suppose to be a user, need to figure out how to get it
+        return self.__purchase_policy.checkAllPolicies(product_to_add, relevant_product_info, overall_price)
+
+    def calculateProductPriceAfterDiscount(self, product, basket, quantity):
+        relevant_product_info = dict()
+        for product_id, product_tuple in basket.items():
+            relevant_product_info[product_id] = product_tuple[1]
+        overall_price = self.calculateBasketBasePrice(relevant_product_info)
+        price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
+        return (product, quantity, price_after_discount)
+
+    def calculateBasketBasePrice(self, products_dict): #tup(product,qunaiity)
+        overall_price = 0
+        for product_id, quantity in products_dict.items():
+            overall_price += self.__products[product_id].get_price() * quantity
+        return overall_price
+
+
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
         new_product_dict = TypedDict(int, int) # (id,quantity)
