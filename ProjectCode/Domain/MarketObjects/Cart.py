@@ -155,7 +155,7 @@ class Cart:
             for basket in self.get_baskets().values():  # all the baskets
                 products: list = basket.getProductsAsTuples()  # tupleList [(productid,productname,quantity,price4unit)]
                 price = basket.calculateBasketPrice()  # price of a single basket
-                founders_usernames.append(basket.get_Store().getFounder())
+                founders_usernames.append(basket.get_Store().getFounder().get_username())
                 cur_purchase = PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price)
                 purchaseReports[basket.get_Store().get_store_name()] = cur_purchase
                 stores_products_dict[basket.get_Store().get_store_name()] = products
@@ -172,18 +172,21 @@ class Cart:
             message_header = "Regular Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
             for basket in self.get_baskets().values():  # purchase all the baskets
                 basket.purchaseBasket()
+            member_msg_id = None
             if is_member:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
                                                           stores_products_dict, overall_price)
                 member_msg_id = MessageController().send_notification(self.username, message_header, purchaseReports, datetime.now())
             founders_message_ids = []
+            purchase_reports_json = []
             for purchase in purchaseReports.values():  # all the baskets
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
-                                                           purchase.getStorename(), purchase.getProducts(), \
+                                                           purchase.getStorename(), purchase.getProducts(),
                                                            purchase.getTotalBasketPayment())
                 founder_message_id = MessageController().send_notification(purchase.getStorename(), message_header, purchase, datetime.now())
                 founders_message_ids.append(founder_message_id)
-                self.clearCartFromProducts()  # clearing all the products from all the baskets
+                purchase_reports_json.append(purchase.toJson())
+            self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {
                 "memeber_message_id":  member_msg_id,
@@ -192,7 +195,7 @@ class Cart:
                 "message": "Regular Purchase was successful",
                 "transaction_id": transaction_id,
                 "supply_id": supply_id,
-                "purchaseReports": purchaseReports,
+                "purchaseReports": purchase_reports_json,
                 "overallPrice": overall_price
             }
         else:

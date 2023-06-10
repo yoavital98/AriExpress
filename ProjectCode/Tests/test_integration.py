@@ -357,7 +357,7 @@ class Test_Use_Case_4_Management(TestCase):
         self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
         res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
         self.assertTrue(res_added_product.getStatus())
-        res_purchase = self.service.purchaseCart("0", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+        res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
         self.assertTrue(res_purchase.getStatus())
         res_purchase_history = self.service.getStorePurchaseHistory("Feliks", "AriExpress")
