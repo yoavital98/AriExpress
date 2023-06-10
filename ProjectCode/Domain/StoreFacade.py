@@ -611,7 +611,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User isn't logged in")
-        new_policy = cur_store.addDiscount(username, purchase_policy, rule, level=level, level_name=level_name)
+        new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
         return new_policy
 
     def getPurchasePolicy(self, storename, policy_id):

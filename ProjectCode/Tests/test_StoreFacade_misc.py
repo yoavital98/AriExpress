@@ -332,8 +332,6 @@ class TestStoreFacade(TestCase):
         self.assertTrue(access.hasRole("Owner"))
 
     # addPurchasePolicy
-    def test_addPurchasePolicy_success(self):
-        pass
 
     def test_addPurchasePolicy_userNotLoggedIn_fail(self):
         pass
@@ -1021,6 +1019,32 @@ class TestStoreFacade(TestCase):
 
     def test_getDiscount_discountNotExists_fail(self):
         pass
+
+    # purchase policy
+
+    def test_addPurchasePolicy_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
+                "quantity": 5, "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        added_discount = self.my_store.getPolicy(1)
+        self.assertEqual(policy, added_discount)
+
+
+    def test_calculatePurchasePolicy_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
+                "quantity": 5, "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        product_dict = {oreo.get_product_id(): 7}
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
 
     # purchaseCart
 

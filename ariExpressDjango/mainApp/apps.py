@@ -31,6 +31,7 @@ class MainappConfig(AppConfig):
 
 
 
+
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only
         # service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
