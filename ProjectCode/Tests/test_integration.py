@@ -339,14 +339,81 @@ class Test_Use_Case_4_Management(TestCase):
         res_close = self.service.closeStore("Feliks", "AriExpress")
         self.assertTrue(res_close.getStatus())
 
-
-
 # Use Case 4.11.a
+
     def test_requestStoreStaffInfo_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
         res_info = self.service.getStaffInfo("Feliks", "AriExpress")
         self.assertTrue(res_info.getStatus())
+
+# Use Case 4.13
+
+    def test_requestStorePurchaseHistory_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        self.service.createStore("Feliks", "AriExpress")
+        self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_purchase = self.service.purchaseCart("0", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                                 "be'er sheva", "beer sheva", "israel", "1234152")
+        self.assertTrue(res_purchase.getStatus())
+        res_purchase_history = self.service.getStorePurchaseHistory("Feliks", "AriExpress")
+        self.assertTrue(res_purchase_history.getStatus())
+
+    # Use Case 5
+    def test_nominatedPreformingAction_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res = self.service.logIn("Amiel", "password789")
+        self.assertTrue(res.getStatus())
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(res_nominate.getStatus())
+        res_request = self.service.addNewProductToStore("Amiel", "AriExpress", "paper", "paper", 50, 100)
+        self.assertTrue(res_request.getStatus())
+        res_request = self.service.removeProductFromStore("Amiel", "AriExpress",1)
+        self.assertTrue(res_request.getStatus())
+
+
+# Use Case 6.4
+
+    def test_StorePurchaseHistoryAdmin_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.service.loginAsGuest()
+        res_admin = self.service.logIn("admin", "12341234")
+        self.assertTrue(res.getStatus())
+        self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        self.service.createStore("Feliks", "AriExpress")
+        self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_purchase = self.service.purchaseCart("0", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                                 "be'er sheva", "beer sheva", "israel", "1234152")
+        self.assertTrue(res_purchase.getStatus())
+        res_purchase_history = self.service.getStorePurchaseHistory("admin", "AriExpress")
+        self.assertTrue(res_purchase_history.getStatus())
+
+# Use Case 6.4
+
+    def test_UserPurchaseHistoryAdmin_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        res_admin = self.service.logIn("admin", "12341234")
+        res_amiel = self.service.logIn("Amiel", "password789")
+        self.assertTrue(res.getStatus())
+        self.assertTrue(res_admin.getStatus())
+        self.service.createStore("Feliks", "AriExpress")
+        self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
+        res_added_product = self.service.addToBasket('Amiel', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+#        res_purchase = self.service.purchaseCart("Amiel", "4580020345672134",)
+        res_purchase = self.service.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                                 "be'er sheva", "beer sheva", "israel", "1234152")
+        self.assertTrue(res_purchase.getStatus())
+        res_purchase_history = self.service.getMemberPurchaseHistory("admin", "Amiel")
+        self.assertTrue(res_purchase_history.getStatus())
 
 
 if __name__ == '__main__':
