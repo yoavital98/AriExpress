@@ -74,7 +74,6 @@ class MessageController:
 
     def send_notification(self, receiver_id, subject, content, creation_date):
         message_id = self.notificationCounter
-        self.notificationCounter += 1
         message = Notification(message_id, "AriExpress", receiver_id, subject, content, creation_date)
 
         if receiver_id not in self._inbox_notifications.keys():
@@ -84,11 +83,11 @@ class MessageController:
         if receiver_id not in self._pending_notifications_amount.keys():
             self._pending_notifications_amount[receiver_id] = 0
         self._pending_notifications_amount[receiver_id] = self._pending_notifications_amount[receiver_id] + 1
-
+        self.notificationCounter += 1
         # send_notification(receiver_id, "notification", "You have a new Notification.",
         #                   self._pending_notifications_amount[receiver_id])
 
-        return message
+        return message_id
 
     def read_notification(self, user_id, message_id):
         for message in self._inbox_notifications[user_id]:
