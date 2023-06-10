@@ -21,6 +21,7 @@ from django.core.paginator import Paginator # for pagination
 from datetime import datetime #used to get total msg per day
 from django.views.decorators.cache import cache_control # for disabling cache
 from django.utils import timezone
+from notifications.signals import notify
 
 
 
@@ -633,6 +634,9 @@ def send_message(request):
                 print(file)
                 message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date, file)
                 if message_res.getStatus():
+                    recipent = User.objects.get(username=receiver_username)
+                    m_id = message_res.getReturnValue()['id']
+                    notify.send(request.user, recipient=recipent, verb=f'{request.user.username} has sent you a message!', message_id=m_id)
                     messages.success(request, "Message sent successfully")
                     return HttpResponseRedirect('/inbox')
                 else:
@@ -650,10 +654,16 @@ def send_message(request):
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_message(request, usermessage_id):
-    message = UserMessage.objects.get(id=usermessage_id)
-    message.delete()
-    messages.success(request, "Message deleted successfully")
+    service = Service()
+    res = service.deleteMessage(request.user.username, usermessage_id)
+    if res.getStatus():
+        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user)
+        notification.delete()
+        messages.success(request, "Message deleted successfully")
+    else:
+        messages.success(request, "Message deleted successfully")
     return HttpResponseRedirect('/inbox')
+    
 
 
 
@@ -671,9 +681,11 @@ def mark_as_read(request, usermessage_id):
     service = Service()
     res = service.readMessage(request.user.username, usermessage_id)
     if res.getStatus():
+        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user)[0]
+        notification.mark_as_read()
         messages.success(request, "Message marked as read successfully")
     else:
-        messages.error(request, "Error marking message as read - "+res.getReturnValue())
+        messages.error(request, "Error marking message as read - "+str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
 

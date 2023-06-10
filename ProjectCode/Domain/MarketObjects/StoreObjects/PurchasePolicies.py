@@ -12,7 +12,7 @@ class PurchasePolicies:
     def addPurchasePolicy(self, **kwargs):
         policy = None
         purchase_policy, level = kwargs["purchase_policy"], kwargs["level"]
-        level_value, rule = kwargs["level_value"], kwargs["rule"]
+        level_value, rule = kwargs["level_name"], kwargs["rule"]
         if purchase_policy == "PurchasePolicy":
             policy = PurchasePolicy(level, level_value, rule)
         else:
@@ -23,9 +23,9 @@ class PurchasePolicies:
         return policy
 
 
-    def checkAllPolicies(self, basket, total_price, user):
+    def checkAllPolicies(self, product, basket, total_price, user=None):
         for policy in self.policies.values():
-            if not policy.calculate(basket, total_price, user):
+            if not policy.calculate(product, basket, total_price, user):
                 return False
         return True
 

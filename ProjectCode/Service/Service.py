@@ -173,7 +173,6 @@ class Service:
         try:
             member = self.store_facade.register(user_name, password, email)
             logging.info("Registered successfully. By username: " + user_name + ".")
-            print("aaa")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"register Error: {str(e)}.")
@@ -329,11 +328,11 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            basket = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
-            return Response(basket.toJson(), True)
+            return Response(answer.toJson(), True)
         except Exception as e:
             logging.error(f"addToBasket Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -786,7 +785,6 @@ class Service:
     def getAllMessagesReceived(self, requesterID):
         try:
             messages = self.store_facade.getAllMessagesReceived(requesterID)
-            print(messages)
             logging.debug(
                 f"fetching all the user's messages. By username: " + requesterID + ".")
             return Response(messages, True)
@@ -798,10 +796,20 @@ class Service:
         try:
             message = self.store_facade.readMessage(requesterID, messageID)
             logging.debug(
-                f"fetching all the user's messages. By username: " + requesterID + ".")
+                f"marked as read message with ID {messageID}. By username: " + requesterID + ".")
             return Response(message.toJson(), True)
         except Exception as e:
             logging.error(f"readMessage Error: {str(e)}.")
+            return Response(e, False)
+        
+    def deleteMessage(self, requesterID, messageID):
+        try:
+            res = self.store_facade.deleteMessage(requesterID, messageID)
+            logging.debug(
+                f"deleted message with ID {messageID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
