@@ -8,6 +8,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
+
 # ------------------------------------ Load config ------------------------------------ #
 @staticmethod
 def load_config(config_file):
@@ -292,7 +293,11 @@ class Service:
             results = self.store_facade.productSearchByCategory(categoryName)
             logging.debug(
                 f"fetching all the products within the category '{str(categoryName)}'. By username: " + username + ".")
-            return Response(JsonSerialize.toJsonAttributes(results), True)
+            results_json = []
+            for item in results.values():
+                for product in item:
+                    results_json.append(product.toJson())
+            return Response(results_json, True)
         except Exception as e:
             logging.error(f"productSearchByCategory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -791,6 +796,16 @@ class Service:
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
             return Response(e, False)
+        
+    def getAllNotifications(self, requesterID):
+        try:
+            notifications = self.store_facade.getAllNotifications(requesterID)
+            logging.debug(
+                f"fetching all the user's notifications. By username: " + requesterID + ".")
+            return Response(notifications, True)
+        except Exception as e:
+            logging.error(f"getNotifications Error: {str(e)}.")
+            return Response(e, False)
 
     def readMessage(self, requesterID, messageID):
         try:
@@ -811,6 +826,9 @@ class Service:
         except Exception as e:
             logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
+        
+
+
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
     #     try:
