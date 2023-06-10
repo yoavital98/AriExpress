@@ -70,7 +70,7 @@ class MessageController:
 
         #send_notification(receiver_id, message_id ,'notification', subject)
 
-        return message
+        return message_id
 
     def read_notification(self, user_id, message_id):
         for message in self._inbox_notifications[user_id]:

@@ -207,9 +207,9 @@ class Service:
             logging.error(f"logOut Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def getMemberPurchaseHistory(self, username):
+    def getMemberPurchaseHistory(self, requester_id, username):
         try:
-            purchase_history = self.store_facade.getMemberPurchaseHistory(username)
+            purchase_history = self.store_facade.getMemberPurchaseHistory(requester_id, username)
             logging.debug(f"fetching purchase history of user {str(username)}.")
             data_json = []
             for transaction in purchase_history:

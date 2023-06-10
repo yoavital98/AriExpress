@@ -150,10 +150,12 @@ class Cart:
             raise Exception(e)
         if answer:  # means everything is ok to go
             purchaseReports = {}
+            founders_usernames = []
             exp_month, exp_year = card_date.split("/")
             for basket in self.get_baskets().values():  # all the baskets
                 products: list = basket.getProductsAsTuples()  # tupleList [(productid,productname,quantity,price4unit)]
                 price = basket.calculateBasketPrice()  # price of a single basket
+                founders_usernames.append(basket.get_Store().getFounder())
                 cur_purchase = PurchaseReport(self.username, basket.get_Store().get_store_name(), products, price)
                 purchaseReports[basket.get_Store().get_store_name()] = cur_purchase
                 stores_products_dict[basket.get_Store().get_store_name()] = products
@@ -173,16 +175,20 @@ class Cart:
             if is_member:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
                                                           stores_products_dict, overall_price)
-                MessageController().send_notification(self.username, message_header, purchaseReports, datetime.now())
+                member_msg_id = MessageController().send_notification(self.username, message_header, purchaseReports, datetime.now())
+            founders_message_ids = []
             for purchase in purchaseReports.values():  # all the baskets
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
                                                            purchase.getStorename(), purchase.getProducts(), \
                                                            purchase.getTotalBasketPayment())
-                MessageController().send_notification(purchase.getStorename(), message_header, purchase, datetime.now())
-            self.clearCartFromProducts()  # clearing all the products from all the baskets
+                founder_message_id = MessageController().send_notification(purchase.getStorename(), message_header, purchase, datetime.now())
+                founders_message_ids.append(founder_message_id)
+                self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {
-                
+                "memeber_message_id":  member_msg_id,
+                "founders_message_ids": founders_message_ids,
+                "founders_usernames": founders_usernames,
                 "message": "Regular Purchase was successful",
                 "transaction_id": transaction_id,
                 "supply_id": supply_id,

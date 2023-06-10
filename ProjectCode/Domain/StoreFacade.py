@@ -538,10 +538,10 @@ class StoreFacade:
             raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
-        removed_usernames = cur_store.removeAccess(to_remove_username, requester_username)
+        removed_username = cur_store.removeAccess(to_remove_username, requester_username)
         MessageController.send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
                                             + store_name + " have been removed", datetime.now(), None)
-        return removed_usernames
+        return removed_username
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
         cur_store: Store = self.stores[store_name]
@@ -610,7 +610,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User isn't logged in")
-        new_policy = cur_store.addDiscount(username, purchase_policy, rule, level=level, level_name=level_name)
+        new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
         return new_policy
 
     def getPurchasePolicy(self, storename, policy_id):
