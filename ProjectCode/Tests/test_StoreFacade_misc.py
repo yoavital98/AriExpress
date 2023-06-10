@@ -134,6 +134,7 @@ class TestStoreFacade(TestCase):
             added_discount = self.my_store.getDiscount(1)
         except Exception as e:
             self.assertEqual(e.args[0], "No such discount exists")
+            # !
 
     def test_addSimpleDiscount_storeNotExists_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
