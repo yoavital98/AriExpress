@@ -539,10 +539,10 @@ class StoreFacade:
             raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
-        removed_usernames = cur_store.removeAccess(to_remove_username, requester_username)
+        removed_username = cur_store.removeAccess(to_remove_username, requester_username)
         MessageController.send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
                                             + store_name + " have been removed", datetime.now(), None)
-        return removed_usernames
+        return removed_username
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
         cur_store: Store = self.stores[store_name]
