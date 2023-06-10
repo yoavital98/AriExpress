@@ -26,17 +26,21 @@ class RulePurchaseComp(LogicComp):
         basket := dict(int,int) -> (product id, quantity in basket)
     """
     def checkIfSatisfy(self, product, basket, total_price, user=None):
+        print(f"user {user}")
         if user is None: #User policies
             if self.rule_type == "amount_of_product":
+                print("ok11")
                 return self.productAmount(basket)
         elif basket is None or total_price is None: #Basket policies
             if self.rule_type == "alcohol_restriction":
+                print("ok12")
                 return self.alcoholRestriction(user.get_age())
         raise Exception("No such rule type exists")
 
 
     def productAmount(self, basket):
         basket_product_quantity = basket.get(self.product_id)
+        print(f"basket {basket_product_quantity}")
         if basket_product_quantity is None:
             return True
         elif self.compareWithOperator(basket_product_quantity):
@@ -49,6 +53,7 @@ class RulePurchaseComp(LogicComp):
             return self.compareWithOperator(age)
 
     def compareWithOperator(self, arg):
+        print("omggggg")
         if self.operator == ">=":
             return arg >= self.quantity
         elif self.operator == "<=":

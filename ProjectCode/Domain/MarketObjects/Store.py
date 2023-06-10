@@ -288,7 +288,9 @@ class Store:
         for product_id, product_tuple in basket.items():
             relevant_product_info[product_id] = product_tuple[1]
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
+        print(f"overall_price: {overall_price}")
         price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
+        print(f"price_after_discount: {price_after_discount}")
         return (product, quantity, price_after_discount)
 
     def calculateBasketBasePrice(self, products_dict): #tup(product,qunaiity)
@@ -321,7 +323,8 @@ class Store:
 
     def getProductPriceAfterDiscount(self, product, product_quantity_dict, overall_price):
         cur_percent = self.__discount_policy.calculateDiscountForProduct(product, product_quantity_dict, overall_price)
-        return product.get_price() - product.get_price() * (cur_percent / 100)
+        print(f"fucking shit {float(product.get_price()) - float(product.get_price()) * float((cur_percent) / 100)}")
+        return float(product.get_price()) - float(product.get_price()) * float((cur_percent) / 100)
 
     def addDiscount(self, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
         cur_access: Access = self.__accesses.get(username)

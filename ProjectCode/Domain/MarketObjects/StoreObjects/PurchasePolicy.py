@@ -26,6 +26,7 @@ class PurchasePolicy(Policy):
         self.logic_comp: LogicComp = None
 
     def calculate(self, product, basket, additional_value, user=None):
+        print(f"checkIfSatify {self.logic_comp.checkIfSatisfy(product, basket, additional_value)} ")
         return self.logic_comp.checkIfSatisfy(product, basket, additional_value)
 
     def checkIfRelevant(self, product: Product, user):

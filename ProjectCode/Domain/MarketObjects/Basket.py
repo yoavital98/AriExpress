@@ -21,9 +21,12 @@ class Basket:
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(product_id):
+            print("ok2")
             if not self.store.checkBasketValidity(self.products, product, quantity):
                 raise Exception("product cannot be added to basket due to policy restrictions")
+            print("ok3")
             product_tup = self.store.calculateProductPriceAfterDiscount(product,self.products, quantity)
+            print(f"product_tup {product_tup}")
             self.products[product_id] = product_tup
         else:
             raise Exception("product already exists in the basket")

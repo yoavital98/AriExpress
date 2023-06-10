@@ -32,11 +32,14 @@ class Cart:
             raise Exception("Basket does not exists")
 
     def add_Product(self, username, store, product_id, product, quantity):
+        print("ok1")
         if not self.baskets.keys().__contains__(store.get_store_name()):
             basket_to_add = Basket(str(username), store)
             self.baskets[store.get_store_name()] = basket_to_add
         basket: Basket = self.get_Basket(store.get_store_name())
+        print(f"basketbefore: {basket.toJson()}")
         basket.add_Product(product_id, product, quantity)
+        print(f"basketbefore2: {basket.toJson()}")
         return basket
 
     def removeFromBasket(self, store_name, product_id):

@@ -706,6 +706,7 @@ def cart(request):
     if request.user.is_authenticated:
         service = Service()
         res = service.getCart(request.user.username)
+        print(res.getReturnValue())
         if res.getStatus():
             cart = res.getReturnValue()
             baskets = ast.literal_eval(str(cart)).get('baskets')
@@ -713,6 +714,7 @@ def cart(request):
             products = dict()
             for basket in baskets:
                 basket_res = service.getBasket(request.user.username, basket)
+                print(basket_res.getReturnValue())
                 if basket_res.getStatus() == True:
                     basket_res = basket_res.getReturnValue()
                     basket_products = ast.literal_eval(str(basket_res)).get('products')
