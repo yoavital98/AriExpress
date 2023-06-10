@@ -842,7 +842,11 @@ def checkout(request):
                 res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']), form.cleaned_data['address'], form.cleaned_data['city'], form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
                     member_notification_id = ast.literal_eval(str(res.getReturnValue())).get('member_message_id')
-                    sendNotification(request.user.username, member_notification_id,'notification' ,"Order placed successfully! thank you for shopping with us")
+                    sendNotification(request.user.username, int(member_notification_id),'notification' ,"Order placed successfully! thank you for shopping with us")
+                    founders_notification_id = ast.literal_eval(str(res.getReturnValue())).get('founders_message_ids')
+                    founder_usernames = ast.literal_eval(str(res.getReturnValue())).get('founders_usernames')
+                    for i in range(len(founders_notification_id)):
+                        sendNotification(founder_usernames[i], int(founders_notification_id[i]), 'notification', "An order has been placed in your store!")
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
                     return redirect('mainApp:mainpage')
                 else:
