@@ -270,6 +270,7 @@ def store_specific(request, storename):
         context = ast.literal_eval(str(products))
         products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
         active = "Open" if context['active'].lower() == "true" else "Closed"
+        print(products_dict)
         return render(request, 'store_specific.html', {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})
     # else:
     #     return redirect('mainApp:mainpage')
