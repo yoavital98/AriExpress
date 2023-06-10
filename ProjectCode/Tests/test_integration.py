@@ -248,24 +248,72 @@ class Test_Use_Case_3_members(TestCase):
         res_create_store = self.service.createStore("username", "AriExpress")
         self.assertTrue(res_create_store.getStatus())
 
-    class Test_Use_Case_4_Management(TestCase):
-        def setUp(self):
-            self.service = Service()
-            self.service.register("Feliks", "password456", "feliks@gmail.com")
-            self.service.register("Amiel", "password789", "amiel@gmail.com")
-            self.service.logIn("Feliks", "password456")
-            self.service.createStore("Feliks", "AriExpress")
-            self.service.logOut("Feliks")
+class Test_Use_Case_4_Management(TestCase):
+    def setUp(self):
+        self.service = Service()
+        self.service.register("Feliks", "password456", "feliks@gmail.com")
+        self.service.register("Amiel", "password789", "amiel@gmail.com")
+        res = self.service.logIn("Feliks", "password456")
+        self.service.createStore("Feliks", "AriExpress")
+        self.service.logOut("Feliks")
 
 
 
 
-# Use Case 3.2
+    # Use Case 4.1.a
     def test_addProductToStore_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
         res_new_product = self.service.addNewProductToStore("Feliks","AriExpress", "paper", "paper", 50, 100)
         self.assertTrue(res_new_product.getStatus())
+
+    # Use Case 4.1.b
+
+    def test_deleteProductFromStore_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_new_product = self.service.addNewProductToStore("Feliks","AriExpress", "paper", "paper", 50, 100)
+        self.assertTrue(res_new_product.getStatus())
+        res_delete = self.service.removeProductFromStore("Feliks", "AriExpress", 1)
+        self.assertTrue(res_delete.getStatus())
+
+
+
+    # Use Case 4.1.c
+    def test_changeProductinStore_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_new_product = self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
+        self.assertTrue(res_new_product.getStatus())
+        res_edit = self.service.editProductOfStore("Feliks", "AriExpress", 1, quantity=50)
+        self.assertTrue(res_edit.getStatus())
+
+
+
+    # Use Case 4.4
+    def test_nominateShopOwner_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_nominate = self.service.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(res_nominate.getStatus())
+
+
+# Use Case 4.6
+    def test_nominateShopManager_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(res_nominate.getStatus())
+
+
+# Use Case 4.7
+    def test_PermissionToShopManager_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(res_nominate.getStatus())
+        res_permission = self.service.addPermission("AriExpress", "Feliks", "Amiel", "ModifyPermissions")
+        self.assertTrue(res_permission.getStatus())
 
 
 if __name__ == '__main__':
