@@ -144,7 +144,7 @@ class Test_Use_Case_2_guests(TestCase):
     def test_guest_product_search_by_category(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        products = self.service.productSearchByName("paper", "0")
+        products = self.service.productSearchByCategory("paper", "0")
         self.assertTrue(products.getStatus())
 
     # def test_guest_product_search_by_keyword(self):
