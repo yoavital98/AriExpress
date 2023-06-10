@@ -24,6 +24,11 @@ class MainappConfig(AppConfig):
         # service.createStore("bbb", "TESTSTORE")
         # service.logOut("bbb")
 
+#         config_file = "../config_multipleStaff.json"
+# #         config_file = "../config_purchaseCart.json"
+#         service = Service(config_file)
+
+
 
 
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only

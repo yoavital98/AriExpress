@@ -192,7 +192,7 @@ class StoreFacade:
                 existing_member: Member = self.members[username]
                 if password_validator.ConfirmPassword(password, existing_member.get_password()):
                     existing_member.logInAsMember()
-                    existing_member.setEntranceId(self.nextEntranceID)
+                    existing_member.setEntranceId(str(self.nextEntranceID))
                     self.nextEntranceID += 1
                     self.online_members[username] = existing_member  # indicates that the user is logged in
                     return existing_member
@@ -250,7 +250,7 @@ class StoreFacade:
     # guest and member
     # adding a product to basket, checking with store if the item is available
     def addToBasket(self, username, store_name, product_id, quantity):
-        user: User = self.getUserOrMember(username)
+        user: User = self.getUserOrMember(str(username))
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
@@ -874,6 +874,8 @@ class StoreFacade:
     # ==================  Messages  ==================#
 
     def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
 
     def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
@@ -881,16 +883,24 @@ class StoreFacade:
         return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
 
     def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         founder = self.getStoreFounder(storeID)
         return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
 
     def getAllMessagesSent(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().get_messages_sent(requesterID)
 
     def getAllMessagesReceived(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().get_messages_received(requesterID)
 
     def readMessage(self, requesterID, messageID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().read_message(requesterID, messageID)
     
     def deleteMessage(self, requesterID, messageID):
@@ -900,17 +910,25 @@ class StoreFacade:
 
     def sendNotificationToUser(self, receiverID, subject, content, creation_date):
         # with purchase form AliExpress to user
+        if not self.members.keys().__contains__(receiverID):
+            raise Exception("no such member exists")
         return MessageController().send_notification(receiverID, subject, content, creation_date)
 
     def sendNotificationToStore(self, storeID, subject, content, creation_date):
         # with purchase form AliExpress to store's founder
+        if not self.stores.keys().__contains__(storeID):
+            raise Exception("no such store exists")
         founder = self.getStoreFounder(storeID)
         return MessageController().send_notification(founder, subject, content, creation_date)
 
     def getAllNotificationsReceived(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().get_notifications(requesterID)
 
     def readNotification(self, requesterID, messageID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().read_notification(requesterID, messageID)
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
@@ -920,6 +938,6 @@ class StoreFacade:
     #     pass
     def getStoreFounder(self, store_name):
         if self.stores.keys().__contains__(store_name):
-            return self.stores[store_name].getFounder()
+            return self.stores[store_name].getFounder().get_username()
         else:
             raise Exception("no such store exists")
