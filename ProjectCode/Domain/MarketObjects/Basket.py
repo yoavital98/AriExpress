@@ -61,7 +61,7 @@ class Basket:
     def getProductsAsTuples(self):
         productList = []
         for key, value in self.products.items():
-            productList.append((key, value[0], value[1], value[2]))
+            productList.append((key, value[0].get_name(), value[1], value[2]))
         return productList
 
     def addBidToBasket(self, bid: Bid):
