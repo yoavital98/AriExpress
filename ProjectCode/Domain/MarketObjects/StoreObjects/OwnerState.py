@@ -8,6 +8,7 @@ class OwnerState(AccessState):
         super().__init__()
         self.permissions["ProductChange"] = self.permission_names["ProductChange"]
         self.permissions["Bid"] = self.permission_names["Bid"]
+        self.permissions["ModifyPermissions"] = self.permission_names["ModifyPermissions"]
 
 
 
