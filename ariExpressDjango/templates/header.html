@@ -1,7 +1,7 @@
-{% load static i18n %}
-{% load notifications_tags %}
 <!DOCTYPE html>
 <html>
+    {% load static i18n %}
+    {% load notifications_tags %}
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -79,14 +79,10 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'mainApp:inbox' %}" id="notification-btn">
-                                    <i class="fas fa-bell"></i><span class="notification-amount" name="notification-amount" id="notification-amount"> {% notifications_unread %}</span>
+                                    <i class="fas fa-bell"></i><span class="notification-amount" name="notification-amount" id="notification-amount">{% live_notify_badge %}</span>
                                 </a>
                             </li>
-                            <script>
-                                setInterval(function(){
-                                    $('.notification-amount').html("{% notifications_unread %}");
-                                }, 1000);
-                            </script>                        
+                                                  
                         {% endif %}
                         {% if request.session.guest is 1 %}
                         <li class="nav-item">
@@ -123,6 +119,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    
 </body>
 </html>
 

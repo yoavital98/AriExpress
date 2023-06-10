@@ -153,3 +153,10 @@ CHANNEL_LAYERS = {
 
 NOTIFICATIONS_NOTIFICATION_MODEL = 'mainApp.Notification'
 DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True}
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
