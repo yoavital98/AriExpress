@@ -11,50 +11,69 @@
 		<h1 style="text-align:center; font-size:300%;">Inbox <i class="fa-regular fa-envelope-open"></i></h1>
 		<br><br>
 		<!--Table of messages-->
-		<div class = "col-lg-12 hide">
-			<div style = "margin-top: 20 px;">
-				<table class="table table-hover" >
-					<thead class="table-light" style="font-size: 20px">
-						<tr>
-							<th style = "width: 20%;">Name</th>
-							<th style = "width: 50%;">Subject</th>
-							<th style = "width: 10%;">Recived on</th>
-							<th style = "width: 10%;">Status</th>
-							<th style = "width: 10%; text align: center;" colspan="2">Actions</th>
+		<div class="row">
+            <div class="col-lg-4 order-lg-2 mb-4" style="background-color:#34495e; position: relative;">
+                <h2 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-light" style="text-align: center; font-size:140%;">Notifications</span>
+                </h2>
+                <br>
+                <ul class="list-group mb-3 sticky-top" >
+                    {% for notification in usernotifications %}
+						<li class="list-group-item d-flex justify-content-between lh-condensed" style="background-color:#34495e;">
+							<div >
+								<h6 class="text-light">{{ notification.subject }}</h6>
+								<small class="text-subtle description">{{ notification.content }}</small>
+							</div>
+						</li>
+                    {% endfor %}
+                </ul>
+                <br>
+            </div>
+			<div class = "col-lg-8 order-lg-1">
+				<div style = "margin-top: 20 px;">
+					<table class="table table-hover" >
+						<thead class="table-light" style="font-size: 20px">
+							<tr>
+								<th style = "width: 20%;">Name</th>
+								<th style = "width: 50%;">Subject</th>
+								<th style = "width: 10%;">Recived on</th>
+								<th style = "width: 10%;">Status</th>
+								<th style = "width: 10%; text align: center;" colspan="2">Actions</th>
+							</tr>
+						</thead>
+						{% for usermessage in usermessages %}
+						<tr> 
+							<td>{{ usermessage.sender }}</td>
+							<td>{{ usermessage.subject }}</td>
+							<td>{{ usermessage.creation_date | date:'m/d/y (H:i)' }}</td>
+							{% if usermessage.status == 'pending' %}
+							<td clas="text-danger" style="color: red">{{ usermessage.status }}</td>
+							{% else %}
+							<td "color: black">{{ usermessage.status }}</td>
+							{% endif %}
+
+							<td>
+								<button class="btn btn-secondary btn-sm btn-action" title="Delete message" data-bs-toggle="modal" data-bs-target="#deleteModal{{ usermessage.pk }}">
+									<i class="fas fa-trash-alt"></i>
+								</button>
+							</td>
+							<td>
+								<button class="btn text-light btn-sm btn-action" title="Read message" style="background-color:#0074fe;" data-bs-toggle="modal" data-bs-target="#readModal{{ usermessage.pk }}">
+									<i class="fas fa-envelope"></i>
+								</button>
+							</td>
 						</tr>
-					</thead>
-					{% for usermessage in usermessages %}
-					<tr> 
-						<td>{{ usermessage.sender }}</td>
-						<td>{{ usermessage.subject }}</td>
-						<td>{{ usermessage.creation_date | date:'m/d/y (H:i)' }}</td>
-						{% if usermessage.status == 'pending' %}
-						<td clas="text-danger" style="color: red">{{ usermessage.status }}</td>
-						{% else %}
-						<td "color: black">{{ usermessage.status }}</td>
-						{% endif %}
 
-						<td>
-							<button class="btn btn-secondary btn-sm btn-action" title="Delete message" data-bs-toggle="modal" data-bs-target="#deleteModal{{ usermessage.pk }}">
-								<i class="fas fa-trash-alt"></i>
-							</button>
-						</td>
-						<td>
-							<button class="btn text-light btn-sm btn-action" title="Read message" style="background-color:#0074fe;" data-bs-toggle="modal" data-bs-target="#readModal{{ usermessage.pk }}">
-								<i class="fas fa-envelope"></i>
-							</button>
-						</td>
-					</tr>
+						<!--Delete message button functionality-->
+						{% include 'messages/delete.html' %}
+						<!--Read message button functionality-->
+						{% include 'messages/read.html' %}
+						<!--Mark message button functionality-->
+						{% include 'messages/mark.html' %}
 
-					<!--Delete message button functionality-->
-					{% include 'messages/delete.html' %}
-					<!--Read message button functionality-->
-					{% include 'messages/read.html' %}
-					<!--Mark message button functionality-->
-					{% include 'messages/mark.html' %}
-
-					{% endfor %}	
-				</table>
+						{% endfor %}	
+					</table>
+				</div>
 			</div>
 		</div>
 		<br>
@@ -119,4 +138,11 @@
 	</main>
 </body>
 </html>
+<style>
+	.description{
+		overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+	}
+</style>
 {% endblock%}

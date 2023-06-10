@@ -182,6 +182,7 @@ class Cart:
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {
+                
                 "message": "Regular Purchase was successful",
                 "transaction_id": transaction_id,
                 "supply_id": supply_id,

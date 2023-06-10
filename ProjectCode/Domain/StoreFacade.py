@@ -41,7 +41,6 @@ class StoreFacade:
         self.banned_members = TypedDict(str,
                                         Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
-        self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
@@ -897,6 +896,11 @@ class StoreFacade:
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().get_messages_received(requesterID)
+    
+    def getAllNotifications(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
+        return MessageController().get_notifications(requesterID)
 
     def readMessage(self, requesterID, messageID):
         if not self.checkIfUserIsLoggedIn(requesterID):
