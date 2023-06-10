@@ -18,8 +18,8 @@ class MainappConfig(AppConfig):
         # service = Service()
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only
-        # service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
-        # service.register("roobink", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        service.register("roobink", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
         # service.register("Yoav", "XG5EsQtQ.J:k82G", "yoavital98@gmail.com") # for debug only
         # service.logOut("roobink")
         # service.logIn("bbb", "asdf1233")

@@ -29,6 +29,11 @@ def startpage(request):
     return render(request, "startpage.html")
 
 def mainpage(request):
+    #----------------------creating first user - ariExpress--------------------------------------------
+    if not User.objects.filter(username='ariExpress').exists():
+        user = User.objects.create_user(username='ariExpress', password='ariExpress')
+        user.save()
+    #--------------------------------------------------------------------------------------------------
     createGuestIfNeeded(request)
     return render(request, 'mainpage.html')
 
@@ -609,11 +614,17 @@ def inbox(request):
     #pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
     all_user_messages = service.getAllMessagesReceived(request.user.username)
     if all_user_messages.getStatus():
-        all_user_messages = all_user_messages.getReturnValue()
-        paginator = Paginator(all_user_messages, 5)
-        page = request.GET.get('page')
-        all_messages = paginator.get_page(page)
-        return render(request, 'inbox.html',{'usermessages': all_messages})
+        all_user_notifications = service.getAllNotifications(request.user.username)
+        if all_user_notifications.getStatus():
+            all_user_messages = all_user_messages.getReturnValue()
+            all_user_notifications = all_user_notifications.getReturnValue()
+            paginator = Paginator(all_user_messages, 5)
+            page = request.GET.get('page')
+            all_messages = paginator.get_page(page)
+            return render(request, 'inbox.html',{'usermessages': all_messages, 'usernotifications': all_user_notifications})
+        else:
+            messages.error(request, "Error: " + str(all_user_notifications.getReturnValue()))
+            return redirect('mainApp:mainpage')
     else:
         messages.error(request, "Error: " + str(all_user_messages.getReturnValue()))
         return redirect('mainApp:mainpage')
@@ -636,7 +647,7 @@ def send_message(request):
                 if message_res.getStatus():
                     recipent = User.objects.get(username=receiver_username)
                     m_id = message_res.getReturnValue()['id']
-                    notify.send(request.user, recipient=recipent, verb=f'{request.user.username} has sent you a message!', message_id=m_id)
+                    notify.send(request.user, recipient=recipent, verb=f'{request.user.username} has sent you a message!', message_id=m_id, type='message')
                     messages.success(request, "Message sent successfully")
                     return HttpResponseRedirect('/inbox')
                 else:
@@ -657,7 +668,7 @@ def delete_message(request, usermessage_id):
     service = Service()
     res = service.deleteMessage(request.user.username, usermessage_id)
     if res.getStatus():
-        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user)
+        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')
         notification.delete()
         messages.success(request, "Message deleted successfully")
     else:
@@ -681,7 +692,7 @@ def mark_as_read(request, usermessage_id):
     service = Service()
     res = service.readMessage(request.user.username, usermessage_id)
     if res.getStatus():
-        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user)[0]
+        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')[0]
         notification.mark_as_read()
         messages.success(request, "Message marked as read successfully")
     else:
@@ -830,6 +841,12 @@ def checkout(request):
             if form.is_valid():
                 res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']), form.cleaned_data['address'], form.cleaned_data['city'], form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
+                    member_notification_id = ast.literal_eval(str(res.getReturnValue())).get('member_message_id')
+                    sendNotification(request.user.username, int(member_notification_id),'notification' ,"Order placed successfully! thank you for shopping with us")
+                    founders_notification_id = ast.literal_eval(str(res.getReturnValue())).get('founders_message_ids')
+                    founder_usernames = ast.literal_eval(str(res.getReturnValue())).get('founders_usernames')
+                    for i in range(len(founders_notification_id)):
+                        sendNotification(founder_usernames[i], int(founders_notification_id[i]), 'notification', "An order has been placed in your store!")
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
                     return redirect('mainApp:mainpage')
                 else:
@@ -1034,3 +1051,8 @@ def get_number_at_end(string):
             break
     return int(number)
 #---------------------------------------------------------------------------------------------------------------------------------------#
+
+def sendNotification(reciever_id, notification_id, type, subject):
+    receipent = User.objects.get(id=reciever_id)
+    sender = User.objects.get(username='ariExpress')
+    notify.send(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!', message_id=notification_id, type=type, description=subject)
