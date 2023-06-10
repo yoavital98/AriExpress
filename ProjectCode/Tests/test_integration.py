@@ -307,13 +307,46 @@ class Test_Use_Case_4_Management(TestCase):
 
 
 # Use Case 4.7
-    def test_PermissionToShopManager_Success(self):
+    def test_addPermissionToShopManager_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
         res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
         self.assertTrue(res_nominate.getStatus())
         res_permission = self.service.addPermission("AriExpress", "Feliks", "Amiel", "ModifyPermissions")
         self.assertTrue(res_permission.getStatus())
+
+# Use Case 4.8
+    def test_removePermissionToShopManager_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(res_nominate.getStatus())
+        res_permission = self.service.removePermissions("AriExpress", "Feliks", "Amiel", "Bid")
+        self.assertTrue(res_permission.getStatus())
+
+    def test_removePermissionToShopManager_Fail(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        self.assertTrue(res_nominate.getStatus())
+        res_permission = self.service.removePermissions("AriExpress", "Feliks", "Amiel", "StaffInfo")
+        self.assertFalse(res_permission.getStatus())
+
+# Use Case 4.9
+    def test_closeStore_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_close = self.service.closeStore("Feliks", "AriExpress")
+        self.assertTrue(res_close.getStatus())
+
+
+
+# Use Case 4.11.a
+    def test_requestStoreStaffInfo_success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_info = self.service.getStaffInfo("Feliks", "AriExpress")
+        self.assertTrue(res_info.getStatus())
 
 
 if __name__ == '__main__':
