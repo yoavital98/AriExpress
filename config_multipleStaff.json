@@ -39,13 +39,7 @@
     "logIn": {"args": ["aaa", "asdf1233"]}
   },
   {
-    "nominateStoreManager": {"args": ["aaa", "bbb", "store123"]}
-  },
-  {
-    "nominateStoreManager": {"args": ["aaa", "ccc", "store123"]}
-  },
-  {
-    "nominateStoreManager": {"args": ["aaa", "ddd", "store123"]}
+    "logIn": {"args": ["eee", "asdf1233"]}
   },
   {
     "nominateStoreOwner": {"args": ["aaa", "eee", "store123"]}
@@ -54,10 +48,18 @@
     "nominateStoreOwner": {"args": ["aaa", "fff", "store123"]}
   },
   {
+    "nominateStoreOwner": {"args": ["eee", "bbb", "store123"]}
+  },
+  {
+    "nominateStoreManager": {"args": ["eee", "ccc", "store123"]}
+  },
+  {
+    "nominateStoreManager": {"args": ["eee", "ddd", "store123"]}
+  },
+  {
     "logOut": {"args": ["aaa"]}
+  },
+  {
+    "logOut": {"args": ["eee"]}
   }
 ]
-
-
-
-        
