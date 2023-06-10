@@ -13,6 +13,7 @@ class RulePurchaseComp(LogicComp):
 
     def __init__(self, rule_type, product, category, user_field, operator, quantity):
         super().__init__("")
+        self.rule_types = {"amount_of_product": True, "alcohol_restriction": True}
         self.rule_type = self.__validateRuleType(rule_type)
         self.product_id = product
         self.category = category
@@ -20,12 +21,13 @@ class RulePurchaseComp(LogicComp):
         self.operator = operator
         self.quantity = quantity
 
+
     """
         basket := dict(int,int) -> (product id, quantity in basket)
     """
-    def checkIfSatisfy(self, basket, total_price, user):
+    def checkIfSatisfy(self, product, basket, total_price, user=None):
         if user is None: #User policies
-            if self.rule_type == "product_amount":
+            if self.rule_type == "amount_of_product":
                 return self.productAmount(basket)
         elif basket is None or total_price is None: #Basket policies
             if self.rule_type == "alcohol_restriction":
@@ -58,8 +60,7 @@ class RulePurchaseComp(LogicComp):
 
 
     def __validateRuleType(self, rule_type):
-        rule_types = {"product_amount":True, "alcohol_restriction":True}
-        if rule_types.get(rule_type):
+        if self.rule_types.get(rule_type):
             return rule_type
         else:
             raise Exception("No such rule type exists")
