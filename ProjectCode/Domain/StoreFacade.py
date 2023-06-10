@@ -902,6 +902,9 @@ class StoreFacade:
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().read_message(requesterID, messageID)
+    
+    def deleteMessage(self, requesterID, messageID):
+        return MessageController().delete_message(requesterID, messageID)
 
     # ==================  Notifications  ==================#
 
