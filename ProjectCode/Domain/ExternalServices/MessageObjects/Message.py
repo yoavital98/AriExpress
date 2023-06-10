@@ -46,8 +46,7 @@ class Message:
             file_info = None
         else:
             file_info = {
-                "filename": self._file.name,
-                "path": self._file.path
+                "file": self._file
             }
             
         if self._read:

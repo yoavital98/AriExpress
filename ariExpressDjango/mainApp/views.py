@@ -21,6 +21,7 @@ from django.core.paginator import Paginator # for pagination
 from datetime import datetime #used to get total msg per day
 from django.views.decorators.cache import cache_control # for disabling cache
 from django.utils import timezone
+from notifications.signals import notify
 
 
 
@@ -333,7 +334,7 @@ def addNewDiscount(request, storename): # Discounts
         discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
         percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
         levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
-        levelType = None if levelTypeInt == None else getLevelType(levelTypeInt)
+        levelType = None if levelTypeInt == None else getDiscountLevelType(levelTypeInt)
         levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
 
         if 'submitDiscount' in request.POST:
@@ -347,13 +348,13 @@ def addNewDiscount(request, storename): # Discounts
 
 
             if discountTypeInt == 2:
-                rulesData = request.session['rulesData']
-                fixedRulesData = fixRulesData(rulesData)
+                discountRulesData = request.session['discountRulesData']
+                fixedRulesData = fixDiscountRulesData(discountRulesData)
                 actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
                 if actionRes.getStatus():
                     messages.success(request, ("Discount has been added"))
-                    if 'rulesData' in request.session:
-                        del request.session['rulesData']
+                    if 'discountRulesData' in request.session:
+                        del request.session['discountRulesData']
                 else:
                     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
@@ -369,31 +370,98 @@ def addNewDiscount(request, storename): # Discounts
 
 
         if 'conditionedAddRule' in request.POST:
-            # Retrieve the submitted rulesData
-            rulesData = request.POST.get('rulesData')
-            ruleData = json.loads(rulesData)
+            # Retrieve the submitted discountRulesData
+            discountRulesData = request.POST.get('discountRulesData')
+            ruleData = json.loads(discountRulesData)
 
-            if 'rulesData' not in request.session:
-                request.session['rulesData'] = {}
-                request.session['ruleCounter'] = 0
+            if 'discountRulesData' not in request.session:
+                request.session['discountRulesData'] = {}
+                request.session['discountRuleCounter'] = 0
 
             # Check if ruleData is not already in the session
-            if ruleData not in dict(request.session['rulesData']).values():
-                counter = request.session['ruleCounter']
-                ruleDict = request.session['rulesData']
+            if ruleData not in dict(request.session['discountRulesData']).values():
+                counter = request.session['discountRuleCounter']
+                ruleDict = request.session['discountRulesData']
                 ruleDict[counter] = ruleData
-                request.session['ruleCounter'] += 1
+                request.session['discountRuleCounter'] += 1
 
 
         if 'clearAllRules' in request.POST:
-            if 'rulesData' in request.session:
-                del request.session['rulesData']
-            request.session['ruleCounter'] = 0
+            if 'discountRulesData' in request.session:
+                del request.session['discountRulesData']
+            request.session['discountRuleCounter'] = 0
 
         return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
+
+
+def addNewPurchasePolicy(request, storename): # Policies
+    username = request.user.username
+    permissionName = 'Policies'
+    if permissionCheck(username, storename, permissionName):
+        purchase_policy_int = None if request.POST.get('purchase_policy') == None else int(request.POST.get('purchase_policy'))
+        purchase_policy = None if purchase_policy_int == None else getPurchasePolicyType(purchase_policy_int)
+        levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+        levelType = None if levelTypeInt == None else getPolicyLevelType(levelTypeInt)
+        levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
+
+        if 'submitPolicy' in request.POST:
+            service = Service()
+            if purchase_policy_int == 1:
+                policyRulesData = request.session['policyRulesData']
+                print(f"policyRulesData: {policyRulesData}")
+                rule = fixDiscountRulesData(policyRulesData)                                                                    #TODO: check if works
+                print(f"storename: {storename}\n username: {username}\n, purchase_policy: {purchase_policy}\n, rule: {rule}\n, levelType: {levelType}\n, levelName: {levelName}")
+                actionRes = service.addPurchasePolicy(storename, username, purchase_policy, rule, levelType, levelName)
+                if actionRes.getStatus():
+                    messages.success(request, ("Policy has been added"))
+                else:
+                    messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+
+            if purchase_policy_int == 2:
+                pass
+
+            if purchase_policy_int == 3:
+                pass
+
+            if purchase_policy_int == 4:
+                pass
+
+            if purchase_policy_int == 5:
+                pass
+
+
+        if 'addRule' in request.POST:
+            # Retrieve the submitted policyRulesData
+            policyRulesData = request.POST.get('policyRulesData')
+            ruleData = json.loads(policyRulesData)
+
+            if 'policyRulesData' not in request.session:
+                request.session['policyRulesData'] = {}
+                request.session['policyRuleCounter'] = 0
+
+            # Check if ruleData is not already in the session
+            if ruleData not in dict(request.session['policyRulesData']).values():
+                counter = request.session['policyRuleCounter']
+                ruleDict = request.session['policyRulesData']
+                ruleDict[counter] = ruleData
+                request.session['policyRuleCounter'] += 1
+
+
+        if 'clearAllRules' in request.POST:
+            if 'policyRulesData' in request.session:
+                del request.session['policyRulesData']
+            request.session['policyRuleCounter'] = 0
+
+        return render(request, 'addNewPurchasePolicy.html', {'storename': storename})
+    
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
+
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
@@ -489,10 +557,14 @@ def viewDiscounts(request, storename):
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
         actionRes = service.getAllDiscounts(storename)
-        if actionRes:
-            discounts = ast.literal_eval(str(actionRes.getReturnValue()))
+        if actionRes.getStatus():
+            removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
+            print(removeNulls)
+            discounts = ast.literal_eval(str(removeNulls))
             return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
-    
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:store_specific', storename=storename)
     messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
     return redirect('mainApp:store_specific', storename=storename)
 
@@ -562,6 +634,9 @@ def send_message(request):
                 print(file)
                 message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date, file)
                 if message_res.getStatus():
+                    recipent = User.objects.get(username=receiver_username)
+                    m_id = message_res.getReturnValue()['id']
+                    notify.send(request.user, recipient=recipent, verb=f'{request.user.username} has sent you a message!', message_id=m_id)
                     messages.success(request, "Message sent successfully")
                     return HttpResponseRedirect('/inbox')
                 else:
@@ -579,10 +654,16 @@ def send_message(request):
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_message(request, usermessage_id):
-    message = UserMessage.objects.get(id=usermessage_id)
-    message.delete()
-    messages.success(request, "Message deleted successfully")
+    service = Service()
+    res = service.deleteMessage(request.user.username, usermessage_id)
+    if res.getStatus():
+        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user)
+        notification.delete()
+        messages.success(request, "Message deleted successfully")
+    else:
+        messages.success(request, "Message deleted successfully")
     return HttpResponseRedirect('/inbox')
+    
 
 
 
@@ -600,9 +681,11 @@ def mark_as_read(request, usermessage_id):
     service = Service()
     res = service.readMessage(request.user.username, usermessage_id)
     if res.getStatus():
+        notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user)[0]
+        notification.mark_as_read()
         messages.success(request, "Message marked as read successfully")
     else:
-        messages.error(request, "Error marking message as read - "+res.getReturnValue())
+        messages.error(request, "Error marking message as read - "+str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
 
@@ -824,19 +907,39 @@ def getDiscountType(discount):
     if discount == 4: return "Max"
     else: return "Add"
 
-def getLevelType(level):
+def getPurchasePolicyType(policy):
+    # TODO: fix this when Amiel answers
+    policy = int(policy)
+    if policy == 1: return "PurchasePolicy"
+    if policy == 2: return "todo2"
+    if policy == 3: return "todo3"
+    if policy == 4: return "todo4"
+    else: return "todo5"
+
+def getDiscountLevelType(level):
     level = int(level)
     if level == 1: return "Store"
     if level == 2: return "Category"
     else: return "Product"
+
+def getPolicyLevelType(level):
+    # TODO: fix this when Amiel answers
+    level = int(level)
+    if level == 1: return "Product"
+    if level == 2: return "Category"
+    if level == 3: return "User"
+    else: return "Basket"
 
 def getlevelName(level, name):
     level = int(level)
     if level == 1: return ""
     else: return name
 
-def fixRulesData(rulesData):
+def fixDiscountRulesData(rulesData):
     keys = list(rulesData.keys())
+    print(rulesData)
+    if len(rulesData.keys()) == 1:
+        print(f"len: {rulesData[0]}")
     for i in range(1, len(keys)):
         key = keys[i]
         previous_key = keys[i-1]
@@ -845,8 +948,14 @@ def fixRulesData(rulesData):
             'rule': rulesData[key]
         }
         rulesData[previous_key]['child'] = child_dict
-    rulesData['0'].pop('logic_type', None)
-    return rulesData['0']
+    rulesData[0].pop('logic_type', None)
+    return rulesData[0]
+
+    # TODO: check 2 lines:
+    # rulesData["0"].pop('logic_type', None)
+    # return rulesData["0"]
+
+
 
     # keys = list(rulesData.keys())
     # for i in range(1, len(keys)):

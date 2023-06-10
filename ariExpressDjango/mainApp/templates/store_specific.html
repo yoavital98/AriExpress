@@ -134,6 +134,12 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
         <button type="submit" class="btn btn-primary me-2">View Store Staff</button>
       </form>
       {% endif %}
+      {% if "Policies" in permissions %}
+      <form method="post" action="{% url 'mainApp:addNewPurchasePolicy' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Add new Purchase Policy</button>
+      </form>
+      {% endif %}
     </div>
 </body>
 {% endblock %}
