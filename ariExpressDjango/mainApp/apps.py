@@ -10,8 +10,8 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
-#         config_file = "../config.json"
-#         config_file = "../config_purchaseCart.json"
+#         config_file = "../config_multipleStaff.json"
+# #         config_file = "../config_purchaseCart.json"
 #         service = Service(config_file)
         service = Service()
         service.register("aaa", "asdf1233", "a@a.com") # for debug only
