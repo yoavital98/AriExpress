@@ -892,6 +892,9 @@ class StoreFacade:
 
     def readMessage(self, requesterID, messageID):
         return MessageController().read_message(requesterID, messageID)
+    
+    def deleteMessage(self, requesterID, messageID):
+        return MessageController().delete_message(requesterID, messageID)
 
     # ==================  Notifications  ==================#
 

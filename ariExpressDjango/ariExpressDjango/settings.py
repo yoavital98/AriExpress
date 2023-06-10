@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'channels',
     'django_cleanup',
     'mathfilters',
+    'notifications',
+    
 ]
 
 
@@ -149,3 +151,5 @@ CHANNEL_LAYERS = {
     },
 }
 
+NOTIFICATIONS_NOTIFICATION_MODEL = 'mainApp.Notification'
+DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True}

@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from ariExpressDjango import settings
 
+
 app_name = "mainApp"
 
 urlpatterns = [
@@ -45,5 +46,6 @@ urlpatterns = [
     path(r'checkoutpage/', views.checkoutpage, name='checkoutpage'),
     path(r'checkout', views.checkout, name='checkout'),
     path(r'searchpage/', views.searchpage, name='searchpage'),
+    
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

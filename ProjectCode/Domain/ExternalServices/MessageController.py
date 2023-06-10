@@ -54,8 +54,9 @@ class MessageController:
 
     def read_message(self, user_id, message_id):
         for message in self._inbox_messages[user_id]:
-            if message.get_id() == message_id:
+            if message.get_id() == int(message_id):   # changed by roobs - message_id is string
                 if not message.is_read():
+                    print("marking as read")
                     message.mark_as_read()
                     self._pending_messages_amount[user_id] = self._pending_messages_amount[user_id] - 1
                 return message
@@ -102,3 +103,12 @@ class MessageController:
         if user_id not in self._inbox_notifications.keys():
             self._inbox_notifications[user_id] = []
         return [message.toJson() for message in self._inbox_notifications[user_id]]
+
+    def delete_message(self, user_id, message_id):
+        for message in self._inbox_messages[user_id]:
+            if message.get_id() == int(message_id):
+                self._inbox_messages[user_id].remove(message)
+                if message.is_read()== False:
+                    self._pending_messages_amount[user_id] = self._pending_messages_amount[user_id] - 1
+                return True
+        return False
