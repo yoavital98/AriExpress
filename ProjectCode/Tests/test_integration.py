@@ -117,10 +117,16 @@ class Test_Use_Case_2_guests(TestCase):
         self.assertTrue(res_product.getStatus())
 
 
-    def test_guest_information_fetching_failure(self):
+    def test_guest_information_fetching_noSuchStore_failure(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
         res_product = self.service.getProductsByStore("some_store", "0")
+        self.assertFalse(res_product.getStatus())
+
+    def test_guest_information_fetching_noSuchProduct_failure(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_product = self.service.getProduct("some_store", 5, 1)
         self.assertFalse(res_product.getStatus())
 
 
@@ -135,7 +141,7 @@ class Test_Use_Case_2_guests(TestCase):
     #   Else:
     #       The system returns a message that there is no products for that description.
 
-    def test_guest_product_search_by_name(self): #TODO: check the todo in storeFacade under the productSearchByName function
+    def test_guest_product_search_by_name(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
         res_product = self.service.productSearchByName("paper", "0")
@@ -144,7 +150,21 @@ class Test_Use_Case_2_guests(TestCase):
     def test_guest_product_search_by_category(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        products = self.service.productSearchByName("paper", "0")
+        products = self.service.productSearchByCategory("paper", "0")
+
+        self.assertTrue(products.getStatus())
+
+    def test_guest_product_search_by_name_fail(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_product = self.service.productSearchByName("some_name", "0")
+        self.assertTrue(res.getStatus())
+
+    def test_guest_product_search_by_category_fail(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        products = self.service.productSearchByCategory("some_category", "0")
+
         self.assertTrue(products.getStatus())
 
     # def test_guest_product_search_by_keyword(self):
@@ -161,11 +181,17 @@ class Test_Use_Case_2_guests(TestCase):
         self.assertTrue(res_added_product.getStatus())
 
 
-    def test_guest_add_product_to_cart_failure(self):
+    def test_guest_add_product_to_cart_productDoesntExists_failure(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
-        self.assertTrue(res_added_product.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 2, 5)
+        self.assertFalse(res_added_product.getStatus())
+
+    def test_guest_add_product_to_cart_StoreDoesntExists_failure(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "some_store", 1, 5)
+        self.assertFalse(res_added_product.getStatus())
 
     def test_member_add_product_to_cart_success(self):
         res = self.service.logIn("Amiel", "password789")
@@ -192,6 +218,22 @@ class Test_Use_Case_2_guests(TestCase):
         res_basket = self.service.editBasketQuantity('0', "AriExpress", 1, 7)
         self.assertTrue(res_basket.getStatus())
 
+    def test_guest_editBasket_itemDoesntExists_fail(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_basket = self.service.editBasketQuantity('0', "AriExpress", 2, 7)
+        self.assertFalse(res_basket.getStatus())
+
+    def test_guest_editBasket_BasketDoesntExists_fail(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_basket = self.service.editBasketQuantity('0', "some", 1, 7)
+        self.assertFalse(res_basket.getStatus())
+
     # Use Case 2.2.5.a
 
     def test_guest_purchaseCart_success(self):
@@ -202,6 +244,15 @@ class Test_Use_Case_2_guests(TestCase):
         res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
         self.assertTrue(res_purchase.getStatus())
+
+    def test_guest_purchaseCart_UserDoesntExists_fail(self):
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_purchase = self.service.purchaseCart("5", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
+                                       "be'er sheva")
+        self.assertFail(res_purchase.getStatus())
 
     # Use Case 2.2.5.b,c guests cant participate in bids
     def test_guest_purchaseConfirmedBid_success(self):
@@ -224,8 +275,12 @@ class Test_Use_Case_3_members(TestCase):
         self.assertTrue(return_value.get('entrance_id') == '0')
         self.assertTrue(return_value.get('username') == 'username')
 
-    def test_logging_in_the_system_failure(self):
+    def test_logging_in_the_system_wrongPassword_failure(self):
         res = self.service.logIn("username", "passwo")
+        self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't log in")
+
+    def test_logging_in_the_system_wrongUserName_failure(self):
+        res = self.service.logIn("userna", "password")
         self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't log in")
 
     # Use Case 3.1.2
@@ -235,7 +290,7 @@ class Test_Use_Case_3_members(TestCase):
         res_logout = self.service.logOut("username")
         self.assertTrue(res_logout.getStatus())
 
-    def test_log_out_from_the_system_fail(self):
+    def test_log_out_from_the_system_userDoesntExists_fail(self):
         res = self.service.logIn("username", "password")
         self.assertTrue(res.getStatus())
         res_logout = self.service.logOut("userna")
@@ -247,6 +302,10 @@ class Test_Use_Case_3_members(TestCase):
         self.assertTrue(res.getStatus())
         res_create_store = self.service.createStore("username", "AriExpress")
         self.assertTrue(res_create_store.getStatus())
+
+    def test_createShop_notLoggedIn_fail(self):
+        res_create_store = self.service.createStore("username", "AriExpress")
+        self.assertFalse(res_create_store.getStatus())
 
 class Test_Use_Case_4_Management(TestCase):
     def setUp(self):

@@ -24,7 +24,9 @@ class Basket:
             if not self.store.checkBasketValidity(self.products, product, quantity):
                 raise Exception("product cannot be added to basket due to policy restrictions")
             price_after_discount = self.store.getProductPriceAfterDiscount(product,self.products, quantity)
-            self.products[product_id] = (product,quantity, price_after_discount)
+
+            self.products[product_id] = (product, quantity, price_after_discount)
+
         else:
             raise Exception("product already exists in the basket")
 
