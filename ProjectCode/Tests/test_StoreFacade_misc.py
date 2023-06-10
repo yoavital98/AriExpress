@@ -103,7 +103,7 @@ class TestStoreFacade(TestCase):
     def test_addAdmin_selfAddToAdmin_fail(self):
         with self.assertRaises(Exception):
             self.store_facade.addAdmin("Ari", "Ari", "pass", "yoav@gmail.com")
- 325-discount-tests
+
 
 
 
@@ -133,7 +133,6 @@ class TestStoreFacade(TestCase):
             added_discount = self.my_store.getDiscount(1)
         except Exception as e:
             self.assertEqual(e.args[0], "No such discount exists")
-            # !
 
     def test_addSimpleDiscount_storeNotExists_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -268,7 +267,7 @@ class TestStoreFacade(TestCase):
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(500, price_after_discount_1)
 
- 325-discount-tests
+
     def test_calculateConditionedDiscount_byCategory_storeDoesNotExist_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         feliks: Member = self.store_facade.members.get("Feliks")
@@ -636,7 +635,7 @@ class TestStoreFacade(TestCase):
         amiel: Member = self.store_facade.members.get("Amiel")
         self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
- 325-discount-tests
+
 
     # closeStore
     def test_closeStore_success(self):
@@ -1168,7 +1167,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             cart: Cart = self.store_facade.getCart("Amiel")
 
- 325-discount-tests
+
 
 
     def test_addDiscount_success(self):
