@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <script>
-	var discountRulesData = {};
+	var policyRulesData = {};
 </script>
 <head>
   <title>{{ storename }} - Add new product</title>
@@ -13,52 +13,31 @@
 </head>
 
 <body onload="handleLevelChange(document.getElementById('levelType'))">
-	<h1 class="mb-3">{{ storename }} - Add a new Discount</h1>
+	<h1 class="mb-3">{{ storename }} - Add a new Purchase Policy</h1>
 
 	<div class="d-flex justify-content-start">
 		<div class="container" id="firstContainer">
 			<div class="card">
 				<div class="card-body">
-					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}" id="addRuleForm" onsubmit="handleFormSubmit(event)">
+					<form method="post" action="{% url 'mainApp:addNewPurchasePolicy' storename=storename %}" id="addRuleForm" onsubmit="handleFormSubmit(event)">
 						{% csrf_token %}
-					<input type="hidden" name="discountRulesData" value="{{ discountRulesData|safe }}">
-					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleConditioned(this)">
-						<option selected disabled>Discount Type</option>
-						<option value="1" {% if discountType == "Simple" %} selected {% endif %}>Simple</option>
-						<option value="2" {% if discountType == "Conditioned" %} selected {% endif %}>Conditioned</option>
-						<option value="3" {% if discountType == "Coupon" %} selected {% endif %}>Coupon</option>
-						<option value="4" {% if discountType == "Max" %} selected {% endif %}>Max</option>
-						<option value="5" {% if discountType == "Add" %} selected {% endif %}>Add</option>
+					<input type="hidden" name="policyRulesData" value="{{ policyRulesData|safe }}">
+					<select class="form-select mb-3" aria-label="Default select example" name="purchase_policy">
+						<option selected disabled>Purchase Policy Type</option>
+						<option value="1" {% if purchase_policy == "PurchasePolicy" %} selected {% endif %}>PurchasePolicy</option>
+						<option value="2" {% if purchase_policy == "idk2" %} selected {% endif %}>idk2</option>
+						<option value="3" {% if purchase_policy == "idk3" %} selected {% endif %}>idk3</option>
+						<option value="4" {% if purchase_policy == "idk4" %} selected {% endif %}>idk4</option>
+						<option value="5" {% if purchase_policy == "idk5" %} selected {% endif %}>idk5</option>
 
-					</select>
-
-					<div class="mb-3">
-						<label for="discountAmountRange" class="form-label">Discount Percentage</label>
-						<input type="range" class="form-range" min="1" max="100" id="discountAmountRange" name="discountAmountRange" value="{{ percent|default_if_none:'50' }}"> 
-					</div>
-					<p id="rangeAmount"></p>
-					<script>
-						// Get the range input element
-						const rangeInput = document.getElementById("discountAmountRange");
-						// Get the paragraph element
-						const rangeAmountElement = document.getElementById("rangeAmount");
-						// Function to update the range amount
-						function updateRangeAmount() {
-							const rangeValue = rangeInput.value; // Get the current value of the range input
-							rangeAmountElement.textContent = "Range Amount: " + rangeValue; // Update the paragraph text
-						}
-						// Add an event listener to the range input
-						rangeInput.addEventListener("input", updateRangeAmount);
-						// Initial update of the range amount
-						updateRangeAmount();
-					</script>
-					
+					</select>					
 
 					<select class="form-select mb-3" aria-label="Default select example" name="levelType" onchange="handleLevelChange(this)">
-						<option selected disabled>Store/Category/Product</option>
-						<option value="1" {% if levelType == "Store" %} selected {% endif %}>Store</option>
+						<option selected disabled>Product/Category/User/Basket</option>
+						<option value="1" {% if levelType == "Product" %} selected {% endif %}>Product</option>
 						<option value="2" {% if levelType == "Category" %} selected {% endif %}>Category</option>
-						<option value="3" {% if levelType == "Product" %} selected {% endif %}>Product</option>
+						<option value="3" {% if levelType == "User" %} selected {% endif %}>User</option>
+						<option value="4" {% if levelType == "Basket" %} selected {% endif %}>Basket</option>
 					</select>
 					
 					<div class="form-floating mb-3">
@@ -71,39 +50,36 @@
                         function handleLevelChange(selectElement) {
                             const inputElement = document.getElementById("floatingInput");
                             const labelElement = document.querySelector("label[for='floatingInput']");
-                    
                             if (selectElement.value === "1") {
-                                inputElement.disabled = true;
-                                labelElement.textContent = "Store";
+                                inputElement.disabled = false;
+                                labelElement.textContent = "Product ID";
                             } else if (selectElement.value === "2") {
                                 inputElement.disabled = false;
                                 labelElement.textContent = "Category";
                             } else if (selectElement.value === "3") {
                                 inputElement.disabled = false;
-                                labelElement.textContent = "Product";
+                                labelElement.textContent = "User";
+                            } else if (selectElement.value === "4") {
+                                inputElement.disabled = true;
+                                labelElement.textContent = "Basket";
+								inputElement.value = "";
                             }
                         }
                     </script>
 					
-					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" name="submitDiscount">Submit Discount</button>
+					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" name="submitPolicy">Submit Policy</button>
 
 				</div>
 			</div>
 		</div>
 
 
-
-
-
-
-		<div class="container" id="secondContainer" style="display: none;">
+		<div class="container" id="secondContainer">
 			<div class="card">
 				<div class="card-body">
 					<select class="form-select mb-3" aria-label="Default select example" name="ruleType">
 						<option selected disabled>Rule Type</option>
-						<option value="basket_total_price">Basket total price</option>
-						<option value="amount_of_product">Amount of product</option>
-						<option value="amount_of_category">Amount of category</option>
+						<option value="alcohol_restriction">Alcohol Restriction</option>
 					</select>
 					<div class="form-floating mb-3">
 						<input type="text" class="form-control" id="floatingInput" name="ruleProductName">
@@ -117,6 +93,11 @@
 						<input type="text" class="form-control" id="floatingInput" name="ruleQuantity">
 						<label for="floatingInput">Quantity</label>
 					</div>
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="floatingInput" name="ruleUserField">
+						<label for="floatingInput">User field</label>
+					</div>
+					
 
 					<label class="form-label">Operator: </label>
 					<br>
@@ -136,12 +117,12 @@
 					<label class="form-label">Logic type: </label>
 					<br>
 					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio1" value="OR" checked>
-						<label class="form-check-label" for="inlineRadio1">OR</label>
+						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio1" value="Condition" checked>
+						<label class="form-check-label" for="inlineRadio1">Condition</label>
 					</div>
 					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio2" value="XOR">
-						<label class="form-check-label" for="inlineRadio2">XOR</label>
+						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio2" value="OR">
+						<label class="form-check-label" for="inlineRadio2">OR</label>
 					</div>
 					<div class="form-check form-check-inline mb-3">
 						<input class="form-check-input" type="radio" name="logicRadioOptions" id="inlineRadio3" value="AND">
@@ -149,36 +130,13 @@
 					</div>
 					<br>
 					<div class="d-flex justify-content-start">
-						<div><button type="submit" class="btn btn-primary me-2" id="submitButtonSecondContainer" name="conditionedAddRule">Add Rule</button></div>
+						<div><button type="submit" class="btn btn-primary me-2" id="submitButtonSecondContainer" name="addRule">Add Rule</button></div>
 						<div><button type="submit" class="btn btn-primary me-2" name="clearAllRules">Clear Rules</button></div>
 					</div>
 					</form>
 				</div>
 			</div>
 		</div>
-		<script>
-			function toggleConditioned(element) {
-			//   const submitButtonFirstContainer = document.getElementById("submitButtonFirstContainer");
-			  const submitButtonSecondContainer = document.getElementById("submitButtonSecondContainer");
-			  const secondContainer = document.getElementById("secondContainer");
-			  if (element.value === "1") {
-				secondContainer.style.display = "none";
-				// submitButtonFirstContainer.style.display = "block";
-			  } else if (element.value === "2") {
-				secondContainer.style.display = "block";
-				// submitButtonFirstContainer.style.display = "none";
-			  } else {
-				secondContainer.style.display = "none";
-				// submitButtonFirstContainer.style.display = "none";
-			  }
-			}
-		  
-			// Run toggleConditioned on page load
-			window.addEventListener("DOMContentLoaded", function() {
-			  const discountTypeSelect = document.querySelector("select[name='discountType']");
-			  toggleConditioned(discountTypeSelect);
-			});
-		</script>
 		<script>
 			// Function to capture input values and create a dictionary
 			function captureInputValues() {
@@ -187,6 +145,7 @@
 				var ruleProductName = document.querySelector("input[name='ruleProductName']").value;
 				var ruleCategoryName = document.querySelector("input[name='ruleCategoryName']").value;
 				var ruleQuantity = document.querySelector("input[name='ruleQuantity']").value;
+				var ruleUserField = document.querySelector("input[name='ruleUserField']").value;
 
 				// Retrieve the selected radio button value
 				var operatorOption = document.querySelector("input[name='operatorRadioOptions']:checked");
@@ -196,35 +155,32 @@
 				var logicRadioValue = logicOption ? logicOption.value : '';
 
 				// Create a dictionary object to store the values
-				var discountRulesData = {
+				var policyRulesData = {
 					'rule_type': ruleType,
 					'product_id': ruleProductName,
+					'category': ruleCategoryName,
+					'user_field': ruleUserField,
 					'operator': operatorRadioValue,
 					'quantity': ruleQuantity,
-					'category': ruleCategoryName,
 					'logic_type': logicRadioValue,
 					'child': {}
 				};
-				return JSON.stringify(discountRulesData);
+				return JSON.stringify(policyRulesData);
 			}
-		// 	rule_type := "basket_total_price" | "amount_of_product" | "amount_of_category"
-        // product := product_id | -1 for non-specific product rule
-        // category := category name | "" for non specific category rule
-        // operator := ">=" | "<=" | "=="
-        // quantity := quantity of a product | total price
+
 			// Function to handle the form submission
 			function handleFormSubmit(event) {
 				// Prevent the form from submitting
 				event.preventDefault();
 
 				// Capture the input values and create the dictionary
-				var discountRulesData = captureInputValues();
+				var policyRulesData = captureInputValues();
 
 				// Set the dictionary value in a hidden input field
 				var hiddenInput = document.createElement('input');
 				hiddenInput.setAttribute('type', 'hidden');
-				hiddenInput.setAttribute('name', 'discountRulesData');
-				hiddenInput.setAttribute('value', discountRulesData);
+				hiddenInput.setAttribute('name', 'policyRulesData');
+				hiddenInput.setAttribute('value', policyRulesData);
 				document.getElementById('addRuleForm').appendChild(hiddenInput);
 
 				// Submit the form
