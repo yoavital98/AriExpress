@@ -74,6 +74,11 @@ class Member(models.Model):
     def __str__(self):
         return self.username
 
-class Notification ( AbstractNotification ): 
+class Notification ( AbstractNotification ):
+    TYPE = (
+        ('message', 'message'),
+        ('notification', 'notification')
+    )
     message_id = models.IntegerField()
+    type = models.CharField(max_length=100, choices=TYPE, default='notification')
     class Meta ( AbstractNotification . Meta ): abstract = False
