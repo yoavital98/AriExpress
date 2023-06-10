@@ -25,6 +25,7 @@ urlpatterns = [
     path(r'addNewProduct/<str:storename>', views.addNewProduct, name='addNewProduct'),
     path(r'editProduct/<str:storename>', views.editProduct, name='editProduct'),
     path(r'addNewDiscount/<str:storename>', views.addNewDiscount, name='addNewDiscount'),
+    path(r'addNewPurchasePolicy/<str:storename>', views.addNewPurchasePolicy, name='addNewPurchasePolicy'),
     path(r'viewDiscounts/<str:storename>', views.viewDiscounts, name='viewDiscounts'),
     path(r'viewStoreStaff/<str:storename>', views.viewStoreStaff, name='viewStoreStaff'),
 
