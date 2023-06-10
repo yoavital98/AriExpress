@@ -289,7 +289,7 @@ class Service:
     def productSearchByCategory(self, categoryName,
                                 username):  # TODO: probably each store will have its products catagorized
         try:  # TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
-            results = self.store_facade.productSearchByCategory(categoryName, username)
+            results = self.store_facade.productSearchByCategory(categoryName)
             logging.debug(
                 f"fetching all the products within the category '{str(categoryName)}'. By username: " + username + ".")
             return Response(JsonSerialize.toJsonAttributes(results), True)
