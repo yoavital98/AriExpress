@@ -47,7 +47,7 @@ class Store:
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
-            raise Exception("No such access aexists in the store")
+            raise Exception("No such access exists in the store")
         cur_access.canChangeStatus()
         if status == self.active:
             raise Exception("store is already open or closed")
@@ -327,6 +327,8 @@ class Store:
         cur_access: Access = self.__accesses.get(username)
         if cur_access is None:
             raise Exception("No such access exists")
+        if not self.__products.__contains__(level_name):
+            raise Exception("no such product exists")
         cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
                                            level_name=level_name, rule=rule, discounts=discounts)
