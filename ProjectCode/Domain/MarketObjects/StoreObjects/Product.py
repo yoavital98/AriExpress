@@ -32,11 +32,11 @@ class Product:
     # =======================JSON=======================#
 
     def toJson(self):
-        return json.dumps({
+        return {
             'product_id': self.product_id,
             'name': self.name,
             'quantity': self.quantity,
             'price': self.price,
             'categories': self.categories
             # 'categories': json.dumps(self.categories)
-        })
+        }

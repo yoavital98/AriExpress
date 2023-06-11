@@ -1,26 +1,21 @@
-from datetime import datetime
 from ProjectCode.Domain.ExternalServices.MessageObjects.Message import Message
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
-from ProjectCode.Domain.ExternalServices.MessageObjects.Notfication import Notification
-
-def send_notification(user_id, notification_id ,type, subject):
-   pass
+from ProjectCode.Domain.ExternalServices.MessageObjects.Notfication import Notification 
 
 
 class MessageController:
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, sendNotification, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super().__new__(cls, *args, **kwargs)
             cls._inbox_messages = {}  # message_id to message
             cls._sent_messages = {}  # list of sent messages
             cls._inbox_notifications = {}  # message_id to message
+            cls._sendNotification = sendNotification
             cls.observers = []  # receiver_id to observer
             cls.msgCounter = 0
             cls.notificationCounter = 0
+
         return cls._instance
 
     def send_message(self, requester_id, receiver_id, subject, content, creation_date, file=None):
@@ -36,8 +31,8 @@ class MessageController:
         if requester_id not in self._sent_messages.keys():
             self._sent_messages[requester_id] = []
         self._sent_messages[requester_id].append(message)
-
-
+        #send_message(requester_id, receiver_id, message_id, 'message', f"you have a new message from {requester_id}")
+        self._sendNotification(requester_id, receiver_id, message_id, 'message', subject)
         return message
 
     def read_message(self, user_id, message_id):
@@ -59,18 +54,18 @@ class MessageController:
             self._inbox_messages[user_id] = []
         return [message.toJson() for message in self._inbox_messages[user_id]]
 
-    def send_notification(self, sender, receiver_id, subject, content, creation_date):
-        message_id = self.notificationCounter
+    def send_notification(self, receiver_id, subject, content, creation_date ):
+        notification_id = self.notificationCounter
         self.notificationCounter += 1
-        message = Notification(message_id, "AriExpress", receiver_id, subject, content, creation_date)
+        message = Notification(notification_id, "AriExpress", receiver_id, subject, content, creation_date)
 
         if receiver_id not in self._inbox_notifications.keys():
             self._inbox_notifications[receiver_id] = []
         self._inbox_notifications[receiver_id].append(message)
 
-        #send_notification(receiver_id, message_id ,'notification', subject)
+        self._sendNotification('AriExpress',receiver_id, notification_id ,type, subject)
 
-        return message_id
+        return notification_id
 
     def read_notification(self, user_id, message_id):
         for message in self._inbox_notifications[user_id]:
