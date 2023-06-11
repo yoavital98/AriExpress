@@ -179,7 +179,7 @@ class Cart:
             if is_member:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
                                                           stores_products_dict, overall_price)
-                member_msg_id = MessageController().send_notification("AriExpress", self.username, message_header,
+                member_msg_id = MessageController().send_notification(self.username, message_header,
                                                                       purchaseReports, datetime.now())
             founders_message_ids = []
             purchase_reports_json = []
@@ -188,7 +188,7 @@ class Cart:
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
                                                            purchase.getStorename(), purchase.getProducts(),
                                                            purchase.getTotalBasketPayment())
-                founder_message_id = MessageController().send_notification("AriExpress", founders_usernames[index],
+                founder_message_id = MessageController().send_notification(founders_usernames[index],
                                                                            message_header, purchase, datetime.now())
                 index += 1
                 founders_message_ids.append(founder_message_id)

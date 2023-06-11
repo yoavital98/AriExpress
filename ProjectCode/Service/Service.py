@@ -35,10 +35,10 @@ def load_config(config_file):
 class Service:
     _instance = None
 
-    def __new__(cls, config_file=None):
+    def __new__(cls, config_file=None, send_notification_call=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls.store_facade = StoreFacade()
+            cls.store_facade = StoreFacade(send_notification_call=send_notification_call)
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
