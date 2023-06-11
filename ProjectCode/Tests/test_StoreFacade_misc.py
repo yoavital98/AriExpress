@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 from unittest import TestCase
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
@@ -1237,7 +1238,46 @@ class TestStoreFacade(TestCase):
         rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
                 "quantity": 5, "child": {}}
         policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
-        product_dict = {oreo.get_product_id(): 7}
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
+
+    def test_NotRelevantProductPurchasePolicy_succeed(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
+                "quantity": 5, "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        self.store_facade.addToBasket("Feliks", "AriExpress", 1, 8)
+        self.assertEqual(self.store_facade.getBasket("Feliks","AriExpress").products.get(self.item_paper.get_product_id())[1], 8)
+
+    def test_DayOfTheWeekPurchasePolicy_succeed(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        current_day = datetime.now().weekday()
+        rule = {"rule_type": "day_of_the_week", "product_id": "", "category": "", "operator": "<=",
+                "user_field": days_of_week[current_day],
+                "quantity": "", "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        #with self.assertRaises(Exception):
+        self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
+    def test_DayOfTheWeekPurchasePolicy_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        current_day = datetime.now().weekday()
+        rule = {"rule_type": "day_of_the_week", "product_id": "", "category": "", "operator": "<=",
+                "user_field": days_of_week[current_day-1],
+                "quantity": "", "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
         with self.assertRaises(Exception):
             self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
 
