@@ -6,11 +6,10 @@ from ProjectCode.Domain.MarketObjects.Cart import Cart
 class User(ABC):
     def __init__(self, entrance_id):
         self.entrance_id = entrance_id
-        self.cart = Cart(entrance_id)
+        self.cart = Cart(str(entrance_id))
 
     def get_cart(self):
         return self.cart
-
 
     def add_to_cart(self, username, store, productID, product, quantity):
         return self.cart.add_Product(username, store, productID, product, quantity)
@@ -30,3 +29,6 @@ class User(ABC):
 
     def get_entrance_id(self):
         return self.entrance_id
+
+    def setCart(self, cart :Cart):
+        self.cart = cart

@@ -39,7 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mainApp',
+    'channels',
+    'django_cleanup',
+    'mathfilters',
+    'notifications',
+    
 ]
+
+
+ASGI_APPLICATION = 'AriExpress.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -64,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
             ],
         },
     },
@@ -118,9 +127,36 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#MEDIA
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# TODO: check those lines
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_EXPIRE_AT_BROWSER_CLOSE=True
+
+#CHANNELS
+CHANNEL_LAYERS = {
+    "default": {
+# DEFAULT_CHANNEL_LAYER
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        "CONFIG": {},
+    },
+}
+
+NOTIFICATIONS_NOTIFICATION_MODEL = 'mainApp.Notification'
+DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True}
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]

@@ -22,7 +22,7 @@ class TestStoreFacade(TestCase):
         self.member1: Member = self.store_facade.members.get("Ari")
         self.member2: Member = self.store_facade.members.get("Jane")
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore("Ari", "Store1")
+        self.store_facade.createStore("Ari", "Store1")
         self.store1: Store = self.store_facade.stores.get("Store1")
         self.store_facade.addNewProductToStore("Ari", "Store1", "paper", 10, 500, "paper")
         self.item_paper: Product = self.store1.getProductById(1, "Ari")
@@ -41,9 +41,10 @@ class TestStoreFacade(TestCase):
     #     for store in stores:
     #         self.assertIsInstance(store, Store)
 
+
     def test_getStores_returnsStores_multiple(self):
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore("Ari", "Store2")
+        self.store_facade.createStore("Ari", "Store2")
         store2: Store = self.store_facade.stores.get("Store2")
         self.assertTrue(len(self.store_facade.getStores().values()) == 2)
         list_of_stores: list = list(self.store_facade.getStores().values())
@@ -90,7 +91,7 @@ class TestStoreFacade(TestCase):
     
     def test_productSearchByName_returnsProducts_multiple(self):
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore("Ari", "Store2")
+        self.store_facade.createStore("Ari", "Store2")
         store2: Store = self.store_facade.stores.get("Store2")
         self.store_facade.addNewProductToStore("Ari", "Store2", "paper", 10, 500, "paper")
         item_paper2: Product = store2.getProductById(1, "Ari")
@@ -109,7 +110,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(len(list(self.store_facade.productSearchByCategory("paper").values())) == 0)
     def test_productSearchByCategory_returnsProducts_multipleProducts(self):
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore("Ari", "Store2")
+        self.store_facade.createStore("Ari", "Store2")
         store2: Store = self.store_facade.stores.get("Store2")
         self.store_facade.addNewProductToStore("Ari", "Store2", "paper", 10, 500, "paper")
         item_paper2: Product = store2.getProductById(1, "Ari")
@@ -120,7 +121,7 @@ class TestStoreFacade(TestCase):
     def test_productSearchByCategory_returnsProducts_multipleCategories(self):
         self.products = TypedDict(Store, list)
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore("Ari", "Store2")
+        self.store_facade.createStore("Ari", "Store2")
         store2: Store = self.store_facade.stores.get("Store2")
         self.store_facade.addNewProductToStore("Ari", "Store2", "paper", 10, 500, "paper1")
         item_paper2: Product = store2.getProductById(1, "Ari")
@@ -201,7 +202,7 @@ class TestStoreFacade(TestCase):
 
     def test_addDiscount_success(self):
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore(self.member1.get_username(), "Store1")
+        self.store_facade.createStore(self.member1.get_username(), "Store1")
         self.store = self.store_facade.stores["Store1"]
         self.access = self.store.get_accesses()[self.member1.get_username()]
         self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
@@ -212,7 +213,7 @@ class TestStoreFacade(TestCase):
 
     def test_calculateSimpleDiscount_success(self):
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore(self.member1.get_username(), "Store1")
+        self.store_facade.createStore(self.member1.get_username(), "Store1")
         self.store = self.store_facade.stores["Store1"]
         self.access = self.store.get_accesses()[self.member1.get_username()]
         self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")
@@ -224,7 +225,7 @@ class TestStoreFacade(TestCase):
 
     def test_calculateConditionedDiscount_success(self):
         self.store_facade.logInAsMember("Ari", "password123")
-        self.store_facade.openStore(self.member1.get_username(), "Store1")
+        self.store_facade.createStore(self.member1.get_username(), "Store1")
         self.store = self.store_facade.stores["Store1"]
         self.access = self.store.get_accesses()[self.member1.get_username()]
         self.product = self.store.addProduct(self.access, "Oreo", 10, 10, "Milk")

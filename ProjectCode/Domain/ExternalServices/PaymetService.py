@@ -1,3 +1,6 @@
+import requests
+
+
 class PaymentService:
 
     _instance = None
@@ -8,10 +11,59 @@ class PaymentService:
             # Add any initialization code here
         return cls._instance
 
-    def process_payment(self, card_number, card_user_name, card_user_id, card_date, back_number, price):
-        # Your payment processing logic goes here
-        return True
-    def pay(self, store, card_number, card_user_name, card_user_ID, card_date, back_number, price): #TODO: Pass all the arguments
-        return True
-    def call(self):
-        return True
+
+    def perform_handshake(self):
+        post_data = {
+            "action_type": "handshake"
+        }
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            return True
+        else:
+            raise Exception("Handshake request with PaymentService failed")
+
+    def pay(self, card_number, month, year, holder, ccv, id):
+        # if price > 20000:
+        #     raise Exception("Price too high, please contact your credit card company")
+
+        post_data = {
+            "action_type": "pay",
+            "card_number": card_number,
+            "month": month,
+            "year": year,
+            "holder": holder,
+            "ccv": ccv,
+            "id": id
+        }
+
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            transaction_id = int(response.text)
+            if transaction_id == -1:
+                raise Exception("Payment transaction failed")
+            else:
+                return transaction_id
+        else:
+            raise Exception("Payment request failed")
+
+
+    def cancel_pay(self, transaction_id):
+        post_data = {
+            "action_type": "cancel_pay",
+            "transaction_id": str(transaction_id)
+        }
+
+        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+
+        if response.status_code == 200:
+            cancellation_result = int(response.text)
+            if cancellation_result == -1:
+                raise Exception("Payment cancellation failed")
+            else:
+                return True
+        else:
+            raise Exception("Payment cancellation request failed")

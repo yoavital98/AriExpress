@@ -1,73 +1,125 @@
-<style>
-  #navBarSearchForm {width:450px !important;}
-  #admintag {background-color: #FF0000 !important; 
-    color: #FFFFFF !important;}
-</style>
-<body>
-	<nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-          <a class="navbar-brand" href="#">Navbar</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'mainApp:mainpage' %}">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
-              </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Dropdown
-                </a>
-                <ul class="dropdown-menu">
-                  {% if user.is_authenticated %}
-                  <li><a class="dropdown-item" href="#">Shop Management</a></li>
-                  <li><a class="dropdown-item" href="{% url 'mainApp:myshops'%}">My Shops</a></li>
-                  {% endif %}
-                  <li><a class="dropdown-item" href="#">Action</a></li>
-                  <li><a class="dropdown-item" href="#">Action</a></li>
-                  <li><a class="dropdown-item" href="#">Another action</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="#" >Something else here</a></li>
-                </ul>
-              </li>
-              {% if user.is_authenticated %}
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
-              </li>
-              <li class= "nav-item">
-                <a class = "nav-link" href="{% url 'mainApp:inbox' %}">
-                  <i class = "fas fa-bell"></i><span class = "pending">2</span>
-                </a>
-              </li>
-              {% else %}
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'mainApp:login' %}">Login</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'mainApp:registerPage' %}">Register</a>
-              </li>
-              {% endif %}
-              <!-- <li class="nav-item">
-                <a class="nav-link disabled">Disabled</a>
-              </li> -->
-              {% if user.is_superuser %}
-              <li class="nav-item">
-                <a class="nav-link" id="admintag" href="{% url 'mainApp:adminPage' %}">ADMIN</a>
-              </li>
-              {% endif %}
+<!DOCTYPE html>
+<html>
+    {% load static i18n %}
+    {% load notifications_tags %}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AriExpress - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+    <link href="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous" rel="stylesheet">
+    <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
+    {% register_notify_callbacks refresh_period='1' callbacks='fill_notification_badge' %}
+    <style>
+        .nav-search-form {
+            width: 450px !important;
+        }
 
-            </ul>
-            <form class="d-flex" role="search">
-              <input class="form-control me-2" type="search" placeholder="Search" id="navBarSearchForm" aria-label="Search">
-              <button class="btn btn-outline-success" type="submit">Search</button>
-            </form>
-          </div>
-        </div>
-      </nav>
+        .admin-tag {
+            background-color: #FF0000 !important;
+            color: #FFFFFF !important;
+        }
+
+        #notification-btn {
+            font-size: 16px;
+        }
+        .notification-amount {
+            position: absolute;
+            border-radius: 50%;
+            font-size: 13px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            margin-top: -35px;
+            margin-left: 10px;
+            background-color: red;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg bg-body-tertiary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Navbar</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="{% url 'mainApp:mainpage' %}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Link</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Dropdown
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'mainApp:viewAllStores'%}">All Stores</a></li>
+                                {% if user.is_authenticated %}
+                                <li><a class="dropdown-item" href="{% url 'mainApp:mystores'%}">My Stores</a></li>
+                                <li><a class="dropdown-item" href="{% url 'mainApp:createStore'%}">Create a new Store</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="#">Action</a></li>
+                                <li><a class="dropdown-item" href="#">Action</a></li>
+                                <li><a class="dropdown-item" href="#">Another action</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            </ul>
+                        </li>
+                        {% if request.session.guest is 0 or user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'mainApp:logout' %}">Logout</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'mainApp:inbox' %}" id="notification-btn">
+                                    <i class="fas fa-bell"></i><span class="notification-amount" name="notification-amount" id="notification-amount">{% live_notify_badge %}</span>
+                                </a>
+                            </li>
+                                                  
+                        {% endif %}
+                        {% if request.session.guest is 1 %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'mainApp:login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'mainApp:registerPage' %}">Register</a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                          <a class="nav-link" href="{% url 'mainApp:cart' %}">
+                              <i class="fas fa-shopping-cart"></i>
+                          </a>
+                        </li>
+                        {% if user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link admin-tag" href="{% url 'mainApp:adminPage' %}">ADMIN</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <form class="d-flex" method="POST" role="search" action="{% url 'mainApp:searchpage' %}">
+                        {% csrf_token %}
+                        <input class="form-control me-2 nav-search-form" type="search" placeholder="I'm looking for..." aria-label="Search" name ="searched">
+                        <button class="btn btn-outline-success" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    </form>
+                </div>
+            </div>
+            <script src="{% static 'ariExpressDjango/ariExpressDjango/static/notification.js' %}"></script>
+        </nav>
+    </header>
+
+    <!-- Your page content goes here -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    
 </body>
+</html>
 

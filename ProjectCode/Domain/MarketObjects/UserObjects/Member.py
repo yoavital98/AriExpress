@@ -1,11 +1,13 @@
 import json
 
+from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 from ProjectCode.Domain.MarketObjects.StoreObjects.Auction import Auction
 from ProjectCode.Domain.MarketObjects.StoreObjects.Lottery import Lottery
 from ProjectCode.Domain.MarketObjects.User import User
+from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
 
 
 class Member(User):
@@ -19,12 +21,16 @@ class Member(User):
         self.password = password  # password
         self.email = email  # email
 
+        #REPOSITORY FIELDS - TO BE REPLACED
+        self.accesses_test = AccessRepository(username=user_name)
+
+
     # -------------------------Methods from User--------------------------------
     def get_cart(self):
         return super().get_cart()
 
     def add_to_cart(self, username, store, product_id, product, quantity):
-        super().add_to_cart(username, store, product_id, product, quantity)
+        return super().add_to_cart(username, store, product_id, product, quantity)
 
     def get_Basket(self, store_name):
         return super().get_Basket(store_name)
@@ -32,9 +38,11 @@ class Member(User):
     def removeFromBasket(self, store_name, product_id):
         return super().removeFromBasket(store_name, product_id)
 
-    def edit_Product_Quantity(self, storename, product_id, quantity):
-        super().edit_Product_Quantity(storename, product_id, quantity)
+    def edit_Product_Quantity(self, store_name, product_id, quantity):
+        return super().edit_Product_Quantity(store_name, product_id, quantity)
 
+    def setCart(self, cart: Cart):
+        super().setCart(cart)
     # -------------------------------------------------------------------------------
 
     def logInAsMember(self):
@@ -122,9 +130,21 @@ class Member(User):
     # =======================JSON=======================#
 
     def toJson(self):
-        data = {
+        return {
             "entrance_id": self.entrance_id,
             "username": self.user_name,
             "email": self.email
+        }
+        return json.dumps(data)
+
+    def toJsonAll(self):
+        data = {
+            "entrance_id": self.entrance_id,
+            "username": self.user_name,
+            "email": self.email,
+            "auctions": JsonSerialize.toJsonAttributes(self.auctions),
+            "lotteries": JsonSerialize.toJsonAttributes(self.lotteries),
+            "accesses": JsonSerialize.toJsonAttributes(self.accesses),
+            "cart": self.cart.toJson()
         }
         return json.dumps(data)

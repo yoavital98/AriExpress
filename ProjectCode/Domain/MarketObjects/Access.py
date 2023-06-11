@@ -17,15 +17,21 @@ class Access:
         self.user = user
         self.store = store
         self.access_state = AccessState()
+        self.role = ""
 
+    def __str__(self):
+        return self.user.get_username() + " " + self.store.get_store_name() + " " + self.role + " " + self.nominated_by_username
 
     def setAccess(self, role):
-        if role is "Owner":
+        if role == "Owner":
             self.setOwner()
-        elif role is "Manager":
-            self.setOwner()
-        elif role is "Founder":
+            self.role = "Owner"
+        elif role == "Manager":
+            self.setManager()
+            self.role = "Manager"
+        elif role == "Founder":
             self.setFounder()
+            self.role = "Founder"
         else:
             raise Exception("No such role exists.")
 
@@ -41,13 +47,13 @@ class Access:
 
 
     def hasRole(self, role="Any"):
-        if role is "Any":
+        if role == "Any":
             return True
-        elif role is "Founder":
+        elif role == "Founder":
             return isinstance(self.access_state,FounderState)
-        elif role is "Owner":
+        elif role == "Owner":
             return isinstance(self.access_state,OwnerState)
-        elif role is "Manager":
+        elif role == "Manager":
             return isinstance(self.access_state,ManagerState)
 
 
@@ -94,6 +100,9 @@ class Access:
     def get_store(self):
         return self.store
 
+    def get_role(self):
+        return self.role
+
     def get_access_state(self):
         return self.access_state
 
@@ -109,12 +118,12 @@ class Access:
 
     # =======================JSON=======================#
     def toJson(self):
-        data = {
-            'user': self.user,
-            'store': self.store,
-            'nominated_by_username': self.nominated_by_username,
-            'nominations': JsonSerialize.toJsonAttributes(self.nominations),
-            'access_state': self.access_state.toJson()
+        return {
+            "user": self.user.toJson(),
+            "store": self.store.toJsonInfo(),
+            "nominated_by_username": self.nominated_by_username,
+            # "nominations": JsonSerialize.toJsonAttributes(self.nominations),
+            "role": self.role
+            # "access_state": self.access_state.toJson()
         }
-        return json.dumps(data)
 
