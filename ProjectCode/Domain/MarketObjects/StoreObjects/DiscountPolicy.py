@@ -22,7 +22,7 @@ class DiscountPolicy:
     """
         kwargs := 
             discount_type := Conditioned | Simple | Coupon | Max | Add
-            percent := 0-100 int value
+            percent := 1-100 int value
             level := "Store" | "Category" | "Product"
             level_name := product_id | category name | "" blank for store
             rule := RuleComp (optional)
@@ -44,6 +44,8 @@ class DiscountPolicy:
         elif discount_type == "Max": #TODO: impl max discount
             pass
         elif discount_type == "Simple":
+            if percent < 1 or percent > 100:
+                raise Exception("discount percentage can be only within 1-100")
             discount = SimpleDiscount(percent, level, level_name)
         elif discount_type == "Coupon": #TODO: impl coupon discount
             pass
@@ -74,3 +76,10 @@ class DiscountPolicy:
         return {
             "discounts": JsonSerialize.toJsonAttributes(self.discounts)
         }
+    # =======================FOR TESTS=======================#
+
+    def calculateOverallDiscountsForSimple(self):
+        total_discount = 0
+        for discount in self.discounts.values():
+            total_discount += discount.calculateForTest()
+        return total_discount

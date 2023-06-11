@@ -1,13 +1,16 @@
 import unittest
+from datetime import datetime
 from unittest import TestCase
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
+from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects.DiscountPolicy import DiscountPolicy
 from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp import LogicComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
@@ -102,75 +105,290 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             self.store_facade.addAdmin("Ari", "Ari", "pass", "yoav@gmail.com")
 
-    # addAuction
-    def test_addAuction_success(self):
-        pass
 
-    def test_addAuction_userNotLoggedIn_fail(self):
-        pass
 
-    def test_addAuction_storeNotExists_fail(self):
-        pass
 
-    def test_addAuction_userWithoutPermission_fail(self):
-        pass
-
-    def test_addAuction_productNotExists_fail(self):
-        pass
-
-    def test_addAuction_startingPriceLessEqualZero_fail(self):
-        pass
-
-    def test_addAuction_durationLessEqualZero_fail(self):
-        pass
-
-    def test_addAuction_productAlreadyInAuction_fail(self):
-        pass
 
     # addDiscount
-    def test_addDiscount_success(self):
-        pass
+    def test_addSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
+                                             level_name=oreo.get_product_id())
+        added_discount = self.my_store.getDiscount(1)
+        self.assertEqual(discount, added_discount)
 
-    def test_addDiscount_userNotLoggedIn_fail(self):
-        pass
 
-    def test_addDiscount_storeNotExists_fail(self):
-        pass
+    def test_addSimpleDiscount_userNotLoggedIn_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
+                                                 level_name=oreo.get_product_id())
+        try:
+            added_discount = self.my_store.getDiscount(1)
+        except Exception as e:
+            self.assertEqual(e.args[0], "No such discount exists")
 
-    def test_addDiscount_userWithoutPermission_fail(self):
-        pass
+    def test_addSimpleDiscount_storeNotExists_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("some_store", "Feliks", "Simple", percent=10, level="Product",
+                                                     level_name=oreo.get_product_id())
+        try:
+            added_discount = self.my_store.getDiscount(1)
+        except Exception as e:
+            self.assertEqual(e.args[0], "No such discount exists")
 
-    def test_addDiscount_productNotExists_fail(self):
-        pass
+    def test_addSimpleDiscount_userWithoutPermission_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Amiel", "Simple", percent=10, level="Product",
+                                                     level_name=oreo.get_product_id())
+        try:
+            added_discount = self.my_store.getDiscount(1)
+        except Exception as e:
+            self.assertEqual(e.args[0], "No such discount exists")
 
-    def test_addDiscount_productAlreadyInDiscount_fail(self):
-        # TODO: check if this is legal - should it fail or success?
-        pass
+    def test_addSimpleDiscount_productNotExists_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
+                                                     level_name=2)
+        try:
+            added_discount = self.my_store.getDiscount(1)
+        except Exception as e:
+            self.assertEqual(e.args[0], "No such discount exists")
+        self.assertFalse(self.my_store.prods.__contains__(2))
+    def test_addSimpleDiscount_productAlreadyInSimpleDiscount_Success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        discount1 = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
+                                                  level_name=1)
+        discount2 = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=20, level="Product",
+                                                  level_name=1)
+        discount_policy: DiscountPolicy = self.my_store.getDiscount(1)
+        total_discount = discount_policy.calculateOverallDiscountsForSimple()
+        self.assertTrue(total_discount == 30)
+        # todo: ask amiel
 
-    def test_addDiscount_invalidDiscountType_fail(self):
-        pass
+    def test_addSimpleDiscount_invalidDiscountType_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Feliks", "lol", percent=10, level="Product",
+                                                     level_name=1)
+        try:
+            added_discount = self.my_store.getDiscount(1)
+        except Exception as e:
+            self.assertEqual(e.args[0], "No such discount exists")
+
 
     def test_addDiscount_invalidDiscountPercentage_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=101, level="Product",
+                                                     level_name=1)
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=0, level="Product",
+                                                     level_name=1)
+        try:
+            added_discount = self.my_store.getDiscount(1)
+        except Exception as e:
+            self.assertEqual(e.args[0], "No such discount exists")
 
-    # addLottery
-    def test_addLottery_success(self):
-        pass
+    # Condition Discounts
+    def test_calculateConditionedDiscount_byCategory_OR_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks","AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                        "operator":">=", "quantity": 1,"category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                     "operator": ">=", "quantity": 1,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
+        discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
+                                               level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(450, price_after_discount_1)
 
-    def test_addLottery_userNotLoggedIn_fail(self):
-        pass
+    def test_calculateConditionedDiscount_byCategory_OR_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 10, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks","AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                        "operator":">=", "quantity": 5,"category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                     "operator": ">=", "quantity": 5,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
+        discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
+                                               level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(500, price_after_discount_1)
+    def test_calculateConditionedDiscount_byCategory_userNotLoggedIn_Fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks","AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                        "operator":">=", "quantity": 1,"category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                     "operator": ">=", "quantity": 1,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                               level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(500, price_after_discount_1)
 
-    def test_addLottery_storeNotExists_fail(self):
-        pass
 
-    def test_addLottery_userWithoutPermission_fail(self):
-        pass
+    def test_calculateConditionedDiscount_byCategory_storeDoesNotExist_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 1, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 1, "category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
+        with self.assertRaises(Exception):
+            discount = self.store_facade.addDiscount("SomeStore", "Feliks", "Conditioned", percent=10, level="Product",
+                                                     level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(500, price_after_discount_1)
 
-    def test_addLottery_productNotExists_fail(self):
-        pass
+    
 
-    def test_addLottery_productAlreadyInLottery_fail(self):
-        pass
+    def test_calculateConditionedDiscount_byCategory_XOR_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 5, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {"logic_type": "XOR", "rule": sub_rule}}
+
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                                     level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 7}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(450, price_after_discount_1)
+
+    def test_calculateConditionedDiscount_byCategory_XOR_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 5, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {"logic_type": "XOR", "rule": sub_rule}}
+
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                                     level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 7, oreo.get_product_id(): 7}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(500, price_after_discount_1)
+
+    def test_calculateConditionedDiscount_byCategory_XOR_fail2(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 5, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {"logic_type": "XOR", "rule": sub_rule}}
+
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                                     level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 0, oreo.get_product_id(): 0}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(500, price_after_discount_1)
+
+    def test_calculateConditionedDiscount_byCategory_AND_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 5, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {"logic_type": "AND", "rule": sub_rule}}
+
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                                     level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 8, oreo.get_product_id(): 7}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(450, price_after_discount_1)
+
+    def test_calculateConditionedDiscount_byCategory_AND_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 5, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {"logic_type": "AND", "rule": sub_rule}}
+
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                                     level_name=self.item_paper.get_product_id(), rule=rule)
+        product_dict = {cariot.get_product_id(): 8, oreo.get_product_id(): 4}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
+        self.assertEqual(500, price_after_discount_1)
+
+    def test_PurchaseCartWithDiscounts_byCategory_success(self):
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 10, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        sub_rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                    "operator": ">=", "quantity": 5, "category": "", "child": {}}
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {"logic_type": "AND", "rule": sub_rule}}
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                                 level_name=self.item_paper.get_product_id(), rule=rule)
+
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel" , "AriExpress", 1, 1)
+        self.store_facade.addToBasket("Amiel", "AriExpress", 2, 10)
+        self.store_facade.addToBasket("Amiel", "AriExpress", 3, 10)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                       "some_address", "be'er sheva", "Israel", "1234567")
+        user_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
+        user_transaction: UserTransaction = user_transaction_list[0]
+        self.assertEqual(650, user_transaction.get_overall_price())
 
     # addNewProductToStore
     def test_addNewProductToStore_success(self):
@@ -418,30 +636,7 @@ class TestStoreFacade(TestCase):
         amiel: Member = self.store_facade.members.get("Amiel")
         self.assertFalse(amiel.cart.baskets.keys().__contains__("AriExpress"))
 
-    # approveBid
 
-    # ClaimAuctionPurchase
-    def test_ClaimAuctionPurchase_success(self):
-        pass
-
-    def test_ClaimAuctionPurchase_userNotLoggedIn_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_storeNotExists_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_userWithoutPermission_fail(self):
-        # TODO: should there be permissions? - should it fail or success?
-        pass
-
-    def test_ClaimAuctionPurchase_auctionNotExists_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_auctionNotEnded_fail(self):
-        pass
-
-    def test_ClaimAuctionPurchase_auctionAlreadyClaimed_fail(self):
-        pass
 
     # closeStore
     def test_closeStore_success(self):
@@ -973,8 +1168,8 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             cart: Cart = self.store_facade.getCart("Amiel")
 
-    # getDiscount
-    # TODO: Discounts
+
+
 
     def test_addDiscount_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -997,6 +1192,7 @@ class TestStoreFacade(TestCase):
         self.product_dict = {self.product.get_product_id(): 1}
         self.price_after_discount = self.store.getProductPriceAfterDiscount(self.product, self.product_dict, 0)
         self.assertEqual(self.price_after_discount, 9)
+
 
     def test_calculateConditionedDiscount_byCategory_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -1042,9 +1238,49 @@ class TestStoreFacade(TestCase):
         rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
                 "quantity": 5, "child": {}}
         policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
-        product_dict = {oreo.get_product_id(): 7}
         with self.assertRaises(Exception):
             self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
+
+    def test_NotRelevantProductPurchasePolicy_succeed(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
+                "quantity": 5, "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        self.store_facade.addToBasket("Feliks", "AriExpress", 1, 8)
+        self.assertEqual(self.store_facade.getBasket("Feliks","AriExpress").products.get(self.item_paper.get_product_id())[1], 8)
+
+    def test_DayOfTheWeekPurchasePolicy_succeed(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        current_day = datetime.now().weekday()
+        rule = {"rule_type": "day_of_the_week", "product_id": "", "category": "", "operator": "<=",
+                "user_field": days_of_week[current_day],
+                "quantity": "", "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        #with self.assertRaises(Exception):
+        self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
+    def test_DayOfTheWeekPurchasePolicy_fail(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        current_day = datetime.now().weekday()
+        rule = {"rule_type": "day_of_the_week", "product_id": "", "category": "", "operator": "<=",
+                "user_field": days_of_week[current_day-1],
+                "quantity": "", "child": {}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
 
     # purchaseCart
 
@@ -1336,7 +1572,7 @@ class TestStoreFacade(TestCase):
 
     def test_getProductsByStore_storeNotExists_fail(self):
         with self.assertRaises(Exception):
-            products_dict = self.store_facade.getProductsByStore("some_store")
+            products_dict = self.store_facade.getProductsByStore("some_store", "Feliks")
 
     def test_getProductsByStore_storeIsClosed_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -1344,14 +1580,10 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             products_dict = self.store_facade.getProductsByStore("some_store")
 
-    # TODO: amiel
-    # getPurchasePolicy
-    def test_getPurchasePolicy_success(self):
-        # self.store_facade.addPurchasePolicy()
-        pass
+
+
 
     def test_getPurchasePolicy_userNotLoggedIn_fail(self):
-        # TODO: should it be success?
         pass
 
     def test_getPurchasePolicy_storeNotExists_fail(self):

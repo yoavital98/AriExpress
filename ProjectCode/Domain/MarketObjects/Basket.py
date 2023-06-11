@@ -23,7 +23,7 @@ class Basket:
         if not self.products.keys().__contains__(product_id):
             if not self.store.checkBasketValidity(self.products, product, quantity):
                 raise Exception("product cannot be added to basket due to policy restrictions")
-            product_tup = self.store.getProductPriceAfterDiscount(product,self.products, quantity)
+            product_tup = self.store.calculateProductPriceAfterDiscount(product, self.products, quantity)
             self.products[product_id] = product_tup
         else:
             raise Exception("product already exists in the basket")
@@ -61,7 +61,7 @@ class Basket:
     def getProductsAsTuples(self):
         productList = []
         for key, value in self.products.items():
-            productList.append((key, value[0], value[1], value[2]))
+            productList.append((key, value[0].get_name(), value[1], value[2]))
         return productList
 
     def addBidToBasket(self, bid: Bid):
