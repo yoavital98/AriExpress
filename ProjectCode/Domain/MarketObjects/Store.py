@@ -67,7 +67,7 @@ class Store:
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
         if cur_access is None:
-            raise Exception("No such access aexists in the store")
+            raise Exception("No such access exists in the store")
         cur_access.canChangeStatus()
         if status == self.active:
             raise Exception("store is already open or closed")
@@ -88,7 +88,7 @@ class Store:
     def getOwners(self):
         owners = []
         for access in self.__accesses.values():
-            if access.getRole() == "Owner":
+            if access.hasRole("Owner"):
                 owners.append(access.get_user())
         return owners
 
@@ -298,6 +298,30 @@ class Store:
                                                                                           overall_price)
         return price_after_discounts
 
+    def checkBasketValidity(self, basket, product_to_add, quantity):
+        relevant_product_info = dict()
+        for product_id, product_tuple in basket.items():
+            relevant_product_info[product_id] = product_tuple[1]
+        relevant_product_info[product_to_add.get_product_id()] = quantity
+        overall_price = self.calculateBasketBasePrice(relevant_product_info)
+        #TODO: last argument suppose to be a user, need to figure out how to get it
+        return self.__purchase_policy.checkAllPolicies(product_to_add, relevant_product_info, overall_price)
+
+    def calculateProductPriceAfterDiscount(self, product, basket, quantity):
+        relevant_product_info = dict()
+        for product_id, product_tuple in basket.items():
+            relevant_product_info[product_id] = product_tuple[1]
+        overall_price = self.calculateBasketBasePrice(relevant_product_info)
+        price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
+        return (product, quantity, price_after_discount)
+
+    def calculateBasketBasePrice(self, products_dict): #tup(product,qunaiity)
+        overall_price = 0
+        for product_id, quantity in products_dict.items():
+            overall_price += self.__products[product_id].get_price() * quantity
+        return overall_price
+
+
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
         new_product_dict = TypedDict(int, int) # (id,quantity)
@@ -327,6 +351,8 @@ class Store:
         cur_access: Access = self.__accesses.get(username)
         if cur_access is None:
             raise Exception("No such access exists")
+        if not self.__products.__contains__(level_name):
+            raise Exception("no such product exists")
         cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
                                            level_name=level_name, rule=rule, discounts=discounts)

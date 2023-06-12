@@ -25,8 +25,11 @@ class PurchasePolicy(Policy):
         self.rule = rule
         self.logic_comp: LogicComp = None
 
-    def calculate(self, product, basket, additional_value):
-        return self.logic_comp.checkIfSatisfy(product, basket, additional_value)
+    def calculate(self, product, basket, additional_value, user=None):
+        if self.checkIfRelevant(product, user):
+            return self.logic_comp.checkIfSatisfy(product, basket, additional_value)
+        return True #if not relevant, then it is satisfied
+
 
     def checkIfRelevant(self, product: Product, user):
         if self.level == "Category":

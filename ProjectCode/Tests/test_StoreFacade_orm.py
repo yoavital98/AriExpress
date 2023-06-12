@@ -2,6 +2,7 @@ import unittest
 
 from peewee import SqliteDatabase
 
+
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
@@ -12,8 +13,15 @@ from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
+from ProjectCode.DAL.ProductUserTransactionModel import ProductUserTransactionModel
 from ProjectCode.DAL.StoreModel import StoreModel
+from ProjectCode.DAL.StoreOfUserTransactionModel import StoreOfUserTransactionModel
+from ProjectCode.DAL.StoreTransactionModel import StoreTransactionModel
 from ProjectCode.DAL.SystemModel import SystemModel
+from ProjectCode.DAL.UserTransactionModel import UserTransactionModel
+from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
+from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Store import Store
@@ -61,7 +69,17 @@ class MyTestCase(unittest.TestCase):
                      "child": {"logic_type": "OR", "rule": self.sub_rule}}
         self.discount = ConditionedDiscount(10, "Product", self.oreo.get_product_id(), self.rule)
         self.discount2 = SimpleDiscount(10, "Basket", "")
-
+        db = SqliteDatabase('database.db')
+        db.connect()
+        #StoreProduct = StoreModel.products.get_through_model()
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel,
+                        BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel, UserTransactionModel,
+                        StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
+                        ProductStoreTransactionModel])
+        db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel,
+                          BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel, UserTransactionModel,
+                        StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
+                          ProductStoreTransactionModel])
 
     # ------ AccessRepository Tests ------
 
@@ -229,7 +247,7 @@ class MyTestCase(unittest.TestCase):
         print(self.store_facade.onlineGuests_test.get("0").get_entrance_id())
         print(self.store_facade.onlineGuests_test.get("1").get_entrance_id())
 
-    def test_Orm_del_and_contains_admin(self):
+    def test_Orm_del_and_contains_guest(self):
         guest: Guest = Guest("0")
         guest2: Guest = Guest("1")
         self.store_facade.onlineGuests_test[guest.get_entrance_id()] = guest
@@ -262,6 +280,86 @@ class MyTestCase(unittest.TestCase):
         self.store1.get_discount_policy().discounts_test[1] = self.discount
         self.store1.get_discount_policy().discounts_test[2] = self.discount2
         print(self.store1.get_discount_policy().discounts_test[None])
+
+        # ------ StoreTransactionRepository Tests ------
+
+    def test_Orm_create_and_get_storeTransaction(self):
+        products = list()
+        products.append((5, "cola", 50, 500))
+        store_transaction = StoreTransaction(1, 1, "Ari", "AriExpress", products, 500)
+        self.store_facade.store_transactions_test.add(store_transaction)
+        store_transactions_after_get: list = self.store_facade.store_transactions_test.__getitem__("AriExpress")
+        for x in store_transactions_after_get:
+            print(x.get_transaction_id())
+            print(x.get_products())
+            print(x.get_storename())
+
+
+    def test_Orm_del_and_contains_storeTransaction(self):
+        products = list()
+        products.append((5, "cola", 50, 500))
+        user_transaction = StoreTransaction(1, 1, "Ari", "AriExpress", products, 500)
+        self.store_facade.store_transactions_test.add(user_transaction)
+        products = list()
+        products.append((7, "zero", 50, 500))
+        user_transaction2 = StoreTransaction(2, 1, "Ari", "AmielExpress", products, 500)
+        self.store_facade.store_transactions_test.add(user_transaction2)
+        self.store_facade.store_transactions_test.__delitem__(1)
+        print(self.store_facade.store_transactions_test.__contains__(1))
+        print(self.store_facade.store_transactions_test.__contains__(2))
+    def test_Orm_keys_storeTransaction(self):
+        products = list()
+        products.append((5, "cola", 50, 500))
+        user_transaction = StoreTransaction(1, 1, "Ari", "AriExpress", products, 500)
+        self.store_facade.store_transactions_test.add(user_transaction)
+        products = list()
+        products.append((7, "zero", 50, 500))
+        user_transaction2 = StoreTransaction(2, 1, "Ari", "AmielExpress", products, 500)
+        self.store_facade.store_transactions_test.add(user_transaction2)
+        print(self.store_facade.user_transactions_test.keys())
+
+        # ------ UserTransactionRepository Tests ------
+
+    def test_Orm_create_and_get_userTransaction(self):
+        products = list()
+        products.append((5, "cola", 50, 500))
+        dict_for_products: dict = {"AriExpress": products}
+        user_transaction = UserTransaction(1, 1, "Ari", dict_for_products, 500)
+        self.store_facade.user_transactions_test.add(user_transaction)
+        user_transactions_after_get: list = self.store_facade.user_transactions_test.__getitem__("Ari")
+        for x in user_transactions_after_get:
+            print(x.get_transaction_id())
+            print(x.get_products())
+            print(x.get_overall_price())
+
+    def test_Orm_del_and_contains_userTransaction(self):
+        products = list()
+        products.append((5, "cola", 50, 500))
+        dict_for_products: dict = {"AriExpress": products}
+        user_transaction = UserTransaction(1, 1, "Ari", dict_for_products, 500)
+        self.store_facade.user_transactions_test.add(user_transaction)
+        products = list()
+        products.append((1, "cariot", 50, 500))
+        dict_for_products: dict = {"AmielExpress": products}
+        user_transaction = UserTransaction(5, 1, "Amiel", dict_for_products, 500)
+        self.store_facade.user_transactions_test.add(user_transaction)
+        self.store_facade.user_transactions_test.__delitem__(1)
+        print(self.store_facade.user_transactions_test.__contains__(1))
+        print(self.store_facade.user_transactions_test.__contains__(5))
+
+    def test_Orm_keys_storeTransaction(self):
+        products = list()
+        products.append((5, "cola", 50, 500))
+        dict_for_products: dict = {"AriExpress": products}
+        user_transaction = UserTransaction(1, 1, "Ari", dict_for_products, 500)
+        self.store_facade.user_transactions_test.add(user_transaction)
+        products = list()
+        products.append((1, "cariot", 50, 500))
+        dict_for_products: dict = {"AmielExpress": products}
+        user_transaction = UserTransaction(5, 1, "Amiel", dict_for_products, 500)
+        self.store_facade.user_transactions_test.add(user_transaction)
+        print(self.store_facade.user_transactions_test.keys())
+
 
 if __name__ == '__main__':
     unittest.main()

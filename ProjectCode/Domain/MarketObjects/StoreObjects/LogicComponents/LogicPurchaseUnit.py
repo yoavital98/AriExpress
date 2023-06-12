@@ -16,9 +16,9 @@ class LogicPurchaseUnit(LogicComp):
             raise Exception("No such logic operator exists")
 
 
-    def checkIfSatisfy(self, product, basket, total_price):
-        satisfy_left = self.left_rule.checkIfSatisfy(product, basket, total_price)
-        satisfy_right = self.right_rule.checkIfSatisfy(product, basket, total_price)
+    def checkIfSatisfy(self, product, basket, total_price, user=None):
+        satisfy_left = self.left_rule.checkIfSatisfy(product, basket, total_price, user=user)
+        satisfy_right = self.right_rule.checkIfSatisfy(product, basket, total_price, user=user)
         if self.logic_type == "OR":
             return satisfy_right or satisfy_left
         elif self.logic_type == "AND":

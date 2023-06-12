@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <script>
-	var rulesData = {};
+	var discountRulesData = {};
 </script>
 <head>
   <title>{{ storename }} - Add new product</title>
@@ -21,7 +21,7 @@
 				<div class="card-body">
 					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}" id="addRuleForm" onsubmit="handleFormSubmit(event)">
 						{% csrf_token %}
-					<input type="hidden" name="rulesData" value="{{ rulesData|safe }}">
+					<input type="hidden" name="discountRulesData" value="{{ discountRulesData|safe }}">
 					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleConditioned(this)">
 						<option selected disabled>Discount Type</option>
 						<option value="1" {% if discountType == "Simple" %} selected {% endif %}>Simple</option>
@@ -101,9 +101,9 @@
 				<div class="card-body">
 					<select class="form-select mb-3" aria-label="Default select example" name="ruleType">
 						<option selected disabled>Rule Type</option>
-						<option value="1">Basket total price</option>
-						<option value="2">Amount of product</option>
-						<option value="3">Amount of category</option>
+						<option value="basket_total_price">Basket total price</option>
+						<option value="amount_of_product">Amount of product</option>
+						<option value="amount_of_category">Amount of category</option>
 					</select>
 					<div class="form-floating mb-3">
 						<input type="text" class="form-control" id="floatingInput" name="ruleProductName">
@@ -196,7 +196,7 @@
 				var logicRadioValue = logicOption ? logicOption.value : '';
 
 				// Create a dictionary object to store the values
-				var rulesData = {
+				var discountRulesData = {
 					'rule_type': ruleType,
 					'product_id': ruleProductName,
 					'operator': operatorRadioValue,
@@ -205,7 +205,7 @@
 					'logic_type': logicRadioValue,
 					'child': {}
 				};
-				return JSON.stringify(rulesData);
+				return JSON.stringify(discountRulesData);
 			}
 		// 	rule_type := "basket_total_price" | "amount_of_product" | "amount_of_category"
         // product := product_id | -1 for non-specific product rule
@@ -218,13 +218,13 @@
 				event.preventDefault();
 
 				// Capture the input values and create the dictionary
-				var rulesData = captureInputValues();
+				var discountRulesData = captureInputValues();
 
 				// Set the dictionary value in a hidden input field
 				var hiddenInput = document.createElement('input');
 				hiddenInput.setAttribute('type', 'hidden');
-				hiddenInput.setAttribute('name', 'rulesData');
-				hiddenInput.setAttribute('value', rulesData);
+				hiddenInput.setAttribute('name', 'discountRulesData');
+				hiddenInput.setAttribute('value', discountRulesData);
 				document.getElementById('addRuleForm').appendChild(hiddenInput);
 
 				// Submit the form

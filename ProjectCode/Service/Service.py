@@ -8,6 +8,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
+
 # ------------------------------------ Load config ------------------------------------ #
 @staticmethod
 def load_config(config_file):
@@ -173,7 +174,6 @@ class Service:
         try:
             member = self.store_facade.register(user_name, password, email)
             logging.info("Registered successfully. By username: " + user_name + ".")
-            print("aaa")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"register Error: {str(e)}.")
@@ -207,9 +207,9 @@ class Service:
             logging.error(f"logOut Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def getMemberPurchaseHistory(self, username):
+    def getMemberPurchaseHistory(self, requester_id, username):
         try:
-            purchase_history = self.store_facade.getMemberPurchaseHistory(username)
+            purchase_history = self.store_facade.getMemberPurchaseHistory(requester_id, username)
             logging.debug(f"fetching purchase history of user {str(username)}.")
             data_json = []
             for transaction in purchase_history:
@@ -290,10 +290,14 @@ class Service:
     def productSearchByCategory(self, categoryName,
                                 username):  # TODO: probably each store will have its products catagorized
         try:  # TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
-            results = self.store_facade.productSearchByCategory(categoryName, username)
+            results = self.store_facade.productSearchByCategory(categoryName)
             logging.debug(
                 f"fetching all the products within the category '{str(categoryName)}'. By username: " + username + ".")
-            return Response(JsonSerialize.toJsonAttributes(results), True)
+            results_json = []
+            for item in results.values():
+                for product in item:
+                    results_json.append(product.toJson())
+            return Response(results_json, True)
         except Exception as e:
             logging.error(f"productSearchByCategory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -329,11 +333,11 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            basket = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
-            return Response(basket.toJson(), True)
+            return Response(answer.toJson(), True)
         except Exception as e:
             logging.error(f"addToBasket Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -399,7 +403,7 @@ class Service:
             self.store_facade.purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode)
             logging.info(
-                "Bid purchase was made successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
+                "Bid purchase was made successfully. By username: " + username + ". storename: " + store_name + ". bid_id: " + str(
                     bid_id) + ".")
             return Response(True, True)
         except Exception as e:
@@ -786,23 +790,45 @@ class Service:
     def getAllMessagesReceived(self, requesterID):
         try:
             messages = self.store_facade.getAllMessagesReceived(requesterID)
-            print(messages)
             logging.debug(
                 f"fetching all the user's messages. By username: " + requesterID + ".")
             return Response(messages, True)
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
             return Response(e, False)
+        
+    def getAllNotifications(self, requesterID):
+        try:
+            notifications = self.store_facade.getAllNotifications(requesterID)
+            logging.debug(
+                f"fetching all the user's notifications. By username: " + requesterID + ".")
+            return Response(notifications, True)
+        except Exception as e:
+            logging.error(f"getNotifications Error: {str(e)}.")
+            return Response(e, False)
 
     def readMessage(self, requesterID, messageID):
         try:
             message = self.store_facade.readMessage(requesterID, messageID)
             logging.debug(
-                f"fetching all the user's messages. By username: " + requesterID + ".")
+                f"marked as read message with ID {messageID}. By username: " + requesterID + ".")
             return Response(message.toJson(), True)
         except Exception as e:
             logging.error(f"readMessage Error: {str(e)}.")
             return Response(e, False)
+        
+    def deleteMessage(self, requesterID, messageID):
+        try:
+            res = self.store_facade.deleteMessage(requesterID, messageID)
+            logging.debug(
+                f"deleted message with ID {messageID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteMessage Error: {str(e)}.")
+            return Response(e, False)
+        
+
+
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
     #     try:

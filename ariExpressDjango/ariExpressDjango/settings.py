@@ -42,14 +42,10 @@ INSTALLED_APPS = [
     'channels',
     'django_cleanup',
     'mathfilters',
+    'notifications',
+    
 ]
 
-CHANNEL_LAYERS = {
-    "default": {
-        "DEFAULT_CHANNEL_LAYER": "channels.layers.InMemoryChannelLayer",
-        "CONFIG": {},
-    },
-}
 
 ASGI_APPLICATION = 'AriExpress.asgi.application'
 
@@ -149,8 +145,18 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE=True
 #CHANNELS
 CHANNEL_LAYERS = {
     "default": {
+# DEFAULT_CHANNEL_LAYER
         "BACKEND": "channels.layers.InMemoryChannelLayer",
         "CONFIG": {},
     },
 }
 
+NOTIFICATIONS_NOTIFICATION_MODEL = 'mainApp.Notification'
+DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True}
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]

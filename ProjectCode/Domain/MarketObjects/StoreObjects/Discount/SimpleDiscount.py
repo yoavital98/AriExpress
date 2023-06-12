@@ -51,4 +51,7 @@ class SimpleDiscount(Policy):
             # "rule": self.rule,
             "discount_type": "Simple"
         }
+    # =======================FOR TESTS=======================#
 
+    def calculateForTest(self):
+        return self.percent

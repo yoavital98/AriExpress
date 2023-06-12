@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import timezone
 
+from notifications.base.models import AbstractNotification 
+
 class Product(models.Model):
     product_id = models.IntegerField()
     name = models.CharField(max_length=100)
@@ -72,19 +74,11 @@ class Member(models.Model):
     def __str__(self):
         return self.username
 
-class UserMessage(models.Model):
-    
-    STATUS = (
-        ('pending', 'pending'),
-        ('read', 'read'),
+class Notification ( AbstractNotification ):
+    TYPE = (
+        ('message', 'message'),
+        ('notification', 'notification')
     )
-    id = models.AutoField(primary_key=True)
-    sender = models.CharField(max_length=50)
-    receiver = models.CharField(max_length=50)
-    subject = models.CharField(max_length=100)
-    content = models.TextField(max_length=1000)
-    file = models.FileField(upload_to='uploads/', null=True, blank=True)
-    creation_date = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=10, choices=STATUS, default='pending')
-    def __str__(self):
-        return self.sender
+    message_id = models.IntegerField()
+    type = models.CharField(max_length=100, choices=TYPE, default='notification')
+    class Meta ( AbstractNotification . Meta ): abstract = False

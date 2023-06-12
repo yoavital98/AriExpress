@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -19,6 +20,8 @@ class StoreTransaction:
     def get_storename(self):
         return self._store_name
 
+    def set_date(self, date):
+        _date = date
     def get_products(self):
         return self._products
 
@@ -46,7 +49,7 @@ class StoreTransaction:
             "supply_id": self._supply_id,
             "username": self._username,
             "storename": self._store_name,
-            "products": JsonSerialize.toJsonAttributes(self._products),
+            "products": json.dumps(self._products),
             "overall_price": self._overall_price,
             "date": self._date
         }

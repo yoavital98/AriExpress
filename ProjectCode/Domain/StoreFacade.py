@@ -18,6 +18,7 @@ from ProjectCode.Domain.ExternalServices.MessageController import MessageControl
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
+from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 # -------MarketObjects Imports-------#
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -36,6 +37,8 @@ from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
 from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
+from ProjectCode.Domain.Repository.StoreTransactionRepository import StoreTransactionRepository
+from ProjectCode.Domain.Repository.UserTransactionRepository import UserTransactionRepository
 
 
 class StoreFacade:
@@ -84,7 +87,6 @@ class StoreFacade:
         self.online_members = MemberRepository(online=True)  # dict from username to online members
         self.banned_members = MemberRepository(banned=True)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
-        self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
@@ -109,6 +111,12 @@ class StoreFacade:
         # self.stores_test = StoreRepository()
         # self.admins_test = AdminRepository()
         # self.onlineGuests_test = GuestRepository()
+        self.members_test = MemberRepository()
+        self.stores_test = StoreRepository()
+        self.admins_test = AdminRepository()
+        self.onlineGuests_test = GuestRepository()
+        self.user_transactions_test = UserTransactionRepository()
+        self.store_transactions_test = StoreTransactionRepository()
 
 
     # ------  System  ------ #
@@ -233,7 +241,7 @@ class StoreFacade:
                 existing_member: Member = self.members[username]
                 if password_validator.ConfirmPassword(password, existing_member.get_password()):
                     existing_member.logInAsMember()
-                    existing_member.setEntranceId(self.nextEntranceID)
+                    existing_member.setEntranceId(str(self.nextEntranceID))
                     self.nextEntranceID += 1
                     self.online_members[username] = existing_member  # indicates that the user is logged in
                     return existing_member
@@ -291,7 +299,7 @@ class StoreFacade:
     # guest and member
     # adding a product to basket, checking with store if the item is available
     def addToBasket(self, username, store_name, product_id, quantity):
-        user: User = self.getUserOrMember(username)
+        user: User = self.getUserOrMember(str(username))
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
@@ -336,10 +344,10 @@ class StoreFacade:
         user: User = self.getUserOrMember(user_name)
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(card_number, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
+                return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
         else:
             with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(card_number, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
+                return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
 
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
@@ -642,7 +650,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         if not self.checkIfUserIsLoggedIn(username):
             raise Exception("User isn't logged in")
-        new_policy = cur_store.addDiscount(username, purchase_policy, rule, level=level, level_name=level_name)
+        new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
         return new_policy
 
     def getPurchasePolicy(self, storename, policy_id):
@@ -728,9 +736,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now(), None)
+        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now(), None)
+            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
         return cur_store
 
     def closeStore(self, username, store_name):
@@ -742,7 +750,7 @@ class StoreFacade:
         cur_store.setStoreStatus(False, username)
         self.sendNotificationToUser(cur_store.getFounder().get_username(), "Store Closed", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
+            self.sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
         return cur_store
 
     def getStaffInfo(self, username, store_name):
@@ -906,6 +914,8 @@ class StoreFacade:
     # ==================  Messages  ==================#
 
     def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
 
     def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
@@ -913,33 +923,57 @@ class StoreFacade:
         return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
 
     def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         founder = self.getStoreFounder(storeID)
         return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
 
     def getAllMessagesSent(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().get_messages_sent(requesterID)
 
     def getAllMessagesReceived(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().get_messages_received(requesterID)
 
+    def getAllNotifications(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
+        return MessageController().get_notifications(requesterID)
+
     def readMessage(self, requesterID, messageID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().read_message(requesterID, messageID)
+
+    def deleteMessage(self, requesterID, messageID):
+        return MessageController().delete_message(requesterID, messageID)
 
     # ==================  Notifications  ==================#
 
     def sendNotificationToUser(self, receiverID, subject, content, creation_date):
         # with purchase form AliExpress to user
+        if not self.members.keys().__contains__(receiverID):
+            raise Exception("no such member exists")
         return MessageController().send_notification(receiverID, subject, content, creation_date)
 
     def sendNotificationToStore(self, storeID, subject, content, creation_date):
         # with purchase form AliExpress to store's founder
+        if not self.stores.keys().__contains__(storeID):
+            raise Exception("no such store exists")
         founder = self.getStoreFounder(storeID)
         return MessageController().send_notification(founder, subject, content, creation_date)
 
     def getAllNotificationsReceived(self, requesterID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().get_notifications(requesterID)
 
     def readNotification(self, requesterID, messageID):
+        if not self.checkIfUserIsLoggedIn(requesterID):
+            raise Exception("User is not logged in")
         return MessageController().read_notification(requesterID, messageID)
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
@@ -949,6 +983,6 @@ class StoreFacade:
     #     pass
     def getStoreFounder(self, store_name):
         if self.stores.keys().__contains__(store_name):
-            return self.stores[store_name].getFounder()
+            return self.stores[store_name].getFounder().get_username()
         else:
             raise Exception("no such store exists")
