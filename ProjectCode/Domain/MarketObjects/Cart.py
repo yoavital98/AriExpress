@@ -178,16 +178,14 @@ class Cart:
             if is_member:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
                                                           stores_products_dict, overall_price)
-                MessageController().send_notification(self.username, message_header,
-                                                                      purchaseReports, datetime.now())
+                member_msg_id = MessageController().send_notification(self.username, message_header,purchaseReports, datetime.now())
             purchase_reports_json = []
             index = 0
             for purchase in purchaseReports.values():  # all the baskets
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
                                                            purchase.getStorename(), purchase.getProducts(),
                                                            purchase.getTotalBasketPayment())
-                MessageController().send_notification(founders_usernames[index],
-                                                                           message_header, purchase, datetime.now())
+                founder_message_id = MessageController().send_notification(founders_usernames[index], message_header, purchase, datetime.now())
                 index += 1
                 purchase_reports_json.append(purchase.toJson())
             self.clearCartFromProducts()  # clearing all the products from all the baskets

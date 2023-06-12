@@ -15,37 +15,56 @@ from django.contrib import messages
 import json
 import ast
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect # for redirecting to another page and clearing the input fields
-from django.contrib import messages # for displaying messages
-from django.core.paginator import Paginator # for pagination
-from datetime import datetime #used to get total msg per day
-from django.views.decorators.cache import cache_control # for disabling cache
+from django.http import HttpResponseRedirect  # for redirecting to another page and clearing the input fields
+from django.contrib import messages  # for displaying messages
+from django.core.paginator import Paginator  # for pagination
+from datetime import datetime  # used to get total msg per day
+from django.views.decorators.cache import cache_control  # for disabling cache
 from django.utils import timezone
+
+# -------------------------------------------------Notify--------------------------------------------------------------#
 from notifications.signals import notify
 
 
+def sendNotification(reciever_id, notification_id, type, subject):
+    receipent = User.objects.get(id=reciever_id)
+    sender = User.objects.get(username='ariExpress')
+    notify.send(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
+                message_id=notification_id, type=type, description=subject)
+
+
+send_notification_lambda = lambda receiver_id, notification_id, type, subject: sendNotification(receiver_id,
+                                                                                                notification_id,
+                                                                                                type, subject)
+
+
+# ---------------------------------------------------------------------------------------------------------------------#
 
 def startpage(request):
+    Service(send_notification_call=send_notification_lambda)
     return render(request, "startpage.html")
 
+
 def mainpage(request):
-    #----------------------creating first user - ariExpress--------------------------------------------
+    # ----------------------creating first user - ariExpress--------------------------------------------
     if not User.objects.filter(username='ariExpress').exists():
         user = User.objects.create_user(username='ariExpress', password='ariExpress')
         user.save()
-    #--------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------
     createGuestIfNeeded(request)
     return render(request, 'mainpage.html')
+
 
 def login(request):
     msg = ""
     # login form is sent
     if request.method == 'POST':
-        if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
+        if request.user.is_authenticated and not request.session['guest']:  # user (not guest) is logged in
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in    
-            # service = Service(sendNotification)
+        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in
+            # service = Service()
+
             form = loginForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
@@ -62,7 +81,7 @@ def login(request):
                         request.session['guest'] = 1
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
-                else: 
+                else:
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
@@ -86,30 +105,29 @@ def login(request):
                 #             loggedin_username = guestToUser(request, username, password)
                 #             if loggedin_username: return loggedin_username
                 #             else: return False                                                  # shouldn't happen
-                        
+
                 # else:
                 #     guestToUser(request, username, password)
                 #     return redirect('mainApp:mainpage')
             else:
-                messages.success(request, ("Error: login form is not valid"))    
+                messages.success(request, ("Error: login form is not valid"))
         else:
             messages.success(request, ("Error: something went wrong with the login"))
-
 
     # render the login page
     form = loginForm()
     return render(request, 'login.html', {'form': form})
 
 
-
 def registerPage(request):
-
     if request.method == 'POST':
-        service = Service(sendNotification)
-        if request.user.is_authenticated and not request.session['guest']:                      # user (not guest) is logged in
+        service = Service()
+        if request.user.is_authenticated and not request.session['guest']:  # user (not guest) is logged in
+
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session['guest']:                        # user (guest) is logged in                                                       # 
+        elif request.user.is_authenticated and request.session[
+            'guest']:  # user (guest) is logged in                                                       #
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
@@ -126,12 +144,12 @@ def registerPage(request):
                         request.session['guest'] = 0
                         return redirect('mainApp:mainpage')
                     else:
-                        User.objects.filter(username=username).delete()                         # remove the created user from django
-                        messages.success(request, (f"Error: register was successful but there is a login error"))   
+                        User.objects.filter(username=username).delete()  # remove the created user from django
+                        messages.success(request, (f"Error: register was successful but there is a login error"))
                 else:
-                    messages.success(request, (f"Error: {res.getReturnValue()}"))   
+                    messages.success(request, (f"Error: {res.getReturnValue()}"))
             else:
-                messages.success(request, ("Error: register form is not valid"))    
+                messages.success(request, ("Error: register form is not valid"))
         else:
             messages.success(request, ("Error: something went wrong with the register"))
 
@@ -160,9 +178,6 @@ def logout(request):
         return redirect('mainApp:mainpage')
 
 
-
-    
-
 def mystores(request):
     if request.user.is_authenticated:
         service = Service(sendNotification)
@@ -190,7 +205,7 @@ def viewStoreStaff(request, storename):
         else:
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
             return redirect('mainApp:viewStoreStaff', storename=storename)
-    else:                               # just render page
+    else:  # just render page
         permissionName = 'StaffInfo'
         if permissionCheck(username, storename, permissionName):
             actionRes = service.getStoreProductsInfo(storename)
@@ -201,7 +216,7 @@ def viewStoreStaff(request, storename):
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
-        
+
     messages.success(request, (f"Error: Something went wrong"))
     return redirect('mainApp:store_specific', storename=storename)
 
@@ -220,7 +235,8 @@ def store_specific(request, storename):
     if request.user.is_authenticated:
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
-    else: permissions = {}
+    else:
+        permissions = {}
 
     # print(permissions)
     # print(storename)
@@ -275,7 +291,8 @@ def store_specific(request, storename):
         context = ast.literal_eval(str(products))
         products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
         active = "Open" if context['active'].lower() == "true" else "Closed"
-        return render(request, 'store_specific.html', {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})
+        return render(request, 'store_specific.html',
+                      {'products': products_dict, 'storename': storename, 'active': active, 'permissions': permissions})
     # else:
     #     return redirect('mainApp:mainpage')
 
@@ -316,8 +333,10 @@ def editProduct(request, storename):
         product_categories = request.POST.get('product_categories')
 
         if 'editButton' in request.POST:
-            service = Service(sendNotification)
-            actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name, quantity=product_quantity, price=product_price, categories=product_categories)
+            service = Service()
+            actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name,
+                                                   quantity=product_quantity, price=product_price,
+                                                   categories=product_categories)
             if actionRes.getStatus():
                 messages.success(request, ("Product has been edited"))
                 return redirect('mainApp:store_specific', storename=storename)
@@ -331,13 +350,15 @@ def editProduct(request, storename):
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
 
-def addNewDiscount(request, storename): # Discounts
+
+def addNewDiscount(request, storename):  # Discounts
     username = request.user.username
     permissionName = 'Discounts'
     if permissionCheck(username, storename, permissionName):
         discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
         discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
-        percent = 50 if request.POST.get('discountAmountRange') == None else int(request.POST.get('discountAmountRange'))
+        percent = 50 if request.POST.get('discountAmountRange') == None else int(
+            request.POST.get('discountAmountRange'))
         levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
         levelType = None if levelTypeInt == None else getDiscountLevelType(levelTypeInt)
         levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
@@ -351,18 +372,17 @@ def addNewDiscount(request, storename): # Discounts
                 else:
                     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
-
             if discountTypeInt == 2:
                 discountRulesData = request.session['discountRulesData']
                 fixedRulesData = fixDiscountRulesData(discountRulesData)
-                actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName, fixedRulesData)
+                actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName,
+                                                fixedRulesData)
                 if actionRes.getStatus():
                     messages.success(request, ("Discount has been added"))
                     if 'discountRulesData' in request.session:
                         del request.session['discountRulesData']
                 else:
                     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-
 
             if discountTypeInt == 3:
                 pass
@@ -372,7 +392,6 @@ def addNewDiscount(request, storename): # Discounts
 
             if discountTypeInt == 5:
                 pass
-
 
         if 'conditionedAddRule' in request.POST:
             # Retrieve the submitted discountRulesData
@@ -390,23 +409,25 @@ def addNewDiscount(request, storename): # Discounts
                 ruleDict[counter] = ruleData
                 request.session['discountRuleCounter'] += 1
 
-
         if 'clearAllRules' in request.POST:
             if 'discountRulesData' in request.session:
                 del request.session['discountRulesData']
             request.session['discountRuleCounter'] = 0
 
-        return render(request, 'addNewDiscount.html', {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType, 'levelName': levelName})
+        return render(request, 'addNewDiscount.html',
+                      {'storename': storename, 'percent': percent, 'discountType': discountType, 'levelType': levelType,
+                       'levelName': levelName})
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
 
 
-def addNewPurchasePolicy(request, storename): # Policies
+def addNewPurchasePolicy(request, storename):  # Policies
     username = request.user.username
     permissionName = 'Policies'
     if permissionCheck(username, storename, permissionName):
-        purchase_policy_int = None if request.POST.get('purchase_policy') == None else int(request.POST.get('purchase_policy'))
+        purchase_policy_int = None if request.POST.get('purchase_policy') == None else int(
+            request.POST.get('purchase_policy'))
         purchase_policy = None if purchase_policy_int == None else getPurchasePolicyType(purchase_policy_int)
         levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
         levelType = None if levelTypeInt == None else getPolicyLevelType(levelTypeInt)
@@ -417,14 +438,14 @@ def addNewPurchasePolicy(request, storename): # Policies
             if purchase_policy_int == 1:
                 policyRulesData = request.session['policyRulesData']
                 print(f"policyRulesData: {policyRulesData}")
-                rule = fixDiscountRulesData(policyRulesData)                                                                    #TODO: check if works
-                print(f"storename: {storename}\n username: {username}\n, purchase_policy: {purchase_policy}\n, rule: {rule}\n, levelType: {levelType}\n, levelName: {levelName}")
+                rule = fixDiscountRulesData(policyRulesData)  # TODO: check if works
+                print(
+                    f"storename: {storename}\n username: {username}\n, purchase_policy: {purchase_policy}\n, rule: {rule}\n, levelType: {levelType}\n, levelName: {levelName}")
                 actionRes = service.addPurchasePolicy(storename, username, purchase_policy, rule, levelType, levelName)
                 if actionRes.getStatus():
                     messages.success(request, ("Policy has been added"))
                 else:
                     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-
 
             if purchase_policy_int == 2:
                 pass
@@ -437,7 +458,6 @@ def addNewPurchasePolicy(request, storename): # Policies
 
             if purchase_policy_int == 5:
                 pass
-
 
         if 'addRule' in request.POST:
             # Retrieve the submitted policyRulesData
@@ -455,14 +475,13 @@ def addNewPurchasePolicy(request, storename): # Policies
                 ruleDict[counter] = ruleData
                 request.session['policyRuleCounter'] += 1
 
-
         if 'clearAllRules' in request.POST:
             if 'policyRulesData' in request.session:
                 del request.session['policyRulesData']
             request.session['policyRuleCounter'] = 0
 
         return render(request, 'addNewPurchasePolicy.html', {'storename': storename})
-    
+
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
@@ -512,7 +531,8 @@ def nominateUser(request, storename):
                     messages.success(request, ("Error nominating a user to be Manager"))
                     return redirect('mainApp:mystores')
             else:
-                return render(request, 'nominateUser.html', {'storename': storename})           #didn't nominate yet, just load the page
+                return render(request, 'nominateUser.html',
+                              {'storename': storename})  # didn't nominate yet, just load the page
 
 
         else:
@@ -539,8 +559,10 @@ def addNewProduct(request, storename):
                 category = form.cleaned_data['productCategory']
                 price = form.cleaned_data['productPrice']
                 quantity = form.cleaned_data['productQuantity']
-                service = Service(sendNotification)
-                actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
+                service = Service()
+                actionRes = service.addNewProductToStore(request.user.username, storename, productname, category,
+                                                         quantity, price)
+
                 if actionRes.getStatus():
                     messages.success(request, ("A new Product has been added to the store"))
                     return redirect('mainApp:store_specific', storename=storename)
@@ -581,6 +603,7 @@ def adminPage(request):
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
         return redirect('mainApp:mainpage')
 
+
 def viewOnlineUsers(request):
     if request.method == 'POST':
         if request.user.is_superuser:
@@ -588,30 +611,32 @@ def viewOnlineUsers(request):
             resOnline = service.getAllOnlineMembers(request.user.username)
             resOffline = service.getAllOfflineMembers(request.user.username)
             if resOnline.getStatus() and resOffline.getStatus():
-                onlinemembers = resOnline.getReturnValue() #returns a list
-                offlinemembers = resOffline.getReturnValue() #returns a list
+                onlinemembers = resOnline.getReturnValue()  # returns a list
+                offlinemembers = resOffline.getReturnValue()  # returns a list
                 onlinemembers = ast.literal_eval(str(onlinemembers))
                 offlinemembers = ast.literal_eval(str(offlinemembers))
                 context = {'online': onlinemembers,
-                        'offline': offlinemembers}
+                           'offline': offlinemembers}
                 return render(request, 'adminPage.html', {'context': context})
-        
+
     messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
     return redirect('mainApp:mainpage')
 
+
 def reset_password(request):
     pass
+
 
 def homepage_guest(request):
     pass
 
 
-
 @login_required(login_url='/login')
 def inbox(request):
-    service = Service(sendNotification)
-    #all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
-    #pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+    service = Service()
+    # all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
+    # pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+
     all_user_messages = service.getAllMessagesReceived(request.user.username)
     if all_user_messages.getStatus():
         all_user_notifications = service.getAllNotifications(request.user.username)
@@ -621,7 +646,8 @@ def inbox(request):
             paginator = Paginator(all_user_messages, 5)
             page = request.GET.get('page')
             all_messages = paginator.get_page(page)
-            return render(request, 'inbox.html',{'usermessages': all_messages, 'usernotifications': all_user_notifications})
+            return render(request, 'inbox.html',
+                          {'usermessages': all_messages, 'usernotifications': all_user_notifications})
         else:
             messages.error(request, "Error: " + str(all_user_notifications.getReturnValue()))
             return redirect('mainApp:mainpage')
@@ -645,14 +671,16 @@ def send_message(request):
                 print(file)
                 message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date,file)
                 if message_res.getStatus():
+
                     messages.success(request, "Message sent successfully")
                     return HttpResponseRedirect('/inbox')
                 else:
-                    messages.error(request, "Error sending message through backend - "+str(message_res.getReturnValue()))
+                    messages.error(request,
+                                   "Error sending message through backend - " + str(message_res.getReturnValue()))
             else:
                 messages.error(request, "Invalid adresssee username - the message was not sent")
         else:
-            messages.error(request, "Invalid form submission - "+form.errors.as_json())
+            messages.error(request, "Invalid form submission - " + form.errors.as_json())
     else:
         form = UserMessageform()
         messages.error(request, "Error sending message")
@@ -671,8 +699,6 @@ def delete_message(request, usermessage_id):
     else:
         messages.success(request, "Message deleted successfully")
     return HttpResponseRedirect('/inbox')
-    
-
 
 
 @login_required(login_url='/login')
@@ -683,17 +709,18 @@ def mark_as_read(request, usermessage_id):
     # username = request.POST.get('username', None)
     # res = service.readMessage(username, usermessage_id)
     # if res.getStatus():
-        # message.status = 'read'
-        # message.save()
-        # messages.success(request, "Message marked as read successfully")
-    service = Service(sendNotification)
+    # message.status = 'read'
+    # message.save()
+    # messages.success(request, "Message marked as read successfully")
+    service = Service()
+
     res = service.readMessage(request.user.username, usermessage_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')[0]
         notification.mark_as_read()
         messages.success(request, "Message marked as read successfully")
     else:
-        messages.error(request, "Error marking message as read - "+str(res.getReturnValue()))
+        messages.error(request, "Error marking message as read - " + str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
 
@@ -708,7 +735,8 @@ def check_username(request):
         else:
             return JsonResponse({'status': False})
 
-#---------------------------------------------------------cart functionality---------------------------------------------------------#
+
+# ---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
     if request.user.is_authenticated:
         service = Service(sendNotification)
@@ -735,11 +763,13 @@ def cart(request):
         messages.error(request, "You must be logged in to view your cart")
         return HttpResponseRedirect('/login')
 
+
 def calculate_total_price(products):
     total_price = 0
     for product in products.values():
         total_price += float(product['price']) * float(product['quantity'])
     return total_price
+
 
 @login_required(login_url='/login')
 def remove_basket_product(request):
@@ -765,8 +795,9 @@ def remove_basket_product(request):
             return HttpResponseRedirect('/login')
     else:
         form = BasketRemoveProductForm()
-        messages.error(request, "Error removing product from cart - "+ str(request.method))
+        messages.error(request, "Error removing product from cart - " + str(request.method))
         return HttpResponseRedirect('/cart')
+
 
 @login_required(login_url='/login')
 def edit_basket_product(request):
@@ -793,7 +824,7 @@ def edit_basket_product(request):
             return HttpResponseRedirect('/login')
     else:
         form = BasketEditProductForm()
-        messages.error(request, "Error editting product quantity - "+ str(request.method))
+        messages.error(request, "Error editting product quantity - " + str(request.method))
         return HttpResponseRedirect('/cart')
 
 
@@ -808,8 +839,8 @@ def checkoutpage(request):
             baskets = ast.literal_eval(str(cart)).get('baskets')
             baskets = ast.literal_eval(str(baskets))
             products = []
-            total_cart_price=0
-            quantity= 0
+            total_cart_price = 0
+            quantity = 0
             for basket in baskets:
                 basket_res = service.getBasket(request.user.username, basket)
                 if basket_res.getStatus() == True:
@@ -820,13 +851,15 @@ def checkoutpage(request):
                     quantity += len(basket_products)
                     products.append(basket_products)
 
-            return render(request, 'checkoutpage.html', {'total_cart_price': total_cart_price, 'products': products, 'quantity': quantity})
+            return render(request, 'checkoutpage.html',
+                          {'total_cart_price': total_cart_price, 'products': products, 'quantity': quantity})
         else:
             messages.error(request, "Error loading checkout page - " + str(res.getReturnValue()))
             return redirect('mainApp:mainpage')
     else:
         messages.error(request, "You must be logged in to checkout")
         return HttpResponseRedirect('/login')
+
 
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -836,9 +869,14 @@ def checkout(request):
             service = Service(sendNotification)
             form = CheckoutForm(request.POST)
             if form.is_valid():
-                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']), form.cleaned_data['address'], form.cleaned_data['city'], form.cleaned_data['country'], int(form.cleaned_data['zip']))
+                res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),
+                                           form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],
+                                           int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']),
+                                           form.cleaned_data['address'], form.cleaned_data['city'],
+                                           form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
+
                     return redirect('mainApp:mainpage')
                 else:
                     messages.error(request, "Error placing order res - " + str(res.getReturnValue()))
@@ -851,11 +889,12 @@ def checkout(request):
             return HttpResponseRedirect('/login')
     else:
         form = BasketEditProductForm()
-        messages.error(request, "Error placing an order - "+ str(request.method))
+        messages.error(request, "Error placing an order - " + str(request.method))
         return HttpResponseRedirect('/cart')
 
+
 def add_product_to_cart(request):
-    if request.method=='POST':
+    if request.method == 'POST':
         if request.user.is_authenticated:
             service = Service(sendNotification)
             form = BasketAddProductForm(request.POST)
@@ -879,17 +918,17 @@ def add_product_to_cart(request):
     else:
         return redirect('mainApp:mainpage')
 
-#---------------------------------------------------------------------------------------------------------------------------------------#
+
+# ---------------------------------------------------------------------------------------------------------------------------------------#
 
 
-
-#-------------------------------------------------------Searchbar functionality---------------------------------------------------------#
+# -------------------------------------------------------Searchbar functionality---------------------------------------------------------#
 
 def searchpage(request):
     if request.method == "POST":
         service = Service(sendNotification)
         searched = request.POST['searched']
-        res = service.productSearchByName(searched,request.user.username)
+        res = service.productSearchByName(searched, request.user.username)
         if res.getStatus():
             products = res.getReturnValue()
             return render(request, 'searchpage.html', {'searched': searched, 'products': products})
@@ -900,20 +939,21 @@ def searchpage(request):
         return redirect('mainApp:mainpage')
 
 
-#---------------------------------------------------------------------------------------------------------------------------------------#
+# ---------------------------------------------------------------------------------------------------------------------------------------#
 
 
-
-
-#-----------------------------------------------------------Helper Functions------------------------------------------------------------#
+# -----------------------------------------------------------Helper Functions------------------------------------------------------------#
 
 def getDiscountType(discount):
     discount = int(discount)
     if discount == 1: return "Simple"
     if discount == 2: return "Conditioned"
     if discount == 3: return "Coupon"
-    if discount == 4: return "Max"
-    else: return "Add"
+    if discount == 4:
+        return "Max"
+    else:
+        return "Add"
+
 
 def getPurchasePolicyType(policy):
     # TODO: fix this when Amiel answers
@@ -921,27 +961,39 @@ def getPurchasePolicyType(policy):
     if policy == 1: return "PurchasePolicy"
     if policy == 2: return "todo2"
     if policy == 3: return "todo3"
-    if policy == 4: return "todo4"
-    else: return "todo5"
+    if policy == 4:
+        return "todo4"
+    else:
+        return "todo5"
+
 
 def getDiscountLevelType(level):
     level = int(level)
     if level == 1: return "Store"
-    if level == 2: return "Category"
-    else: return "Product"
+    if level == 2:
+        return "Category"
+    else:
+        return "Product"
+
 
 def getPolicyLevelType(level):
     # TODO: fix this when Amiel answers
     level = int(level)
     if level == 1: return "Product"
     if level == 2: return "Category"
-    if level == 3: return "User"
-    else: return "Basket"
+    if level == 3:
+        return "User"
+    else:
+        return "Basket"
+
 
 def getlevelName(level, name):
     level = int(level)
-    if level == 1: return ""
-    else: return name
+    if level == 1:
+        return ""
+    else:
+        return name
+
 
 def fixDiscountRulesData(rulesData):
     keys = list(rulesData.keys())
@@ -950,7 +1002,7 @@ def fixDiscountRulesData(rulesData):
         print(f"len: {rulesData[0]}")
     for i in range(1, len(keys)):
         key = keys[i]
-        previous_key = keys[i-1]
+        previous_key = keys[i - 1]
         child_dict = {
             'logic_type': rulesData[key].pop('logic_type', ''),
             'rule': rulesData[key]
@@ -963,8 +1015,6 @@ def fixDiscountRulesData(rulesData):
     # rulesData["0"].pop('logic_type', None)
     # return rulesData["0"]
 
-
-
     # keys = list(rulesData.keys())
     # for i in range(1, len(keys)):
     #     prev_key = str(i - 1)
@@ -972,26 +1022,29 @@ def fixDiscountRulesData(rulesData):
     #     rulesData[prev_key]['child'] = rulesData[current_key]
     # return rulesData['0']
 
+
 def permissionCheck(username, storename, permissionName):
     if username == "": return False
     service = Service(sendNotification)
     permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
-    permissions : dict = ast.literal_eval(str(permissions))                             #already a dict
+    permissions: dict = ast.literal_eval(str(permissions))  # already a dict
     if permissionName in permissions.keys():
         return True
     return False
 
-#returns False if user authenticated. Otherwise creates a new guest user and returns the username
+
+# returns False if user authenticated. Otherwise creates a new guest user and returns the username
 def createGuestIfNeeded(request):
     if request.user.is_authenticated:
         return False
 
-    
+
     # user needs to be guest
     # 1. create a new user in django
     # 2. login to that user
-    else:   
-        service = Service(sendNotification)
+    else:
+        service = Service()
+
         actionRes = service.loginAsGuest()
         guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
 
@@ -1007,6 +1060,7 @@ def createGuestIfNeeded(request):
             request.session['guest'] = 1
             return username
 
+
 # guest logges in as a user
 # 1. change guest to user in service
 # 2. logout of django
@@ -1018,19 +1072,20 @@ def guestToUser(request, username, password):
     if request.user.is_authenticated and request.session['guest']:
         service = Service(sendNotification)
         guestnumber = get_number_at_end(guestusername)
-        actionRes = service.logInFromGuestToMember(guestnumber, username, password) # 1.
+        actionRes = service.logInFromGuestToMember(guestnumber, username, password)  # 1.
         if actionRes.getStatus():
-            logoutFunc(request)                                                     # 2.
-            user = authenticate(request, username=username, password=password)      
-            loginFunc(request, user)                                                # 3.
+            logoutFunc(request)  # 2.
+            user = authenticate(request, username=username, password=password)
+            loginFunc(request, user)  # 3.
             guestuser = User.objects.get(username=guestusername)
-            guestuser.delete()                                                      # 4.
+            guestuser.delete()  # 4.
             request.session['guest'] = 0
             return request.user.username
             # ret = ast.literal_eval(str(actionRes.getReturnValue()))
             # return ret['entrance_id']
 
-    else: return False
+    else:
+        return False
 
 
 def get_number_at_end(string):
@@ -1041,9 +1096,5 @@ def get_number_at_end(string):
         else:
             break
     return int(number)
-#---------------------------------------------------------------------------------------------------------------------------------------#
 
-def sendNotification(sender_id, reciever_id, notification_id, type, subject):
-    receipent = User.objects.get(id=reciever_id)
-    sender = User.objects.get(username=sender_id)
-    notify.send(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!', message_id=notification_id, type=type, description=subject)
+#---------------------------------------------------------------------------------------------------------------------------------------#
