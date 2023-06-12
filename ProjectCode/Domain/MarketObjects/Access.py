@@ -8,10 +8,10 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.ManagerState import ManagerSt
 from ProjectCode.Domain.MarketObjects.StoreObjects.OwnerState import OwnerState
 
 
-
 class Access:
 
     def __init__(self, store, user, nominated_by_username):
+        from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
         # self.nominated_by_username = nominated_by_username
         # self.nominations = TypedDict(str, Access) #username, Access
         # self.user = user
@@ -19,7 +19,7 @@ class Access:
         # self.access_state = AccessState()
         # self.role = ""
         self.nominated_by_username = nominated_by_username
-        self.nominations = TypedDict(str, Access)  # username, Access
+        self.nominations = []
         self.user = user
         self.store = store
         self.access_state = AccessState()
@@ -61,10 +61,11 @@ class Access:
             return isinstance(self.access_state,OwnerState)
         elif role == "Manager":
             return isinstance(self.access_state,ManagerState)
+        return False
 
 
     def addNominatedUsername(self, username, access):
-        self.nominations[username] = access
+        self.nominations.append(username)
 
 
 
@@ -97,8 +98,8 @@ class Access:
         return self.access_state.checkForPermission("Discounts")
 
 
-    def removeAccessFromMember(self):
-        self.user.get_accesses().pop(self.store.get_store_name())
+    # def removeAccessFromMember(self):
+    #     self.user.get_accesses().pop(self.store.get_store_name())
 
     def get_user(self):
         return self.user
@@ -121,6 +122,8 @@ class Access:
     def get_access_state_name(self):
         return type(self.access_state).__name__[:-5]
 
+    def set_nominations(self, nominations):
+        self.nominations = nominations
 
     # =======================JSON=======================#
     def toJson(self):

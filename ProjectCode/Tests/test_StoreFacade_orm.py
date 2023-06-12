@@ -39,8 +39,10 @@ class MyTestCase(unittest.TestCase):
         self.store_facade = StoreFacade()
         self.store_facade.register("Ari", "password123", "ari@gmail.com")
         self.store_facade.register("Jane", "password456", "jane.doe@example.com")
+        self.store_facade.register("Feliks", "password456", "fe.doe@example.com")
         self.member1: Member = self.store_facade.members.get("Ari")
         self.member2: Member = self.store_facade.members.get("Jane")
+        self.member3: Member = self.store_facade.members.get("Feliks")
         self.store_facade.logInAsMember("Ari", "password123")
         self.store_facade.createStore("Ari", "Store1")
         self.store_facade.createStore("Ari", "Store2")
@@ -62,6 +64,13 @@ class MyTestCase(unittest.TestCase):
 
 
     # ------ AccessRepository Tests ------
+
+    def test_Orm_access_nominations(self):
+        #MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email)
+        #StoreModel.create(store_name="Store1")
+        self.store_facade.nominateStoreOwner("Ari",  "Jane", "Store1")
+        self.store_facade.nominateStoreOwner("Ari", "Feliks", "Store1")
+        print(self.store1.get_accesses()["Ari"].get_nominations())
 
     def test_Orm_access_del(self):
         MemberModel.create(user_name=self.member1.user_name, password=self.member1.password, email=self.member1.email)

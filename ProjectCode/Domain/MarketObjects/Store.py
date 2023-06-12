@@ -81,7 +81,7 @@ class Store:
 
     def getFounder(self):
         for access in self.__accesses.values():
-            if access.getRole() == "Founder":
+            if access.hasRole("Founder"):
                 return access.get_user()
         return None
 
@@ -96,10 +96,13 @@ class Store:
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
             raise Exception("The member doesn't have the access for that store")
+        if self.__accesses[nominated_username] is not None and self.__accesses[nominated_username].hasRole(role):
+            raise Exception("The member already has that role")
         if requester_access.canModifyPermissions() and requester_username == nominated_access.get_nominated_by_username():
             nominated_access.setAccess(role)
             requester_access.addNominatedUsername(nominated_username, nominated_access)
             self.__accesses[nominated_username] = nominated_access
+            self.__accesses[requester_username] = requester_access #update
             return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
@@ -124,11 +127,11 @@ class Store:
         usernames_to_remove = []
         while len(accesses_to_remove) > 0:
             cur_access = accesses_to_remove[0]
-            cur_access.removeAccessFromMember()
-            self.__accesses.pop(cur_access.get_user().get_username())
-            usernames_to_remove.extend(cur_access.get_nominations().keys())
+            self.__accesses.remove(cur_access.get_user().get_username())
+            usernames_to_remove.extend(cur_access.get_nominations())
             accesses_to_remove.remove(cur_access)
-            accesses_to_remove.extend(cur_access.get_nominations().values())
+            pulled_accesses = [self.__accesses.get(username) for username in cur_access.get_nominations()]
+            accesses_to_remove.extend(pulled_accesses)
         return usernames_to_remove
 
     def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):

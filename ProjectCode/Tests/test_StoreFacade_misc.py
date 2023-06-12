@@ -22,6 +22,7 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 class TestStoreFacade(TestCase):
 
     def setUp(self):
+
         self.store_facade = StoreFacade()
         self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
         self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
@@ -459,7 +460,7 @@ class TestStoreFacade(TestCase):
     def test_closeStore_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         self.store_facade.closeStore("Feliks", "AriExpress")
-        self.assertFalse(self.my_store.active)
+        self.assertFalse(self.store_facade.getStores()["AriExpress"].active)
 
 
     def test_closeStore_userNotLoggedIn_fail(self):

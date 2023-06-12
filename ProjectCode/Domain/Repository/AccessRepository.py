@@ -20,7 +20,7 @@ class AccessRepository(Repository):
         try:
             return self.get(item)
         except Exception as e:
-            raise Exception("AccessRepository: __getitem__ failed: " + str(e))
+            return None
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -87,7 +87,9 @@ class AccessRepository(Repository):
     def __createDomainObject(self, access_entry, store_dom, user_dom):
         access_dom = Access(store_dom, user_dom, access_entry.nominated_by_username)
         access_dom.setAccess(access_entry.role)
+        access_dom.set_nominations(access_entry.nominations.split(','))
         access_dom.get_access_state().setPermissions(list(access_entry.access_state.permissions.split(',')))
+
         return access_dom
 
     def add(self, access):
@@ -96,16 +98,21 @@ class AccessRepository(Repository):
         permissions = access.get_access_state().get_permissions().keys()
         user_entry = MemberModel.get(MemberModel.user_name == access.get_user().get_username())
         access_entry = AccessModel.get_or_none(AccessModel.store == store_entry, AccessModel.user == user_entry)
-        access_state_entry = AccessStateModel.create(permissions=','.join(permissions), state=access.get_role())
 
         if access_entry is not None:
             #update
+            access_state_entry = access_entry.access_state
+            access_state_entry.permissions = ','.join(permissions)
+            access_state_entry.state = access.get_role()
+            access_state_entry.save()
             access_entry.access_state = access_state_entry
             access_entry.role = access.get_role()
             access_entry.nominated_by_username = access.get_nominated_by_username()
+            access_entry.nominations = ','.join(access.get_nominations())
             access_entry.save()
             return access
-        AccessModel.create(store=store_entry, user=user_entry, nominated_by_username=access.get_nominated_by_username(), role=access.get_role(), access_state=access_state_entry)
+        access_state_entry = AccessStateModel.create(permissions=','.join(permissions), state=access.get_role())
+        AccessModel.create(store=store_entry, user=user_entry, nominated_by_username=access.get_nominated_by_username(), role=access.get_role(), access_state=access_state_entry, nominations=','.join(access.get_nominations()))
         return access
 
     def remove(self, pk):
@@ -127,7 +134,4 @@ class AccessRepository(Repository):
 
 
     def values(self):
-        if self.store_name is None:
-            return self.getByUsername()
-        else:
-            return self.getByStorename()
+        return self.get()

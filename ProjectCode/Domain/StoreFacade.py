@@ -65,6 +65,11 @@ class StoreFacade:
 
         db = SqliteDatabase('database.db')
         db.connect()
+        # model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                 ProductBasketModel, DiscountModel, AdminModel, GuestModel]
+        # for m in model_list:
+        #     m.delete().execute()
+
         db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
                         ProductBasketModel, DiscountModel, AdminModel, GuestModel])
         db.create_tables(
@@ -541,10 +546,7 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         self.checkIfMemberExists(nominated_username)
-        nominated_access = self.members[nominated_username].get_accesses().get(store_name)
-        if nominated_access is None:
-            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-
+        nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Owner")
 
@@ -557,10 +559,7 @@ class StoreFacade:
             raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
-        nominated_access = self.members[nominated_username].get_accesses().get(store_name)
-        if nominated_access is None:
-            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-
+        nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Manager")
         return nominated_modified_access
@@ -741,9 +740,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(False, username)
-        self.sendNotificationToUser(cur_store.getFounder(), "Store Closed", "", datetime.now())
+        self.sendNotificationToUser(cur_store.getFounder().get_username(), "Store Closed", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().sendNotificationToUser(owner, "Store Closed", "", datetime.now())
+            MessageController().sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
         return cur_store
 
     def getStaffInfo(self, username, store_name):
