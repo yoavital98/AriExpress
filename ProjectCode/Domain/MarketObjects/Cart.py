@@ -175,30 +175,22 @@ class Cart:
                 supply_id)
             for basket in self.get_baskets().values():  # purchase all the baskets
                 basket.purchaseBasket()
-            member_msg_id = None
             if is_member:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
                                                           stores_products_dict, overall_price)
-                member_msg_id = MessageController().send_notification(self.username, message_header,
-                                                                      purchaseReports, datetime.now())
-            founders_message_ids = []
+                member_msg_id = MessageController().send_notification(self.username, message_header,purchaseReports, datetime.now())
             purchase_reports_json = []
             index = 0
             for purchase in purchaseReports.values():  # all the baskets
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
                                                            purchase.getStorename(), purchase.getProducts(),
                                                            purchase.getTotalBasketPayment())
-                founder_message_id = MessageController().send_notification(founders_usernames[index],
-                                                                           message_header, purchase, datetime.now())
+                founder_message_id = MessageController().send_notification(founders_usernames[index], message_header, purchase, datetime.now())
                 index += 1
-                founders_message_ids.append(founder_message_id)
                 purchase_reports_json.append(purchase.toJson())
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {
-                "memeber_message_id": member_msg_id,
-                "founders_message_ids": founders_message_ids,
-                "founders_usernames": founders_usernames,
                 "message": "Regular Purchase was successful",
                 "transaction_id": transaction_id,
                 "supply_id": supply_id,

@@ -64,12 +64,13 @@ def login(request):
             return render(request, 'login.html', {'form': loginForm()})
         elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in
             # service = Service()
+
             form = loginForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
-                if Service().checkIfAdmin(username).getStatus():
-                    actionRes = Service().logIn(username, password)
+                if Service(sendNotification).checkIfAdmin(username).getStatus():
+                    actionRes = Service(sendNotification).logIn(username, password)
                     if actionRes.getStatus():
                         user = authenticate(request, username=username, password=password)
                         loginFunc(request, user)
@@ -122,6 +123,7 @@ def registerPage(request):
     if request.method == 'POST':
         service = Service()
         if request.user.is_authenticated and not request.session['guest']:  # user (not guest) is logged in
+
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
         elif request.user.is_authenticated and request.session[
@@ -159,7 +161,7 @@ def registerPage(request):
 def logout(request):
     # if request.user.is_authenticated and not request.user.username.startswith("GuestUser"):
     if request.user.is_authenticated and not request.session['guest']:
-        service = Service()
+        service = Service(sendNotification)
         actionRes = service.logOut(request.user.username)
         if actionRes.getStatus():
             logoutFunc(request)
@@ -178,7 +180,7 @@ def logout(request):
 
 def mystores(request):
     if request.user.is_authenticated:
-        service = Service()
+        service = Service(sendNotification)
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
@@ -190,7 +192,7 @@ def mystores(request):
 
 def viewStoreStaff(request, storename):
     username = request.user.username
-    service = Service()
+    service = Service(sendNotification)
     if 'removeAccessButton' in request.POST:
         requester_id = username
         to_remove_id = request.POST.get('to_remove_id')
@@ -220,7 +222,7 @@ def viewStoreStaff(request, storename):
 
 
 def viewAllStores(request):
-    service = Service()
+    service = Service(sendNotification)
     storesInfo = service.getStoresBasicInfo()
     string_data = storesInfo.getReturnValue()
     storesInfoDict = ast.literal_eval(str(string_data))
@@ -228,7 +230,7 @@ def viewAllStores(request):
 
 
 def store_specific(request, storename):
-    service = Service()
+    service = Service(sendNotification)
     username = request.user.username
     if request.user.is_authenticated:
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
@@ -297,7 +299,7 @@ def store_specific(request, storename):
 
 # def openStore(request, storename):
 #     if request.method == 'POST' and request.user.is_authenticated:
-#         service = Service()
+#         service = Service(sendNotification)
 #         actionRes = service.openStore(request.user.username, storename)
 #         if actionRes.getStatus():
 #             messages.success(request, ("Store is now open."))
@@ -310,7 +312,7 @@ def store_specific(request, storename):
 
 # def closeStore(request, storename):
 #     if request.method == 'POST' and request.user.is_authenticated:
-#         service = Service()
+#         service = Service(sendNotification)
 #         actionRes = service.closeStore(request.user.username, storename)
 #         if actionRes.getStatus():
 #             messages.success(request, ("Store is now closed."))
@@ -362,7 +364,7 @@ def addNewDiscount(request, storename):  # Discounts
         levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
 
         if 'submitDiscount' in request.POST:
-            service = Service()
+            service = Service(sendNotification)
             if discountTypeInt == 1:
                 actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
                 if actionRes.getStatus():
@@ -432,7 +434,7 @@ def addNewPurchasePolicy(request, storename):  # Policies
         levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
 
         if 'submitPolicy' in request.POST:
-            service = Service()
+            service = Service(sendNotification)
             if purchase_policy_int == 1:
                 policyRulesData = request.session['policyRulesData']
                 print(f"policyRulesData: {policyRulesData}")
@@ -488,7 +490,7 @@ def addNewPurchasePolicy(request, storename):  # Policies
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
         newStoreName = request.POST.get('storeName')
-        service = Service()
+        service = Service(sendNotification)
         res = service.createStore(request.user.username, newStoreName)
         if res.getStatus():
             messages.success(request, ("A new store has been created successfully"))
@@ -502,7 +504,7 @@ def createStore(request):
 
 
 def nominateUser(request, storename):
-    service = Service()
+    service = Service(sendNotification)
     username = request.user.username
     permissionName = 'ModifyPermissions'
 
@@ -560,6 +562,7 @@ def addNewProduct(request, storename):
                 service = Service()
                 actionRes = service.addNewProductToStore(request.user.username, storename, productname, category,
                                                          quantity, price)
+
                 if actionRes.getStatus():
                     messages.success(request, ("A new Product has been added to the store"))
                     return redirect('mainApp:store_specific', storename=storename)
@@ -576,7 +579,7 @@ def addNewProduct(request, storename):
 
 
 def viewDiscounts(request, storename):
-    service = Service()
+    service = Service(sendNotification)
     permissionName = 'Discounts'
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
@@ -604,7 +607,7 @@ def adminPage(request):
 def viewOnlineUsers(request):
     if request.method == 'POST':
         if request.user.is_superuser:
-            service = Service()
+            service = Service(sendNotification)
             resOnline = service.getAllOnlineMembers(request.user.username)
             resOffline = service.getAllOfflineMembers(request.user.username)
             if resOnline.getStatus() and resOffline.getStatus():
@@ -633,6 +636,7 @@ def inbox(request):
     service = Service()
     # all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
     # pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
+
     all_user_messages = service.getAllMessagesReceived(request.user.username)
     if all_user_messages.getStatus():
         all_user_notifications = service.getAllNotifications(request.user.username)
@@ -654,7 +658,7 @@ def inbox(request):
 
 def send_message(request):
     if request.method == 'POST':
-        service = Service()
+        service = Service(sendNotification)
         form = UserMessageform(request.POST, request.FILES)
         if form.is_valid():
             receiver_username = form.cleaned_data['receiver']
@@ -665,14 +669,9 @@ def send_message(request):
                 creation_date = datetime.now()
                 file = form.cleaned_data['file']
                 print(file)
-                message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content,
-                                                       creation_date, file)
+                message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date,file)
                 if message_res.getStatus():
-                    recipent = User.objects.get(username=receiver_username)
-                    m_id = message_res.getReturnValue()['id']
-                    notify.send(request.user, recipient=recipent,
-                                verb=f'{request.user.username} has sent you a message!', message_id=m_id,
-                                type='message')
+
                     messages.success(request, "Message sent successfully")
                     return HttpResponseRedirect('/inbox')
                 else:
@@ -691,7 +690,7 @@ def send_message(request):
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_message(request, usermessage_id):
-    service = Service()
+    service = Service(sendNotification)
     res = service.deleteMessage(request.user.username, usermessage_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')
@@ -706,7 +705,7 @@ def delete_message(request, usermessage_id):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_as_read(request, usermessage_id):
     # message = UserMessage.objects.get(id=usermessage_id)
-    # service = Service()
+    # service = Service(sendNotification)
     # username = request.POST.get('username', None)
     # res = service.readMessage(username, usermessage_id)
     # if res.getStatus():
@@ -714,6 +713,7 @@ def mark_as_read(request, usermessage_id):
     # message.save()
     # messages.success(request, "Message marked as read successfully")
     service = Service()
+
     res = service.readMessage(request.user.username, usermessage_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')[0]
@@ -728,7 +728,7 @@ def mark_as_read(request, usermessage_id):
 def check_username(request):
     if request.method == 'POST':
         username = request.POST.get('username', None)
-        service = Service()
+        service = Service(sendNotification)
         res = service.checkUsernameExistence(username)
         if res.getStatus():
             return JsonResponse({'status': True})
@@ -739,7 +739,7 @@ def check_username(request):
 # ---------------------------------------------------------cart functionality---------------------------------------------------------#
 def cart(request):
     if request.user.is_authenticated:
-        service = Service()
+        service = Service(sendNotification)
         res = service.getCart(request.user.username)
         if res.getStatus():
             cart = res.getReturnValue()
@@ -775,7 +775,7 @@ def calculate_total_price(products):
 def remove_basket_product(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
-            service = Service()
+            service = Service(sendNotification)
             form = BasketRemoveProductForm(request.POST)
             if form.is_valid():
                 store = form.cleaned_data['store_name']
@@ -803,7 +803,7 @@ def remove_basket_product(request):
 def edit_basket_product(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
-            service = Service()
+            service = Service(sendNotification)
             form = BasketEditProductForm(request.POST)
             if form.is_valid():
                 store = form.cleaned_data['store_name']
@@ -832,7 +832,7 @@ def edit_basket_product(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def checkoutpage(request):
     if request.user.is_authenticated:
-        service = Service()
+        service = Service(sendNotification)
         res = service.getCart(request.user.username)
         if res.getStatus():
             cart = res.getReturnValue()
@@ -866,7 +866,7 @@ def checkoutpage(request):
 def checkout(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
-            service = Service()
+            service = Service(sendNotification)
             form = CheckoutForm(request.POST)
             if form.is_valid():
                 res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),
@@ -875,15 +875,8 @@ def checkout(request):
                                            form.cleaned_data['address'], form.cleaned_data['city'],
                                            form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
-                    member_notification_id = ast.literal_eval(str(res.getReturnValue())).get('member_message_id')
-                    sendNotification(request.user.username, int(member_notification_id), 'notification',
-                                     "Order placed successfully! thank you for shopping with us")
-                    founders_notification_id = ast.literal_eval(str(res.getReturnValue())).get('founders_message_ids')
-                    founder_usernames = ast.literal_eval(str(res.getReturnValue())).get('founders_usernames')
-                    for i in range(len(founders_notification_id)):
-                        sendNotification(founder_usernames[i], int(founders_notification_id[i]), 'notification',
-                                         "An order has been placed in your store!")
-                    messages.success(request, "Order placed successfully! thank you for shopping with us")
+                    messages.success(request,"Order placed successfully! thank you for shopping with us")
+
                     return redirect('mainApp:mainpage')
                 else:
                     messages.error(request, "Error placing order res - " + str(res.getReturnValue()))
@@ -903,7 +896,7 @@ def checkout(request):
 def add_product_to_cart(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
-            service = Service()
+            service = Service(sendNotification)
             form = BasketAddProductForm(request.POST)
             if form.is_valid():
                 store = form.cleaned_data['store_name']
@@ -933,7 +926,7 @@ def add_product_to_cart(request):
 
 def searchpage(request):
     if request.method == "POST":
-        service = Service()
+        service = Service(sendNotification)
         searched = request.POST['searched']
         res = service.productSearchByName(searched, request.user.username)
         if res.getStatus():
@@ -1032,7 +1025,7 @@ def fixDiscountRulesData(rulesData):
 
 def permissionCheck(username, storename, permissionName):
     if username == "": return False
-    service = Service()
+    service = Service(sendNotification)
     permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
     permissions: dict = ast.literal_eval(str(permissions))  # already a dict
     if permissionName in permissions.keys():
@@ -1051,6 +1044,7 @@ def createGuestIfNeeded(request):
     # 2. login to that user
     else:
         service = Service()
+
         actionRes = service.loginAsGuest()
         guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
 
@@ -1076,7 +1070,7 @@ def createGuestIfNeeded(request):
 def guestToUser(request, username, password):
     guestusername = request.user.username
     if request.user.is_authenticated and request.session['guest']:
-        service = Service()
+        service = Service(sendNotification)
         guestnumber = get_number_at_end(guestusername)
         actionRes = service.logInFromGuestToMember(guestnumber, username, password)  # 1.
         if actionRes.getStatus():
@@ -1102,3 +1096,5 @@ def get_number_at_end(string):
         else:
             break
     return int(number)
+
+#---------------------------------------------------------------------------------------------------------------------------------------#
