@@ -8,7 +8,6 @@ from ProjectCode.Domain.ExternalServices.MessageObjects.Notfication import Notif
 class MessageController:
     _instance = None
 
-
     def __new__(cls, send_notification_call=None, *args, **kwargs):
 
         if cls._instance is None:
@@ -16,13 +15,13 @@ class MessageController:
             cls._inbox_messages = {}  # message_id to message
             cls._sent_messages = {}  # list of sent messages
             cls._inbox_notifications = {}  # message_id to message
-            cls._sendNotification = sendNotification
             cls.observers = []  # receiver_id to observer
             cls.msgCounter = 0
             cls.notificationCounter = 0
             cls.send_notification_call = send_notification_call #receiver_id, notification_id, type, subject:
                                                                 # sendNotification(receiver_id,notification_id,type,
-                                                                                                            # subject)
+                                                                                                            # subject)                                                                                                       
+        return cls._instance
 
 
     def send_message(self, requester_id, receiver_id, subject, content, creation_date, file=None):
@@ -60,14 +59,14 @@ class MessageController:
         return [message.toJson() for message in self._inbox_messages[user_id]]
 
     def send_notification(self, receiver_id, subject, content, creation_date):
-        message_id = self.notificationCounter
+        notification_id = self.notificationCounter
         self.notificationCounter += 1
         message = Notification(notification_id, "AriExpress", receiver_id, subject, content, creation_date)
 
         if receiver_id not in self._inbox_notifications.keys():
             self._inbox_notifications[receiver_id] = []
         self._inbox_notifications[receiver_id].append(message)
-        self.send_notification_call(receiver_id, message_id, "notification", "You got a new notification: " + subject)
+        self.send_notification_call(receiver_id, notification_id, "notification", "You got a new notification: " + subject)
 
 
         return notification_id

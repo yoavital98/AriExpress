@@ -171,23 +171,27 @@ class Cart:
                 supply_id = supply_service.dispatch_supply(card_user_full_name, address, city, country, zipcode)
             except Exception as e:
                 raise Exception(e)
-            message_header = "Regular Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(
-                supply_id)
+            message_header = "Regular Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
+            buyer_message_header = "Regular Purchase Completed. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
             for basket in self.get_baskets().values():  # purchase all the baskets
                 basket.purchaseBasket()
-            if is_member:
-                transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
-                                                          stores_products_dict, overall_price)
-                member_msg_id = MessageController().send_notification(self.username, message_header,purchaseReports, datetime.now())
+           
             purchase_reports_json = []
             index = 0
             for purchase in purchaseReports.values():  # all the baskets
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name,
                                                            purchase.getStorename(), purchase.getProducts(),
                                                            purchase.getTotalBasketPayment())
-                founder_message_id = MessageController().send_notification(founders_usernames[index], message_header, purchase, datetime.now())
+                MessageController().send_notification(founders_usernames[index], message_header, purchase.toJson(), datetime.now())
                 index += 1
                 purchase_reports_json.append(purchase.toJson())
+
+            if is_member:
+                transaction_history.addNewUserTransaction(transaction_id, supply_id, self.username,
+                                                            stores_products_dict, overall_price)
+                message = "Thank you for buying in AriExpress! Your transaction id is: " + str(transaction_id) + " and your supply id is: " + str(supply_id)+ "\n" + "Your purchase reports are: \n"
+                purchaseReportsString = '\n'.join([str(rep) for rep in purchase_reports_json])
+                MessageController().send_message("AriExpress", self.username, buyer_message_header,message+purchaseReportsString, datetime.now())
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {

@@ -48,6 +48,7 @@ class Service:
             if config_file is not None:
                 load_config(config_file)
         return cls._instance
+    
 
     # ------  logger  ------ # < TODO cuurently without toJson
     def getInfoLogs(self):
