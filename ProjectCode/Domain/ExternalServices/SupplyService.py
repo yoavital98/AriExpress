@@ -4,10 +4,12 @@ import requests
 class SupplyService:
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, paymentAddress):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             # Add any initialization code here
+            cls._instance.paymentAddress = str(paymentAddress)
+
         return cls._instance
 
     def perform_handshake(self):
@@ -15,7 +17,7 @@ class SupplyService:
             "action_type": "handshake"
         }
 
-        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+        response = requests.post(self.paymentAddress, data=post_data)
 
         if response.status_code == 200:
             return True
@@ -32,7 +34,7 @@ class SupplyService:
             "zip": zipcode
         }
 
-        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+        response = requests.post(self.paymentAddress, data=post_data)
 
         if response.status_code == 200:
             transaction_id = int(response.text)
@@ -49,7 +51,7 @@ class SupplyService:
             "transaction_id": str(transaction_id)
         }
 
-        response = requests.post("https://php-server-try.000webhostapp.com/", data=post_data)
+        response = requests.post(self.paymentAddress, data=post_data)
 
         if response.status_code == 200:
             cancellation_result = int(response.text)

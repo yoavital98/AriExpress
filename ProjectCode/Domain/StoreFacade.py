@@ -30,7 +30,7 @@ from ProjectCode.Domain.Repository.UserTransactionRepository import UserTransact
 
 
 class StoreFacade:
-    def __init__(self):
+    def __init__(self, config):
         # Store Data
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = TypedDict(str, Admin)  # dict of admins
@@ -38,26 +38,27 @@ class StoreFacade:
         self.onlineGuests = TypedDict(str, Guest)  # dict of users
         self.stores = TypedDict(str, Store)  # dict of stores
         self.online_members = TypedDict(str, Member)  # dict from username to online members
-        self.banned_members = TypedDict(str,
-                                        Member)  # dict from username to banned users Todo opt: special home page for banned users
+        self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
         self.nextEntranceID = 0  # guest ID counter
-
         self.bid_id_counter = 0  # bid counter
+
         # Admin
-        first_admin: Admin = Admin("admin", "12341234", "a@a.com")
-        # first_admin.logInAsAdmin() # added by rubin to prevent deadlock
-        self.admins["admin"] = first_admin
+        self.loadConfigAdmins(config["Admins"])
+
         # load data
         self.loadData()
 
         # handshake with supply service and payment service
-        self.supply_service = SupplyService()
-        self.payment_service = PaymentService()
+        self.supply_service = SupplyService(config["SupplyService"])
+        self.payment_service = PaymentService(config["PaymentService"])
         self.supply_service.perform_handshake()
         self.payment_service.perform_handshake()
+
+        # database config init
+        # TODO: connect to db # ------------------- TODO ------------------- #
 
         # REPOSITORY FIELDS - TO BE REPLACED
         #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
@@ -72,6 +73,12 @@ class StoreFacade:
     # ------  System  ------ #
     def loadData(self):  # todo complete
         pass
+
+    def loadConfigAdmins(self, admins : dict):
+        for name, pwd in admins.items():
+            new_admin: Admin = Admin(name, pwd, "admin@admin.com")
+            self.admins[name] = new_admin
+
 
     # ------  users  ------ #
     #  Guests
