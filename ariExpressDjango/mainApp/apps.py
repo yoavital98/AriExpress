@@ -15,7 +15,7 @@ class MainappConfig(AppConfig):
         # load_file = "../config_purchaseCart.json"
         # load_file = "../config_withDiscounts.json"
 
-        service = Service(config, load_file)
+        service = Service(load_file, config)
         # service = Service()
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only

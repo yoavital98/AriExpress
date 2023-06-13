@@ -54,9 +54,11 @@ def loadConfigInit(load_file):
 class Service:
     _instance = None
 
-    def __new__(cls, config_file, load_file=None):
+    def __new__(cls, load_file=None, config_file=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+            if config_file is None:
+                raise Exception("Config file hasn't been loaded")
             configFileDict = loadConfigInit(config_file)
             cls.store_facade = StoreFacade(configFileDict)
             # TODO check if all functions (new ones) got logging messages
