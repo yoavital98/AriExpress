@@ -33,7 +33,10 @@ class AccessRepository(Repository):
             raise Exception("AccessRepository: __delitem__ failed: " + str(e))
 
     def __contains__(self, item):
-        pass
+        try:
+            return self.contains(item)
+        except Exception as e:
+            return False
 
 
     def get(self, pk=None):
@@ -56,14 +59,14 @@ class AccessRepository(Repository):
             access_list = []
             for access in store_entry.accesses:
                 user_entry = MemberModel.get(MemberModel.user_name == access.user.user_name)
-                user_dom = Member(-1, user_entry.user_name, user_entry.password, user_entry.email)
+                user_dom = Member(user_entry.entrance_id, user_entry.user_name, user_entry.password, user_entry.email)
                 access_list.append(self.__createDomainObject(access, store_dom, user_dom))
             return access_list
         else:
             store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
             user_entry = MemberModel.get(MemberModel.user_name == pk)
             access_entry = AccessModel.get(AccessModel.store == store_entry, AccessModel.user == user_entry)
-            return self.__createDomainObject(access_entry, Store(self.store_name), Member(-1, user_entry.user_name, user_entry.password, user_entry.email))
+            return self.__createDomainObject(access_entry, Store(self.store_name), Member(user_entry.entrance_id, user_entry.user_name, user_entry.password, user_entry.email))
 
     def getByUsername(self, pk=None):
         from ProjectCode.Domain.MarketObjects.Store import Store
@@ -71,7 +74,7 @@ class AccessRepository(Repository):
 
         if pk is None:
             user_entry = MemberModel.get(MemberModel.user_name == self.username)
-            member_dom = Member(-1, user_entry.user_name, user_entry.password, user_entry.email)
+            member_dom = Member(user_entry.entrance_id, user_entry.user_name, user_entry.password, user_entry.email)
             access_list = []
             for access in user_entry.accesses:
                 store_dom = Store(access.store.store_name)
@@ -83,7 +86,7 @@ class AccessRepository(Repository):
             access_entry = AccessModel.get_or_none(AccessModel.store == store_entry, AccessModel.user == user_entry)
             if user_entry is None or store_entry is None or access_entry is None:
                 return None
-            return self.__createDomainObject(access_entry, Store(pk), Member(-1, user_entry.user_name, user_entry.password, user_entry.email))
+            return self.__createDomainObject(access_entry, Store(pk), Member(user_entry.entrance_id, user_entry.user_name, user_entry.password, user_entry.email))
 
     def __createDomainObject(self, access_entry, store_dom, user_dom):
         access_dom = Access(store_dom, user_dom, access_entry.nominated_by_username)
@@ -123,15 +126,19 @@ class AccessRepository(Repository):
         access_entry.access_state.delete_instance()
         access_entry.delete_instance()
 
-
+    def contains(self, item):
+        return item in self.keys()
 
     def keys(self):
-        if self.store_name is None: #-> then return list of storenames
-            return [ StoreModel.get_by_id(access.store).store_name for access in MemberModel.get(MemberModel.user_name == self.username).accesses]
-        else: #-> then return list of usernames
-            store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
-            access_query = AccessModel.select().where(AccessModel.store == store_entry)
-            return [ MemberModel.get_by_id(access.user).user_name for access in access_query]
+        try:
+            if self.store_name is None: #-> then return list of storenames
+                return [ StoreModel.get_by_id(access.store).store_name for access in MemberModel.get(MemberModel.user_name == self.username).accesses]
+            else: #-> then return list of usernames
+                store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
+                access_query = AccessModel.select().where(AccessModel.store == store_entry)
+                return [ MemberModel.get_by_id(access.user).user_name for access in access_query]
+        except Exception as e:
+            return []
 
 
     def values(self):

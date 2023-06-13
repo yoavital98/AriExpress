@@ -94,7 +94,7 @@ class Basket:
         return self.store.calculateBasketPrice(self.products)
 
     def clearProducts(self):
-        self.products.clear()
+        self.products.remove()
 
     def clearBidFromBasket(self, bid_id):
         del self.bids[bid_id]

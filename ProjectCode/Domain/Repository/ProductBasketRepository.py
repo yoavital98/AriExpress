@@ -37,6 +37,12 @@ class ProductBasketRepository(Repository):
         except Exception as e:
             raise Exception("BasketsRepository: __delitem__ failed: " + str(e))
 
+    def __len__(self):
+        try:
+            return len(self.keys())
+        except Exception as e:
+            raise Exception("BasketsRepository: __len__ failed: " + str(e))
+
     def get(self, pk=None):
         try:
             if pk is None:
@@ -86,7 +92,10 @@ class ProductBasketRepository(Repository):
                               product_model=product_query)
         return product_data
 
-    def remove(self, pk):
+    def remove(self, pk=None):
+        if pk is None: #remove all
+            self.model.delete().where(self.model.basket == BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)).execute()
+            return True
         basket_entry = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)
         product_basket_entry = self.model.get(self.model.product_id == pk, self.model.basket == basket_entry)
         product_basket_entry.delete_instance()
@@ -94,8 +103,11 @@ class ProductBasketRepository(Repository):
 
 
     def keys(self):
-        query = self.model.select().where(self.model.basket == BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name))
-        return [p.product_id for p in query]
+        try:
+            query = self.model.select().where(self.model.basket == BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name))
+            return [p.product_id for p in query]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()

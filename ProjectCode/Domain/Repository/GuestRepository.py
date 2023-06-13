@@ -55,7 +55,10 @@ class GuestRepository(Repository):
         user_entry.delete_instance()
 
     def keys(self):
-        return [guest.entrance_id for guest in GuestModel.select()]
+        try:
+            return [guest.entrance_id for guest in GuestModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()

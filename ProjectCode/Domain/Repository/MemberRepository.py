@@ -63,7 +63,7 @@ class MemberRepository(Repository):
             return None
         elif self.online and not entry.logged_in:
             return None
-        return Member(-1, entry.user_name, entry.password, entry.email)
+        return Member(entry.entrance_id, entry.user_name, entry.password, entry.email)
 
     def add(self, member: Member):
         member_entry = self.model.get_or_none(self.model.user_name == member.get_username())
@@ -75,10 +75,11 @@ class MemberRepository(Repository):
                 member_entry.logged_in = True
             member_entry.password = member.get_password()
             member_entry.email = member.get_email()
+            member_entry.entrance_id = member.get_entrance_id()
             member_entry.save()
         else:
             #create
-            member_entry = self.model.create(user_name=member.get_username(), password=member.get_password() ,email=member.get_email())
+            member_entry = self.model.create(user_name=member.get_username(), password=member.get_password() ,email=member.get_email(), entrance_id=member.get_entrance_id())
         return member
 
     def remove(self, pk):
@@ -94,11 +95,14 @@ class MemberRepository(Repository):
         return True
 
     def keys(self):
-        if self.online:
-            return [member.user_name for member in MemberModel.select().where(MemberModel.logged_in == True)]
-        elif self.banned:
-            return [member.user_name for member in MemberModel.select().where(MemberModel.banned == True)]
-        return [member.user_name for member in MemberModel.select()]
+        try:
+            if self.online:
+                return [member.user_name for member in MemberModel.select().where(MemberModel.logged_in == True)]
+            elif self.banned:
+                return [member.user_name for member in MemberModel.select().where(MemberModel.banned == True)]
+            return [member.user_name for member in MemberModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()

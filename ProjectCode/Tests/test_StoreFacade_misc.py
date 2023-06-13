@@ -24,7 +24,8 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 class TestStoreFacade(TestCase):
 
     def setUp(self):
-        self.store_facade = StoreFacade()
+        send_notification_lambda = lambda self, receiver_id, notification_id, type, subject: True
+        self.store_facade = StoreFacade(send_notification_call=send_notification_lambda)
         self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
         self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
         self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
@@ -39,6 +40,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.logOut("Feliks")
         self.store_facade.onlineGuests.clear()
         self.store_facade.nextEntranceID = 0
+
 
     # __getAdmin
     def test_getAdmin_success(self):
@@ -691,6 +693,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             self.store_facade.closeStore("Feliks", "AriExpress")
             # check if store is still active
+        self.my_store = self.store_facade.stores.get("AriExpress")
         self.assertFalse(self.my_store.active)
 
     # closeStoreAsAdmin
@@ -1312,7 +1315,6 @@ class TestStoreFacade(TestCase):
         # check that message was sent to Amiel and to AriExpress
         amiel_transaction_list: list = transaction_history.get_User_Transactions("Amiel")
         yuval_transaction_list: list = transaction_history.get_Store_Transactions("AriExpress")
-        self.assertEqual()
         yuval_cart = self.store_facade.getCart("YuvalMelamed")
         with self.assertRaises(Exception):
             self.store_facade.purchaseCart("YuvalMelamed", "4580202046783956", "12/26", "Yuval Melamed", "554",
@@ -1648,8 +1650,8 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
         self.store_facade.addToBasket("Amiel", "AriExpress",
                                       1, 9)
-        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
-                                       "some_address")
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26","Amiel Saad", "555", "123456789",
+                                       "some_address", "be'er sheva", "Israel", "1234567")
         transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Feliks", "AriExpress")
         # integrity
         self.assertTrue(len(transaction_history_of_ariexpress) == 1)
@@ -1669,8 +1671,8 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
         self.store_facade.addToBasket("Amiel", "AriExpress",
                                       1, 9)
-        self.store_facade.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
-                                       "some_address")
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                       "some_address", "be'er sheva", "Israel", "1234567")
         transaction_history_of_ariexpress = self.store_facade.getStorePurchaseHistory("Ari", "AriExpress")
         self.assertTrue(len(transaction_history_of_ariexpress) == 1)
         transaction: StoreTransaction = transaction_history_of_ariexpress[0]
@@ -1854,18 +1856,18 @@ class TestStoreFacade(TestCase):
     def test_logOutAsAdmin_success(self):
         ari: Admin = self.store_facade.admins.get("Ari")
         self.store_facade.logInAsMember("Ari", "password123")
-        self.assertTrue(ari.get_logged())
+        self.assertTrue(self.store_facade.admins.get("Ari").get_logged())
         self.store_facade.logOutAsAdmin("Ari")
-        self.assertFalse(ari.get_logged())
+        self.assertFalse(self.store_facade.admins.get("Ari").get_logged())
 
     def test_logOutAsAdmin_userNotLoggedIn_fail(self):
         ari: Admin = self.store_facade.admins.get("Ari")
         self.store_facade.logInAsMember("Ari", "password123")
-        self.assertTrue(ari.get_logged())
+        self.assertTrue(self.store_facade.admins.get("Ari").get_logged())
         self.store_facade.logOutAsAdmin("Ari")
         with self.assertRaises(Exception):
             self.store_facade.logOutAsAdmin("Ari")
-        self.assertFalse(ari.get_logged())
+        self.assertFalse(self.store_facade.admins.get("Ari").get_logged())
 
     # openStore
     def test_openStore_success(self):
@@ -1884,12 +1886,14 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Feliks", "password456")
         self.assertTrue(self.my_store.active)
         self.store_facade.closeStore("Feliks", "AriExpress")
+        self.my_store = self.store_facade.stores.get("AriExpress")
         self.assertFalse(self.my_store.active)
         Feliks_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
         self.store_facade.logOut("Feliks")
         with self.assertRaises(Exception):
             self.store_facade.openStore("Feliks", "AriExpress")
         # integrity
+        self.my_store = self.store_facade.stores.get("AriExpress")
         self.assertFalse(self.my_store.active)
         Feliks_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
         self.assertEqual(Feliks_Messages_count_before, Feliks_Messages_count_after, "Feliks shouldn't be notified")
@@ -1898,10 +1902,12 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Feliks", "password456")
         self.assertTrue(self.my_store.active)
         self.store_facade.closeStore("Feliks", "AriExpress")
+        self.my_store = self.store_facade.stores.get("AriExpress")
         self.assertFalse(self.my_store.active)
         with self.assertRaises(Exception):
             self.store_facade.openStore("Feliks", "")
         # integrity
+        self.my_store = self.store_facade.stores.get("AriExpress")
         self.assertFalse(self.my_store.active)
 
     # participateInLottery
@@ -2269,7 +2275,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Feliks", "password456")
         # item with id 1
         prods = self.my_store.getProducts("Feliks")
-        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "Oreo", 10, 10, "Milk")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks","AriExpress", "Oreo", 10, 10, "Milk")
         self.assertTrue(prods.keys().__contains__(1))
         self.store_facade.removeProductFromStore("Feliks", "AriExpress", 1)
         self.assertFalse(prods.keys().__contains__(1))

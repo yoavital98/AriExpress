@@ -54,10 +54,16 @@ class StoreRepository(Repository):
         store_entry = StoreModel.get(StoreModel.store_name == pk)
         for product in store_entry.products:
             product.delete_instance()
+        for access in store_entry.accesses:
+            access.access_state.delete_instance()
+            access.delete_instance()
         store_entry.delete_instance()
 
     def keys(self):
-        return [store.store_name for store in StoreModel.select()]
+        try:
+            return [store.store_name for store in StoreModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()

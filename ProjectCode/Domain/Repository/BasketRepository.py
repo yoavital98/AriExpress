@@ -34,13 +34,13 @@ class BasketRepository(Repository):
         try:
             return self.contains(item)
         except Exception as e:
-            raise Exception("BasketsRepository: __delitem__ failed: " + str(e))
+            return False
 
     def get(self, pk=None):
         try:
             if pk is None:
                 basket_list = []
-                for basket_entry in self.model.select():
+                for basket_entry in self.model.select().where(BasketModel.user_name==self.user_name):
                     basket = self.__createDomainObject(basket_entry)
                     basket_list.append(basket)
                 return basket_list
@@ -89,7 +89,10 @@ class BasketRepository(Repository):
 
 
     def keys(self):
-        return [basket.store.store_name for basket in BasketModel.select()]
+        try:
+            return [basket.store.store_name for basket in BasketModel.select().where(BasketModel.user_name == self.user_name)]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()
@@ -99,5 +102,4 @@ class BasketRepository(Repository):
             yield key, value
 
     def contains(self, store_name):
-        query = self.model.select().where(self.model.store.store_name == store_name)
-        return query.exists()
+        return store_name in self.keys()

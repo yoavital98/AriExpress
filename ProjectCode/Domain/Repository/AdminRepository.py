@@ -65,7 +65,10 @@ class AdminRepository(Repository):
         user_entry.delete_instance()
 
     def keys(self):
-        return [admin.user_name for admin in AdminModel.select()]
+        try:
+            return [admin.user_name for admin in AdminModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()

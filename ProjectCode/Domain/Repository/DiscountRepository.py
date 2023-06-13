@@ -77,7 +77,10 @@ class DiscountRepository(Repository):
         return True
 
     def keys(self):
-        return [discount.discount_id for discount in DiscountModel.select()]
+        try:
+            return [discount.discount_id for discount in DiscountModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()

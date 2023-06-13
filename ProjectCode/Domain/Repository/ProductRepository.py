@@ -65,12 +65,13 @@ class ProductRepository(Repository):
 
     def remove(self, pk):
         model = ProductModel.get(ProductModel.product_id == pk)
-        store = StoreModel.get(StoreModel.store_name == self.store_name)
-        store.products.remove(model)
         model.delete_instance()
 
     def keys(self):
-        return [ product.product_id for product in StoreModel.get(StoreModel.store_name == self.store_name).products]
+        try:
+            return [product.product_id for product in StoreModel.get(StoreModel.store_name == self.store_name).products]
+        except Exception as e:
+            return []
 
     def contains(self, item):
         return item in self.keys()

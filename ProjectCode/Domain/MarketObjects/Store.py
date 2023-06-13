@@ -72,6 +72,7 @@ class Store:
         if status == self.active:
             raise Exception("store is already open or closed")
         self.active = status
+        self.update_fields()
 
     #-------------Permissions----------------#
 
@@ -336,6 +337,7 @@ class Store:
                 raise Exception("No such product exists")
             cur_product.quantity -= product_quantity
             overall_price += cur_product.price * product_quantity
+            self.__products[product_id] = cur_product
 
         for product_id, product_quantity in new_product_dict.items():
             cur_product: Product = self.__products[product_id]

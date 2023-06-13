@@ -70,15 +70,15 @@ class StoreFacade:
         db = SqliteDatabase('database.db')
         db.connect()
         model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                        ProductBasketModel, DiscountModel, AdminModel, GuestModel]
+                       ProductBasketModel, DiscountModel, AdminModel, GuestModel]
         for m in model_list:
-            m.delete().execute()
+           m.delete().execute()
 
         # db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-        #                 ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        #                  ProductBasketModel, DiscountModel, AdminModel, GuestModel])
         # db.create_tables(
-        #     [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-        #      ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        #      [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #       ProductBasketModel, DiscountModel, AdminModel, GuestModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
@@ -109,11 +109,6 @@ class StoreFacade:
         self.message_controller = MessageController(send_notification_call)
 
         # REPOSITORY FIELDS - TO BE REPLACED
-        #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
-        # self.members_test = MemberRepository()
-        # self.stores_test = StoreRepository()
-        # self.admins_test = AdminRepository()
-        # self.onlineGuests_test = GuestRepository()
         self.members_test = MemberRepository()
         self.stores_test = StoreRepository()
         self.admins_test = AdminRepository()
@@ -583,7 +578,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         removed_usernames = cur_store.removeAccess(to_remove_username, requester_username)
         MessageController().send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
-                                            + store_name + " have been removed", datetime.now(), None)
+                                            + store_name + " have been removed", datetime.now())
         return removed_usernames
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
@@ -802,6 +797,7 @@ class StoreFacade:
             if not existing_admin.logged_In:
                 raise Exception("Admin is not logged in")
             existing_admin.logOffAsAdmin()
+            self.admins[user_name] = existing_admin
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
         pass  # no messanger this version

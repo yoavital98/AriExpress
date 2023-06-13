@@ -28,6 +28,11 @@ class Cart:
         # REPOSITORY FIELD --- TO BE REPLACED
         # self.basket_test = BasketRepository(username)
 
+    def __eq__(self, other):
+        if isinstance(other, Cart):
+            return self.username == other.username
+        return False
+
     def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):
             return self.baskets[storename]
@@ -35,6 +40,7 @@ class Cart:
             raise Exception("Basket does not exists")
 
     def add_Product(self, username, store, product_id, product, quantity):
+        obj = self.baskets.keys()
         if not self.baskets.keys().__contains__(store.get_store_name()):
             basket_to_add = Basket(str(username), store)
             self.baskets[store.get_store_name()] = basket_to_add
