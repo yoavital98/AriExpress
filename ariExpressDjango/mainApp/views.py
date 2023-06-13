@@ -150,6 +150,7 @@ def registerPage(request):
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
+                        messages.success(request, (f"{username} Registered successfully"))
                         return redirect('mainApp:mainpage')
                     else:
                         User.objects.filter(username=username).delete()  # remove the created user from django
