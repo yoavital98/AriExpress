@@ -134,8 +134,7 @@ def registerPage(request):
 
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session[
-            'guest']:  # user (guest) is logged in                                                       #
+        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in 
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
