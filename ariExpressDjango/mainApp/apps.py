@@ -6,15 +6,17 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
-
+        load_file = "../load.json"
+        config = "../default_config.json"
+        # load_file = "../config_purchaseCart.json"
+        # load_file = "../config_withDiscounts.json"
+        
         from ProjectCode.Service.Service import Service
         from .views import send_notification_lambda
-        config_file = "../config.json"
-        # config_file = "../config_purchaseCart.json"
-        # config_file = "../config_withDiscounts.json"
+        
+        service = Service(load_file, config, send_notification_call = send_notification_lambda)
+        # service = Service()
 
-        service = Service(config_file, send_notification_call = send_notification_lambda)
-        #service = Service(send_notification_call = send_notification_lambda)
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only
         # service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
@@ -26,9 +28,9 @@ class MainappConfig(AppConfig):
         # service.logOut("bbb")
 
 
-#         config_file = "../config_multipleStaff.json"
-# #         config_file = "../config_purchaseCart.json"
-#         service = Service(config_file)
+#         load_file = "../config_multipleStaff.json"
+# #         load_file = "../config_purchaseCart.json"
+#         service = Service(load_file)
 
 
 
