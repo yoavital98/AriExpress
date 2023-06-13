@@ -49,8 +49,8 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
               <th style = "width: 20%;">Actions</th>
           </tr>
 
-          {% if products.items %}
-            {% for product_id, product in products.items %}
+          {% if products %}
+            {% for  product in products %}
               <tr style=" font-size:16px;">
                   <td style="text-align:center;">{{ product.product_id }}</td>
                   <td style="text-align:center;">{{ product.name }}</td>
