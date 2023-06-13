@@ -114,7 +114,7 @@ class Store:
         if requester_access is None or to_be_removed_access is None:
             raise Exception("No such access exists")
         if requester_access.canModifyPermissions() and requester_username == to_be_removed_access.get_nominated_by_username():
-            requester_access.get_nominations().pop(to_be_removed_username)
+            requester_access.get_nominations().remove(to_be_removed_username)
             removed_usernames = self.__removeAllAccesses(to_be_removed_access)
             return removed_usernames
         else:
@@ -606,17 +606,23 @@ class Store:
             else:
                 self.active = False
                 self.closed_by_admin = True
+            self.update_fields()
 
+    def update_fields(self):
+        store_entry = StoreModel.get_by_id(self.__store_name)
+        store_entry.closed_by_admin = self.closed_by_admin
+        store_entry.active = self.active
+        store_entry.save()
 
-    def close_store_by_admin(self):
-        if self.closed_by_admin:
-            raise Exception("Store already closed by admin")
-        else:
-            if not self.closed_by_admin and not self.active:
-                self.active = False
-            else:
-                self.active = False
-                self.closed_by_admin = True
+    # def close_store_by_admin(self):
+    #     if self.closed_by_admin:
+    #         raise Exception("Store already closed by admin")
+    #     else:
+    #         if not self.closed_by_admin and not self.active:
+    #             self.active = False
+    #         else:
+    #             self.active = False
+    #             self.closed_by_admin = True
     def checkValue(self, value):
         if isinstance(value,int):
             if value <= 0:

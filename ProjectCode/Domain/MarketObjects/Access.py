@@ -117,6 +117,8 @@ class Access:
         return self.nominated_by_username
 
     def get_nominations(self):
+        if '' in self.nominations:
+            return self.nominations[1:]
         return self.nominations
 
     def get_access_state_name(self):

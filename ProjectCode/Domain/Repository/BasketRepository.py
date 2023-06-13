@@ -15,10 +15,8 @@ class BasketRepository(Repository):
         self.user_name = user_name
 
     def __getitem__(self, store_name):
-        try:
-            return self.get(store_name)
-        except Exception as e:
-            raise Exception("BasketsRepository: __getitem__ failed: " + str(e))
+        return self.get(store_name)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -39,16 +37,19 @@ class BasketRepository(Repository):
             raise Exception("BasketsRepository: __delitem__ failed: " + str(e))
 
     def get(self, pk=None):
-        if pk is None:
-            basket_list = []
-            for basket_entry in self.model.select():
+        try:
+            if pk is None:
+                basket_list = []
+                for basket_entry in self.model.select():
+                    basket = self.__createDomainObject(basket_entry)
+                    basket_list.append(basket)
+                return basket_list
+            else:
+                basket_entry = self.model.get(BasketModel.store==pk, BasketModel.user_name==self.user_name)
                 basket = self.__createDomainObject(basket_entry)
-                basket_list.append(basket)
-            return basket_list
-        else:
-            basket_entry = self.model.get(BasketModel.store==pk, BasketModel.user_name==self.user_name)
-            basket = self.__createDomainObject(basket_entry)
-            return basket
+                return basket
+        except Exception as e:
+            return None
 
     def __createDomainObject(self, basket_entry):
         basket = Basket(basket_entry.user_name, Store(basket_entry.store.store_name))
@@ -92,6 +93,10 @@ class BasketRepository(Repository):
 
     def values(self):
         return self.get()
+
+    def items(self):
+        for key, value in zip(self.keys(), self.values()):
+            yield key, value
 
     def contains(self, store_name):
         query = self.model.select().where(self.model.store.store_name == store_name)

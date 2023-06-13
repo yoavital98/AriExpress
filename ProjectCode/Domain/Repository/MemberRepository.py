@@ -21,10 +21,8 @@ class MemberRepository(Repository):
         self.banned = banned
 
     def __getitem__(self, user_name):
-        try:
-            return self.get(user_name)
-        except Exception as e:
-            raise Exception("MemberRepository: __getitem__ failed: " + str(e))
+        return self.get(user_name)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -39,20 +37,26 @@ class MemberRepository(Repository):
             raise Exception("MemberRepository: __delitem__ failed: " + str(e))
 
     def __contains__(self, item):
-         pass
+        try:
+            return self.contains(item)
+        except Exception as e:
+            raise Exception("MemberRepository: __contains__ failed: " + str(e))
 
     def get(self, pk=None):
-        if not pk:
-            member_list = []
-            for entry in self.model.select():
-                member = self.__get_by_flag(entry)
-                if member is not None:
-                    member_list.append(member)
-            return member_list
-        else:
-            entry = self.model.get(self.model.user_name == pk)
-            member_obj = self.__get_by_flag(entry)
-            return member_obj
+        try:
+            if not pk:
+                member_list = []
+                for entry in self.model.select():
+                    member = self.__get_by_flag(entry)
+                    if member is not None:
+                        member_list.append(member)
+                return member_list
+            else:
+                entry = self.model.get(self.model.user_name == pk)
+                member_obj = self.__get_by_flag(entry)
+                return member_obj
+        except Exception as e:
+            return None
 
     def __get_by_flag(self, entry):
         if self.banned and not entry.banned:

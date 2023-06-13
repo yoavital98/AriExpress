@@ -68,16 +68,16 @@ class StoreFacade:
 
         db = SqliteDatabase('database.db')
         db.connect()
-        # model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-        #                 ProductBasketModel, DiscountModel, AdminModel, GuestModel]
-        # for m in model_list:
-        #     m.delete().execute()
+        model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+                        ProductBasketModel, DiscountModel, AdminModel, GuestModel]
+        for m in model_list:
+            m.delete().execute()
 
-        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                        ProductBasketModel, DiscountModel, AdminModel, GuestModel])
-        db.create_tables(
-            [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-             ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        # db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                 ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        # db.create_tables(
+        #     [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #      ProductBasketModel, DiscountModel, AdminModel, GuestModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins

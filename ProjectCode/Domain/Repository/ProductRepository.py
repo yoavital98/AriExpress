@@ -15,35 +15,40 @@ class ProductRepository(Repository):
     def __getitem__(self, item):
         return self.get(item)
 
+
     def __setitem__(self, key, value): #key is meaningless
-        return self.add(value)
+        try:
+            return self.add(value)
+        except Exception as e:
+            raise Exception("ProductRepository: __setitem__ failed: " + str(e))
 
     def __delitem__(self, key):
-        return self.remove(key)
-
+        try:
+            return self.remove(key)
+        except Exception as e:
+            raise Exception("ProductRepository: __delitem__ failed: " + str(e))
     def __contains__(self, item):
-         pass
+        try:
+            return self.contains(item)
+        except Exception as e:
+            raise Exception("ProductRepository: __contains__ failed: " + str(e))
 
     def get(self, pk=None):
-        if pk is None:
-            store = StoreModel.get(StoreModel.store_name == self.store_name)
-            product_list = []
-            for product in store.products:
-                product_list.append(Product(product.product_id, product.name, product.quantity, product.price, product.categories))
-            return product_list
-        else:
-            store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
-            product_entry = ProductModel.get(ProductModel.product_id == pk, ProductModel.store == store_entry)
-            product = Product(product_entry.product_id, product_entry.name, product_entry.quantity, product_entry.price, product_entry.categories)
-            return product
-            # StoreProduct = StoreModel.products.get_through_model()
-            # joined = ProductModel.select().join(StoreProduct).join(StoreModel)\
-            #     .where(
-            #            (StoreProduct.storemodel_id == self.store_name) &
-            #            (StoreProduct.productmodel_id == pk))
-            # product = joined[0]
-            # product_obj = Product(product.product_id, product.name, product.quantity, product.price, product.categories)
-            # return product_obj
+        try:
+            if pk is None:
+                store = StoreModel.get(StoreModel.store_name == self.store_name)
+                product_list = []
+                for product in store.products:
+                    product_list.append(Product(product.product_id, product.name, product.quantity, product.price, product.categories))
+                return product_list
+            else:
+                store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
+                product_entry = ProductModel.get(ProductModel.product_id == pk, ProductModel.store == store_entry)
+                product = Product(product_entry.product_id, product_entry.name, product_entry.quantity, product_entry.price, product_entry.categories)
+                return product
+        except Exception as e:
+            return None
+
 
     def add(self, product: Product):
         store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
@@ -67,5 +72,10 @@ class ProductRepository(Repository):
     def keys(self):
         return [ product.product_id for product in StoreModel.get(StoreModel.store_name == self.store_name).products]
 
+    def contains(self, item):
+        return item in self.keys()
+
     def values(self):
         return self.get()
+
+

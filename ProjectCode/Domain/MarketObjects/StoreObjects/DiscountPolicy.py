@@ -68,7 +68,7 @@ class DiscountPolicy:
         return total_percent
 
     def getDiscount(self, discount_id):
-        if self.discounts.get(discount_id) is None:
+        if self.discounts[discount_id] is None:
             raise Exception("No such discount exists")
         return self.discounts[discount_id]
 

@@ -17,10 +17,8 @@ class AccessRepository(Repository):
         self.username = username
 
     def __getitem__(self, item):
-        try:
-            return self.get(item)
-        except Exception as e:
-            return None
+        return self.get(item)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -39,10 +37,13 @@ class AccessRepository(Repository):
 
 
     def get(self, pk=None):
-        if self.store_name is None:
-            return self.getByUsername(pk=pk)
-        else:
-            return self.getByStorename(pk=pk)
+        try:
+            if self.store_name is None:
+                return self.getByUsername(pk=pk)
+            else:
+                return self.getByStorename(pk=pk)
+        except Exception as e:
+            return None
 
 
     def getByStorename(self, pk=None):
@@ -135,3 +136,7 @@ class AccessRepository(Repository):
 
     def values(self):
         return self.get()
+
+    def items(self):
+        for key, value in zip(self.keys(), self.values()):
+            yield key, value

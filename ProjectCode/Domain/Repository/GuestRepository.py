@@ -11,10 +11,8 @@ class GuestRepository(Repository):
         self.model = GuestModel
 
     def __getitem__(self, entrance_id):
-        try:
-            return self.get(entrance_id)
-        except Exception as e:
-            raise Exception("GuestRepository: __getitem__ failed: " + str(e))
+        return self.get(entrance_id)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -35,15 +33,18 @@ class GuestRepository(Repository):
             raise Exception("GuestRepository: __delitem__ failed: " + str(e))
 
     def get(self, pk=None):
-        if not pk:
-            guest_list = []
-            for entry in self.model.select():
-                guest_list.append(Guest(entry.entrance_id))
-            return guest_list
-        else:
-            entry = self.model.get(self.model.entrance_id == pk)
-            admin_obj = Guest(entry.entrance_id)
-            return admin_obj
+        try:
+            if not pk:
+                guest_list = []
+                for entry in self.model.select():
+                    guest_list.append(Guest(entry.entrance_id))
+                return guest_list
+            else:
+                entry = self.model.get(self.model.entrance_id == pk)
+                admin_obj = Guest(entry.entrance_id)
+                return admin_obj
+        except Exception as e:
+            return None
 
     def add(self, guest: Guest):
         admin_entry = self.model.create(entrance_id=guest.entrance_id)

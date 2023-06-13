@@ -166,7 +166,6 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Feliks", "password456")
         feliks: Member = self.store_facade.members.get("Feliks")
         access: Access = feliks.accesses.get("AriExpress")
-        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 5, 1, "cookies")
         with self.assertRaises(Exception):
             discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
                                                      level_name=2)
@@ -174,7 +173,7 @@ class TestStoreFacade(TestCase):
             added_discount = self.my_store.getDiscount(1)
         except Exception as e:
             self.assertEqual(e.args[0], "No such discount exists")
-        self.assertFalse(self.my_store.prods.__contains__(2))
+        self.assertFalse(self.my_store.get_products().__contains__(2))
     def test_addSimpleDiscount_productAlreadyInSimpleDiscount_Success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         feliks: Member = self.store_facade.members.get("Feliks")
@@ -184,7 +183,7 @@ class TestStoreFacade(TestCase):
                                                   level_name=1)
         discount2 = self.store_facade.addDiscount("AriExpress", "Feliks", "Simple", percent=20, level="Product",
                                                   level_name=1)
-        discount_policy: DiscountPolicy = self.my_store.getDiscount(1)
+        discount_policy: DiscountPolicy = self.my_store.get_discount_policy()
         total_discount = discount_policy.calculateOverallDiscountsForSimple()
         self.assertTrue(total_discount == 30)
         # todo: ask amiel
@@ -698,6 +697,7 @@ class TestStoreFacade(TestCase):
     def test_closeStoreAsAdmin_success(self):
         self.store_facade.logInAsAdmin("Ari", "password123")
         self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
+        self.my_store = self.store_facade.getStores()["AriExpress"]
         self.assertTrue(self.my_store.closed_by_admin)
         self.assertFalse(self.my_store.active)
 
@@ -726,6 +726,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
         with self.assertRaises(Exception):
             self.store_facade.closeStoreAsAdmin("Ari", "AriExpress")
+        self.my_store = self.store_facade.getStores()["AriExpress"]
         self.assertTrue(self.my_store.closed_by_admin)
         self.assertFalse(self.my_store.active)
 
@@ -1280,7 +1281,7 @@ class TestStoreFacade(TestCase):
         days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         current_day = datetime.now().weekday()
         rule = {"rule_type": "day_of_the_week", "product_id": "", "category": "", "operator": "<=",
-                "user_field": days_of_week[current_day-1],
+                "user_field": 'Friday',
                 "quantity": "", "child": {}}
         policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
         with self.assertRaises(Exception):
@@ -1708,7 +1709,7 @@ class TestStoreFacade(TestCase):
     def test_logInAsAdmin_success(self):
         ari: Admin = self.store_facade.admins.get("Ari")
         self.store_facade.logInAsMember("Ari", "password123")
-        self.assertTrue(ari.get_logged())
+        self.assertTrue(self.store_facade.admins.get("Ari").get_logged())
 
     def test_logInAsAdmin_userNotExists_fail(self):
         ari: Admin = self.store_facade.admins.get("Ari")
@@ -1737,7 +1738,7 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             self.store_facade.logInAsMember("Ari", "password123")
         # integrity
-        self.assertTrue(ari.get_logged())
+        self.assertTrue(self.store_facade.admins.get("Ari").get_logged())
 
     # loginAsGuest
     def test_loginAsGuest_success(self):

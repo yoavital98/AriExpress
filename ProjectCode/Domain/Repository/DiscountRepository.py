@@ -13,10 +13,8 @@ class DiscountRepository(Repository):
         self.store_name = store_name
 
     def __getitem__(self, discount_id):
-        try:
-            return self.get(discount_id)
-        except Exception as e:
-            raise Exception("DiscountRepository: __getitem__ failed: " + str(e))
+        return self.get(discount_id)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -38,15 +36,18 @@ class DiscountRepository(Repository):
 
 
     def get(self, pk=None):
-        if pk is None:
-            store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
-            discount_list = []
-            for discount_entry in store_entry.discounts:
-                discount_list.append(self.__createDomainObject(discount_entry))
-            return discount_list
-        else:
-            discount_entry = self.model.get(self.model.discount_id == pk)
-            return self.__createDomainObject(discount_entry)
+        try:
+            if pk is None:
+                store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
+                discount_list = []
+                for discount_entry in store_entry.discounts:
+                    discount_list.append(self.__createDomainObject(discount_entry))
+                return discount_list
+            else:
+                discount_entry = self.model.get(self.model.discount_id == pk)
+                return self.__createDomainObject(discount_entry)
+        except Exception as e:
+            return None
 
     def __createDomainObject(self, discount_entry):
         discount = None
