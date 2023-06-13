@@ -1,8 +1,4 @@
 from django.apps import AppConfig
-from ProjectCode.Service.Service import Service
-
-
-
 
 
 
@@ -10,16 +6,19 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
+
+        from ProjectCode.Service.Service import Service
+        from .views import send_notification_lambda
         config_file = "../config.json"
         # config_file = "../config_purchaseCart.json"
         # config_file = "../config_withDiscounts.json"
 
-        service = Service(config_file)
-        # service = Service()
+        service = Service(config_file, send_notification_call = send_notification_lambda)
+        #service = Service(send_notification_call = send_notification_lambda)
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only
-        service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
-        service.register("roobink", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        # service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
+        # service.register("roobink", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
         # service.register("Yoav", "XG5EsQtQ.J:k82G", "yoavital98@gmail.com") # for debug only
         # service.logOut("roobink")
         # service.logIn("bbb", "asdf1233")
