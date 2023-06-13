@@ -93,16 +93,23 @@ class StoreFacade:
         guest: Guest = self.onlineGuests.get(str(entrance_id))
         if guest is None:
             raise Exception("Entrance id not found")
-
+        print("ok1")
+        print(self.members)
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
+            print("ok2")
             existing_member: Member = self.members[user_name]
             if password_validator.ConfirmPassword(password, existing_member.get_password()):
+                print("ok3")
                 existing_member.logInAsMember()
+                print("ok4")
                 existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
+                print("ok5")
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
+                print("ok6")
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
+                print("ok7")
                 return existing_member
                 # return DataMember(existing_member)
             else:
