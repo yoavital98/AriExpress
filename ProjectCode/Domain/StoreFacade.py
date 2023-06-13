@@ -42,7 +42,8 @@ from ProjectCode.Domain.Repository.UserTransactionRepository import UserTransact
 
 
 class StoreFacade:
-    def __init__(self):
+    def __init__(self, send_notification_call=None):
+
         # Store Data
         # self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         # self.admins = TypedDict(str, Admin)  # dict of admins
@@ -104,6 +105,8 @@ class StoreFacade:
         self.payment_service = PaymentService()
         self.supply_service.perform_handshake()
         self.payment_service.perform_handshake()
+
+        self.message_controller = MessageController(send_notification_call)
 
         # REPOSITORY FIELDS - TO BE REPLACED
         #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
@@ -579,7 +582,7 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         removed_usernames = cur_store.removeAccess(to_remove_username, requester_username)
-        MessageController.send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
+        MessageController().send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
                                             + store_name + " have been removed", datetime.now(), None)
         return removed_usernames
 
@@ -739,6 +742,7 @@ class StoreFacade:
         MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
         for owner in cur_store.getOwners():
             MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
+
         return cur_store
 
     def closeStore(self, username, store_name):
@@ -916,11 +920,13 @@ class StoreFacade:
     def sendMessageUsers(self, requesterID, receiverID, subject, content, creation_date, file):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
+
         return MessageController().send_message(requesterID, receiverID, subject, content, creation_date, file)
 
     def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file):
         founder = self.getStoreFounder(store_name)
         return MessageController().send_message(founder, receiverID, subject, content, creation_date, file)
+
 
     def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file):
         if not self.checkIfUserIsLoggedIn(requesterID):
@@ -928,10 +934,12 @@ class StoreFacade:
         founder = self.getStoreFounder(storeID)
         return MessageController().send_message(requesterID, founder, subject, content, creation_date, file)
 
+
     def getAllMessagesSent(self, requesterID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().get_messages_sent(requesterID)
+
 
     def getAllMessagesReceived(self, requesterID):
         if not self.checkIfUserIsLoggedIn(requesterID):
@@ -943,6 +951,7 @@ class StoreFacade:
             raise Exception("User is not logged in")
         return MessageController().get_notifications(requesterID)
 
+
     def readMessage(self, requesterID, messageID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
@@ -950,6 +959,7 @@ class StoreFacade:
 
     def deleteMessage(self, requesterID, messageID):
         return MessageController().delete_message(requesterID, messageID)
+
 
     # ==================  Notifications  ==================#
 
@@ -959,6 +969,7 @@ class StoreFacade:
             raise Exception("no such member exists")
         return MessageController().send_notification(receiverID, subject, content, creation_date)
 
+
     def sendNotificationToStore(self, storeID, subject, content, creation_date):
         # with purchase form AliExpress to store's founder
         if not self.stores.keys().__contains__(storeID):
@@ -966,15 +977,18 @@ class StoreFacade:
         founder = self.getStoreFounder(storeID)
         return MessageController().send_notification(founder, subject, content, creation_date)
 
+
     def getAllNotificationsReceived(self, requesterID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().get_notifications(requesterID)
 
+
     def readNotification(self, requesterID, messageID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().read_notification(requesterID, messageID)
+
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
     #     pass

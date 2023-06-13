@@ -1,0 +1,48 @@
+{% extends 'baseModal.html' %}
+
+{% block modal-size%}
+modal-lg
+{% endblock modal-size %}
+
+
+
+<!--Modal ID-->
+{% block modal-id %} id="readNotificationModal{{ notification.pk }}" data-bs-backdrop="static" {% endblock modal-id %}
+
+
+<!--Modal title-->
+{% block modal-title %}
+AriExpress notification
+{% endblock modal-title %}
+
+
+{% block form %}
+<div class="container">
+    <div class="card text-center mt-3">
+        <div class="card-body">
+            <form enctype="multipart/form-data">
+                {% csrf_token %}
+                <!--Input hidden-->
+                
+                <div class="input-group mb-2" >
+                    <span class="input-group-text justify-content-center side-lable" style="font-size: 16px;"><i class="fas fa-user-edit"></i></span>
+                    <input type="text" id="input-bg" class="form-control" value="{{ notification.subject }}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <textarea class="form-control" id="input-bg" rows="10" readonly>{{ notification.content }}</textarea>
+                </div>
+
+                <div class="input-group mb-2">
+                    <span class="input-group-text justify-content-center side-lable"><i class="fas fa-calendar"></i></span>
+                    <input type="text" id="input-bg" class="form-control" value="Received on: {{ notification.creation_date|date:'m/d/y' }} at {{ notification.creation_date|date:'(H:i)' }}" readonly>
+                </div>
+
+
+               
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock form %}
+

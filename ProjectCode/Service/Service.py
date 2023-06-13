@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import inspect
+import pickle
 
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -35,10 +36,11 @@ def load_config(config_file):
 class Service:
     _instance = None
 
-    def __new__(cls, config_file=None):
+    def __new__(cls, config_file=None, send_notification_call=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls.store_facade = StoreFacade()
+            cls.store_facade = StoreFacade(send_notification_call=send_notification_call)
+
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -46,6 +48,7 @@ class Service:
             if config_file is not None:
                 load_config(config_file)
         return cls._instance
+    
 
     # ------  logger  ------ # < TODO cuurently without toJson
     def getInfoLogs(self):
@@ -757,7 +760,7 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By username: '{requester_id}'")
             return Response(e, False)
 
-    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file=None):
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file=None):
         try:
             message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, file)
             logging.info(
@@ -767,9 +770,9 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
             return Response(e, False)
 
-    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status, file=None):
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file=None):
         try:
-            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, status, file)
+            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, file)
             logging.info(
                 "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
             return Response(message.toJson(), True)

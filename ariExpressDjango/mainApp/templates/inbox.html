@@ -5,6 +5,15 @@
 
 <!DOCTYPE html>
 <html>
+<style>
+	.description{
+		width: 500px;
+		height: 20px;
+		overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+	}
+</style>
 <body>
 	<main>
 		<br>
@@ -20,11 +29,12 @@
                 <ul class="list-group mb-3 sticky-top" >
                     {% for notification in usernotifications %}
 						<li class="list-group-item d-flex justify-content-between lh-condensed" style="background-color:#34495e;">
-							<div >
-								<h6 class="text-light">{{ notification.subject }}</h6>
-								<small class="text-subtle description">{{ notification.content }}</small>
-							</div>
+							<button class="btn btn-action" data-bs-toggle="modal" data-bs-target="#readNotificationModal{{ notification.pk }}">
+								<h6 class="text-light" style="text-align:left; font-size:110%;">{{ notification.subject }}</h6>
+								<div class="text-subtle description">{{ notification.content }}</div>
+							</button>
 						</li>
+						{% include 'messages/readNotification.html' %}
                     {% endfor %}
                 </ul>
                 <br>
@@ -83,7 +93,7 @@
 			</button>	
 		</div>
 
-		{% if open_modal %}
+		{% comment %} {% if open_modal %}
 		<!--Message Modal-->
 		<div class="modal fade show" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel"
 			aria-hidden="true" style="display: block;">
@@ -106,7 +116,7 @@
 			</div>
 		</div>
 		<div class="modal-backdrop fade show"></div>
-		{% endif %}
+		{% endif %} {% endcomment %}
 
 		<!--Pagination-->
 		<nav>
@@ -138,11 +148,5 @@
 	</main>
 </body>
 </html>
-<style>
-	.description{
-		overflow: hidden;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-	}
-</style>
+
 {% endblock%}
