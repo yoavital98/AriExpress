@@ -97,7 +97,7 @@ def login(request):
                         return redirect('mainApp:mainpage')
                     else:
                         request.session['guest'] = 1
-                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
+                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here) - MAYBE THE USER NOT IN THE DJANGO DB?"))
                         return redirect('mainApp:login')
 
                 # if request.session['guest']:

@@ -30,7 +30,7 @@ def loadFileInit(load_file):
                     else:
                         func(*args)
             if not found_function:
-                print(f"Error: Function '{func_name}' not found in Service class.")     
+                raise Exception(f"Error: Function '{func_name}' not found in Service class.")     
 # ------------------------------------ loadConfigInit ------------------------------------ #
 @staticmethod
 def loadConfigInit(load_file):
