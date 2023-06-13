@@ -28,10 +28,10 @@
 {% block modal-footer %}
 <a href="mark_as_read/{{ usermessage.id }}" class="btn text-light btn-sm btn-modal" style="background-color: #0074fe;">Yes</a>
 <button type="button" class="btn btn-outline-dark btn-sm " id="closeAllModals" data-bs-dismiss="modal" aria-label="Close"> No </button>
-<script>
+{% comment %} <script>
     $('#closeAllModals').on('click', function() {
         $(this).closest('.modal').modal('hide');
     });
-</script>
+</script> {% endcomment %}
 
 {% endblock modal-footer %}
