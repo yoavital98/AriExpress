@@ -69,16 +69,16 @@ class StoreFacade:
 
         db = SqliteDatabase('database.db')
         db.connect()
-        model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                       ProductBasketModel, DiscountModel, AdminModel, GuestModel]
-        for m in model_list:
-           m.delete().execute()
+        # model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                ProductBasketModel, DiscountModel, AdminModel, GuestModel]
+        # for m in model_list:
+        #    m.delete().execute()
 
-        # db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-        #                  ProductBasketModel, DiscountModel, AdminModel, GuestModel])
-        # db.create_tables(
-        #      [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-        #       ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+                         ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        db.create_tables(
+             [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+              ProductBasketModel, DiscountModel, AdminModel, GuestModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
@@ -734,9 +734,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
+        MessageController().send_notification(cur_store.getFounder().get_username(), "Store Re-Opened", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
+            MessageController().send_notification(owner.get_username(), "Store Re-Opened", "", datetime.now())
 
         return cur_store
 
