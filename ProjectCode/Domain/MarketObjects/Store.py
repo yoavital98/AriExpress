@@ -42,7 +42,6 @@ class Store:
         super().__init__(*args, **kwargs)
         self.__store_name = store_name
         self.__products = ProductRepository(store_name)
-        # TODO: policies
         self.active: bool = True
         self.closed_by_admin: bool = False
         self.__accesses = AccessRepository(store_name=store_name)
@@ -115,7 +114,8 @@ class Store:
         if requester_access is None or to_be_removed_access is None:
             raise Exception("No such access exists")
         if requester_access.canModifyPermissions() and requester_username == to_be_removed_access.get_nominated_by_username():
-            requester_access.get_nominations().remove(to_be_removed_username)
+            requester_access.nominations.remove(to_be_removed_username)
+            self.__accesses[requester_username] = requester_access
             removed_usernames = self.__removeAllAccesses(to_be_removed_access)
             return removed_usernames
         else:
