@@ -336,7 +336,7 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, int(productID), int(quantity))
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")

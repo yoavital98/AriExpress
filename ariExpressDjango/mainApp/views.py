@@ -375,7 +375,7 @@ def addNewDiscount(request, storename):  # Discounts
             request.POST.get('discountAmountRange'))
         levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
         levelType = None if levelTypeInt == None else getDiscountLevelType(levelTypeInt)
-        levelName = None if request.POST.get('levelName') == None else request.POST.get('levelName')
+        levelName = "" if request.POST.get('levelName') == None else request.POST.get('levelName')
 
         if 'submitDiscount' in request.POST:
             service = Service()
