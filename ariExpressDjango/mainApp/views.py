@@ -52,6 +52,18 @@ def startpage(request):
 
 
 def mainpage(request):
+    # ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    # --------------------------TODO: DELETE THESE LINES----------------------------
+    # from django.contrib.auth.models import User
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
+    # ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+
     # ----------------------creating first user - ariExpress--------------------------------------------
     if not User.objects.filter(username='ariExpress').exists():
         user = User.objects.create_user(username='ariExpress', password='ariExpress')
@@ -190,7 +202,6 @@ def mystores(request):
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
-        print(storesInfoDict[0])
         return render(request, 'mystores.html', {'stores': storesInfoDict})
     messages.success(request, ("Error: User is not logged in (django error)"))
     return redirect('mainApp:mainpage')
@@ -202,8 +213,6 @@ def viewStoreStaff(request, storename):
     if 'removeAccessButton' in request.POST:
         requester_id = username
         to_remove_id = request.POST.get('to_remove_id')
-        print(requester_id)
-        print(to_remove_id)
         actionRes = service.removeAccess(requester_id, to_remove_id, storename)
         if actionRes.getStatus():
             messages.success(request, (f"{requester_id} has removed {to_remove_id} accesses"))
@@ -295,15 +304,12 @@ def store_specific(request, storename):
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
         context = ast.literal_eval(str(products))
-        print(context)
         products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
         #products_dict = ast.literal_eval(str(products_dict))
         products_list = []
         for product in products_dict.values():
             product = json.loads(product)
             products_list.append(product)
-
-        print (products_list)
         active = "Open" if context['active'].lower() == "true" else "Closed"
         return render(request, 'store_specific.html',
                       {'products': products_list, 'storename': storename, 'active': active, 'permissions': permissions})
@@ -500,6 +506,32 @@ def addNewPurchasePolicy(request, storename):  # Policies
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
 
+def viewBids(request, storename):
+    permissionName = 'Bid'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        service = Service()
+        bids = {}
+        actionRes = service.getAllBidsFromStore(storename)
+        # print(f"status {actionRes.getStatus()}")
+        if actionRes.getStatus():
+            bids = ast.literal_eval(str(actionRes.getReturnValue()))
+            # print(f"bids {bids}")
+                
+        # <td>{{ bid_id }}</td>
+        # <td>{{ bid.username }}</td>
+        # <td>{{ bid.product_name }}</td>
+        # <td>{{ bid.quantity }}</td>
+        # <td>{{ bid.price }}</td>
+        bids = {"1" : {"bid_id": 1, "username": "bbb", "product_name": "apple", "quantity": 5, "price": 10},
+                "2" : {"bid_id": 2, "username": "bbb", "product_name": "earphones", "quantity": 10, "price": 5000}
+                }
+        return render(request, 'viewBids.html', {'storename': storename,
+                                                    'bids': bids
+                                                    })
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:

@@ -421,6 +421,19 @@ class Service:
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
+    
+    def getAllBidsFromStore(self, storename):
+        try:
+            bids = self.store_facade.getAllBidsFromStore(storename)
+            print(f"bidsservice {bids}")
+            logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
+            bids_data = {}
+            for bid in bids:
+                bids_data[bid.get_id()] = bid.toJson()
+            return Response(json.dumps(bids_data), True)
+        except Exception as e:
+            logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
+            return Response(e, False)
 
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):

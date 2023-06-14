@@ -329,6 +329,12 @@ class StoreFacade:
         # data_bids_list = [DataBid(bid) for bid in bids_set]
         # return data_bids_list
 
+    def getAllBidsFromStore(self, storename):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.get_bids()
+
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
         existing_member: Member = self.getOnlineMemberOnly(username)
