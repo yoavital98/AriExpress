@@ -9,51 +9,45 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Service.Service import Service
 from ProjectCode.Service.Response import Response
 
+default_config = "../../default_config.json"
+
 
 class Test_Use_Cases_1(TestCase):
+    
     def setUp(self):
         pass
 
-    # TODO need to add default config for all Service() calls
-    # config = "../de fault_config.json"
+    # TODO need to add default config for all Service(default_config) calls
     # Service(config)
     """ ---------------------- (1) system functionality tests ---------------------- """
 
     #  Use Case 1.1
     def test_starting_the_market_system_success(self):
-        service = Service()
+        service = Service(default_config)
         self.assertNotEqual(service.store_facade.admins.__len__(), 0)
 
     # Use Case 1.2
 
     def test_AddSetUpdate_connection_with_supply_service_success(self):
-        service = Service()
-        self.assertTrue(
-            service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
+        service = Service(default_config)
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
         # add new address
-        service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.111webhostapp.com/",
-                                                                      "new_name")
-        self.assertTrue(service.store_facade.supply_service.get_request_address(
-            "new_name") == "https://php-server-try.111webhostapp.com/")
+        service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.111webhostapp.com/","new_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address("new_name") == "https://php-server-try.111webhostapp.com/")
         # set address with wrong name
         service.store_facade.supply_service.set_request_address("wrong_name")
-        self.assertTrue(
-            service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
         # set address with correct name
         service.store_facade.supply_service.set_request_address("new_name")
-        self.assertTrue(
-            service.store_facade.supply_service.get_request_address() == "https://php-server-try.111webhostapp.com/")
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.111webhostapp.com/")
         # update address of new_name
-        service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.222webhostapp.com/",
-                                                                      "new_name")
-        self.assertTrue(service.store_facade.supply_service.get_request_address(
-            "new_name") == "https://php-server-try.222webhostapp.com/")
+        service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.222webhostapp.com/", "new_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address("new_name") == "https://php-server-try.222webhostapp.com/")
         service.store_facade.supply_service.set_request_address("new_name")
-        self.assertTrue(
-            service.store_facade.supply_service.get_request_address() == "https://php-server-try.222webhostapp.com/")
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.222webhostapp.com/")
 
     def test_AddSetUpdate_connection_with_payment_service_success(self):
-        service = Service()
+        service = Service(default_config)
         self.assertTrue(
             service.store_facade.payment_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
         # add new address
@@ -81,10 +75,9 @@ class Test_Use_Cases_1(TestCase):
     # Use Case 1.3 & 1.4
 
     def setup_purchase(self):
-        self.service = Service()
+        self.service = Service(default_config)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
-        self.service.register("YuvalMelamed", "PussyDestroyer69", "fuck@gmail.com")
         self.service.logIn("Feliks", "password456")
         self.service.createStore("Feliks", "Feliks&Sons")
         self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
@@ -138,15 +131,32 @@ class Test_Use_Cases_1(TestCase):
 
 
 class Test_Use_Cases_2_1(TestCase):
-    def setUp(self):
-        self.Service = Service()
 
+    def setUp(self):
+        self.service = Service(default_config)
+    def setup_purchase(self):
+        self.service = Service(default_config)
+        self.service.register("Feliks", "password456", "feliks@gmail.com")
+        self.service.register("Amiel", "password789", "amiel@gmail.com")
+        self.service.logIn("Feliks", "password456")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "medium paper package", 50, 100, "paper")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "pencil", 50, 100, "writing tools")
     # Use Case 2.1.1
     def test_guest_visit_success(self):
-        res = self.Service.loginAsGuest()
+        # TODO 00 - check that a guest is trackable, can know when logged out to system, etc.
+        # a guest can visit the system, have a cart,
+        # add products to it, and purchase it.
+        self.setup_purchase()
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        return_value = res.getReturnValue()
-        self.assertTrue(return_value == '{"entrance_id": "0"}')
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        self.assertTrue(guest0_entrance_id == 0)
+        self.assertTrue(guest1_entrance_id == 1)
+        guest0_cart = self.service.getCart(entrance_id)
 
     def test_guest_visit_failure(self):
         # cannot fail!
@@ -178,7 +188,7 @@ class Test_Use_Cases_2_1(TestCase):
 class Test_Use_Case_2_1_4(TestCase):
 
     def setUp(self):
-        self.service = Service()
+        self.service = Service(default_config)
 
     def test_login_to_the_system_success(self):
         res = self.service.loginAsGuest()
@@ -193,10 +203,9 @@ class Test_Use_Case_2_1_4(TestCase):
 
 class Test_Use_Case_2_guests(TestCase):
     def setUp(self):
-        self.service = Service()
+        self.service = Service(default_config)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
-        self.service.register("YuvalMelamed", "PussyDestroyer69", "fuck@gmail.com")
         self.service.logIn("Feliks", "password456")
         self.service.createStore("Feliks", "Feliks&Sons")
         self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
@@ -352,7 +361,7 @@ class Test_Use_Case_2_guests(TestCase):
 
 class Test_Use_Case_3_members(TestCase):
     def setUp(self):
-        self.service = Service()
+        self.service = Service(default_config)
         self.service.register("username", "password", "email")
 
     # Use Case 3.1.1
@@ -399,7 +408,7 @@ class Test_Use_Case_3_members(TestCase):
 
 class Test_Use_Case_4_Management(TestCase):
     def setUp(self):
-        self.service = Service()
+        self.service = Service(default_config)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         res = self.service.logIn("Feliks", "password456")

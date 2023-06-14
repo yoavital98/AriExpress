@@ -6,7 +6,7 @@ participant Service
 note over Ari: Ari wants to open AriExpress\n@post: AriExpress is now functional\n            Handshake was made with external service\n            There is an admin to the store
 Ari->Service:logIn("Feliks", "password456")
 Service->Ari:res
-Feliks->Service:addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
+Ari->Service:addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
 Service->StoreFacade:addNewProductToStore(username, storename, productname, quantity, price, categories)
 StoreFacade->StoreFacade: member = getOnlineMemberOnly(username)
 StoreFacade->StoreFacade:store = getStore(storename)

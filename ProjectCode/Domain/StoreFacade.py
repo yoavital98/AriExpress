@@ -295,7 +295,7 @@ class StoreFacade:
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
-        else:
+        else: # guest user
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
 
