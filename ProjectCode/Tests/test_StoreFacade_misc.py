@@ -36,10 +36,20 @@ class TestStoreFacade(TestCase):
         self.store_facade.createStore("Feliks", "AriExpress")
         self.my_store: Store = self.store_facade.stores.get("AriExpress")
         self.store_facade.addNewProductToStore("Feliks", "AriExpress", "paper", 10, 500, "paper")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "headphones", 10, 500, "paper")
         self.item_paper: Product = self.my_store.getProductById(1, "Feliks")
         self.store_facade.logOut("Feliks")
         self.store_facade.onlineGuests.clear()
         self.store_facade.nextEntranceID = 0
+
+
+    def test_discount_conditioned_basket_total_price(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        rule =  {'rule_type': 'basket_total_price', 'product_id': '', 'operator': '>=', 'quantity': '100', 'category': '', 'child': {'logic_type': 'AND', 'rule': {'rule_type': 'amount_of_category', 'product_id': '', 'operator': '<=', 'quantity': '5', 'category': 'fruit', 'child': {}}}}
+        self.store_facade.addDiscount("AriExpress","Feliks","Conditioned",60,"Product",2,
+                                      rule)
+        self.store_facade.addToBasket("Feliks", "AriExpress",2,1)
+        print(self.store_facade.getBasket("Feliks", "AriExpress").products.get())
 
 
     # __getAdmin

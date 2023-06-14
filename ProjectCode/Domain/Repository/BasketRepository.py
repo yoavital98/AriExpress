@@ -58,14 +58,14 @@ class BasketRepository(Repository):
             product = Product(
                 product_entry.product_id,
                 product_entry.name,
-                product_basket_entry.quantity,
+                product_entry.quantity,
                 product_entry.price,
                 product_entry.categories
             )
             basket.products[product.product_id] = (
                 product,
                 product_basket_entry.quantity,
-                product_entry.price
+                product_basket_entry.price
             )
         return basket
 

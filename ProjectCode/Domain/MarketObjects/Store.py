@@ -312,6 +312,7 @@ class Store:
         relevant_product_info = dict()
         for product_id, product_tuple in basket.items():
             relevant_product_info[product_id] = product_tuple[1]
+        relevant_product_info[product.get_product_id()] = quantity
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
         return (product, quantity, price_after_discount)
