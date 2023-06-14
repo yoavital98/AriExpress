@@ -33,9 +33,7 @@ class Store:
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
         self.__bids = TypedDict(int, Bid)
-        self.__bids_requests = TypedDict(str, List[Bid])
-        self.__auctions = TypedDict(int, Auction)
-        self.__lotteries = TypedDict(int, Lottery)
+        self.__bids_requests = TypedDict(str, list)
         self.__discount_policy = DiscountPolicy(store_name)
         self.__purchase_policy = PurchasePolicies()
 
@@ -222,12 +220,12 @@ class Store:
 
 
     def checkProductAvailability(self, product_id, quantity):
-        cur_product : Product = self.__products[int(product_id)]
+        cur_product : Product = self.__products.get(product_id)
         if cur_product is None:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
-        if quantity < 0:
+        if quantity <= 0:
             raise Exception("quantity can't be under zero")
         return cur_product
 
@@ -351,13 +349,15 @@ class Store:
 
     def getPolicy(self, policy_id):
         return self.__purchase_policy.getPurchasePolicy(policy_id)
+
+
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
         for access in self.__accesses.values():
             if access.canManageBids():
                 username = access.get_user().get_username()
-                if self.__bids_requests[username] is None:
-                    self.__bids_requests[username] = []
+                if self.__bids_requests.get(username) is None:
+                    self.__bids_requests[username] = list()
                 self.__bids_requests[username].append(bid)
                 bid.increment_left_to_approve()
 

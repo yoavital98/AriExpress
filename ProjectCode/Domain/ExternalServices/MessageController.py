@@ -66,7 +66,8 @@ class MessageController:
         if receiver_id not in self._inbox_notifications.keys():
             self._inbox_notifications[receiver_id] = []
         self._inbox_notifications[receiver_id].append(message)
-        self.send_notification_call(receiver_id, notification_id, "notification", "You got a new notification: " + subject)
+        if self.send_notification_call is not None:
+            self.send_notification_call(receiver_id, notification_id, "notification", "You got a new notification: " + subject)
 
 
         return notification_id

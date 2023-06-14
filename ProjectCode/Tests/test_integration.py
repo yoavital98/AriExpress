@@ -347,8 +347,22 @@ class Test_Use_Case_4_Management(TestCase):
         res_edit = self.service.editProductOfStore("Feliks", "AriExpress", 1, quantity=50)
         self.assertTrue(res_edit.getStatus())
 
+    # Use Case 4.2.a
+    def test_newDiscountToStore_StoreLevel_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_new_discount = self.service.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Store",
+                                                     level_name=1)
+        self.assertTrue(res_new_discount.getStatus())
 
+    # Use Case 4.2.b
 
+    def test_newDiscountToStore_ProductLevel_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_new_discount = self.service.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
+                                                     level_name=1)
+        self.assertTrue(res_new_discount.getStatus())
     # Use Case 4.4
     def test_nominateShopOwner_Success(self):
         res = self.service.logIn("Feliks", "password456")
