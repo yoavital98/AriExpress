@@ -353,7 +353,7 @@ class Store:
         cur_access: Access = self.__accesses.get(username)
         if cur_access is None:
             raise Exception("No such access exists")
-        if level == "Product" and not self.__products.__contains__(level_name):
+        if level == "Product" and not self.__products.__contains__(int(level_name)):
             raise Exception("no such product exists")
         cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
