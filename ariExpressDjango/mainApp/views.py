@@ -540,7 +540,7 @@ def addNewProduct(request, storename):
                 price = form.cleaned_data['productPrice']
                 quantity = form.cleaned_data['productQuantity']
                 service = Service()
-                actionRes = service.addNewProductToStore(request.user.username, storename, productname, category, quantity, price)
+                actionRes = service.addNewProductToStore(request.user.username, storename, productname, quantity, price, category)
                 if actionRes.getStatus():
                     messages.success(request, ("A new Product has been added to the store"))
                     return redirect('mainApp:store_specific', storename=storename)

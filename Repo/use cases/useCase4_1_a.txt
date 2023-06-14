@@ -1,0 +1,26 @@
+title Open The System
+
+actor Ari
+participant Service
+
+note over Ari: Ari wants to open AriExpress\n@post: AriExpress is now functional\n            Handshake was made with external service\n            There is an admin to the store
+Ari->Service:logIn("Feliks", "password456")
+Service->Ari:res
+Feliks->Service:addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
+Service->StoreFacade:addNewProductToStore(username, storename, productname, quantity, price, categories)
+StoreFacade->StoreFacade: member = getOnlineMemberOnly(username)
+StoreFacade->StoreFacade:store = getStore(storename)
+StoreFacade->StoreFacade:access = member.get_accesses().get(storename)
+StoreFacade->store:addProduct(access, name, quantity, price, categories)
+store->ProductModel:addProduct(name, quantity, price, categories)
+ProductModel->store: product
+store->StoreFacade: product
+StoreFacade->Service: added_product
+Service->Feliks:res
+
+
+
+
+#group #2f2e7b if member has accesses #white [condition]
+#StoreFacade->StoreFacade:Access = #member.get_accesses().get(store_name)
+#end
