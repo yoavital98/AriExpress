@@ -48,6 +48,10 @@ class Notification:
                 "filename": self._file.name,
                 "path": self._file.path
             }
+        if self._read:
+            read = "read"
+        else:
+            read = "pending"
         return {
             "id": self._id,
             "sender_id": self._sender_id,
@@ -56,5 +60,5 @@ class Notification:
             "content": self._content,
             "file": file_info,
             "date": self._date,
-            "read": self._read
+            "status": read
         }

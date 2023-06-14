@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import inspect
+import pickle
 
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -9,11 +10,11 @@ from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
 
-# ------------------------------------ Load config ------------------------------------ #
+# ------------------------------------ loadFileInit ------------------------------------ #
 @staticmethod
-def load_config(config_file):
+def loadFileInit(load_file):
 
-    with open(config_file, 'r') as f:
+    with open(load_file, 'r') as f:
         config_data = json.load(f)
     for func_config in config_data:
         for func_name, func_args in func_config.items():
@@ -30,22 +31,46 @@ def load_config(config_file):
                         func(*args)
             if not found_function:
                 print(f"Error: Function '{func_name}' not found in Service class.")     
+# ------------------------------------ loadConfigInit ------------------------------------ #
+@staticmethod
+def loadConfigInit(load_file):
+
+    with open(load_file, 'r') as f:
+        config_data : dict = json.load(f)
+    if 'PaymentService' not in config_data.keys() or config_data["PaymentService"] == "":
+        raise Exception("PaymentService doesn't exist in load config")
+    if 'SupplyService' not in config_data.keys() or config_data["SupplyService"] == "":
+        raise Exception("SupplyService doesn't exist in load config")
+    if 'Database' not in config_data.keys():
+        raise Exception("Database doesn't exist in load config")
+    if 'Admins' not in config_data.keys() or config_data["Admins"] == "":
+        raise Exception("Admins doesn't exist in load config")
+    admins : dict = config_data["Admins"]
+    if len(admins.keys()) == 0:
+        raise Exception("Ateast one admin should exist in load config")
+    return config_data
+
 # ------------------------------------------------------------------------------------- #
 
 class Service:
     _instance = None
 
-    def __new__(cls, config_file=None):
+    def __new__(cls, load_file=None, config_file=None, send_notification_call=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls.store_facade = StoreFacade()
+            if config_file is None:
+                raise Exception("Config file hasn't been loaded")
+            configFileDict = loadConfigInit(config_file)
+            cls.store_facade = StoreFacade(configFileDict, send_notification_call=send_notification_call)
+
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             # load info
-            if config_file is not None:
-                load_config(config_file)
+            if load_file is not None:
+                loadFileInit(load_file)
         return cls._instance
+    
 
     # ------  logger  ------ # < TODO cuurently without toJson
     def getInfoLogs(self):
@@ -757,7 +782,7 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By username: '{requester_id}'")
             return Response(e, False)
 
-    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file=None):
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file=None):
         try:
             message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, file)
             logging.info(
@@ -767,9 +792,9 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
             return Response(e, False)
 
-    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status, file=None):
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file=None):
         try:
-            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, status, file)
+            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, file)
             logging.info(
                 "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
             return Response(message.toJson(), True)
