@@ -27,13 +27,13 @@
     "createStore": {"args": ["aaa", "456store"]}
   },
   {
-    "addNewProductToStore": {"args": ["aaa", "store123", "apple", "fruit", "20", "3"]}
+    "addNewProductToStore": {"args": ["aaa", "store123", "apple", "20", "3", "fruit"]}
   },
   {
-    "addNewProductToStore": {"args": ["aaa", "store123", "banana", "fruit", "30", "8"]}
+    "addNewProductToStore": {"args": ["aaa", "store123", "banana", "30", "8", "fruit"]}
   },
   {
-    "addNewProductToStore": {"args": ["aaa", "store123", "headphones", "electronics", "10", "700"]}
+    "addNewProductToStore": {"args": ["aaa", "store123", "headphones", "10", "700", "electronics"]}
   },
   {
     "logIn": {"args": ["aaa", "asdf1233"]}

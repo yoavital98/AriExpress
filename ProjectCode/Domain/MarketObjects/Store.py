@@ -252,6 +252,16 @@ class Store:
                 product_list.append(prod)
         return product_list
 
+    def searchProductByFeatures(self, featuresDict):
+        if not self.active:
+            return {}
+        product_list = []
+        for prod in self.__products.values():
+            if prod.checkFeatures(featuresDict):
+                product_list.append(prod)
+        return product_list
+
+
 
     def calculateBasketPrice(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies

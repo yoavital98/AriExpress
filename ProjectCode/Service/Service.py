@@ -109,7 +109,8 @@ class Service:
     # ------  admin  ------ #
     # def openTheSystem(self, username):
     #     try:
-    #         self.store_facade.openSystem(username)
+    #         if self.admins.keys().__contains__(user_name):
+    #         self.store_facade = StoreFacade()
     #         logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
     #     except Exception as e:
     #         logging.error(f"openTheSystem Error: {str(e)}. By username: '{username}'")
@@ -527,7 +528,7 @@ class Service:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def addNewProductToStore(self, username, storename, productname, categories, quantity, price):
+    def addNewProductToStore(self, username, storename, productname, quantity, price, categories):
         try:  # TODO check whether this product details are needed
             added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price,
                                                                    categories)

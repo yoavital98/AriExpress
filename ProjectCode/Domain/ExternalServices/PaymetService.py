@@ -26,9 +26,6 @@ class PaymentService:
             raise Exception("Handshake request with PaymentService failed")
 
     def pay(self, card_number, month, year, holder, ccv, id):
-        # if price > 20000:
-        #     raise Exception("Price too high, please contact your credit card company")
-
         post_data = {
             "action_type": "pay",
             "card_number": card_number,

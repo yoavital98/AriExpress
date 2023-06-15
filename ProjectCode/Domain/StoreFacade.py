@@ -307,7 +307,7 @@ class StoreFacade:
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
-        else:
+        else: # guest user
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
 
@@ -383,7 +383,6 @@ class StoreFacade:
             for keyword in splitted_keywords:
                 product_list.extend(cur_store.searchProductByName(keyword))
             if len(product_list) > 0:
-                # data_product_list = [DataProduct(prod) for prod in product_list]
                 json_product_list = [prod.toJson() for prod in product_list]
                 search_results[
                     cur_store.get_store_name()] = json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
@@ -400,8 +399,13 @@ class StoreFacade:
         return search_results
 
     def productFilterByFeatures(self, featuresDict, username):
-        # TODO: not implemented yet
-        return []
+        search_results = TypedDict(str, list)
+        for cur_store in self.stores.values():
+            product_list = cur_store.filterProductByFeatures(featuresDict, username)
+            if len(product_list) > 0:
+                json_product_list = [prod.toJson() for prod in product_list]
+                search_results[cur_store.get_store_name()] = json_product_list
+        return search_results
 
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()
