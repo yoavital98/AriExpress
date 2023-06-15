@@ -48,16 +48,16 @@ class StoreFacade:
 
 
         # Admin
-#        self.loadConfigAdmins(config["Admins"])
+        self.loadConfigAdmins(config["Admins"])
 
         # load data
         self.loadData()
 
         # handshake with supply service and payment service
-#        self.supply_service = SupplyService(config["SupplyService"])
-#        self.payment_service = PaymentService(config["PaymentService"])
-#        self.supply_service.perform_handshake()
-#        self.payment_service.perform_handshake()
+        self.supply_service = SupplyService(config["SupplyService"])
+        self.payment_service = PaymentService(config["PaymentService"])
+        self.supply_service.perform_handshake()
+        self.payment_service.perform_handshake()
 
         # database config init
         # TODO: connect to db # ------------------- TODO ------------------- #

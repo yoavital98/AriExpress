@@ -14,7 +14,7 @@ class MainappConfig(AppConfig):
         from ProjectCode.Service.Service import Service
         from .views import send_notification_lambda
         
-        service = Service(load_file, config, send_notification_call = send_notification_lambda)
+        service = Service(load_file, config, send_notification_call= send_notification_lambda)
         # service = Service()
 
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
