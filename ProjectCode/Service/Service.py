@@ -422,6 +422,16 @@ class Service:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
+    def getStaffPendingForBid(self, store_name, bid_id):
+        try:
+            pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
+            logging.debug(f"fetching all pending staff for bid. By store name: " + store_name + "and bid id" + bid_id +
+                          ".")
+            return Response(json.dumps(pending_list), True)
+        except Exception as e:
+            logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
+            return Response(e, False)
+
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
         try:
