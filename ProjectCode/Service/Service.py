@@ -422,6 +422,19 @@ class Service:
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
+    
+    def getAllBidsFromStore(self, storename):
+        try:
+            bids = self.store_facade.getAllBidsFromStore(storename)
+            print(f"bidsservice {bids}")
+            logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
+            bids_data = {}
+            for bid in bids:
+                bids_data[bid.get_id()] = bid.toJson()
+            return Response(json.dumps(bids_data), True)
+        except Exception as e:
+            logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
+            return Response(e, False)
 
     def getStaffPendingForBid(self, store_name, bid_id):
         try:
