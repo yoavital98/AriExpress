@@ -3,12 +3,12 @@ from unittest import TestCase
 from ProjectCode.Service.Service import Service
 
 default_config = "../../default_config.json"
-stores_config  = "../../config_acceptanceTests2StoresNoWorkers.json"
+stores_load  = "../../load_acceptanceTests2StoresNoWorkers.json"
 true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
 class Test_Use_Cases_1(TestCase):
     default_config = "../../default_config.json"
-    stores_config = "../../config_acceptanceTests2StoresNoWorkers.json"
+    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
 
     def setUp(self):
         pass
@@ -126,10 +126,10 @@ class Test_Use_Cases_1(TestCase):
     # ----------------------guest functionality tests----------------------
 class Test_Use_Cases_2_1(TestCase):
     default_config = "../../default_config.json"
-    stores_config = "../../config_acceptanceTests2StoresNoWorkers.json"
+    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
 
     def setUp(self):
-        self.service = Service(self.stores_config, true_lambda)
+        self.service = Service(self.default_config, true_lambda)
     # Use Case 2.1.1
     def test_guest_visit_success(self):
         # TODO 00 - check that a guest is trackable, can know when logged out to system, etc.
@@ -222,9 +222,9 @@ class Test_Use_Cases_2_1(TestCase):
             self.service.logIn("username22", "password2")
 class Test_Use_Case_2_2(TestCase):
     default_config = "../../default_config.json"
-    stores_config = "../../config_acceptanceTests2StoresNoWorkers.json"
+    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
     def setUp(self):
-        self.service = Service(self.stores_config, true_lambda)
+        self.service = Service(self.default_config, true_lambda)
 
     # Use Case 2.2.1
     def test_guest_information_fetching(self):
@@ -431,7 +431,7 @@ class Test_Use_Case_2_3_members(TestCase):
         self.assertFalse(res_create_store.getStatus())
 class Test_Use_Case_2_4_Management(TestCase):
     def setUp(self):
-        self.service = Service(self.stores_config, true_lambda)
+        self.service = Service(self.default_config, true_lambda)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         res = self.service.logIn("Feliks", "password456")
@@ -536,7 +536,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(res_purchase_history.getStatus())
 class Test_Use_Case_2_5_nominations(TestCase):
     def setUp(self):
-        self.service = Service(self.stores_config, true_lambda)
+        self.service = Service(self.default_config, true_lambda)
     # Use Case 5
     def test_nominatedPreformingAction_Success(self):
         res = self.service.logIn("Feliks", "password456")
@@ -553,7 +553,7 @@ class Test_Use_Case_2_5_nominations(TestCase):
     # Use Case 6.4
 class Test_Use_Case_2_6_transactions(TestCase):
     def setUp(self):
-        self.service = Service(self.stores_config, true_lambda)
+        self.service = Service(self.default_config, true_lambda)
     def test_StorePurchaseHistoryAdmin_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.service.loginAsGuest()
