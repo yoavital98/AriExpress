@@ -84,10 +84,12 @@ def login(request):
                         messages.success(request, (f"{username} Logged in successfully"))
                         return redirect('mainApp:mainpage')
                     else:
+                        # Service().logOut # TODO: needed?
                         request.session['guest'] = 1
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
                 else:
+                    print("got here")
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
@@ -95,7 +97,7 @@ def login(request):
                         return redirect('mainApp:mainpage')
                     else:
                         request.session['guest'] = 1
-                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
+                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here) - MAYBE THE USER NOT IN THE DJANGO DB?"))
                         return redirect('mainApp:login')
 
                 # if request.session['guest']:
@@ -132,8 +134,7 @@ def registerPage(request):
 
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session[
-            'guest']:  # user (guest) is logged in                                                       #
+        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in 
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
@@ -148,6 +149,7 @@ def registerPage(request):
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
+                        messages.success(request, (f"{username} Registered successfully"))
                         return redirect('mainApp:mainpage')
                     else:
                         User.objects.filter(username=username).delete()  # remove the created user from django
@@ -1082,23 +1084,23 @@ def createGuestIfNeeded(request):
     if request.user.is_authenticated:
         return False
 
-
     # user needs to be guest
     # 1. create a new user in django
     # 2. login to that user
     else:
         service = Service()
-
         actionRes = service.loginAsGuest()
-        guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
 
         if actionRes.getStatus():
+            guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
             # form = CreateMemberForm(request.POST)
             username = f"GuestUser{guestnumberdict['entrance_id']}"
             password = "asdf1233"
             # email = "guestmail@guest.com"
             # form.save()
-            user = User.objects.create_user(username=username, password=password)
+            if not User.objects.filter(username=username).exists():
+                user = User.objects.create_user(username=username, password=password)
+                user.save()
             user = authenticate(request, username=username, password=password)
             loginFunc(request, user)
             request.session['guest'] = 1
@@ -1113,10 +1115,12 @@ def createGuestIfNeeded(request):
 # returns False if current user not a guest. Otherwise logges in as member and returns the username
 def guestToUser(request, username, password):
     guestusername = request.user.username
+    print(f"session: {request.session['guest']}")
     if request.user.is_authenticated and request.session['guest']:
         service = Service()
         guestnumber = get_number_at_end(guestusername)
         actionRes = service.logInFromGuestToMember(guestnumber, username, password)  # 1.
+        print(actionRes.getStatus())
         if actionRes.getStatus():
             logoutFunc(request)  # 2.
             user = authenticate(request, username=username, password=password)
@@ -1124,12 +1128,11 @@ def guestToUser(request, username, password):
             guestuser = User.objects.get(username=guestusername)
             guestuser.delete()  # 4.
             request.session['guest'] = 0
-            return request.user.username
+            return username
             # ret = ast.literal_eval(str(actionRes.getReturnValue()))
             # return ret['entrance_id']
 
-    else:
-        return False
+    return False
 
 
 def get_number_at_end(string):
