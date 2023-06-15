@@ -71,12 +71,12 @@ class MessageController:
 
         return notification_id
 
-    def read_notification(self, user_id, message_id):
-        for message in self._inbox_notifications[user_id]:
-            if message.get_id() == message_id:
-                if not message.is_read():
-                    message.mark_as_read()
-                return message
+    def read_notification(self, user_id, notification_id):
+        for notification in self._inbox_notifications[user_id]:
+            if notification.get_id() == int(notification_id):
+                if not notification.is_read():
+                    notification.mark_as_read()
+                return notification
         return None
 
     def get_notifications(self, user_id):
@@ -88,5 +88,12 @@ class MessageController:
         for message in self._inbox_messages[user_id]:
             if message.get_id() == int(message_id):
                 self._inbox_messages[user_id].remove(message)
+                return True
+        return False
+    
+    def delete_notification(self, user_id, notification_id):
+        for notification in self._inbox_notifications[user_id]:
+            if notification.get_id() == int(notification_id):
+                self._inbox_notifications[user_id].remove(notification)
                 return True
         return False

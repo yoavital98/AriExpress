@@ -852,7 +852,25 @@ class Service:
             logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
         
-
+    def readNotification(self, requesterID, notificationID):
+        try:
+            notification = self.store_facade.readNotification(requesterID, notificationID)
+            logging.debug(
+                f"marked as read notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(notification.toJson(), True)
+        except Exception as e:
+            logging.error(f"readNotification Error: {str(e)}.")
+            return Response(e, False)
+        
+    def deleteNotification(self, requesterID, notificationID):
+        try:
+            res = self.store_facade.deleteNotification(requesterID, notificationID)
+            logging.debug(
+                f"deleted notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteNotification Error: {str(e)}.")
+            return Response(e, False)
 
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
