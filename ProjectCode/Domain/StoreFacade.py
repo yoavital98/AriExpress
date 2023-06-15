@@ -46,17 +46,18 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
 
+
         # Admin
-        self.loadConfigAdmins(config["Admins"])
+#        self.loadConfigAdmins(config["Admins"])
 
         # load data
         self.loadData()
 
         # handshake with supply service and payment service
-        self.supply_service = SupplyService(config["SupplyService"])
-        self.payment_service = PaymentService(config["PaymentService"])
-        self.supply_service.perform_handshake()
-        self.payment_service.perform_handshake()
+#        self.supply_service = SupplyService(config["SupplyService"])
+#        self.payment_service = PaymentService(config["PaymentService"])
+#        self.supply_service.perform_handshake()
+#        self.payment_service.perform_handshake()
 
         # database config init
         # TODO: connect to db # ------------------- TODO ------------------- #
@@ -93,16 +94,23 @@ class StoreFacade:
         guest: Guest = self.onlineGuests.get(str(entrance_id))
         if guest is None:
             raise Exception("Entrance id not found")
-
+        print("ok1")
+        print(self.members)
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
+            print("ok2")
             existing_member: Member = self.members[user_name]
             if password_validator.ConfirmPassword(password, existing_member.get_password()):
+                print("ok3")
                 existing_member.logInAsMember()
+                print("ok4")
                 existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
+                print("ok5")
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
+                print("ok6")
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
+                print("ok7")
                 return existing_member
                 # return DataMember(existing_member)
             else:
@@ -173,7 +181,7 @@ class StoreFacade:
         if self.online_members.keys().__contains__(user_name):
             return self.online_members.get(user_name)
         else:
-            raise Exception("user is not logged in")
+            raise Exception("user is not logged in or is not a member")
 
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
@@ -306,20 +314,28 @@ class StoreFacade:
         if self.online_members.__contains__(user_name):
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
-        else:
+        else: # guest user
             with self.lock_for_adding_and_purchasing:
                 return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
 
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
+
+
     def placeBid(self, username, store_name, offer, product_id, quantity):
         existing_member: Member = self.getOnlineMemberOnly(username)
-        bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
-        self.bid_id_counter += 1
-        existing_member.addBidToBasket(bid)
-        store: Store = self.stores[store_name]
-        store.requestBid(bid)
-        return bid
+        store: Store = self.stores.get(store_name)
+        if store is None:
+            raise Exception("Store doesnt exists")
+        with self.lock_for_adding_and_purchasing:
+            answer = store.checkProductAvailability(product_id, quantity)
+        if answer is not None:
+            bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
+            self.bid_id_counter += 1
+            existing_member.addBidToBasket(bid, store)
+            store: Store = self.stores[store_name]
+            store.requestBid(bid)
+            return bid
         # return DataBid(bid)
 
     def getAllBidsFromUser(self, username):
@@ -338,53 +354,10 @@ class StoreFacade:
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
         existing_member: Member = self.getOnlineMemberOnly(username)
-        existing_member.get_cart().purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+        with self.lock_for_adding_and_purchasing:
+            existing_member.get_cart().purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode)
 
-    def placeOfferInAuction(self, username, storename, auction_id, offer):
-        cur_member: Member = self.getOnlineMemberOnly(username)
-        cur_store: Store = self.stores.get(storename)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_auction: Auction = cur_store.placeOfferInAuction(username, auction_id, offer)
-        cur_member.addNewAuction(auction_id, cur_auction)
-        # return DataAuction(cur_auction)
-        return cur_auction
-
-    def participateInLottery(self, store_name, user_name, lottery_id, share):
-        cur_store: Store = self.stores.get(store_name)
-        cur_member: Member = self.getOnlineMemberOnly(user_name)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_lottery = cur_store.checkLotteryParticipationShare(lottery_id, share)
-        cur_lottery.add_participant_share(cur_member, share)
-        cur_store.participateInLottery(lottery_id, share)
-        # TODO: Ari: implement payment for the requested share
-        cur_member.addNewLottery(lottery_id, cur_lottery)
-
-    def ClaimAuctionPurchase(self, username, storename, auction_id, card_number, card_user_name, card_user_ID,
-                             card_date, back_number):
-        cur_member: Member = self.getOnlineMemberOnly(username)
-        cur_store: Store = self.stores.get(storename)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_member.claimAuctionPurchase()
-        cur_auction: Auction = cur_member.getAuctionById(auction_id)
-        if cur_auction.get_highest_offer_username() == cur_member.get_username():
-            product: Product = cur_store.get_products().get(cur_auction.get_product_id())
-            item_name = product.name
-            tuple_for_history = (item_name, 1)  # name of item and quantity for the history of the store
-            cur_store.purchaseAuctionProduct(auction_id)
-            self.payment_service.pay(storename, card_number, card_user_name, card_user_ID, card_date,
-                                     back_number, cur_auction.get_current_offer())
-            self.transaction_history.addNewStoreTransaction(username, storename, tuple_for_history,
-                                                            cur_auction.get_current_offer())
-
-            dict_for_history = TypedDict(str, tuple)
-            dict_for_history[storename] = tuple_for_history
-            self.transaction_history.addNewUserTransaction(username, dict_for_history, cur_auction.get_current_offer())
-            for member in cur_auction.get_participants():
-                member.removeAuctionById(auction_id)
 
     # ------  stores  ------ #
 
@@ -423,7 +396,6 @@ class StoreFacade:
             for keyword in splitted_keywords:
                 product_list.extend(cur_store.searchProductByName(keyword))
             if len(product_list) > 0:
-                # data_product_list = [DataProduct(prod) for prod in product_list]
                 json_product_list = [prod.toJson() for prod in product_list]
                 search_results[
                     cur_store.get_store_name()] = json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
@@ -440,8 +412,13 @@ class StoreFacade:
         return search_results
 
     def productFilterByFeatures(self, featuresDict, username):
-        # TODO: not implemented yet
-        return []
+        search_results = TypedDict(str, list)
+        for cur_store in self.stores.values():
+            product_list = cur_store.filterProductByFeatures(featuresDict, username)
+            if len(product_list) > 0:
+                json_product_list = [prod.toJson() for prod in product_list]
+                search_results[cur_store.get_store_name()] = json_product_list
+        return search_results
 
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()
@@ -556,8 +533,7 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         removed_username = cur_store.removeAccess(to_remove_username, requester_username)
-        MessageController(self.sendNotification).send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
-                                            + store_name + " have been removed", datetime.now(), None)
+        MessageController().send_notification(to_remove_username, "Removed Permissions", "Your permissions from store "+ store_name + " have been removed", datetime.now())
         return removed_username
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
@@ -637,46 +613,38 @@ class StoreFacade:
         return cur_store.getPolicy(policy_id)
 
     def approveBid(self, username, storename, bid_id):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+        member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
         approved_bid = cur_store.approveBid(username, bid_id)
         return approved_bid
         # return DataBid(approved_bid)
 
     def rejectBid(self, username, storename, bid_id):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+        member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
         rejected_bid = cur_store.rejectBid(username, bid_id)
         return rejected_bid
         # return DataBid(rejected_bid)
 
     def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+        member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
         alternative_bid = cur_store.sendAlternativeBid(username, bid_id, alternate_offer)
         return alternative_bid
         # return DataBid(alternative_bid)
+
+    def getStaffPendingForBid(self,store_name, bid_id):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getStaffPendingForBid(bid_id)
+
 
     def addAuction(self, username, storename, product_id, starting_price, duration):
         if not self.checkIfUserIsLoggedIn(username):
@@ -692,19 +660,6 @@ class StoreFacade:
         return new_auction
         # return DataAuction(new_auction)
 
-    def addLottery(self, username, storename, product_id):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        cur_store: Store = self.stores.get(storename)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        if self.members.get(username) is None:
-            raise Exception("No such member exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        new_lottery = cur_store.startLottery(username, product_id)
-        return new_lottery
-        # return DataLottery(new_lottery)
 
     def openStore(self, username, store_name):
         if not self.checkIfUserIsLoggedIn(username):
@@ -713,9 +668,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
+        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", f"Store {store_name} has re-opend", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
+            MessageController().send_notification(owner, "Store Re-Opened", f"Store {store_name} has re-opend", datetime.now())
 
         return cur_store
 
@@ -957,10 +912,13 @@ class StoreFacade:
         return MessageController().get_notifications(requesterID)
 
 
-    def readNotification(self, requesterID, messageID):
+    def readNotification(self, requesterID, notificationID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
-        return MessageController().read_notification(requesterID, messageID)
+        return MessageController().read_notification(requesterID, notificationID)
+    
+    def deleteNotification(self, requesterID, notificationID):
+        return MessageController().delete_notification(requesterID,notificationID)
 
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):

@@ -69,8 +69,8 @@ class Member(User):
     def set_email(self, email):
         self.email = email
 
-    def addBidToBasket(self, bid):
-        self.cart.addBidToBasket(bid)
+    def addBidToBasket(self, bid, store):
+        self.cart.addBidToBasket(bid, store)
 
     def getAllBids(self):
         return self.cart.getAllBids()

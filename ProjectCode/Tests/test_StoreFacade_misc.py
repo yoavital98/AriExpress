@@ -1,3 +1,4 @@
+import json
 import unittest
 from datetime import datetime
 from unittest import TestCase
@@ -7,6 +8,7 @@ from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHi
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.MarketObjects.Basket import Basket
+from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Cart import Cart
 
 from ProjectCode.Domain.MarketObjects.Store import Store
@@ -24,7 +26,10 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 class TestStoreFacade(TestCase):
 
     def setUp(self):
-        self.store_facade = StoreFacade()
+#        config = "../default_config.json"
+#        with open(config, 'r') as f:
+#            config_data: dict = json.load(f)
+        self.store_facade = StoreFacade({})
         self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
         self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
         self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
@@ -914,143 +919,549 @@ class TestStoreFacade(TestCase):
     def test_getAllBidsFromUser_success(self):
         pass
 
-    # approveBid
     def test_getAllBidsFromUser_userNotLoggedIn_fail(self):
         pass
 
-    # TODO: BIDS
-    def test_approveBid_success(self):
+    def test_getAllBidsFromStore_success(self):
         pass
 
-    def test_approveBid_userNotLoggedIn_fail(self):
+    def test_getAllBidsFromStore_userNotLoggedIn_fail(self):
         pass
+
+    def test_getStaffPendingForBid_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        pending_list: list = self.store_facade.getStaffPendingForBid("AriExpress", 0)
+        self.assertTrue(pending_list.__contains__("Feliks"))
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        pending_list: list = self.store_facade.getStaffPendingForBid("AriExpress", 0)
+        self.assertFalse(pending_list.__contains__("Feliks"))
+
+    def test_getStaffPendingForBid_TwoPeople_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.nominateStoreOwner("Feliks", "YuvalMelamed", "AriExpress")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        pending_list: list = self.store_facade.getStaffPendingForBid("AriExpress", 0)
+        self.assertTrue(pending_list.__contains__("Feliks"))
+        self.assertTrue(pending_list.__contains__("YuvalMelamed"))
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        pending_list: list = self.store_facade.getStaffPendingForBid("AriExpress", 0)
+        self.assertTrue(pending_list.__contains__("YuvalMelamed"))
+        self.assertFalse(pending_list.__contains__("Feliks"))
+        self.store_facade.approveBid("YuvalMelamed", "AriExpress", 0)
+        pending_list: list = self.store_facade.getStaffPendingForBid("AriExpress", 0)
+        self.assertFalse(pending_list.__contains__("YuvalMelamed"))
+        self.assertFalse(pending_list.__contains__("Feliks"))
+    def test_approveBid_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 0)
+        self.assertTrue(bid.get_status() == 1)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 1)
+    def test_approveBid_userNotLoggedIn_fail(self):
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
 
     def test_approveBid_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.approveBid("Feliks", "some_store", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
 
-    def test_approveBid_userWithoutPermission_fail(self):
-        pass
+
 
     def test_approveBid_bidNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.approveBid("Feliks", "AriExpress", 1)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
 
     # placeBid
 
     def test_placeBid_success(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.assertTrue(len(list(basket.get_bids().values())) == 1)
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        self.assertTrue(self.my_store.get_bids_requests().__contains__("Feliks"))
+
 
     def test_placeBid_guestLoggedIn_fail(self):
-        pass
+        self.store_facade.loginAsGuest()
+        with self.assertRaises(Exception):
+            self.store_facade.placeBid("0", "AriExpress", 2000, 1, 4)
+        guest: Guest = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            basket: Basket = guest.get_Basket("AriExpress")
+        self.assertFalse(self.my_store.get_bids().__contains__(0))
+        self.assertFalse(self.my_store.get_bids_requests().__contains__("Feliks"))
 
     def test_placeBid_userNotLoggedIn_fail(self):
-        pass
+        with self.assertRaises(Exception):
+            self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        guest: Guest = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            basket: Basket = guest.get_Basket("AriExpress")
+        self.assertFalse(self.my_store.get_bids().__contains__(0))
+        self.assertFalse(self.my_store.get_bids_requests().__contains__("Feliks"))
 
     def test_placeBid_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Amiel", "password789")
+        with self.assertRaises(Exception):
+            self.store_facade.placeBid("Amiel", "some_store", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            basket: Basket = member.get_Basket("some_store")
+
 
     def test_placeBid_storeIsClosed_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.placeBid("Amiel", "some_store", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            basket: Basket = member.get_Basket("some_store")
+        self.assertFalse(self.my_store.get_bids().__contains__(0))
+        self.assertFalse(self.my_store.get_bids_requests().__contains__("Feliks"))
 
     def test_placeBid_productNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.placeBid("Amiel", "AriExpress", 2000, 2, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            basket: Basket = member.get_Basket("some_store")
+        self.assertFalse(self.my_store.get_bids().__contains__(0))
+        self.assertFalse(self.my_store.get_bids_requests().__contains__("Feliks"))
 
-    def test_placeBid_productIsNotOnSale_fail(self):
-        pass
-
-    def test_placeBid_offerTooLow_fail(self):
-        pass
 
     def test_placeBid_quantityInvalid_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        with self.assertRaises(Exception):
+            basket: Basket = member.get_Basket("some_store")
+        self.assertFalse(self.my_store.get_bids().__contains__(0))
+        self.assertFalse(self.my_store.get_bids_requests().__contains__("Feliks"))
 
-    def test_placeBid_userAlreadyPlacedBid_fail(self):
-        pass
 
     # purchaseConfirmedBid
     def test_purchaseConfirmedBid_success(self):
-        pass
-
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.assertTrue(len(list(basket.get_bids().values())) == 1)
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        Amiel_Messages_count_before = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(self.my_store.get_bids_requests().__contains__("Feliks"))
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 0)
+        self.assertTrue(bid.get_status() == 1)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 1)
+        self.store_facade.purchaseConfirmedBid(0, "AriExpress", "Amiel", "4580030389763292", "23/12", "Amiel saad",
+                                               "456", "313277949","Shimoni", "Beer Sheva", "Israel", "1533732")
+        Amiel_Messages_count_after = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(len(transaction_history.get_User_Transactions("Amiel")) == 1)
+        self.assertTrue(len(transaction_history.get_Store_Transactions("AriExpress")) == 1)
+        self.assertFalse(basket.get_bids().__contains__(0))
+        self.assertFalse(self.my_store.get_bids().__contains__(0))
+        self.assertEqual(AriExpress_Messages_count_after, AriExpress_Messages_count_before + 1,
+                         "AriExpress should be notified")
+        self.assertEqual(Amiel_Messages_count_after, Amiel_Messages_count_before + 1, "Amiel should be notified")
+        transaction_history.clearAllHistory()
     def test_purchaseConfirmedBid_userNotLoggedIn_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.assertTrue(len(list(basket.get_bids().values())) == 1)
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        Amiel_Messages_count_before = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(self.my_store.get_bids_requests().__contains__("Feliks"))
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 0)
+        self.assertTrue(bid.get_status() == 1)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 1)
+        self.store_facade.logOut("Amiel")
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseConfirmedBid(0, "AriExpress", "Amiel", "4580030389763292", "23/12", "Amiel saad",
+                                               "456", "313277949", "Shimoni", "Beer Sheva", "Israel", "1533732")
+        Amiel_Messages_count_after = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(len(transaction_history.get_User_Transactions("Amiel")) == 0)
+        self.assertTrue(len(transaction_history.get_Store_Transactions("AriExpress")) == 0)
+        self.assertTrue(basket.get_bids().__contains__(0))
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        self.assertNotEquals(AriExpress_Messages_count_after, AriExpress_Messages_count_before + 1,
+                         "AriExpress should be notified")
+        self.assertNotEquals(Amiel_Messages_count_after, Amiel_Messages_count_before + 1, "Amiel should be notified")
 
-    def test_purchaseConfirmedBid_cardNumberInvalid_fail(self):
-        pass
 
-    def test_purchaseConfirmedBid_cardDateInvalid_fail(self):
-        pass
 
-    def test_purchaseConfirmedBid_cardNameInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_cardCcvInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_addressInvalid_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_productInBasketOutOfStock_fail(self):
-        pass
-
-    def test_purchaseConfirmedBid_productInBasketNotExists_fail(self):
-        pass
+    def test_purchaseConfirmedBid_BidInBasketNotExists_fail(self):
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.assertTrue(len(list(basket.get_bids().values())) == 1)
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        Amiel_Messages_count_before = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(self.my_store.get_bids_requests().__contains__("Feliks"))
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 0)
+        self.assertTrue(bid.get_status() == 1)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 1)
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseConfirmedBid(1, "AriExpress", "Amiel", "4580030389763292", "23/12", "Amiel saad",
+                                                   "456", "313277949", "Shimoni", "Beer Sheva", "Israel", "1533732")
+        Amiel_Messages_count_after = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(len(transaction_history.get_User_Transactions("Amiel")) == 0)
+        self.assertTrue(len(transaction_history.get_Store_Transactions("AriExpress")) == 0)
+        self.assertTrue(basket.get_bids().__contains__(0))
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        self.assertNotEqual(AriExpress_Messages_count_after, AriExpress_Messages_count_before + 1,
+                             "AriExpress should be notified")
+        self.assertNotEqual(Amiel_Messages_count_after, Amiel_Messages_count_before + 1, "Amiel should be notified")
 
     def test_purchaseConfirmedBid_bidNotConfirmed_fail(self):
-        pass
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.assertTrue(len(list(basket.get_bids().values())) == 1)
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        Amiel_Messages_count_before = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_before = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(self.my_store.get_bids_requests().__contains__("Feliks"))
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
+        with self.assertRaises(Exception):
+            self.store_facade.purchaseConfirmedBid(0, "AriExpress", "Amiel", "4580030389763292", "23/12", "Amiel saad",
+                                                   "456", "313277949", "Shimoni", "Beer Sheva", "Israel", "1533732")
+        Amiel_Messages_count_after = MessageController().get_notifications("Amiel").__len__()
+        AriExpress_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
+        self.assertTrue(len(transaction_history.get_User_Transactions("Amiel")) == 0)
+        self.assertTrue(len(transaction_history.get_Store_Transactions("AriExpress")) == 0)
+        self.assertTrue(basket.get_bids().__contains__(0))
+        self.assertTrue(self.my_store.get_bids().__contains__(0))
+        self.assertNotEqual(AriExpress_Messages_count_after, AriExpress_Messages_count_before + 1,
+                            "AriExpress should be notified")
+        self.assertNotEqual(Amiel_Messages_count_after, Amiel_Messages_count_before + 1, "Amiel should be notified")
 
-    def test_purchaseConfirmedBid_bidNotExists_fail(self):
-        pass
 
     # rejectBid
 
     def test_rejectBid_success(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 2)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 2)
 
+    def test_TwoPeopleRejectBid_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.nominateStoreOwner("Feliks", "YuvalMelamed", "AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 2)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("YuvalMelamed", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 2)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 2)
     def test_rejectBid_userNotLoggedIn_fail(self):
-        pass
-
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
     def test_rejectBid_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.rejectBid("Feliks", "some_store", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
 
     def test_rejectBid_storeIsClosed_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
 
     def test_rejectBid_bidNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.rejectBid("Feliks", "AriExpress", 1)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 0)
 
-    def test_rejectBid_bidNotBelongToUser_fail(self):
-        pass
 
     def test_rejectBid_bigAlreadyAccepted_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        with self.assertRaises(Exception):
+            self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 0)
+        self.assertTrue(bid.get_status() == 1)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 1)
 
     def test_rejectBid_bidAlreadyRejected_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        with self.assertRaises(Exception):
+            self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 2)
+        self.assertTrue(basket.get_bids().get(0).get_status() == 2)
 
     # sendAlternativeBid
 
     def test_sendAlternativeBid_success(self):
-        pass
-
+        transaction_history = TransactionHistory()
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
+        self.assertTrue(bid.get_status() == 3)
+        self.assertTrue(bid.get_offer() == 2200)
+        self.store_facade.purchaseConfirmedBid(0, "AriExpress", "Amiel", "4580030389763292", "23/12", "Amiel saad",
+                                               "456", "313277949", "Shimoni", "Beer Sheva", "Israel", "1533732")
+        list_amiel = transaction_history.get_User_Transactions("Amiel")
+        transaction: UserTransaction = list_amiel[0]
+        self.assertTrue(transaction.get_overall_price() == 2200)
     def test_sendAlternativeBid_userNotLoggedIn_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.logOut("Feliks")
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(bid.get_offer() == 2000)
+
 
     def test_sendAlternativeBid_storeNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "some_store", 0, 2200)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(bid.get_offer() == 2000)
 
     def test_sendAlternativeBid_storeIsClosed_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.closeStore("Feliks", "AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(bid.get_offer() == 2000)
 
     def test_sendAlternativeBid_bidNotExists_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 1, 2200)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(bid.get_offer() == 2000)
 
     def test_sendAlternativeBid_bidAlreadyAccepted_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
+        self.assertTrue(bid.get_status() == 1)
+        self.assertTrue(bid.get_offer() == 2000)
 
     def test_sendAlternativeBid_bidAlreadyRejected_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
+        self.assertTrue(bid.get_status() == 2)
+        self.assertTrue(bid.get_offer() == 2000)
 
     def test_sendAlternativeBid_alternateBidIsLower_fail(self):
-        pass
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        bid: Bid = self.store_facade.placeBid("Amiel", "AriExpress", 2000, 1, 4)
+        self.assertTrue(bid.get_left_to_approval() == 1)
+        self.assertTrue(bid.get_status() == 0)
+        member: Member = self.store_facade.members.get("Amiel")
+        basket: Basket = member.get_Basket("AriExpress")
+        with self.assertRaises(Exception):
+            self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 1900)
+        self.assertTrue(bid.get_status() == 0)
+        self.assertTrue(bid.get_offer() == 2000)
 
     # getAllOfflineMembers
     def test_getAllOfflineMembers_success(self):
@@ -1288,8 +1699,8 @@ class TestStoreFacade(TestCase):
         transaction_history = TransactionHistory()
 
         # before
-        transaction_history.insertEmptyListToUser("Amiel")
         transaction_history.insertEmptyListToUser("YuvalMelamed")
+        transaction_history.insertEmptyListToUser("Amiel")
         transaction_history.insertEmptyListToStore("AriExpress")
         self.assertTrue(len(transaction_history.user_transactions.get("Amiel")) == 0)
         self.store_facade.logInAsMember("Amiel", "password789")

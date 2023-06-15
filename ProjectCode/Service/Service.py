@@ -30,7 +30,7 @@ def loadFileInit(load_file):
                     else:
                         func(*args)
             if not found_function:
-                print(f"Error: Function '{func_name}' not found in Service class.")     
+                raise Exception(f"Error: Function '{func_name}' not found in Service class.")     
 # ------------------------------------ loadConfigInit ------------------------------------ #
 @staticmethod
 def loadConfigInit(load_file):
@@ -109,7 +109,8 @@ class Service:
     # ------  admin  ------ #
     # def openTheSystem(self, username):
     #     try:
-    #         self.store_facade.openSystem(username)
+    #         if self.admins.keys().__contains__(user_name):
+    #         self.store_facade = StoreFacade()
     #         logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
     #     except Exception as e:
     #         logging.error(f"openTheSystem Error: {str(e)}. By username: '{username}'")
@@ -435,6 +436,16 @@ class Service:
             logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
             return Response(e, False)
 
+    def getStaffPendingForBid(self, store_name, bid_id):
+        try:
+            pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
+            logging.debug(f"fetching all pending staff for bid. By store name: " + store_name + "and bid id" + bid_id +
+                          ".")
+            return Response(json.dumps(pending_list), True)
+        except Exception as e:
+            logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
+            return Response(e, False)
+
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
         try:
@@ -530,7 +541,7 @@ class Service:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def addNewProductToStore(self, username, storename, productname, categories, quantity, price):
+    def addNewProductToStore(self, username, storename, productname, quantity, price, categories):
         try:  # TODO check whether this product details are needed
             added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price,
                                                                    categories)
@@ -865,7 +876,25 @@ class Service:
             logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
         
-
+    def readNotification(self, requesterID, notificationID):
+        try:
+            notification = self.store_facade.readNotification(requesterID, notificationID)
+            logging.debug(
+                f"marked as read notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(notification.toJson(), True)
+        except Exception as e:
+            logging.error(f"readNotification Error: {str(e)}.")
+            return Response(e, False)
+        
+    def deleteNotification(self, requesterID, notificationID):
+        try:
+            res = self.store_facade.deleteNotification(requesterID, notificationID)
+            logging.debug(
+                f"deleted notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteNotification Error: {str(e)}.")
+            return Response(e, False)
 
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):

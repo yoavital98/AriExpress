@@ -1,6 +1,5 @@
 from django.apps import AppConfig
-
-
+import json
 
 class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -11,14 +10,9 @@ class MainappConfig(AppConfig):
         # load_file = "../load_purchaseCart.json"
         # load_file = "../load_withDiscounts.json"
         load_file = "../load_bids.json"
-        
-        
         from ProjectCode.Service.Service import Service
         from .views import send_notification_lambda
-        
         service = Service(load_file, config, send_notification_call = send_notification_lambda)
-
-        # service = Service()
 
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only
@@ -31,8 +25,8 @@ class MainappConfig(AppConfig):
         # service.logOut("bbb")
 
 
-#         load_file = "../config_multipleStaff.json"
-# #         load_file = "../config_purchaseCart.json"
+#         load_file = "../load_multipleStaff.json"
+# #         load_file = "../load_purchaseCart.json"
 #         service = Service(load_file)
 
 
@@ -111,3 +105,17 @@ class MainappConfig(AppConfig):
         # users = User.objects.all()
         # for i in range(1, len(users)):
         #     User.objects.all()[i].delete()
+    def loadAdmins(self, config):
+        from django.contrib.auth.models import User
+        with open(config, 'r') as f:
+            config_data : dict = json.load(f)
+        admins : dict = config_data["Admins"]
+        for name, pwd in admins.items():
+            print(name, pwd)
+            if not User.objects.filter(username=name).exists():
+                user = User.objects.create_user(username=name, password=pwd)
+                user.save()
+
+    
+
+
