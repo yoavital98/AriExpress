@@ -268,3 +268,4 @@ pyrightconfig.json
 .idea/inspectionProfiles/Project_Default.xml
 .vscode
 
+ariExpressDjango/database.db
