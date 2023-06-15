@@ -165,7 +165,6 @@ class StoreFacade:
             raise Exception("user is not logged in")
 
     # Registers a guest, register doesn't mean the user is logged in
-    # TODO 00 how can we return to a guest if the memeber enterance id is 0?
     def register(self, user_name, password, email):
         password_validator = PasswordValidationService()
         if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):
@@ -407,7 +406,6 @@ class StoreFacade:
             for keyword in splitted_keywords:
                 product_list.extend(cur_store.searchProductByName(keyword))
             if len(product_list) > 0:
-                # data_product_list = [DataProduct(prod) for prod in product_list]
                 json_product_list = [prod.toJson() for prod in product_list]
                 search_results[
                     cur_store.get_store_name()] = json_product_list  # TODO: notice product_list type isnt List[Product] therfore TypedDict returns an error
@@ -424,8 +422,13 @@ class StoreFacade:
         return search_results
 
     def productFilterByFeatures(self, featuresDict, username):
-        # TODO: not implemented yet
-        return []
+        search_results = TypedDict(str, list)
+        for cur_store in self.stores.values():
+            product_list = cur_store.filterProductByFeatures(featuresDict, username)
+            if len(product_list) > 0:
+                json_product_list = [prod.toJson() for prod in product_list]
+                search_results[cur_store.get_store_name()] = json_product_list
+        return search_results
 
     def getStorePurchaseHistory(self, requesterID, store_name):
         transaction_history = TransactionHistory()

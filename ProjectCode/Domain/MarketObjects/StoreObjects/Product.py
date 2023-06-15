@@ -29,6 +29,18 @@ class Product:
     def get_categories(self):
         return self.categories
 
+    def checkFeatures(self, features):
+        for k, v in features.items():
+            if k == "min_price":
+                if self.price < v:
+                    return False
+            elif k == "max_price":
+                if self.price > v:
+                    return False
+            else:
+                raise Exception("invalid feature")
+        return True
+
     # =======================JSON=======================#
 
     def toJson(self):

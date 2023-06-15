@@ -4,9 +4,12 @@ from ProjectCode.Service.Service import Service
 
 default_config = "../../default_config.json"
 stores_config  = "../../config_acceptanceTests2StoresNoWorkers.json"
+true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
 class Test_Use_Cases_1(TestCase):
-    
+    default_config = "../../default_config.json"
+    stores_config = "../../config_acceptanceTests2StoresNoWorkers.json"
+
     def setUp(self):
         pass
 
@@ -16,13 +19,13 @@ class Test_Use_Cases_1(TestCase):
 
     #  Use Case 1.1
     def test_starting_the_market_system_success(self):
-        service = Service(default_config)
+        service = Service(default_config, true_lambda)
         self.assertNotEqual(service.store_facade.admins.__len__(), 0)
 
     # Use Case 1.2
 
     def test_AddSetUpdate_connection_with_supply_service_success(self):
-        service = Service(default_config)
+        service = Service(default_config, true_lambda)
         self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
         # add new address
         service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.111webhostapp.com/","new_name")
@@ -40,7 +43,7 @@ class Test_Use_Cases_1(TestCase):
         self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.222webhostapp.com/")
 
     def test_AddSetUpdate_connection_with_payment_service_success(self):
-        service = Service(default_config)
+        service = Service(default_config, true_lambda)
         self.assertTrue(
             service.store_facade.payment_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
         # add new address
@@ -68,7 +71,7 @@ class Test_Use_Cases_1(TestCase):
     # Use Case 1.3 & 1.4
 
     def setup_purchase(self):
-        self.service = Service(default_config)
+        self.service = Service(default_config, true_lambda)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         self.service.logIn("Feliks", "password456")
@@ -122,9 +125,11 @@ class Test_Use_Cases_1(TestCase):
 
     # ----------------------guest functionality tests----------------------
 class Test_Use_Cases_2_1(TestCase):
+    default_config = "../../default_config.json"
+    stores_config = "../../config_acceptanceTests2StoresNoWorkers.json"
 
     def setUp(self):
-        self.service = Service(stores_config)
+        self.service = Service(self.stores_config, true_lambda)
     # Use Case 2.1.1
     def test_guest_visit_success(self):
         # TODO 00 - check that a guest is trackable, can know when logged out to system, etc.
@@ -216,9 +221,12 @@ class Test_Use_Cases_2_1(TestCase):
         with self.assertRaises(Exception):
             self.service.logIn("username22", "password2")
 class Test_Use_Case_2_2(TestCase):
+    default_config = "../../default_config.json"
+    stores_config = "../../config_acceptanceTests2StoresNoWorkers.json"
     def setUp(self):
-        self.service = Service(stores_config)
+        self.service = Service(self.stores_config, true_lambda)
 
+    # Use Case 2.2.1
     def test_guest_information_fetching(self):
         self.setUp()
         res = self.service.loginAsGuest()
@@ -246,49 +254,58 @@ class Test_Use_Case_2_2(TestCase):
         feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
         self.assertTrue(feliks_products == 12)
         with self.assertRaises(Exception):
-            product1 = self.service.getProduct("Feliks&Sons", 15, guest0_entrance_id)
+            self.service.getProduct("Feliks&Sons", 15, guest0_entrance_id)
 
     # Use Case 2.2.2
 
     def test_guest_product_search_by_name(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.productSearchByName("paper", "0")
-        self.assertTrue(res.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res_product = self.service.productSearchByName("Ca", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 3) # Cabbage, Cauliflower, Carrot
+        with self.assertRaises(Exception):
+            x = res_product.getReturnValue()["Robin&Daughters"] # None in Ca
 
     def test_guest_product_search_by_category(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        products = self.service.productSearchByCategory("paper", "0")
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res_product = self.service.productSearchByCategory("Sauces", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Robin&Daughters"].__len__() == 5) # 5 Sauces
+        with self.assertRaises(Exception):
+            x = res_product.getReturnValue()["Feliks&Sons"] # None in Feliks's
 
-        self.assertTrue(products.getStatus())
-
-    def test_guest_product_search_by_name_fail(self):
+    def test_guest_product_search_by_features_price(self):
+        #TODO
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.productSearchByName("some_name", "0")
-        self.assertTrue(res.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res_products_below10 = self.service.productFilterByFeatures({"min price": 0, "max price": 10}, guest0_entrance_id)
+        res_products_below5 = self.service.productFilterByFeatures({"min price": 0, "max price": 5}, guest0_entrance_id)
+        self.assertTrue(res_products_below10.getReturnValue()["Feliks&Sons"].__len__() == 11) # All products
+        self.assertTrue(res_products_below10.getReturnValue()["Robin&Daugthers"].__len__() == 3) # 6 products
+        self.assertTrue(res_products_below5.getReturnValue()["Robin&Daugthers"].__len__() == 3) # 6 products
+        with self.assertRaises(Exception):
+            x = res_products_below5.getReturnValue()["Feliks&Sons"] # None in Feliks's
+        with self.assertRaises(Exception):
+            x = self.service.productFilterByFeatures({"Size": 0}, guest0_entrance_id)
 
-    def test_guest_product_search_by_category_fail(self):
-        res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        products = self.service.productSearchByCategory("some_category", "0")
-
-        self.assertTrue(products.getStatus())
-
-    # def test_guest_product_search_by_keyword(self):
-    #     guest = self.Service.loginAsGuest()
-    #     products = self.Service.productFilterByFeatures("keyword1")
-    #     self.assertTrue(len(products) > 0)
 
     # Use Case 2.2.3
 
-    def test_guest_add_product_to_cart_success(
-            self):  # TODO: check the todo in storeFacade under the productSearchByName function
+    def test_guest_add_product_to_cart_success(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
-        self.assertTrue(res_added_product.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        robin_product_2_quantity = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.service.addToBasket(guest0_entrance_id, "Robin&daughters", 2, 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["id"] == 2)
+        self.service.leaveAsGuest(guest0_entrance_id)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        robin_product_2_quantity_after = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     def test_guest_add_product_to_cart_productDoesntExists_failure(self):
         res = self.service.loginAsGuest()
@@ -369,7 +386,7 @@ class Test_Use_Case_2_2(TestCase):
         # todo: ver 3
 class Test_Use_Case_2_3_members(TestCase):
     def setUp(self):
-        self.service = Service(default_config)
+        self.service = Service(default_config, true_lambda)
         self.service.register("username", "password", "email")
 
     # Use Case 3.1.1
@@ -414,7 +431,7 @@ class Test_Use_Case_2_3_members(TestCase):
         self.assertFalse(res_create_store.getStatus())
 class Test_Use_Case_2_4_Management(TestCase):
     def setUp(self):
-        self.service = Service(stores_config)
+        self.service = Service(self.stores_config, true_lambda)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         res = self.service.logIn("Feliks", "password456")
@@ -519,7 +536,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(res_purchase_history.getStatus())
 class Test_Use_Case_2_5_nominations(TestCase):
     def setUp(self):
-        self.service = Service(stores_config)
+        self.service = Service(self.stores_config, true_lambda)
     # Use Case 5
     def test_nominatedPreformingAction_Success(self):
         res = self.service.logIn("Feliks", "password456")
@@ -536,7 +553,7 @@ class Test_Use_Case_2_5_nominations(TestCase):
     # Use Case 6.4
 class Test_Use_Case_2_6_transactions(TestCase):
     def setUp(self):
-        self.service = Service(stores_config)
+        self.service = Service(self.stores_config, true_lambda)
     def test_StorePurchaseHistoryAdmin_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.service.loginAsGuest()
