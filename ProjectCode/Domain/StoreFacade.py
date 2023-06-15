@@ -165,6 +165,7 @@ class StoreFacade:
             raise Exception("user is not logged in")
 
     # Registers a guest, register doesn't mean the user is logged in
+    # TODO 00 how can we return to a guest if the memeber enterance id is 0?
     def register(self, user_name, password, email):
         password_validator = PasswordValidationService()
         if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):

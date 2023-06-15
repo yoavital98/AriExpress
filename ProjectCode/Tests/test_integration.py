@@ -1,16 +1,9 @@
 import unittest
 from unittest import TestCase
-from ProjectCode.Domain.MarketObjects.Store import Store
-from ProjectCode.Domain.DataObjects.DataGuest import DataGuest
-from ProjectCode.Domain.DataObjects.DataMember import DataMember
-from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
-from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
-from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Service.Service import Service
-from ProjectCode.Service.Response import Response
 
 default_config = "../../default_config.json"
-
+stores_config  = "../../config_acceptanceTests2StoresNoWorkers.json"
 
 class Test_Use_Cases_1(TestCase):
     
@@ -128,117 +121,134 @@ class Test_Use_Cases_1(TestCase):
         self.assertTrue(res.getStatus())
 
     # ----------------------guest functionality tests----------------------
-
-
 class Test_Use_Cases_2_1(TestCase):
 
     def setUp(self):
-        self.service = Service(default_config)
-    def setup_purchase(self):
-        self.service = Service(default_config)
-        self.service.register("Feliks", "password456", "feliks@gmail.com")
-        self.service.register("Amiel", "password789", "amiel@gmail.com")
-        self.service.logIn("Feliks", "password456")
-        self.service.createStore("Feliks", "Feliks&Sons")
-        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "medium paper package", 50, 100, "paper")
-        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "pencil", 50, 100, "writing tools")
+        self.service = Service(stores_config)
     # Use Case 2.1.1
     def test_guest_visit_success(self):
         # TODO 00 - check that a guest is trackable, can know when logged out to system, etc.
-        # a guest can visit the system, have a cart,
-        # add products to it, and purchase it.
-        self.setup_purchase()
+        # a guest can (1) visit the system (2) have a cart
+        # (3) add products to it (4) and purchase it.
+        # =============================================
+        self.setUp()
+        # (1)
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
         guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
-
         self.assertTrue(guest0_entrance_id == 0)
         self.assertTrue(guest1_entrance_id == 1)
-        guest0_cart = self.service.getCart(entrance_id)
-
-    def test_guest_visit_failure(self):
-        # cannot fail!
-        pass
+        # (2)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["username"] == "2")
+        self.assertTrue(self.service.getCart(guest1_entrance_id).getReturnValue()["username"] == "3")
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        self.assertTrue(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"] == [])
+        # (3)
+        feliks_product_1_quantity = self.service.getProduct("Feliks&Sons", 1, "Feliks").getReturnValue()["quantity"]
+        robin_product_1_quantity = self.service.getProduct("Robin&daughters", 1, "Robin").getReturnValue()["quantity"]
+        robin_product_2_quantity = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 3)
+        self.service.addToBasket(guest0_entrance_id, "Robin&daughters", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Robin&daughters", 2, 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 8)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][1]["store"] == "Robin&daughters")
+        self.assertTrue(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
+        # (4)
+        self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                       "some_address", "be'er sheva", "Israel", "1234567")
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        feliks_product_1_quantity_after = self.service.getProduct("Feliks&Sons", 1, "Feliks").getReturnValue()["quantity"]
+        robin_product_1_quantity_after = self.service.getProduct("Robin&daughters", 1, "Robin").getReturnValue()["quantity"]
+        robin_product_2_quantity_after = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.assertTrue(feliks_product_1_quantity_after == feliks_product_1_quantity - 8)
+        self.assertTrue(robin_product_1_quantity_after == robin_product_1_quantity - 5)
+        self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     # Use Case 2.1.2
     def test_guest_exit_success(self):
-        pass
+        self.setUp()
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        robin_product_2_quantity = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.service.addToBasket(guest0_entrance_id, "Robin&daughters", 2, 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["id"] == 2)
+        self.service.leaveAsGuest(guest0_entrance_id)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        robin_product_2_quantity_after = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     # ---------------------------------member functionality tests---------------------------------
 
     # Use Case 2.1.3
     def test_registration_to_the_system_success(self):
-        res = self.Service.register("username22", "password1", "email")
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        return_value: dict = res.getReturnValue()
-        self.assertTrue(return_value.get('email') == 'email')
-        self.assertTrue(return_value.get('entrance_id') == '0')
-        self.assertTrue(return_value.get('username') == 'username22')
+        self.assertTrue(self.service.getMemberInfo("admin", "username22")["name"] == "username22")
 
     def test_registration_to_the_system_failure(self):
-        res = self.Service.register("username", "password", "email")
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        res = self.Service.register("username", "password", "email")
-        self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't register")
+        with self.assertRaises(Exception):
+            self.service.register("username22", "password1", "email")
 
 
-# Use Case 2.1.4
-class Test_Use_Case_2_1_4(TestCase):
-
-    def setUp(self):
-        self.service = Service(default_config)
+    # Use Case 2.1.4
 
     def test_login_to_the_system_success(self):
-        res = self.service.loginAsGuest()
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
+        member_res = self.service.logIn("username22", "password1")
+        self.assertTrue(member_res.getReturnValue()['name'] == 'username22')
+        self.assertTrue(member_res.getReturnValue()['email'] == 'email')
 
     def test_logging_in_the_system_failure(self):
-        # there is no way to fail this
-        pass
-
-    # Use Case 2.2.1
-
-
-class Test_Use_Case_2_guests(TestCase):
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
+        self.assertTrue(res.getStatus())
+        with self.assertRaises(Exception):
+            self.service.logIn("username22", "password2")
+class Test_Use_Case_2_2(TestCase):
     def setUp(self):
-        self.service = Service(default_config)
-        self.service.register("Feliks", "password456", "feliks@gmail.com")
-        self.service.register("Amiel", "password789", "amiel@gmail.com")
-        self.service.logIn("Feliks", "password456")
-        self.service.createStore("Feliks", "Feliks&Sons")
-        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
-        self.service.logOut("Feliks")
+        self.service = Service(stores_config)
 
     def test_guest_information_fetching(self):
-        res_guest = self.service.loginAsGuest()
-        self.assertTrue(res_guest.getStatus())
-        res_product = self.service.getProductsByStore("Feliks&Sons", "0")
-        self.assertTrue(res_product.getStatus())
-
-    def test_guest_information_fetching_noSuchStore_failure(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.getProductsByStore("some_store", "0")
-        self.assertFalse(res_product.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        self.assertTrue(store_count == 2)
+        feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
+        self.assertTrue(feliks_products == 12)
+        product1 = self.service.getProduct("Feliks&Sons", 1, guest0_entrance_id)
+        self.assertTrue(product1.getReturnValue()["name"] == "Cabbage_K")
+    def test_guest_information_fetching_noSuchStore_failure(self):
+        self.setUp()
+        res = self.service.loginAsGuest()
+        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        self.assertTrue(store_count == 2)
+        with self.assertRaises(Exception):
+            self.service.getStoreProductsInfo("Ari&Bears")
 
     def test_guest_information_fetching_noSuchProduct_failure(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.getProduct("some_store", 5, 1)
-        self.assertFalse(res_product.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        self.assertTrue(store_count == 2)
+        feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
+        self.assertTrue(feliks_products == 12)
+        with self.assertRaises(Exception):
+            product1 = self.service.getProduct("Feliks&Sons", 15, guest0_entrance_id)
 
     # Use Case 2.2.2
-    # Pre-conditions: User defined as guest is connected to the system
-    # Post-conditions: None.
-    # Flow:
-    #   User types a certain product name/category/keyword on the search bar.
-    #   The system iterates over the stores and looks for a product that fits the description.
-    #   If OK:
-    #       The system returns the results of all the products that fits the description.
-    #   Else:
-    #       The system returns a message that there is no products for that description.
 
     def test_guest_product_search_by_name(self):
         res = self.service.loginAsGuest()
@@ -357,9 +367,7 @@ class Test_Use_Case_2_guests(TestCase):
     def test_guest_purchaseConfirmedBid_success(self):
         pass
         # todo: ver 3
-
-
-class Test_Use_Case_3_members(TestCase):
+class Test_Use_Case_2_3_members(TestCase):
     def setUp(self):
         self.service = Service(default_config)
         self.service.register("username", "password", "email")
@@ -404,11 +412,9 @@ class Test_Use_Case_3_members(TestCase):
     def test_createShop_notLoggedIn_fail(self):
         res_create_store = self.service.createStore("username", "Feliks&Sons")
         self.assertFalse(res_create_store.getStatus())
-
-
-class Test_Use_Case_4_Management(TestCase):
+class Test_Use_Case_2_4_Management(TestCase):
     def setUp(self):
-        self.service = Service(default_config)
+        self.service = Service(stores_config)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         res = self.service.logIn("Feliks", "password456")
@@ -511,7 +517,9 @@ class Test_Use_Case_4_Management(TestCase):
         self.assertTrue(res_purchase.getStatus())
         res_purchase_history = self.service.getStorePurchaseHistory("Feliks", "Feliks&Sons")
         self.assertTrue(res_purchase_history.getStatus())
-
+class Test_Use_Case_2_5_nominations(TestCase):
+    def setUp(self):
+        self.service = Service(stores_config)
     # Use Case 5
     def test_nominatedPreformingAction_Success(self):
         res = self.service.logIn("Feliks", "password456")
@@ -526,7 +534,9 @@ class Test_Use_Case_4_Management(TestCase):
         self.assertTrue(res_request.getStatus())
 
     # Use Case 6.4
-
+class Test_Use_Case_2_6_transactions(TestCase):
+    def setUp(self):
+        self.service = Service(stores_config)
     def test_StorePurchaseHistoryAdmin_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.service.loginAsGuest()
