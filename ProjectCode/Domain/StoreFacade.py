@@ -46,6 +46,7 @@ class StoreFacade:
         self.nextEntranceID = 0  # guest ID counter
         self.bid_id_counter = 0  # bid counter
 
+
         # Admin
 #        self.loadConfigAdmins(config["Admins"])
 
@@ -324,7 +325,7 @@ class StoreFacade:
         if answer is not None:
             bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
             self.bid_id_counter += 1
-            existing_member.addBidToBasket(bid)
+            existing_member.addBidToBasket(bid, store)
             store: Store = self.stores[store_name]
             store.requestBid(bid)
             return bid
@@ -614,18 +615,20 @@ class StoreFacade:
         # return DataBid(rejected_bid)
 
     def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
+        member: Member = self.getOnlineMemberOnly(username)
         cur_store: Store = self.stores[storename]
         if cur_store is None:
             raise Exception("No such store exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        if self.members[username] is None:
-            raise Exception("No such member exists")
         alternative_bid = cur_store.sendAlternativeBid(username, bid_id, alternate_offer)
         return alternative_bid
         # return DataBid(alternative_bid)
+
+    def getStaffPendingForBid(self,store_name, bid_id):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getStaffPendingForBid(bid_id)
+
 
     def addAuction(self, username, storename, product_id, starting_price, duration):
         if not self.checkIfUserIsLoggedIn(username):

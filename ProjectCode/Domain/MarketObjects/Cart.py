@@ -80,9 +80,9 @@ class Cart:
         basket: Basket = self.get_Basket(storename)
         return basket.getProductsAsTuples()
 
-    def addBidToBasket(self, bid: Bid):
+    def addBidToBasket(self, bid: Bid, store: Store):
         if not self.baskets.keys().__contains__(bid.get_storename()):
-            basket = Basket(bid.get_username(), bid.get_storename())
+            basket = Basket(bid.get_username(), store)
             self.baskets[bid.get_storename()] = basket
         basket_to_place_bid: Basket = self.baskets[bid.get_storename()]
         basket_to_place_bid.addBidToBasket(bid)
@@ -212,7 +212,7 @@ class Cart:
         transaction_history = TransactionHistory()
         message_controller = MessageController()
         bid: Bid = self.getBid(store_name, bid_id)
-        if bid.get_status() == 1:
+        if bid.get_status() == 1 or bid.get_status() == 3:
             # async with lock:
             answer = self.checkItemInCartForBid(bid)
             try:
@@ -224,7 +224,7 @@ class Cart:
                 exp_month, exp_year = card_date.split("/")
                 basket: Basket = self.baskets.get(store_name)
                 store: Store = basket.get_Store()
-                product: Product = store.get_products()[bid.get_product()]
+                product: Product = store.getProductById(bid.get_product_id(), "")
                 single_product_dict = {store_name: product}
                 transaction_id = payment_service.pay(card_number, exp_month, exp_year, card_user_full_name, ccv,
                                                      card_holder_id)
@@ -236,9 +236,10 @@ class Cart:
                                                           bid.get_offer())
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,
                                                            single_product_dict, bid.get_offer())
-                message_controller.sendNotificationToUser(user_name, message_header, single_product_dict,
+                message_controller.send_notification(user_name, message_header, single_product_dict,
                                                           datetime.now())
-                message_controller.sendNotificationToStore(store_name, message_header, single_product_dict,
+
+                message_controller.send_notification(store.getFounder().get_username(), message_header, single_product_dict,
                                                            datetime.now())
                 self.clearBidFromBasket(store_name, bid_id)
                 return {
