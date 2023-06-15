@@ -33,7 +33,7 @@ def sendNotification(reciever_id, notification_id, type, subject):
         notify.send(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
                     message_id=notification_id, type=type, description=subject)
     else:
-        notification = Notification(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
+        notification = Notification.objects.create(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
                                     message_id=notification_id, type=type, description=subject)
         notification.save()
 
@@ -711,21 +711,13 @@ def delete_message(request, usermessage_id):
         notification.delete()
         messages.success(request, "Message deleted successfully")
     else:
-        messages.success(request, "Message deleted successfully")
+        messages.success(request, "Error deleting message - " + str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
 
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_as_read(request, usermessage_id):
-    # message = UserMessage.objects.get(id=usermessage_id)
-    # service = Service(sendNotification)
-    # username = request.POST.get('username', None)
-    # res = service.readMessage(username, usermessage_id)
-    # if res.getStatus():
-    # message.status = 'read'
-    # message.save()
-    # messages.success(request, "Message marked as read successfully")
     service = Service()
 
     res = service.readMessage(request.user.username, usermessage_id)
@@ -737,6 +729,32 @@ def mark_as_read(request, usermessage_id):
         messages.error(request, "Error marking message as read - " + str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def mark_notification_as_read(request, notification_id):
+    service = Service()
+    res = service.readNotification(request.user.username, notification_id)
+    if res.getStatus():
+        notification = Notification.objects.filter(message_id=notification_id, recipient=request.user, type='notification')[0]
+        notification.mark_as_read()
+        messages.success(request, "Message marked as read successfully")
+    else:
+        messages.error(request, "Error marking notification as read - " + str(res.getReturnValue()))
+    return HttpResponseRedirect('/inbox')
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def delete_notification(request, notification_id):
+    service = Service()
+    res = service.deleteNotification(request.user.username, notification_id)
+    if res.getStatus():
+        notification = Notification.objects.filter(message_id=notification_id, recipient=request.user, type='notification')
+        notification.delete()
+        messages.success(request, "notification deleted successfully")
+    else:
+        messages.success(request, "Error deleting notification - " + str(res.getReturnValue()))
+    return HttpResponseRedirect('/inbox')
 
 # check if username exists
 def check_username(request):

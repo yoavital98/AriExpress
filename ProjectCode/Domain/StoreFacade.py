@@ -550,8 +550,7 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         removed_username = cur_store.removeAccess(to_remove_username, requester_username)
-        MessageController(self.sendNotification).send_notification(to_remove_username, "Removed Permissions", "Your permissions from store " \
-                                            + store_name + " have been removed", datetime.now(), None)
+        MessageController().send_notification(to_remove_username, "Removed Permissions", "Your permissions from store "+ store_name + " have been removed", datetime.now())
         return removed_username
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
@@ -707,9 +706,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", "", datetime.now())
+        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", f"Store {store_name} has re-opend", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", "", datetime.now())
+            MessageController().send_notification(owner, "Store Re-Opened", f"Store {store_name} has re-opend", datetime.now())
 
         return cur_store
 
@@ -951,10 +950,13 @@ class StoreFacade:
         return MessageController().get_notifications(requesterID)
 
 
-    def readNotification(self, requesterID, messageID):
+    def readNotification(self, requesterID, notificationID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
-        return MessageController().read_notification(requesterID, messageID)
+        return MessageController().read_notification(requesterID, notificationID)
+    
+    def deleteNotification(self, requesterID, notificationID):
+        return MessageController().delete_notification(requesterID,notificationID)
 
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
