@@ -43,13 +43,27 @@ class TestStoreFacade(TestCase):
         self.store_facade.nextEntranceID = 0
 
 
+    def test_nominations(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks","Amiel","AriExpress")
+        self.store_facade.logInAsMember("Amiel","password789")
+        self.store_facade.nominateStoreOwner("Feliks", "YuvalMelamed","AriExpress")
+        self.store_facade.removeAccess("Feliks","Amiel","AriExpress")
+
+    def test_simple_dis(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.addDiscount("AriExpress","Feliks","Simple",60,"Product",2)
+        self.store_facade.addToBasket("Feliks", "AriExpress",2,1)
+
     def test_discount_conditioned_basket_total_price(self):
         self.store_facade.logInAsMember("Feliks", "password456")
-        rule =  {'rule_type': 'basket_total_price', 'product_id': '', 'operator': '>=', 'quantity': '100', 'category': '', 'child': {'logic_type': 'AND', 'rule': {'rule_type': 'amount_of_category', 'product_id': '', 'operator': '<=', 'quantity': '5', 'category': 'fruit', 'child': {}}}}
+        rule2 = {'rule_type': 'basket_total_price', 'product_id': '', 'operator': '>=', 'quantity': '100', 'category': '', 'child': {}}
+        #rule =  {'rule_type': 'basket_total_price', 'product_id': '', 'operator': '>=', 'quantity': '100', 'category': '', 'child': {'logic_type': 'AND', 'rule': {'rule_type': 'amount_of_category', 'product_id': '', 'operator': '<=', 'quantity': '5', 'category': 'fruit', 'child': {}}}}
         self.store_facade.addDiscount("AriExpress","Feliks","Conditioned",60,"Product",2,
-                                      rule)
+                                      rule2)
         self.store_facade.addToBasket("Feliks", "AriExpress",2,1)
-        print(self.store_facade.getBasket("Feliks", "AriExpress").products.get())
+        print(self.store_facade.getBasket("Feliks", "AriExpress").toJson())
+        #print(self.store_facade.getBasket("Feliks", "AriExpress").products.get())
 
 
     # __getAdmin
