@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from peewee import SqliteDatabase
@@ -7,6 +8,7 @@ from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
 from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.BidModel import BidModel
 from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.DiscountModel import DiscountModel
 #from ProjectCode.DAL.CartModel import CartModel
@@ -24,6 +26,7 @@ from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction imp
 from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
 from ProjectCode.Domain.MarketObjects.Access import Access
 from ProjectCode.Domain.MarketObjects.Basket import Basket
+from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
@@ -31,6 +34,7 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
 from ProjectCode.Domain.MarketObjects.UserObjects.Guest import Guest
 from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
+from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
 
@@ -44,7 +48,11 @@ class MyTestCase(unittest.TestCase):
         # db.create_tables(
         #     [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
         #      ProductBasketModel, DiscountModel, AdminModel, GuestModel])
-        self.store_facade = StoreFacade()
+        send_notification_lambda = lambda self, receiver_id, notification_id, type, subject: True
+        config = "../../default_config.json"
+        with open(config, 'r') as f:
+            config_data: dict = json.load(f)
+        self.store_facade = StoreFacade(config_data, send_notification_call=send_notification_lambda)
         self.store_facade.register("Ari", "password123", "ari@gmail.com")
         self.store_facade.register("Jane", "password456", "jane.doe@example.com")
         self.store_facade.register("Feliks", "password456", "fe.doe@example.com")
@@ -75,11 +83,11 @@ class MyTestCase(unittest.TestCase):
         db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel,
                         BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel, UserTransactionModel,
                         StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-                        ProductStoreTransactionModel])
+                        ProductStoreTransactionModel, BidModel])
         db.create_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel,
                           BasketModel, ProductBasketModel, DiscountModel, AdminModel, GuestModel, UserTransactionModel,
                         StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-                          ProductStoreTransactionModel])
+                          ProductStoreTransactionModel, BidModel])
 
     # ------ AccessRepository Tests ------
 
@@ -360,6 +368,70 @@ class MyTestCase(unittest.TestCase):
         self.store_facade.user_transactions_test.add(user_transaction)
         print(self.store_facade.user_transactions_test.keys())
 
+    #------------------- BidRepo -------------------------------
+    def test_Orm_create_and_get_Bid(self):
+        bid: Bid = Bid(0,"Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[0] = bid
+        bid: Bid = bid_repository.get(0)
+        print(bid.bid_id), print(bid.get_offer()), print(bid.get_username())
+        bid: Bid = Bid(1, "Feliks", "some_Store", 500, 1, 5)
+        bid_repository[1] = bid
+        bid: Bid = bid_repository.get(1)
+        print(bid.bid_id), print(bid.get_offer()), print(bid.get_username())
+
+    def test_Orm_del_and_contains_BidsTransaction(self):
+        bid: Bid = Bid(0, "Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[0] = bid
+        print(bid_repository.contains(0))
+        bid: Bid = Bid(1, "Feliks", "some_Store", 300, 2, 8)
+        bid_repository[1] = bid
+        print(bid_repository.contains(1))
+        bid_repository.__delitem__(0)
+        print(bid_repository.contains(0))
+        bid_repository.__delitem__(1)
+        print(bid_repository.contains(1))
+    def test_Orm_keys_BidsTransaction(self):
+        bid: Bid = Bid(0, "Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[0] = bid
+        print(bid_repository.keys())
+        bid: Bid = Bid(1, "Feliks", "some_Store", 300, 2, 8)
+        bid_repository[1] = bid
+        print(bid_repository.keys())
+
+    def test_Orm_get_by_storename_BidsTransaction(self):
+        bid: Bid = Bid(0, "Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[0] = bid
+        bid: Bid = Bid(1, "Feliks", "some_Store", 300, 2, 8)
+        bid_repository[1] = bid
+        bid: Bid = Bid(2, "Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[2] = bid
+        bid: Bid = Bid(3, "Feliks", "some_Store", 300, 2, 8)
+        bid_repository[3] = bid
+        list_Store: list = bid_repository.get_by_storename("Store")
+        print(list_Store)
+        list_Store: list = bid_repository.get_by_storename("some_Store")
+        print(list_Store)
+
+    def test_Orm_get_by_username_BidsTransaction(self):
+        bid: Bid = Bid(0, "Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[0] = bid
+        bid: Bid = Bid(1, "Feliks", "some_Store", 300, 2, 8)
+        bid_repository[1] = bid
+        bid: Bid = Bid(2, "Ari", "Store", 500, 1, 5)
+        bid_repository = BidsRepository()
+        bid_repository[2] = bid
+        bid: Bid = Bid(3, "Feliks", "some_Store", 300, 2, 8)
+        bid_repository[3] = bid
+        list_Store: list = bid_repository.get_by_username("Ari")
+        print(list_Store)
+        list_Store: list = bid_repository.get_by_username("Feliks")
+        print(list_Store)
 
 if __name__ == '__main__':
     unittest.main()
