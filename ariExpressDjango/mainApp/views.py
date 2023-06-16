@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -516,8 +516,15 @@ def viewBids(request, storename):
         bids = {}
         actionRes = service.getAllBidsFromStore(storename)
         if actionRes.getStatus():
-            bids = ast.literal_eval(str(actionRes.getReturnValue()))
-            print(bids)
+            bids : dict = ast.literal_eval(str(actionRes.getReturnValue()))
+            for id, bid in bids.items():
+                id = int(id)
+                staff = service.getStaffPendingForBid(storename, id)
+                print(f"status {staff.getStatus()}")
+                print(f"value {staff.getReturnValue()}")
+                print(f"valuetype {type(staff.getReturnValue())}")
+                bid["staffToApprove"] = ast.literal_eval(str(staff.getReturnValue()))
+
         return render(request, 'viewBids.html', {'storename': storename,
                                                     'bids': bids
                                                     })

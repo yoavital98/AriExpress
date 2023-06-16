@@ -37,6 +37,7 @@
               <td>{{ bid.offer }}</td>
               <td>
                 <div class="d-flex justify-content-start">
+                  {% if user.username in bid.staffToApprove %}
                   <form method="post" action="">
                     {% csrf_token %}
                     <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
@@ -47,12 +48,12 @@
                     <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
                     <button type="submit" class="btn btn-outline-dark" name="rejectBid">Reject</button>
                   </form>
-                  <button type="submit" onclick="animateTextbox()" class="btn btn-outline-dark" name="offerBidPrice">Offer</button>
+                  {% endif %}
                   <form method="post" action="">
                     {% csrf_token %}
                     <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
-                    <input type="text" id="myTextbox" style="display: none;">
-                    <button type="submit" class="btn btn-outline-dark" name="offerBidPrice" style="display: none">Offer2</button>
+                    <button type="submit" class="btn btn-outline-dark" name="offerBidPrice">Offer</button>
+                    <input type="text" id="myTextbox" name="offerNumber">
                   </form>
                 </div>
               </td>

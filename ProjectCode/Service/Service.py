@@ -443,9 +443,11 @@ class Service:
     def getStaffPendingForBid(self, store_name, bid_id):
         try:
             pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
-            logging.debug(f"fetching all pending staff for bid. By store name: " + store_name + "and bid id" + bid_id +
-                          ".")
-            return Response(json.dumps(pending_list), True)
+            logging.debug(f"fetching all pending staff for bid. By store name: {store_name} and bid id {bid_id}")
+            staff_data = {}
+            for name in pending_list:
+                staff_data[name] = name
+            return Response(json.dumps(staff_data), True)
         except Exception as e:
             logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
             return Response(e, False)
