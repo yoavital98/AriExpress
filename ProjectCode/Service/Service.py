@@ -359,7 +359,7 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, int(productID), int(quantity))
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
@@ -650,7 +650,7 @@ class Service:
                     discounts={}):
         try:
             discount = self.store_facade.addDiscount(storename, username, discount_type,
-                                                     percent=percent, level=level, level_name=level_name, rule=rule,
+                                                     percent=int(percent), level=level, level_name=level_name, rule=rule,
                                                      discounts=discounts)
             logging.debug(
                 f"adding discount of type " + discount_type + ".")

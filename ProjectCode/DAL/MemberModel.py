@@ -14,6 +14,10 @@ class MemberModel(Model):
     user_name = CharField(max_length=100, primary_key=True)
     password = CharField(max_length=100)
     email = CharField(max_length=100)
+    entrance_id = IntegerField()
+    logged_in = BooleanField(default=False)
+    banned = BooleanField(default=False)
+
     #cart = ForeignKeyField(CartModel, backref='member')
     #accesses = ManyToManyField(AccessModel, backref='member')
     # auctions = ManyToManyField(AuctionModel, backref='member')

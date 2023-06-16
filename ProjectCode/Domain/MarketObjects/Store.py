@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -22,13 +22,29 @@ class Store:
 
 
     def __init__(self, store_name, *args, **kwargs):
+        # super().__init__(*args, **kwargs)
+        # self.__store_name = store_name
+        # self.__products = TypedDict(int, Product)
+        # # TODO: policies
+        # self.active: bool = True
+        # self.closed_by_admin: bool = False
+        # self.__accesses = TypedDict(str, Access)
+        # self.product_id_counter = 0
+        # self.auction_id_counter = 0
+        # self.lottery_id_counter = 0
+        # self.__bids = TypedDict(int, Bid)
+        # self.__bids_requests = TypedDict(str, List[Bid])
+        # self.__auctions = TypedDict(int, Auction)
+        # self.__lotteries = TypedDict(int, Lottery)
+        # self.__discount_policy = DiscountPolicy(store_name)
+        # self.__purchase_policy = PurchasePolicies()
+
         super().__init__(*args, **kwargs)
         self.__store_name = store_name
-        self.__products = TypedDict(int, Product)
-        # TODO: policies
+        self.__products = ProductRepository(store_name)
         self.active: bool = True
         self.closed_by_admin: bool = False
-        self.__accesses = TypedDict(str, Access)
+        self.__accesses = AccessRepository(store_name=store_name)
         self.product_id_counter = 0
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
@@ -38,9 +54,12 @@ class Store:
         self.__purchase_policy = PurchasePolicies()
 
         #REPOSITORY FIELDS --- TO BE REPLACED
-        self.accesses_test = AccessRepository(store_name=store_name)
-        self.prods = ProductRepository(store_name)
+        # self.accesses_test = AccessRepository(store_name=store_name)
+        # self.prods = ProductRepository(store_name)
 
+
+    def __eq__(self, other):
+        return self.__store_name == other.get_store_name()
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
@@ -50,6 +69,7 @@ class Store:
         if status == self.active:
             raise Exception("store is already open or closed")
         self.active = status
+        self.update_fields()
 
     #-------------Permissions----------------#
 
@@ -59,14 +79,14 @@ class Store:
 
     def getFounder(self):
         for access in self.__accesses.values():
-            if access.get_role() == "Founder":
+            if access.hasRole("Founder"):
                 return access.get_user()
         return None
 
     def getOwners(self):
         owners = []
         for access in self.__accesses.values():
-            if access.get_role() == "Owner":
+            if access.hasRole("Owner"):
                 owners.append(access.get_user())
         return owners
 
@@ -74,10 +94,13 @@ class Store:
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
             raise Exception("The member doesn't have the access for that store")
+        if self.__accesses[nominated_username] is not None and self.__accesses[nominated_username].hasRole(role):
+            raise Exception("The member already has that role")
         if requester_access.canModifyPermissions() and requester_username == nominated_access.get_nominated_by_username():
             nominated_access.setAccess(role)
             requester_access.addNominatedUsername(nominated_username, nominated_access)
             self.__accesses[nominated_username] = nominated_access
+            self.__accesses[requester_username] = requester_access #update
             return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
@@ -89,7 +112,8 @@ class Store:
         if requester_access is None or to_be_removed_access is None:
             raise Exception("No such access exists")
         if requester_access.canModifyPermissions() and requester_username == to_be_removed_access.get_nominated_by_username():
-            requester_access.get_nominations().pop(to_be_removed_username)
+            requester_access.nominations.remove(to_be_removed_username)
+            self.__accesses[requester_username] = requester_access
             removed_usernames = self.__removeAllAccesses(to_be_removed_access)
             return removed_usernames
         else:
@@ -102,11 +126,11 @@ class Store:
         usernames_to_remove = []
         while len(accesses_to_remove) > 0:
             cur_access = accesses_to_remove[0]
-            cur_access.removeAccessFromMember()
-            self.__accesses.pop(cur_access.get_user().get_username())
-            usernames_to_remove.extend(cur_access.get_nominations().keys())
+            self.__accesses.remove(cur_access.get_user().get_username())
+            usernames_to_remove.extend(cur_access.get_nominations())
             accesses_to_remove.remove(cur_access)
-            accesses_to_remove.extend(cur_access.get_nominations().values())
+            pulled_accesses = [self.__accesses.get(username) for username in cur_access.get_nominations()]
+            accesses_to_remove.extend(pulled_accesses)
         return usernames_to_remove
 
     def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
@@ -143,7 +167,7 @@ class Store:
         access.canChangeProducts()
         if name == "":
             raise Exception("product name cannot be empty")
-        self.product_id_counter += 1
+        self.inc_product_id_counter()
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
         self.__products.__setitem__(self.product_id_counter, product_to_add)
         return product_to_add
@@ -169,6 +193,7 @@ class Store:
                 raise Exception("No such attribute exists")
             self.checkValue(v)
             setattr(cur_product, k, v)
+        self.__products[product_id] = cur_product
         return cur_product
 
     # TODO: may cause problem for unknown reasons
@@ -295,6 +320,7 @@ class Store:
         relevant_product_info = dict()
         for product_id, product_tuple in basket.items():
             relevant_product_info[product_id] = product_tuple[1]
+        relevant_product_info[product.get_product_id()] = quantity
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
         return (product, quantity, price_after_discount)
@@ -320,6 +346,7 @@ class Store:
                 raise Exception("No such product exists")
             cur_product.quantity -= product_quantity
             overall_price += cur_product.price * product_quantity
+            self.__products[product_id] = cur_product
 
         for product_id, product_quantity in new_product_dict.items():
             cur_product: Product = self.__products[product_id]
@@ -335,7 +362,7 @@ class Store:
         cur_access: Access = self.__accesses.get(username)
         if cur_access is None:
             raise Exception("No such access exists")
-        if not self.__products.__contains__(level_name):
+        if level == "Product" and not self.__products.__contains__(int(level_name)):
             raise Exception("no such product exists")
         cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
@@ -525,6 +552,12 @@ class Store:
     def getAllStaffMembersNames(self):
         return self.get_accesses().keys()
 
+    def inc_product_id_counter(self):
+        self.product_id_counter += 1
+        store_entry = StoreModel.get_by_id(self.__store_name)
+        store_entry.product_id_counter = self.product_id_counter
+        store_entry.save()
+
     def get_store_name(self):
         return self.__store_name
 
@@ -567,6 +600,12 @@ class Store:
     def get_discount_policy(self):
         return self.__discount_policy
 
+    def set_counters(self, active, closed_by_admin, product_id_counter, auction_id_counter, lottery_id_counter):
+        self.active = active
+        self.closed_by_admin = closed_by_admin
+        self.product_id_counter = product_id_counter
+        self.auction_id_counter = auction_id_counter
+        self.lottery_id_counter = lottery_id_counter
 
     # =======================JSON=======================#
 
@@ -614,17 +653,23 @@ class Store:
             else:
                 self.active = False
                 self.closed_by_admin = True
+            self.update_fields()
 
+    def update_fields(self):
+        store_entry = StoreModel.get_by_id(self.__store_name)
+        store_entry.closed_by_admin = self.closed_by_admin
+        store_entry.active = self.active
+        store_entry.save()
 
-    def close_store_by_admin(self):
-        if self.closed_by_admin:
-            raise Exception("Store already closed by admin")
-        else:
-            if not self.closed_by_admin and not self.active:
-                self.active = False
-            else:
-                self.active = False
-                self.closed_by_admin = True
+    # def close_store_by_admin(self):
+    #     if self.closed_by_admin:
+    #         raise Exception("Store already closed by admin")
+    #     else:
+    #         if not self.closed_by_admin and not self.active:
+    #             self.active = False
+    #         else:
+    #             self.active = False
+    #             self.closed_by_admin = True
     def checkValue(self, value):
         if isinstance(value,int):
             if value <= 0:

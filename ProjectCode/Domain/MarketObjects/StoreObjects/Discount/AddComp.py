@@ -9,6 +9,7 @@ class AddComp(Policy):
         self.discount_id = discount_id
         self.discount_dict = discount_dict
         self.childs = list()
+        self.parse()
 
     # child: Policy
     def addChild(self, child):

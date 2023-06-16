@@ -1,6 +1,18 @@
 import json
 from datetime import datetime
 
+from peewee import SqliteDatabase
+
+from ProjectCode.DAL.AccessModel import AccessModel
+from ProjectCode.DAL.AccessStateModel import AccessStateModel
+from ProjectCode.DAL.AdminModel import AdminModel
+from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.DiscountModel import DiscountModel
+from ProjectCode.DAL.GuestModel import GuestModel
+from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
+from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.DAL.SystemModel import SystemModel
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
@@ -33,13 +45,48 @@ class StoreFacade:
   
     def __init__(self, config, send_notification_call=None):
         # Store Data
+        # self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
+        # self.admins = TypedDict(str, Admin)  # dict of admins
+        # self.members = TypedDict(str, Member)  # dict of members
+        # self.onlineGuests = TypedDict(str, Guest)  # dict of users
+        # self.stores = TypedDict(str, Store)  # dict of stores
+        # self.online_members = TypedDict(str, Member)  # dict from username to online members
+        # self.banned_members = TypedDict(str,
+        #                                 Member)  # dict from username to banned users Todo opt: special home page for banned users
+        # # Services
+        # self.message_controller = MessageController()  # Assuming get_instance() is the method to get the singleton instance
+        # # Data
+        # self.accesses = TypedDict(str, Access)  # optional TODO check key type
+        # self.nextEntranceID = 0  # guest ID counter
+        #
+        # self.bid_id_counter = 0  # bid counter
+        # # Admin
+        # first_admin: Admin = Admin("admin", "12341234", "a@a.com")
+        # # first_admin.logInAsAdmin() # added by rubin to prevent deadlock
+        # self.admins["admin"] = first_admin
+        # # load data
+        # self.loadData()
+
+        db = SqliteDatabase('database.db')
+        db.connect()
+        # model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                ProductBasketModel, DiscountModel, AdminModel, GuestModel]
+        # for m in model_list:
+        #    m.delete().execute()
+
+        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+                         ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+        db.create_tables(
+             [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+              ProductBasketModel, DiscountModel, AdminModel, GuestModel])
+
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
-        self.admins = TypedDict(str, Admin)  # dict of admins
-        self.members = TypedDict(str, Member)  # dict of members
-        self.onlineGuests = TypedDict(str, Guest)  # dict of users
-        self.stores = TypedDict(str, Store)  # dict of stores
-        self.online_members = TypedDict(str, Member)  # dict from username to online members
-        self.banned_members = TypedDict(str, Member)  # dict from username to banned users Todo opt: special home page for banned users
+        self.admins = AdminRepository() # dict of admins
+        self.members = MemberRepository()  # dict of members
+        self.onlineGuests = GuestRepository()  # dict of users
+        self.stores = StoreRepository()  # dict of stores
+        self.online_members = MemberRepository(online=True)  # dict from username to online members
+        self.banned_members = MemberRepository(banned=True)  # dict from username to banned users Todo opt: special home page for banned users
         # Services
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
@@ -66,7 +113,6 @@ class StoreFacade:
 
 
         # REPOSITORY FIELDS - TO BE REPLACED
-        #self.entrance_orm = SystemModel.create(entrance_id=self.nextEntranceID)
         self.members_test = MemberRepository()
         self.stores_test = StoreRepository()
         self.admins_test = AdminRepository()
@@ -157,7 +203,7 @@ class StoreFacade:
             raise Exception("user does not exists")
 
     def checkIfUserIsLoggedIn(self, user_name):
-        return self.online_members.__contains__(user_name)
+        return self.online_members.keys().__contains__(user_name)
 
     # checks if username exists in the system
     def checkIfUsernameExists(self, user_name):
@@ -166,7 +212,7 @@ class StoreFacade:
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
-            if self.online_members.__contains__(str(user_name)):
+            if self.online_members.keys().__contains__(str(user_name)):
                 return self.members.get(user_name)
             else:
                 raise Exception("user is not logged in")
@@ -442,10 +488,10 @@ class StoreFacade:
             raise Exception("Store name already taken")
 
         cur_store = Store(store_name)
-        new_access = Access(cur_store, cur_member, username)
-        cur_member.accesses[store_name] = new_access
-        cur_store.setFounder(cur_member.get_username(), new_access)
         self.stores[store_name] = cur_store
+        new_access = Access(cur_store, cur_member, username)
+        #cur_member.accesses[store_name] = new_access -- ORM CHANGE
+        cur_store.setFounder(cur_member.get_username(), new_access)
         return cur_store
         # return DataStore(cur_store)
 
@@ -498,17 +544,12 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         self.checkIfMemberExists(nominated_username)
-        nominated_access = self.members[nominated_username].get_accesses().get(store_name)
-        if nominated_access is None:
-            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-
+        nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Owner")
 
-        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
-        # TODO:
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         cur_store: Store = self.stores[store_name]
@@ -516,14 +557,9 @@ class StoreFacade:
             raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
-        nominated_access = self.members[nominated_username].get_accesses().get(store_name)
-        if nominated_access is None:
-            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-
+        nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
         nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                         "Manager")
-        self.members[nominated_username].get_accesses()[store_name] = nominated_modified_access
-        # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
     def removeAccess(self, requester_username, to_remove_username, store_name):
@@ -668,10 +704,9 @@ class StoreFacade:
         if cur_store is None:
             raise Exception("No such store exists")
         cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder(), "Store Re-Opened", f"Store {store_name} has re-opend", datetime.now())
+        MessageController().send_notification(cur_store.getFounder().get_username(), "Store Re-Opened", "", datetime.now())
         for owner in cur_store.getOwners():
-            MessageController().send_notification(owner, "Store Re-Opened", f"Store {store_name} has re-opend", datetime.now())
-
+            MessageController().send_notification(owner.get_username(), "Store Re-Opened", "", datetime.now())
         return cur_store
 
     def closeStore(self, username, store_name):
@@ -718,6 +753,7 @@ class StoreFacade:
                 raise Exception("admin is already in the system")
             if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
                 existing_admin.logInAsAdmin()
+                self.admins[username] = existing_admin
                 return existing_admin
             else:
                 raise Exception("admin name or password does not match")
@@ -730,6 +766,7 @@ class StoreFacade:
             if not existing_admin.logged_In:
                 raise Exception("Admin is not logged in")
             existing_admin.logOffAsAdmin()
+            self.admins[user_name] = existing_admin
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
         pass  # no messanger this version
@@ -786,8 +823,8 @@ class StoreFacade:
             admin: Admin = self.admins.get(user_name)
             if admin.logged_In:
                 member_list = []
-                for member in self.members:
-                    if member not in self.online_members:
+                for member in self.members.values():
+                    if member not in self.online_members.values():
                         member_list.append(member)
                 return member_list
             else:
@@ -867,13 +904,13 @@ class StoreFacade:
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().get_messages_sent(requesterID)
-      
+
 
     def getAllMessagesReceived(self, requesterID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().get_messages_received(requesterID)
-    
+
     def getAllNotifications(self, requesterID):
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
@@ -884,7 +921,7 @@ class StoreFacade:
         if not self.checkIfUserIsLoggedIn(requesterID):
             raise Exception("User is not logged in")
         return MessageController().read_message(requesterID, messageID)
-    
+
     def deleteMessage(self, requesterID, messageID):
         return MessageController().delete_message(requesterID, messageID)
 
@@ -904,7 +941,7 @@ class StoreFacade:
             raise Exception("no such store exists")
         founder = self.getStoreFounder(storeID)
         return MessageController().send_notification(founder, subject, content, creation_date)
-      
+
 
     def getAllNotificationsReceived(self, requesterID):
         if not self.checkIfUserIsLoggedIn(requesterID):

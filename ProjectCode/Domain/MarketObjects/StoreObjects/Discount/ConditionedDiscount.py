@@ -20,6 +20,7 @@ class ConditionedDiscount(Policy):
         self.rule = rule
         self.percent = percent
         self.logic_comp: LogicComp = None
+        self.parse()
         #self.percent = percent
         #self.level = level
         #self.level_name = level_name
@@ -29,10 +30,10 @@ class ConditionedDiscount(Policy):
         return "ConditionedDiscount: " + str(self.percent) + "% off " + str(self.level) + " " + str(self.level_name) + " if " + str(self.rule)
 
     #returns price for a product after discount
-    def calculate(self, product, basket, total_price):
+    def calculate(self, product, basket, total_price): #TODO: check here
         if self.level == "Category" and self.level_name not in product.get_categories():
             return 0
-        elif self.level == "Product" and self.level_name != product.get_product_id():
+        elif self.level == "Product" and int(self.level_name) != product.get_product_id():
             return 0
         if self.logic_comp.checkIfSatisfy(product, basket, total_price):
             return self.percent
