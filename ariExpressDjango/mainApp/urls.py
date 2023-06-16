@@ -28,6 +28,7 @@ urlpatterns = [
     path(r'addNewDiscount/<str:storename>', views.addNewDiscount, name='addNewDiscount'),
     path(r'addNewPurchasePolicy/<str:storename>', views.addNewPurchasePolicy, name='addNewPurchasePolicy'),
     path(r'viewDiscounts/<str:storename>', views.viewDiscounts, name='viewDiscounts'),
+    path(r'viewBids/<str:storename>', views.viewBids, name='viewBids'),
     path(r'viewStoreStaff/<str:storename>', views.viewStoreStaff, name='viewStoreStaff'),
 
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
@@ -38,8 +39,10 @@ urlpatterns = [
     path(r'check_username/', views.check_username, name='check_username'),
     # path to delete the message
     path(r'delete_message/<str:usermessage_id>', views.delete_message, name='delete_message'),
+    path(r'delete_notification/<str:notification_id>', views.delete_notification, name='delete_notification'),
     # path to view the message
     path (r'inbox/mark_as_read/<str:usermessage_id>', views.mark_as_read, name='mark_as_read'),
+    path (r'inbox/mark_notification_as_read/<str:notification_id>', views.mark_notification_as_read, name='mark_notification_as_read'),
     path(r'cart/', views.cart, name='cart'),
     path(r'remove_basket_product', views.remove_basket_product, name='remove_basket_product'),
     path(r'edit_basket_product', views.edit_basket_product, name='edit_basket_product'),

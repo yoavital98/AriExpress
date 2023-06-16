@@ -30,7 +30,7 @@ def loadFileInit(load_file):
                     else:
                         func(*args)
             if not found_function:
-                print(f"Error: Function '{func_name}' not found in Service class.")     
+                raise Exception(f"Error: Function '{func_name}' not found in Service class.")     
 # ------------------------------------ loadConfigInit ------------------------------------ #
 @staticmethod
 def loadConfigInit(load_file):
@@ -109,7 +109,8 @@ class Service:
     # ------  admin  ------ #
     # def openTheSystem(self, username):
     #     try:
-    #         self.store_facade.openSystem(username)
+    #         if self.admins.keys().__contains__(user_name):
+    #         self.store_facade = StoreFacade()
     #         logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
     #     except Exception as e:
     #         logging.error(f"openTheSystem Error: {str(e)}. By username: '{username}'")
@@ -358,7 +359,7 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, int(productID), int(quantity))
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
@@ -420,6 +421,29 @@ class Service:
             return Response(json.dumps(bids_data), True)
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+    
+    def getAllBidsFromStore(self, storename):
+        try:
+            bids = self.store_facade.getAllBidsFromStore(storename)
+            print(f"bidsservice {bids}")
+            logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
+            bids_data = {}
+            for bid in bids:
+                bids_data[bid.get_id()] = bid.toJson()
+            return Response(json.dumps(bids_data), True)
+        except Exception as e:
+            logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
+            return Response(e, False)
+
+    def getStaffPendingForBid(self, store_name, bid_id):
+        try:
+            pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
+            logging.debug(f"fetching all pending staff for bid. By store name: " + store_name + "and bid id" + bid_id +
+                          ".")
+            return Response(json.dumps(pending_list), True)
+        except Exception as e:
+            logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
             return Response(e, False)
 
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
@@ -626,7 +650,7 @@ class Service:
                     discounts={}):
         try:
             discount = self.store_facade.addDiscount(storename, username, discount_type,
-                                                     percent=percent, level=level, level_name=level_name, rule=rule,
+                                                     percent=int(percent), level=level, level_name=level_name, rule=rule,
                                                      discounts=discounts)
             logging.debug(
                 f"adding discount of type " + discount_type + ".")
@@ -852,7 +876,25 @@ class Service:
             logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
         
-
+    def readNotification(self, requesterID, notificationID):
+        try:
+            notification = self.store_facade.readNotification(requesterID, notificationID)
+            logging.debug(
+                f"marked as read notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(notification.toJson(), True)
+        except Exception as e:
+            logging.error(f"readNotification Error: {str(e)}.")
+            return Response(e, False)
+        
+    def deleteNotification(self, requesterID, notificationID):
+        try:
+            res = self.store_facade.deleteNotification(requesterID, notificationID)
+            logging.debug(
+                f"deleted notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteNotification Error: {str(e)}.")
+            return Response(e, False)
 
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):

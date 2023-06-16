@@ -12,18 +12,33 @@ from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
 
 class Member(User):
     def __init__(self, entrance_id, user_name, password, email):
+        # super().__init__(entrance_id)
+        # self.cart = Cart(user_name) # TODO: cart will be pulled from database and guest cart will be added to it
+        # self.accesses = TypedDict(str, Access)  # Accesses
+        # self.auctions = TypedDict(int, Auction)  # auction id to auction
+        # self.lotteries = TypedDict(int, Lottery) # Lottery id to lottery
+        # self.user_name = user_name  # username
+        # self.password = password  # password
+        # self.email = email  # email
         super().__init__(entrance_id)
-        self.cart = Cart(user_name) # TODO: cart will be pulled from database and guest cart will be added to it
-        self.accesses = TypedDict(str, Access)  # Accesses
+        self.cart = Cart(user_name)  # TODO: cart will be pulled from database and guest cart will be added to it
+        self.accesses = AccessRepository(username=user_name)  # Accesses
         self.auctions = TypedDict(int, Auction)  # auction id to auction
-        self.lotteries = TypedDict(int, Lottery) # Lottery id to lottery
+        self.lotteries = TypedDict(int, Lottery)  # Lottery id to lottery
         self.user_name = user_name  # username
         self.password = password  # password
         self.email = email  # email
 
         #REPOSITORY FIELDS - TO BE REPLACED
-        self.accesses_test = AccessRepository(username=user_name)
+        #self.accesses_test = AccessRepository(username=user_name)
 
+    def __str__(self):
+        return "Member: " + self.user_name + " " + self.email
+
+    def __eq__(self, other):
+        if isinstance(other, Member):
+            return self.user_name == other.user_name and self.password == other.password and self.email == other.email
+        return False
 
     # -------------------------Methods from User--------------------------------
     def get_cart(self):
@@ -69,8 +84,8 @@ class Member(User):
     def set_email(self, email):
         self.email = email
 
-    def addBidToBasket(self, bid):
-        self.cart.addBidToBasket(bid)
+    def addBidToBasket(self, bid, store):
+        self.cart.addBidToBasket(bid, store)
 
     def getAllBids(self):
         return self.cart.getAllBids()
