@@ -414,10 +414,13 @@ class Service:
     def getAllBidsFromUser(self, username):
         try:
             bids = self.store_facade.getAllBidsFromUser(username)
+            print(f"bids {bids}")
+            print(type(bids))
             logging.debug(f"fetching all the user's bids. By username: " + username + ".")
             bids_data = {}
-            for bid in bids:
-                bids_data[bid.get_id()] = bid.toJson()
+            for a, bid in bids.items():
+                id = bid.get_id()
+                bids_data[id] = bid.toJson()
             return Response(json.dumps(bids_data), True)
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
@@ -467,7 +470,7 @@ class Service:
 
     def approveBid(self, username, storename, bid_id):
         try:
-            approved_bid = self.store_facade.approveBid(username, storename, bid_id)
+            approved_bid = self.store_facade.approveBid(username, storename, int(bid_id))
             logging.info(
                 "Bid was added successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
                     bid_id) + ".")

@@ -52,6 +52,24 @@
   },
   {
     "logOut": {"args": ["bbb"]}
+  },
+  {
+    "logIn": {"args": ["aaa", "asdf1233"]}
+  },
+  {
+    "approveBid": {"args": ["aaa", "store123", "0"]}
+  },
+  {
+    "logOut": {"args": ["aaa"]}
+  },
+  {
+    "logIn": {"args": ["ccc", "asdf1233"]}
+  },
+  {
+    "approveBid": {"args": ["ccc", "store123", "0"]}
+  },
+  {
+    "logOut": {"args": ["ccc"]}
   }
 ]
 

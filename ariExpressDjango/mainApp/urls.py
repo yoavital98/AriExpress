@@ -29,6 +29,7 @@ urlpatterns = [
     path(r'addNewPurchasePolicy/<str:storename>', views.addNewPurchasePolicy, name='addNewPurchasePolicy'),
     path(r'viewDiscounts/<str:storename>', views.viewDiscounts, name='viewDiscounts'),
     path(r'viewBids/<str:storename>', views.viewBids, name='viewBids'),
+    path(r'userBids/', views.userBids, name='userBids'),
     path(r'viewStoreStaff/<str:storename>', views.viewStoreStaff, name='viewStoreStaff'),
 
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
@@ -48,6 +49,7 @@ urlpatterns = [
     path(r'edit_basket_product', views.edit_basket_product, name='edit_basket_product'),
     path(r'add_product_to_cart',views.add_product_to_cart, name='add_product_to_cart'),
     path(r'checkoutpage/', views.checkoutpage, name='checkoutpage'),
+    path(r'bidcheckoutpage/', views.checkoutpage_bids, name='bidcheckoutpage'),
     path(r'checkout', views.checkout, name='checkout'),
     path(r'searchpage/', views.searchpage, name='searchpage'),
     

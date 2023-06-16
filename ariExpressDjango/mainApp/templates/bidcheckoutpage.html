@@ -1,0 +1,170 @@
+{% extends 'base.html'%}
+{% block content %}
+{% load mathfilters %}
+<body>
+    <main>
+        <div class="text-center mt-2 mb-3" id="stack" style="text-align: center;">
+            <br><br>
+            <span class="fa-stack fa-3x">
+              <i class="fas fa-cart-shopping fa-stack-2x"></i>
+              <i class="fas fa-dollar-sign fa-bounce fa-stack-1x" style="animation-duration: 1s; --fa-bounce-height: -70px; margin-top: -18px;"></i>
+            </span>
+            <h1 style="font-size:300%;">Checkout</h1>
+            <p>thank you for using AriExpress to buy your favorite products, here you can enter your card and be sure your details remain safe.</p>
+            <p>for more information about our purchase policies in <a href="#">Terms and Conditions</a></p>
+            <br>
+        </div>
+        <hr class="solid" style="height:40px; border-width: 0; opacity:100%; color:#e67e22; background-color:#e67e22;">          
+        <div class="row">
+            <div class="col-md-4 order-md-2 mb-4" style="background-color:#34495e; position: relative;">
+                <h2 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-light" style="text-align: center; font-size:140%;">Your cart</span>
+                    <span class="badge badge-secondary badge-pill">{{quantity}}</span>
+                </h2>
+                <br>
+                <ul class="list-group mb-3 sticky-top" >
+                    
+                        
+                        <li class="list-group-item d-flex justify-content-between lh-condensed" style="background-color:#34495e;">
+                            <div >
+                                <h6 class="text-light">{{ product.name }}</h6>
+                                <small class="text-subtle">Number of items: {{ product.quantity }} Price per item: ${{ product.price }}</small>
+                            </div>
+                            <span class="text-subtle">${{ product.price }}</span>
+                        </li>
+
+                    
+                    
+                </ul>
+                <br>
+                <p class="text-subtle" style="text-transform: uppercase; text-align: left; font-size:120%;">Total</p>
+                <h2 class="text-light" style="font-size:250%;"><span style="color: #1c2834; margin-left: 35px; font-size:90%;">$</span>{{total_cart_price}}</h2>
+                
+            </div>
+            <!--user info-->
+            <div class="col-md-8 order-md-1">
+                <h2 class="mb-3" style="margin-left: 20px; font-size:250%;">Billing address</h2>
+                <br>
+                <form method ="POST" action="/checkout" class="was-validated" autocomplete="off" enctype="multipart/form-data" id="checkoutForm" style="margin: 5px auto 0; width: 95%;">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="firstName">First name</label>
+                            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="" value="" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName">Last name</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="" value="" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username">Username</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">@</span>
+                            </div>
+                            <input type="text" class="form-control" id="username" value="{{user.username}}" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email">Email <span class="text-muted">(Optional)</span></label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address">Address</label>
+                        <input type="text" class="form-control" id="address" name="address" placeholder="94 Saint Jhon's" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label for="country">Country</label>
+                            <select class="custom-select d-block w-100" id="country" name="country" required>
+                                <option value="">Choose...</option>
+                                <option>Israel</option>
+                                <option>United States</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="city">City</label>
+                            <select class="custom-select d-block w-100" id="city" name="city">
+                                <option value="">Choose...</option>
+                                <option>---</option>
+                                <option>Beer Sheva</option>
+                                <option>Hulon</option>
+                                <option>Tel-Aviv</option>
+                                <option>Ma'alot-Tarshiha</option>
+                                <option>Tarqumiyah</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="zip">Zip</label>
+                            <input type="text" class="form-control" id="zip" name="zip" placeholder="" required>
+                        </div>
+                    </div>
+                    <hr class="mb-4">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="same-address">
+                        <label class="custom-control-label" for="same-address">Shipping address is the same as my billing address</label>
+                    </div>
+                    <br><br>
+                    <!--payment-->
+                    <div class="text-center mt-2 mb-3" id="stack" style="text-align: center; font-size: 20px;">
+                        <hr class="mb-4">
+                        <h1 class="mb-3">Payment</h1>
+                        <div class="d-block my-2" >
+                            <div class="custom-control custom-radio">
+                                <input id="credit" name="paymentMethod" type="radio" class="custom-control-input" required>
+                                <label class="custom-control-label" for="credit"> <i class="fa-regular fa-credit-card"></i> Credit card </label>
+                            </div>
+                            <div class="custom-control custom-radio">
+                                <input id="paypal" name="paymentMethod" type="radio" class="custom-control-input" required>
+                                <label class="custom-control-label" for="paypal"> <i class="fa-brands fa-paypal"></i> PayPal </label>
+                            </div>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="row justify-content-start" id="creditCardDiv" style="display: none; border-radius: 20px; background-color: #82a5c9;">
+                        <br>
+                        <div class="row align-items-center mb-3" >
+                            <div class="col" for="cc_name" style="text-align: center;"><span >Name on Card</span>
+                                <input name="cc_name" type="text" class="form-control" id="cc_name" placeholder="Lucious B. Byinshtuff" style="text-align: center;" required>
+                            </div>
+                            <div class="col" for="cc_number" style="text-align: center;"><span>Card Number <span>(Dashes not required)</span></span>
+                                <input name="cc_number" type="text" class="form-control" id="cc_number"  pattern="^(?:\d{4}-){3}\d{4}|\d{16}$" placeholder="DONT-USEA-REAL-NMBR" style="text-align: center;" required>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-3" style="text-align: center;">
+                            <div class="col-4" for="cc_id"><span class="col id">ID number</span>
+                                <input name="cc_id" type="text" class="form-control" id="cc_id" placeholder="card holder ID number" style="text-align: center;" required>
+                            </div>
+                            <div class="col-4" for="cc_expiration"><span class="col expdt">Exp. Date</span>
+                                <input name="cc_expiration" type="text" class="form-control" id="cc_expiration" pattern="^(0[1-9]|1[0-2])\/\20[2-9][0-9]$" placeholder="MM/YYYY" style="text-align: center;" required>
+                            </div>
+                            <div class="col-4" for=="cc_cvv"><span class="col cvvnum">CVV</span>
+                                <input name="cc_cvv" type="text" class="form-control" id="cc_cvv" pattern="[0-9]{3}" placeholder="XXX" style="text-align: center;" required>
+                            </div>
+                        </div>
+                        <br>
+                    </div>
+                    
+
+                    <hr class="mb-4">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-light btn-lg " type="submit" style="text-align: center; font-size: 20px; background-color: #e67e22;" onclick="checkout_bid()">Continue to checkout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+
+<script>
+    const creditRadio = document.getElementById("credit");
+    const creditCardDiv = document.getElementById("creditCardDiv");
+
+    creditRadio.addEventListener("change", function() {
+        creditCardDiv.style.display = this.checked ? "block" : "none";
+    });
+</script>
+
+{% endblock content %}
