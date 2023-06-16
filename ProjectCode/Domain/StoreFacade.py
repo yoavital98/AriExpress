@@ -324,6 +324,9 @@ class StoreFacade:
 
     def placeBid(self, username, store_name, offer, product_id, quantity):
         existing_member: Member = self.getOnlineMemberOnly(username)
+        product_id = int(product_id)
+        quantity = int(quantity)
+        offer = int(offer)
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")
