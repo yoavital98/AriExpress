@@ -45,8 +45,9 @@
             <div class="col-md-8 order-md-1">
                 <h2 class="mb-3" style="margin-left: 20px; font-size:250%;">Billing address</h2>
                 <br>
-                <form method ="POST" action="/checkout" class="was-validated" autocomplete="off" enctype="multipart/form-data" id="checkoutForm" style="margin: 5px auto 0; width: 95%;">
+                <form method ="POST" action="/checkout_bid" class="was-validated" autocomplete="off" enctype="multipart/form-data" id="checkoutForm" style="margin: 5px auto 0; width: 95%;">
                     {% csrf_token %}
+                    <input type="hidden" name="bid_id" value="{{ bid_id }}">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="firstName">First name</label>
@@ -150,6 +151,8 @@
 
                     <hr class="mb-4">
                     <div class="d-grid gap-2">
+                        <input type="hidden" name="bid_id" value="{{ bid_id }}">
+                        <input type="hidden" name="storename" value="{{ storename }}">
                         <button class="btn btn-outline-light btn-lg " type="submit" style="text-align: center; font-size: 20px; background-color: #e67e22;" onclick="checkout_bid()">Continue to checkout</button>
                     </div>
                 </form>

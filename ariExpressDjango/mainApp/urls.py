@@ -51,6 +51,7 @@ urlpatterns = [
     path(r'checkoutpage/', views.checkoutpage, name='checkoutpage'),
     path(r'bidcheckoutpage/', views.checkoutpage_bids, name='bidcheckoutpage'),
     path(r'checkout', views.checkout, name='checkout'),
+    path(r'checkout_bid', views.checkout_bid, name='checkout_bid'),
     path(r'searchpage/', views.searchpage, name='searchpage'),
     
     

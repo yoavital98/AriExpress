@@ -954,25 +954,12 @@ def checkoutpage_bids(request):
             # print(f"allbidstype {type(allbids)}")
             # print(request.POST.get('bid_id'))
             print(f"bid {bid}")
-            baskets = ast.literal_eval(str(allbids))
             product = service.getProduct(bid["storename"], bid["product_id"], username).getReturnValue()
+            product = ast.literal_eval(str(product))
             print(f"product {product}")
-            total_cart_price = bid["offer"]
-            # quantity = 0
-            # for basket in baskets:
-            #     basket_res = service.getBasket(request.user.username, basket)
-            #     if basket_res.getStatus() == True:
-            #         basket_res = basket_res.getReturnValue()
-            #         basket_products = ast.literal_eval(str(basket_res)).get('products')
-            #         basket_products = ast.literal_eval(str(basket_products))
-            #         for product in basket_products.values():
-            #             product['product'] = json.loads(product['product'])
-            #         total_cart_price += calculate_total_price(basket_products)
-            #         quantity += len(basket_products)
-            #         products.append(basket_products)
-
+            print(f"product type {type(product)}")
             return render(request, 'bidcheckoutpage.html',
-                          {'total_cart_price': bid["offer"], 'product': product, 'quantity': bid["quantity"], 'bid_id': bid_id})
+                          {'total_cart_price': bid["offer"], 'product': product, 'quantity': bid["quantity"], 'bid_id': bid_id, 'storename': bid["storename"]})
         else:
             messages.error(request, "Error loading checkout page - " + str(res.getReturnValue()))
             return redirect('mainApp:mainpage')
@@ -1055,13 +1042,15 @@ def checkout_bid(request):
             service = Service()
             form = CheckoutForm(request.POST)
             if form.is_valid():
-                res = service.purchaseConfirmedBid(request.user.username, int(form.cleaned_data['cc_number']),
+                bid_id = request.POST.get('bid_id')
+                storename = request.POST.get('storename')
+                res = service.purchaseConfirmedBid(bid_id, storename, request.user.username, int(form.cleaned_data['cc_number']),
                                            form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],
                                            int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']),
                                            form.cleaned_data['address'], form.cleaned_data['city'],
                                            form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
-                    messages.success(request,"Order placed successfully! thank you for shopping with us")
+                    messages.success(request,"Bid has been purchased successfully! thank you for shopping with us")
 
                     return redirect('mainApp:mainpage')
                 else:
