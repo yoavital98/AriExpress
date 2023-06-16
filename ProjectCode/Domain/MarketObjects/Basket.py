@@ -81,9 +81,16 @@ class Basket:
                 return False
         return True
 
-    def checkItemInBasketForBid(self, bid):  # checks if the item is available in the store
+    def checkItemInBasketForBid(self, bid: Bid):  # checks if the item is available in the store
         if self.bids.keys().__contains__(bid.bid_id):  # TODO:
-            return self.store.checkProductAvailability(bid.get_product(), bid.get_quantity())
+            id = bid.get_product_id()
+            quantity = bid.get_quantity()
+            try:
+                return self.store.checkProductAvailability(id, quantity)
+            except Exception as e:
+                print(e)
+
+
         else:
             Exception("product is not in the Basket")
 

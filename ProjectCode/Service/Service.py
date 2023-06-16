@@ -10,11 +10,11 @@ from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
 
-# ------------------------------------ Load config ------------------------------------ #
+# ------------------------------------ loadFileInit ------------------------------------ #
 @staticmethod
-def load_config(config_file):
+def loadFileInit(load_file):
 
-    with open(config_file, 'r') as f:
+    with open(load_file, 'r') as f:
         config_data = json.load(f)
     for func_config in config_data:
         for func_name, func_args in func_config.items():
@@ -30,23 +30,45 @@ def load_config(config_file):
                     else:
                         func(*args)
             if not found_function:
-                print(f"Error: Function '{func_name}' not found in Service class.")     
+                raise Exception(f"Error: Function '{func_name}' not found in Service class.")     
+# ------------------------------------ loadConfigInit ------------------------------------ #
+@staticmethod
+def loadConfigInit(load_file):
+
+    with open(load_file, 'r') as f:
+        config_data : dict = json.load(f)
+    if 'PaymentService' not in config_data.keys() or config_data["PaymentService"] == "":
+        raise Exception("PaymentService doesn't exist in load config")
+    if 'SupplyService' not in config_data.keys() or config_data["SupplyService"] == "":
+        raise Exception("SupplyService doesn't exist in load config")
+    if 'Database' not in config_data.keys():
+        raise Exception("Database doesn't exist in load config")
+    if 'Admins' not in config_data.keys() or config_data["Admins"] == "":
+        raise Exception("Admins doesn't exist in load config")
+    admins : dict = config_data["Admins"]
+    if len(admins.keys()) == 0:
+        raise Exception("Ateast one admin should exist in load config")
+    return config_data
+
 # ------------------------------------------------------------------------------------- #
 
 class Service:
     _instance = None
 
-    def __new__(cls, config_file=None, send_notification_call=None):
+    def __new__(cls, load_file=None, config_file=None, send_notification_call=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls.store_facade = StoreFacade(send_notification_call=send_notification_call)
+            if config_file is None:
+                raise Exception("Config file hasn't been loaded")
+            configFileDict = loadConfigInit(config_file)
+            cls.store_facade = StoreFacade(configFileDict, send_notification_call=send_notification_call)
 
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             # load info
-            if config_file is not None:
-                load_config(config_file)
+            if load_file is not None:
+                loadFileInit(load_file)
         return cls._instance
     
 
@@ -87,7 +109,8 @@ class Service:
     # ------  admin  ------ #
     # def openTheSystem(self, username):
     #     try:
-    #         self.store_facade.openSystem(username)
+    #         if self.admins.keys().__contains__(user_name):
+    #         self.store_facade = StoreFacade()
     #         logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
     #     except Exception as e:
     #         logging.error(f"openTheSystem Error: {str(e)}. By username: '{username}'")
@@ -398,6 +421,29 @@ class Service:
             return Response(json.dumps(bids_data), True)
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+    
+    def getAllBidsFromStore(self, storename):
+        try:
+            bids = self.store_facade.getAllBidsFromStore(storename)
+            print(f"bidsservice {bids}")
+            logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
+            bids_data = {}
+            for bid in bids:
+                bids_data[bid.get_id()] = bid.toJson()
+            return Response(json.dumps(bids_data), True)
+        except Exception as e:
+            logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
+            return Response(e, False)
+
+    def getStaffPendingForBid(self, store_name, bid_id):
+        try:
+            pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
+            logging.debug(f"fetching all pending staff for bid. By store name: " + store_name + "and bid id" + bid_id +
+                          ".")
+            return Response(json.dumps(pending_list), True)
+        except Exception as e:
+            logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
             return Response(e, False)
 
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
@@ -830,7 +876,25 @@ class Service:
             logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
         
-
+    def readNotification(self, requesterID, notificationID):
+        try:
+            notification = self.store_facade.readNotification(requesterID, notificationID)
+            logging.debug(
+                f"marked as read notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(notification.toJson(), True)
+        except Exception as e:
+            logging.error(f"readNotification Error: {str(e)}.")
+            return Response(e, False)
+        
+    def deleteNotification(self, requesterID, notificationID):
+        try:
+            res = self.store_facade.deleteNotification(requesterID, notificationID)
+            logging.debug(
+                f"deleted notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteNotification Error: {str(e)}.")
+            return Response(e, False)
 
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):

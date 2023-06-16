@@ -49,9 +49,7 @@ class Store:
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
         self.__bids = TypedDict(int, Bid)
-        self.__bids_requests = TypedDict(str, List[Bid])
-        self.__auctions = TypedDict(int, Auction)
-        self.__lotteries = TypedDict(int, Lottery)
+        self.__bids_requests = TypedDict(str, list)
         self.__discount_policy = DiscountPolicy(store_name)
         self.__purchase_policy = PurchasePolicies()
 
@@ -247,12 +245,12 @@ class Store:
 
 
     def checkProductAvailability(self, product_id, quantity):
-        cur_product : Product = self.__products[int(product_id)]
+        cur_product : Product = self.__products.get(product_id)
         if cur_product is None:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
-        if quantity < 0:
+        if quantity <= 0:
             raise Exception("quantity can't be under zero")
         return cur_product
 
@@ -278,6 +276,16 @@ class Store:
             if category in prod.categories:
                 product_list.append(prod)
         return product_list
+
+    def searchProductByFeatures(self, featuresDict):
+        if not self.active:
+            return {}
+        product_list = []
+        for prod in self.__products.values():
+            if prod.checkFeatures(featuresDict):
+                product_list.append(prod)
+        return product_list
+
 
 
     def calculateBasketPrice(self, products_dict): #tup(product,qunaiity)
@@ -378,25 +386,32 @@ class Store:
 
     def getPolicy(self, policy_id):
         return self.__purchase_policy.getPurchasePolicy(policy_id)
+
+
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
         for access in self.__accesses.values():
             if access.canManageBids():
                 username = access.get_user().get_username()
-                if self.__bids_requests[username] is None:
-                    self.__bids_requests[username] = []
+                if self.__bids_requests.get(username) is None:
+                    self.__bids_requests[username] = list()
                 self.__bids_requests[username].append(bid)
                 bid.increment_left_to_approve()
 
     def approveBid(self, username, bid_id):
+        if not self.active:
+            raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
-
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
         if cur_bid not in self.__bids_requests[username]:
             raise Exception("You already approved that bid")
+        if cur_bid.get_status() == 2:
+            raise Exception("Bid already got rejected")
+        if cur_bid.get_status() == 1:
+            raise Exception("Bid already got Accepted")
         cur_bid.approve_by_one()
         self.__bids_requests[username].remove(cur_bid)
         if cur_bid.get_left_to_approval() == 0:
@@ -404,37 +419,66 @@ class Store:
         return cur_bid
 
     def rejectBid(self, username, bid_id):
+        if not self.active:
+            raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
+        if cur_bid.get_status() == 2:
+            raise Exception("Bid already got rejected")
+        if cur_bid.get_status() == 1:
+            raise Exception("Bid already got Accepted")
+        list_of_user_bids: list = self.__bids_requests.get(username)
+        if list_of_user_bids.__contains__(cur_bid):
+            for access_username, bid_list in self.__bids_requests.items():
+                if cur_bid in bid_list:
+                    bid_list.remove(cur_bid)
+            cur_bid.set_status(2)
+            return cur_bid
+        else:
+            raise Exception("Member cannot vote twice, or isn't involved in the bid")
+
+    def sendAlternativeBid(self, username, bid_id, alternate_offer):
+        if not self.active:
+            raise Exception("Store is closed, Actions cannot be preformed")
+        cur_access: Access = self.__accesses[username]
+        cur_access.canManageBids()
+        cur_bid: Bid = self.__bids[bid_id]
+        if cur_bid is None:
+            raise Exception("No such bid exists in the store")
+        if not cur_bid.get_status() == 0:
+            raise Exception("Bid already got rejected or Approved, or already waiting for an offer")
+        if alternate_offer <= cur_bid.get_offer():
+            raise Exception("cant set the offer lower than the Member offer ")
+        cur_bid.set_offer(alternate_offer)
         for access_username, bid_list in self.__bids_requests.items():
             if cur_bid in bid_list:
                 bid_list.remove(cur_bid)
-        cur_bid.set_status(2)
-        return cur_bid
-
-    def sendAlternativeBid(self, username, bid_id, alternate_offer):
-        cur_access: Access = self.__accesses[username]
-        cur_access.canManageBids()
-        cur_bid: Bid = self.__bids[bid_id]
-        if cur_bid is None:
-            raise Exception("No such bid exists in the store")
-        cur_bid.set_offer(alternate_offer)
         cur_bid.set_status(3)
 
     def purchaseBid(self, bid_id):
         cur_bid: Bid = self.__bids.get(bid_id)
         if cur_bid is None:
             raise Exception("No such bid exists")
-        if cur_bid.get_status() != 1 or cur_bid.get_left_to_approval() > 0:
+        if cur_bid.get_status() != 1 and cur_bid.get_status() != 3:
             raise Exception("Bid is not approved by the store owners")
-        cur_product: Product = self.__products.get(cur_bid.get_product())
+        cur_product: Product = self.__products.get(cur_bid.get_product_id())
         if cur_product is None:
             raise Exception("Product doesn't exists")
         cur_product.quantity -= cur_bid.get_quantity()
-        del self.__bids[cur_bid]
+        del self.__bids[cur_bid.get_id()]
+
+    def getStaffPendingForBid(self, bid_id):
+        name_list: list = list()
+        if not self.__bids.__contains__(bid_id):
+            raise Exception("bid doesnt exists in this store")
+        cur_bid: Bid = self.__bids.get(bid_id)
+        for access_username, bid_list in self.__bids_requests.items():
+            if cur_bid in bid_list:
+                name_list.append(access_username)
+        return name_list
 
     def startAuction(self, username, product_id, starting_price, duration):
         cur_access: Access = self.__accesses[username]
@@ -634,3 +678,5 @@ class Store:
             if isinstance(value,str):
                 if value == "":
                     raise Exception("name or category cannot be empty")
+
+

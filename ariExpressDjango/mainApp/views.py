@@ -33,7 +33,7 @@ def sendNotification(reciever_id, notification_id, type, subject):
         notify.send(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
                     message_id=notification_id, type=type, description=subject)
     else:
-        notification = Notification(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
+        notification = Notification.objects.create(sender=sender, recipient=receipent, verb=f'you got a notification from AriExpress!',
                                     message_id=notification_id, type=type, description=subject)
         notification.save()
 
@@ -52,6 +52,18 @@ def startpage(request):
 
 
 def mainpage(request):
+    # ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    # --------------------------TODO: DELETE THESE LINES----------------------------
+    # from django.contrib.auth.models import User
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
+    # ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+
     # ----------------------creating first user - ariExpress--------------------------------------------
     if not User.objects.filter(username='ariExpress').exists():
         user = User.objects.create_user(username='ariExpress', password='ariExpress')
@@ -84,10 +96,12 @@ def login(request):
                         messages.success(request, (f"{username} Logged in successfully"))
                         return redirect('mainApp:mainpage')
                     else:
+                        # Service().logOut # TODO: needed?
                         request.session['guest'] = 1
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
                 else:
+                    print("got here")
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
@@ -95,7 +109,7 @@ def login(request):
                         return redirect('mainApp:mainpage')
                     else:
                         request.session['guest'] = 1
-                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here)"))
+                        messages.success(request, (f"Error: A User is already logged in (shouldn't get here) - MAYBE THE USER NOT IN THE DJANGO DB?"))
                         return redirect('mainApp:login')
 
                 # if request.session['guest']:
@@ -132,8 +146,7 @@ def registerPage(request):
 
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session[
-            'guest']:  # user (guest) is logged in                                                       #
+        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in 
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
@@ -148,6 +161,7 @@ def registerPage(request):
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
+                        messages.success(request, (f"{username} Registered successfully"))
                         return redirect('mainApp:mainpage')
                     else:
                         User.objects.filter(username=username).delete()  # remove the created user from django
@@ -190,7 +204,6 @@ def mystores(request):
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
-        print(storesInfoDict[0])
         return render(request, 'mystores.html', {'stores': storesInfoDict})
     messages.success(request, ("Error: User is not logged in (django error)"))
     return redirect('mainApp:mainpage')
@@ -202,8 +215,6 @@ def viewStoreStaff(request, storename):
     if 'removeAccessButton' in request.POST:
         requester_id = username
         to_remove_id = request.POST.get('to_remove_id')
-        print(requester_id)
-        print(to_remove_id)
         actionRes = service.removeAccess(requester_id, to_remove_id, storename)
         if actionRes.getStatus():
             messages.success(request, (f"{requester_id} has removed {to_remove_id} accesses"))
@@ -295,15 +306,12 @@ def store_specific(request, storename):
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
         context = ast.literal_eval(str(products))
-        print(context)
         products_dict = json.loads(context['products'])  # Parse JSON string into a dictionary
         #products_dict = ast.literal_eval(str(products_dict))
         products_list = []
         for product in products_dict.values():
             product = json.loads(product)
             products_list.append(product)
-
-        print (products_list)
         active = "Open" if context['active'].lower() == "true" else "Closed"
         return render(request, 'store_specific.html',
                       {'products': products_list, 'storename': storename, 'active': active, 'permissions': permissions})
@@ -500,6 +508,32 @@ def addNewPurchasePolicy(request, storename):  # Policies
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
 
+def viewBids(request, storename):
+    permissionName = 'Bid'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        service = Service()
+        bids = {}
+        actionRes = service.getAllBidsFromStore(storename)
+        # print(f"status {actionRes.getStatus()}")
+        if actionRes.getStatus():
+            bids = ast.literal_eval(str(actionRes.getReturnValue()))
+            # print(f"bids {bids}")
+                
+        # <td>{{ bid_id }}</td>
+        # <td>{{ bid.username }}</td>
+        # <td>{{ bid.product_name }}</td>
+        # <td>{{ bid.quantity }}</td>
+        # <td>{{ bid.price }}</td>
+        bids = {"1" : {"bid_id": 1, "username": "bbb", "product_name": "apple", "quantity": 5, "price": 10},
+                "2" : {"bid_id": 2, "username": "bbb", "product_name": "earphones", "quantity": 10, "price": 5000}
+                }
+        return render(request, 'viewBids.html', {'storename': storename,
+                                                    'bids': bids
+                                                    })
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
@@ -711,21 +745,13 @@ def delete_message(request, usermessage_id):
         notification.delete()
         messages.success(request, "Message deleted successfully")
     else:
-        messages.success(request, "Message deleted successfully")
+        messages.success(request, "Error deleting message - " + str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
 
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_as_read(request, usermessage_id):
-    # message = UserMessage.objects.get(id=usermessage_id)
-    # service = Service(sendNotification)
-    # username = request.POST.get('username', None)
-    # res = service.readMessage(username, usermessage_id)
-    # if res.getStatus():
-    # message.status = 'read'
-    # message.save()
-    # messages.success(request, "Message marked as read successfully")
     service = Service()
 
     res = service.readMessage(request.user.username, usermessage_id)
@@ -737,6 +763,32 @@ def mark_as_read(request, usermessage_id):
         messages.error(request, "Error marking message as read - " + str(res.getReturnValue()))
     return HttpResponseRedirect('/inbox')
 
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def mark_notification_as_read(request, notification_id):
+    service = Service()
+    res = service.readNotification(request.user.username, notification_id)
+    if res.getStatus():
+        notification = Notification.objects.filter(message_id=notification_id, recipient=request.user, type='notification')[0]
+        notification.mark_as_read()
+        messages.success(request, "Message marked as read successfully")
+    else:
+        messages.error(request, "Error marking notification as read - " + str(res.getReturnValue()))
+    return HttpResponseRedirect('/inbox')
+
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def delete_notification(request, notification_id):
+    service = Service()
+    res = service.deleteNotification(request.user.username, notification_id)
+    if res.getStatus():
+        notification = Notification.objects.filter(message_id=notification_id, recipient=request.user, type='notification')
+        notification.delete()
+        messages.success(request, "notification deleted successfully")
+    else:
+        messages.success(request, "Error deleting notification - " + str(res.getReturnValue()))
+    return HttpResponseRedirect('/inbox')
 
 # check if username exists
 def check_username(request):
@@ -1064,23 +1116,23 @@ def createGuestIfNeeded(request):
     if request.user.is_authenticated:
         return False
 
-
     # user needs to be guest
     # 1. create a new user in django
     # 2. login to that user
     else:
         service = Service()
-
         actionRes = service.loginAsGuest()
-        guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
 
         if actionRes.getStatus():
+            guestnumberdict = ast.literal_eval(str(actionRes.getReturnValue()))
             # form = CreateMemberForm(request.POST)
             username = f"GuestUser{guestnumberdict['entrance_id']}"
             password = "asdf1233"
             # email = "guestmail@guest.com"
             # form.save()
-            user = User.objects.create_user(username=username, password=password)
+            if not User.objects.filter(username=username).exists():
+                user = User.objects.create_user(username=username, password=password)
+                user.save()
             user = authenticate(request, username=username, password=password)
             loginFunc(request, user)
             request.session['guest'] = 1
@@ -1095,10 +1147,12 @@ def createGuestIfNeeded(request):
 # returns False if current user not a guest. Otherwise logges in as member and returns the username
 def guestToUser(request, username, password):
     guestusername = request.user.username
+    print(f"session: {request.session['guest']}")
     if request.user.is_authenticated and request.session['guest']:
         service = Service()
         guestnumber = get_number_at_end(guestusername)
         actionRes = service.logInFromGuestToMember(guestnumber, username, password)  # 1.
+        print(actionRes.getStatus())
         if actionRes.getStatus():
             logoutFunc(request)  # 2.
             user = authenticate(request, username=username, password=password)
@@ -1106,12 +1160,11 @@ def guestToUser(request, username, password):
             guestuser = User.objects.get(username=guestusername)
             guestuser.delete()  # 4.
             request.session['guest'] = 0
-            return request.user.username
+            return username
             # ret = ast.literal_eval(str(actionRes.getReturnValue()))
             # return ret['entrance_id']
 
-    else:
-        return False
+    return False
 
 
 def get_number_at_end(string):

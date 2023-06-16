@@ -1,0 +1,57 @@
+{% extends 'baseModal.html' %}
+
+{% block modal-size%}
+modal-lg
+{% endblock modal-size %}
+
+
+
+<!--Modal ID-->
+{% block modal-id %} id="readNotificationModal{{ notification.id }}" data-bs-backdrop="static" data-bs-keyboard="false"{% endblock modal-id %}
+
+
+<!--Modal title-->
+{% block modal-title %}
+AriExpress notification
+{% endblock modal-title %}
+
+
+{% block form %}
+<div class="container">
+    <div class="card text-center mt-3">
+        <div class="card-body">
+            <form enctype="multipart/form-data">
+                {% csrf_token %}
+                <!--Input hidden-->
+                
+                <div class="input-group mb-2" >
+                    <span class="input-group-text justify-content-center side-lable" style="font-size: 16px;"><i class="fas fa-user-edit"></i></span>
+                    <input type="text" class="form-control" value="{{ notification.subject }}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <textarea class="form-control" rows="10" readonly>{{ notification.content }}</textarea>
+                </div>
+
+                <div class="input-group mb-2">
+                    <span class="input-group-text justify-content-center side-lable"><i class="fas fa-calendar"></i></span>
+                    <input type="text"class="form-control" value="Received on: {{ notification.date|date:'m/d/y' }} at {{ notification.date|date:'(H:i)' }}" readonly>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock form %}
+
+<!--mark as read-->
+{% block modal-footer%}
+<br class="hide-br"><hr>
+<button class="btn text-light btn-sm btn-action" title="delete notification" style="background-color:red;" data-bs-toggle="modal" data-bs-target="#deleteNotificationModal{{ notification.id}}"><i class="fas fa-trash-alt"></i></button>
+{% if notification.status == 'pending'%}
+<button class="btn text-light btn-sm btn-action" title="mark read notification" style="background-color:#0074fe;" data-bs-toggle="modal" data-bs-target="#markNotificationModal{{ notification.id }}"> Close </button>
+{% else %}
+<button type="button" class="btn btn-secondary btn-sm btn-modal" data-bs-dismiss="modal"> Close </button>
+{% endif %}
+{% endblock modal-footer%}
+
+{% block close %}{% endblock close %}
