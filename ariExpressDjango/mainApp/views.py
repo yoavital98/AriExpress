@@ -513,6 +513,34 @@ def viewBids(request, storename):
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
         service = Service()
+        if 'approveBid' in request.POST:
+            bid_id = int(request.POST.get('bid_id'))
+            actionRes = service.approveBid(request.user.username, storename, bid_id)
+            if not actionRes.getStatus():
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:viewBids', storename=storename)
+            else:
+                messages.success(request, (f"Bid {bid_id} was approved"))
+
+        if 'rejectBid' in request.POST:
+            bid_id = int(request.POST.get('bid_id'))
+            actionRes = service.rejectBid(request.user.username, storename, bid_id)
+            if not actionRes.getStatus():
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:viewBids', storename=storename)
+            else:
+                messages.success(request, (f"Bid {bid_id} was rejected"))
+
+        if 'offerBidPrice' in request.POST:
+            bid_id = int(request.POST.get('bid_id'))
+            offerNumber = int(request.POST.get('offerNumber'))
+            actionRes = service.sendAlternativeOffer(request.user.username, storename, bid_id, offerNumber)
+            if not actionRes.getStatus():
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:viewBids', storename=storename)
+            else:
+                messages.success(request, (f"Offer for bid {bid_id} sent successfully"))
+
         bids = {}
         actionRes = service.getAllBidsFromStore(storename)
         if actionRes.getStatus():
@@ -520,11 +548,11 @@ def viewBids(request, storename):
             for id, bid in bids.items():
                 id = int(id)
                 staff = service.getStaffPendingForBid(storename, id)
-                print(f"status {staff.getStatus()}")
-                print(f"value {staff.getReturnValue()}")
-                print(f"valuetype {type(staff.getReturnValue())}")
+                # print(f"status {staff.getStatus()}")
+                # print(f"value {staff.getReturnValue()}")
+                # print(f"valuetype {type(staff.getReturnValue())}")
                 bid["staffToApprove"] = ast.literal_eval(str(staff.getReturnValue()))
-
+        print(f"final bids: {bids}")
         return render(request, 'viewBids.html', {'storename': storename,
                                                     'bids': bids
                                                     })

@@ -40,18 +40,18 @@
                   {% if user.username in bid.staffToApprove %}
                   <form method="post" action="">
                     {% csrf_token %}
-                    <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
+                    <input type="hidden" name="bid_id" value="{{ bid_id }}">
                     <button type="submit" class="btn btn-outline-dark" name="approveBid">Approve</button>
                   </form>
                   <form method="post" action="">
                     {% csrf_token %}
-                    <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
+                    <input type="hidden" name="bid_id" value="{{ bid_id }}">
                     <button type="submit" class="btn btn-outline-dark" name="rejectBid">Reject</button>
                   </form>
                   {% endif %}
                   <form method="post" action="">
                     {% csrf_token %}
-                    <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
+                    <input type="hidden" name="bid_id" value="{{ bid_id }}">
                     <button type="submit" class="btn btn-outline-dark" name="offerBidPrice">Offer</button>
                     <input type="text" id="myTextbox" name="offerNumber">
                   </form>

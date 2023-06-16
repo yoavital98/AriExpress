@@ -6,6 +6,9 @@
     "register": {"args": ["bbb", "asdf1233", "a@a.com"]}
   },
   {
+    "register": {"args": ["ccc", "asdf1233", "a@a.com"]}
+  },
+  {
     "logIn": {"args": ["bbb", "asdf1233"]}
   },
   {
@@ -22,6 +25,9 @@
   },
   {
     "createStore": {"args": ["aaa", "456store"]}
+  },
+  {
+    "nominateStoreOwner": {"args": ["aaa", "ccc", "store123"]}
   },
   {
     "addNewProductToStore": {"args": ["aaa", "store123", "apple", "fruit", "20", "3"]}
