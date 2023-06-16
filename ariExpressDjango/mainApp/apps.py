@@ -9,9 +9,9 @@ class MainappConfig(AppConfig):
 
         from ProjectCode.Service.Service import Service
         from .views import send_notification_lambda
-        config_file = "../config.json"
+        # config_file = "../config.json"
         # config_file = "../config_purchaseCart.json"
-        # config_file = "../config_withDiscounts.json"
+        config_file = "../config_withDiscounts.json"
 
         service = Service(config_file, send_notification_call = send_notification_lambda)
         #service = Service(send_notification_call = send_notification_lambda)

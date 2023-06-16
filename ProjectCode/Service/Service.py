@@ -604,7 +604,7 @@ class Service:
                     discounts={}):
         try:
             discount = self.store_facade.addDiscount(storename, username, discount_type,
-                                                     percent=percent, level=level, level_name=level_name, rule=rule,
+                                                     percent=int(percent), level=level, level_name=level_name, rule=rule,
                                                      discounts=discounts)
             logging.debug(
                 f"adding discount of type " + discount_type + ".")
