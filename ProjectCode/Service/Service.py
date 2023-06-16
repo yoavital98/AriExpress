@@ -426,12 +426,16 @@ class Service:
     def getAllBidsFromStore(self, storename):
         try:
             bids = self.store_facade.getAllBidsFromStore(storename)
-            print(f"bidsservice {bids}")
             logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
             bids_data = {}
-            for bid in bids:
-                bids_data[bid.get_id()] = bid.toJson()
+            for a, bid in bids.items():
+                id = bid.get_id()
+                bids_data[id] = bid.toJson()
+            # bids_data = []
+            # for id, bid in bids.items():
+            #     bids_data.append(bid.toJson())
             return Response(json.dumps(bids_data), True)
+            
         except Exception as e:
             logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
             return Response(e, False)

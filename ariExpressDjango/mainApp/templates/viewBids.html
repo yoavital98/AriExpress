@@ -19,6 +19,7 @@
           <tr>
               <th>ID</th>            
               <th>Bid Placer</th>
+              <th>Store Name</th>
               <th>Product</th>
               <th>Quantity</th>
               <th>Price</th>
@@ -30,9 +31,10 @@
           <tr>
               <td>{{ bid_id }}</td>
               <td>{{ bid.username }}</td>
-              <td>{{ bid.product_name }}</td>
+              <td>{{ bid.storename }}</td>
+              <td>{{ bid.product_id }}</td>
               <td>{{ bid.quantity }}</td>
-              <td>{{ bid.price }}</td>
+              <td>{{ bid.offer }}</td>
               <td>
                 <div class="d-flex justify-content-start">
                   <form method="post" action="">

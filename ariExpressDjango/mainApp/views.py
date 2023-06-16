@@ -515,19 +515,9 @@ def viewBids(request, storename):
         service = Service()
         bids = {}
         actionRes = service.getAllBidsFromStore(storename)
-        # print(f"status {actionRes.getStatus()}")
         if actionRes.getStatus():
             bids = ast.literal_eval(str(actionRes.getReturnValue()))
-            # print(f"bids {bids}")
-                
-        # <td>{{ bid_id }}</td>
-        # <td>{{ bid.username }}</td>
-        # <td>{{ bid.product_name }}</td>
-        # <td>{{ bid.quantity }}</td>
-        # <td>{{ bid.price }}</td>
-        bids = {"1" : {"bid_id": 1, "username": "bbb", "product_name": "apple", "quantity": 5, "price": 10},
-                "2" : {"bid_id": 2, "username": "bbb", "product_name": "earphones", "quantity": 10, "price": 5000}
-                }
+            print(bids)
         return render(request, 'viewBids.html', {'storename': storename,
                                                     'bids': bids
                                                     })
