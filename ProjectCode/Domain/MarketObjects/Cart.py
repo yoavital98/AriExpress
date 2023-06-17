@@ -97,11 +97,12 @@ class Cart:
         basket_to_place_bid.addBidToBasket(bid)
 
     def getAllBids(self):
-        output = set()  # set of bids
+        output = dict()  # set of bids
         for basket in self.baskets.values():
             bids: TypedDict[int, Bid] = basket.get_bids()
-            for bid in bids:
-                output.add(bid)
+            for id, bid in bids.items():
+                output[id] = bid
+        print(f"output {output}")
         return output
 
     def getBid(self, storename, bid_id):
