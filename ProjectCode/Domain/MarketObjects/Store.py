@@ -51,7 +51,7 @@ class Store:
         self.__bids = TypedDict(int, Bid)
         self.__bids_requests = TypedDict(str, list)
         self.__discount_policy = DiscountPolicy(store_name)
-        self.__purchase_policy = PurchasePolicies()
+        self.__purchase_policy = PurchasePolicies(store_name)
 
         #REPOSITORY FIELDS --- TO BE REPLACED
         # self.accesses_test = AccessRepository(store_name=store_name)
@@ -167,7 +167,7 @@ class Store:
         access.canChangeProducts()
         if name == "":
             raise Exception("product name cannot be empty")
-        self.inc_product_id_counter()
+        self.increment_product_id_counter()
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
         self.__products.__setitem__(self.product_id_counter, product_to_add)
         return product_to_add
@@ -552,10 +552,10 @@ class Store:
     def getAllStaffMembersNames(self):
         return self.get_accesses().keys()
 
-    def inc_product_id_counter(self):
-        self.product_id_counter += 1
+    def increment_product_id_counter(self):
         store_entry = StoreModel.get_by_id(self.__store_name)
-        store_entry.product_id_counter = self.product_id_counter
+        store_entry.product_id_counter += 1
+        self.product_id_counter = store_entry.product_id_counter
         store_entry.save()
 
     def get_store_name(self):
