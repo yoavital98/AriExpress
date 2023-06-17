@@ -39,7 +39,7 @@ class StoreTransactionRepository(Repository):
         query = self.model.select()
 
         if pk is not None:
-            query = query.where(self.model.user_name == pk)
+            query = query.where(self.model.store_name == pk)
 
         transactions = []
         for store_transaction in query:
