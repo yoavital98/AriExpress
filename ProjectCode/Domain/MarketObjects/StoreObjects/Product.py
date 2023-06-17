@@ -14,6 +14,9 @@ class Product:
     def __str__(self):
         return f'{self.name} - {self.quantity} - {self.price} - {self.categories}'
 
+    def __eq__(self, other):
+        return self.product_id == other.product_id and self.name == other.name and self.quantity == other.quantity and self.price == other.price and self.categories == other.categories
+
     def get_product_id(self):
         return self.product_id
 
@@ -28,6 +31,18 @@ class Product:
 
     def get_categories(self):
         return self.categories
+
+    def checkFeatures(self, features):
+        for k, v in features.items():
+            if k == "min_price":
+                if self.price < v:
+                    return False
+            elif k == "max_price":
+                if self.price > v:
+                    return False
+            else:
+                raise Exception("invalid feature")
+        return True
 
     # =======================JSON=======================#
 

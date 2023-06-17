@@ -1,0 +1,26 @@
+{% extends 'baseModal.html' %}
+
+
+
+<!--Modal ID-->
+{% block modal-id %} id="deleteNotificationModal{{ notification.id}}" {% endblock modal-id %}
+
+
+<!--Modal title-->
+{% block modal-title %}
+<i class="fas fa-trash-alt"></i>&nbsp; Delete Notification
+{% endblock modal-title %}
+
+<!--Modal Body-->
+{% block modal-body %}
+<div class="text-center text-danger"><i class="far fa-times-circle fa-5x mb-4 mt-2"> </i></div>
+<div class="text-center text-danger">
+    <span> Are you sure you want to delete this notification?</span>
+    <div class="text-dark mt-3 mb-2">notification: <strong>{{ notification.subject }}</strong></div>
+</div>
+{% endblock modal-body %}
+
+<!--Modal footer-->
+{% block modal-footer %}
+<a href="/delete_notification/{{ notification.id }}" class="btn btn-outline-danger btn-sm btn-modal"> Delete</a>
+{% endblock modal-footer %}

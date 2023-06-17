@@ -23,9 +23,6 @@ class Policy(ABC):
         pass
 
     def _checkIfRelevant(self, product):
-        print(product)
-        print(self.level_name)
-        print(f"level {self.level}")
         if self.level == "Store":
             return True
         elif self.level == "Category":

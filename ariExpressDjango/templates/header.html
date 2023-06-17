@@ -11,7 +11,7 @@
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
     <link href="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous" rel="stylesheet">
     <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
-    {% register_notify_callbacks refresh_period='1' callbacks='fill_notification_badge' %}
+    {% register_notify_callbacks refresh_period='3' callbacks='fill_notification_badge' %}
     <style>
         .nav-search-form {
             width: 450px !important;
@@ -67,11 +67,9 @@
                                 <li><a class="dropdown-item" href="{% url 'mainApp:mystores'%}">My Stores</a></li>
                                 <li><a class="dropdown-item" href="{% url 'mainApp:createStore'%}">Create a new Store</a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="#">Action</a></li>
-                                <li><a class="dropdown-item" href="#">Action</a></li>
-                                <li><a class="dropdown-item" href="#">Another action</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                                {% if request.session.guest is 0%}
+                                <li><a class="dropdown-item" href="{% url 'mainApp:userBids'%}">User Bids</a></li>
+                                {% endif %}
                             </ul>
                         </li>
                         {% if request.session.guest is 0 or user.is_superuser %}

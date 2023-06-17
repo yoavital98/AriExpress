@@ -17,10 +17,7 @@ class ProductBasketRepository(Repository):
 
 
     def __getitem__(self, product_id):
-        try:
-            return self.get(product_id)
-        except Exception as e:
-            raise Exception("ProductBasketRepository: __getitem__ failed: " + str(e))
+        return self.get(product_id)
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -40,18 +37,28 @@ class ProductBasketRepository(Repository):
         except Exception as e:
             raise Exception("BasketsRepository: __delitem__ failed: " + str(e))
 
+    def __len__(self):
+        try:
+            return len(self.keys())
+        except Exception as e:
+            raise Exception("BasketsRepository: __len__ failed: " + str(e))
+
     def get(self, pk=None):
-        if pk is None:
-            products = []
-            query = self.model.select()
-            for product_basket_entry in query:
-                product_basket = self.__createDomainObject(product_basket_entry)
-                products.append(product_basket)
-            return products
-        else:
-            product_basket_entry = self.model.get(self.model.product_id == pk)
-            to_return = self.__createDomainObject(product_basket_entry)
-            return to_return
+        try:
+            if pk is None:
+                products = []
+                query = self.model.select()
+                for product_basket_entry in query:
+                    product_basket = self.__createDomainObject(product_basket_entry)
+                    products.append(product_basket)
+                return products
+            else:
+                basket_entry = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)
+                product_basket_entry = self.model.get(self.model.product_id == pk, self.model.basket == basket_entry)
+                to_return = self.__createDomainObject(product_basket_entry)
+                return to_return
+        except Exception as e:
+            return None
 
     def __createDomainObject(self, product_basket_entry):
         product_entry = product_basket_entry.product_model
@@ -69,7 +76,7 @@ class ProductBasketRepository(Repository):
         store_entry = StoreModel.get_by_id(self.store_name)
         basket_query = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == store_entry)
         product, quantity, price = product_data
-        product_basket_entry = self.model.get_or_none(product.get_product_id())
+        product_basket_entry = self.model.get_or_none(self.model.product_id == product.get_product_id(), self.model.basket == basket_query)
         if product_basket_entry is not None:
             #update
             product_basket_entry.quantity = quantity
@@ -85,17 +92,29 @@ class ProductBasketRepository(Repository):
                               product_model=product_query)
         return product_data
 
-    def remove(self, pk):
-        product_basket_entry = self.model.get(product_id=pk)
+    def remove(self, pk=None):
+        if pk is None: #remove all
+            self.model.delete().where(self.model.basket == BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)).execute()
+            return True
+        basket_entry = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)
+        product_basket_entry = self.model.get(self.model.product_id == pk, self.model.basket == basket_entry)
         product_basket_entry.delete_instance()
         return True
 
 
     def keys(self):
-        return [p.product_id for p in ProductBasketModel.select()]
+        try:
+            query = self.model.select().where(self.model.basket == BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name))
+            return [p.product_id for p in query]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()
+
+    def items(self):
+        for key, value in zip(self.keys(), self.values()):
+            yield key, value
 
     def contains(self, product_id):
         query = self.model.select().where(self.model.product_id == product_id)

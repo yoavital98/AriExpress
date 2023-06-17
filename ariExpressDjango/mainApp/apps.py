@@ -1,21 +1,28 @@
 from django.apps import AppConfig
-from ProjectCode.Service.Service import Service
-
-
-
-
-
+import json
 
 class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
-        # config_file = "../config.json"
-        # config_file = "../config_purchaseCart.json"
-        config_file = "../config_withDiscounts.json"
-
-        service = Service(config_file)
+        # load_file = "../load.json"
+        config = "../default_config.json"
+        # load_file = "../load_purchaseCart.json"
+        # load_file = "../load_withDiscounts.json"
+        # load_file = "../load_bids.json"
+        load_file = "../load_registration.json"
+        from ProjectCode.Service.Service import Service
+        from .views import send_notification_lambda
+        service = Service(load_file, config, send_notification_call= send_notification_lambda)
+        members = service.getAllMembers()
+        # print(f"members status: {members.getStatus()}")
+        # print(f"members type: {type(members.getReturnValue())}")
+        # print(f"members: {members.getReturnValue()}")
+        # print(f"members loads: {json.loads(members.getReturnValue())}")
+        # print(f"members loads: {type(json.loads(members.getReturnValue()))}")
+        self.loadUsers(json.loads(members.getReturnValue()))
         # service = Service()
+
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
         # service.register("bbb", "asdf1233", "a@a.com") # for debug only
         # service.register("rubin_krief", "h9reynWq", "roobink@post.bgu.ac.il") # for debug only
@@ -27,9 +34,9 @@ class MainappConfig(AppConfig):
         # service.logOut("bbb")
 
 
-#         config_file = "../config_multipleStaff.json"
-# #         config_file = "../config_purchaseCart.json"
-#         service = Service(config_file)
+#         load_file = "../load_multipleStaff.json"
+# #         load_file = "../load_purchaseCart.json"
+#         service = Service(load_file)
 
 
 
@@ -107,3 +114,24 @@ class MainappConfig(AppConfig):
         # users = User.objects.all()
         # for i in range(1, len(users)):
         #     User.objects.all()[i].delete()
+    def loadAdmins(self, config):
+        from django.contrib.auth.models import User
+        with open(config, 'r') as f:
+            config_data : dict = json.load(f)
+        admins : dict = config_data["Admins"]
+        for name, pwd in admins.items():
+            print(name, pwd)
+            if not User.objects.filter(username=name).exists():
+                user = User.objects.create_user(username=name, password=pwd)
+                user.save()
+
+    def loadUsers(self, memberlist):
+        from django.contrib.auth.models import User
+        for memberDict in memberlist:
+            if not User.objects.filter(username=memberDict["username"]).exists():
+                user = User.objects.create_user(username=memberDict["username"], password=memberDict["password"], email=memberDict["email"])
+                user.save()
+
+
+
+

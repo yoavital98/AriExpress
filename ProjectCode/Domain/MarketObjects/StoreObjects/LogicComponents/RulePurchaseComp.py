@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from ProjectCode.Domain.MarketObjects.StoreObjects.LogicComponents.LogicComp import LogicComp
 
 
@@ -13,7 +15,8 @@ class RulePurchaseComp(LogicComp):
 
     def __init__(self, rule_type, product, category, user_field, operator, quantity):
         super().__init__("")
-        self.rule_types = {"amount_of_product": True, "alcohol_restriction": True}
+        self.rule_types = {"amount_of_product": True, "alcohol_restriction": True, "basket_total_price": True,
+                      "day_of_the_week": True, "amount_of_category": True}
         self.rule_type = self.__validateRuleType(rule_type)
         self.product_id = product
         self.category = category
@@ -22,28 +25,42 @@ class RulePurchaseComp(LogicComp):
         self.quantity = quantity
 
 
-    """
-        basket := dict(int,int) -> (product id, quantity in basket)
-    """
     def checkIfSatisfy(self, product, basket, total_price, user=None):
-        print(f"user {user}")
         if user is None: #User policies
             if self.rule_type == "amount_of_product":
-                print("ok11")
                 return self.productAmount(basket)
+            elif self.rule_type == "basket_total_price":
+                return self.compareWithOperator(total_price)
+            elif self.rule_type == "day_of_the_week":
+                return self.dayOfTheWeek()
+            elif self.rule_type == "amount_of_category":
+                return self.amountOfCategory(basket)
         elif basket is None or total_price is None: #Basket policies
             if self.rule_type == "alcohol_restriction":
-                print("ok12")
                 return self.alcoholRestriction(user.get_age())
         raise Exception("No such rule type exists")
 
 
-    def productAmount(self, basket):
-        basket_product_quantity = basket.get(self.product_id)
-        print(f"basket {basket_product_quantity}")
-        if basket_product_quantity is None:
+    def amountOfCategory(self,basket):
+        amount = 0
+        for product_id, product_tuple in basket.items():
+            cur_product, cur_quantity = product_tuple[0], product_tuple[1]
+            if self.category in cur_product.get_categories():
+                amount += cur_quantity
+        if self.compareWithOperator(amount):
             return True
-        elif self.compareWithOperator(basket_product_quantity):
+        return False
+
+    def productAmount(self, basket):
+        for product_id, product_tuple in basket.items():
+            if int(product_id) == self.product_id and self.compareWithOperator(product_tuple[1]):
+                return True
+        return False
+
+    def dayOfTheWeek(self):
+        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        current_day = datetime.now().weekday()
+        if days_of_week[current_day] == self.user_field:
             return True
         return False
 
@@ -53,7 +70,6 @@ class RulePurchaseComp(LogicComp):
             return self.compareWithOperator(age)
 
     def compareWithOperator(self, arg):
-        print("omggggg")
         if self.operator == ">=":
             return arg >= self.quantity
         elif self.operator == "<=":

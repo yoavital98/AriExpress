@@ -10,7 +10,7 @@ class ProductBasketModel(Model):
         db_table = 'product_basket'
 
 
-    product_id = IntegerField(primary_key=True)
+    product_id = IntegerField()
     quantity = IntegerField()
     product_model = ForeignKeyField(ProductModel, backref='product_basket')
     basket = ForeignKeyField(BasketModel, backref='products')

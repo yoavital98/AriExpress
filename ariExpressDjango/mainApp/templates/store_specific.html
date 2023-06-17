@@ -50,8 +50,8 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
               <th style = "width: 20%;">Actions</th>
           </tr>
 
-          {% if products.items %}
-            {% for product_id, product in products.items %}
+          {% if products %}
+            {% for  product in products %}
               <tr style=" font-size:16px;">
                   <td style="text-align:center;">{{ product.product_id }}</td>
                   <td style="text-align:center;">{{ product.name }}</td>
@@ -80,6 +80,11 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
                       {% endif %}
                       <button class="addtocart-btn btn-action" name="addToCart" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}">Add to cart</button>
                       {% include 'products/addToCart.html' with storename=storename product=product %}
+                      <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                        <button type="submit" class="btn btn-outline-dark" name="placeBid">Place Bid</button>
+                    </form>
                     </div>
                   </td>
               </tr>
@@ -139,6 +144,12 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
       <form method="post" action="{% url 'mainApp:addNewPurchasePolicy' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Add new Purchase Policy</button>
+      </form>
+      {% endif %}
+      {% if "Bid" in permissions %}
+      <form method="post" action="{% url 'mainApp:viewBids' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">Store Bids</button>
       </form>
       {% endif %}
     </div>

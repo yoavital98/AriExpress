@@ -4,29 +4,32 @@ from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
 import json
 
+from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
 from ProjectCode.Domain.Repository.ProductBasketRepository import ProductBasketRepository
 
 
 class Basket:
     def __init__(self, username, store):
+        # self.username = username
+        # self.store: Store = store
+        # self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
+        # self.bids = TypedDict(int, Bid) # Bid id -> Bid
+
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
-        self.bids = TypedDict(int, Bid) # Bid id -> Bid
-
+        self.products = ProductBasketRepository(username, store.get_store_name())  # product id : int -> (product: Product, quantity: int, price: double)
+#        self.bids = TypedDict(int, Bid)  # Bid id -> Bid
+        self.bids = BidsRepository()
         # REPOSITORY FIELD --- TO BE REPLACED
-        self.products_test = ProductBasketRepository(username, store.get_store_name())
+        #self.products_test = ProductBasketRepository(username, store.get_store_name())
 
     def add_Product(self, product_id, product, quantity):
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(product_id):
-            print("ok2")
             if not self.store.checkBasketValidity(self.products, product, quantity):
                 raise Exception("product cannot be added to basket due to policy restrictions")
-            print("ok3")
-            product_tup = self.store.calculateProductPriceAfterDiscount(product,self.products, quantity)
-            print(f"product_tup {product_tup}")
+            product_tup = self.store.calculateProductPriceAfterDiscount(product, self.products, quantity)
             self.products[product_id] = product_tup
         else:
             raise Exception("product already exists in the basket")
@@ -59,12 +62,12 @@ class Basket:
     def getBasketSize(self):
         return len(self.products)
     def getBasketBidSize(self):
-        return len(self.bids)
+        return len(self.bids.keys_for_user(self.username))
 
     def getProductsAsTuples(self):
         productList = []
         for key, value in self.products.items():
-            productList.append((key, value[0], value[1], value[2]))
+            productList.append((key, value[0].get_name(), value[1], value[2]))
         return productList
 
     def addBidToBasket(self, bid: Bid):
@@ -79,9 +82,16 @@ class Basket:
                 return False
         return True
 
-    def checkItemInBasketForBid(self, bid):  # checks if the item is available in the store
+    def checkItemInBasketForBid(self, bid: Bid):  # checks if the item is available in the store
         if self.bids.keys().__contains__(bid.bid_id):  # TODO:
-            return self.store.checkProductAvailability(bid.get_product(), bid.get_quantity())
+            id = bid.get_product_id()
+            quantity = bid.get_quantity()
+            try:
+                return self.store.checkProductAvailability(id, quantity)
+            except Exception as e:
+                print(e)
+
+
         else:
             Exception("product is not in the Basket")
 
@@ -92,7 +102,7 @@ class Basket:
         return self.store.calculateBasketPrice(self.products)
 
     def clearProducts(self):
-        self.products.clear()
+        self.products.remove()
 
     def clearBidFromBasket(self, bid_id):
         del self.bids[bid_id]
@@ -123,3 +133,6 @@ class Basket:
             "quantity": self[1],
             "price": self[2],
         }
+
+    def get_bid(self, bid_id):
+        return self.bids.__getitem__(bid_id)

@@ -2,17 +2,19 @@ import json
 import logging
 import os
 import inspect
+import pickle
 
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
 
-# ------------------------------------ Load config ------------------------------------ #
-@staticmethod
-def load_config(config_file):
 
-    with open(config_file, 'r') as f:
+# ------------------------------------ loadFileInit ------------------------------------ #
+@staticmethod
+def loadFileInit(load_file):
+
+    with open(load_file, 'r') as f:
         config_data = json.load(f)
     for func_config in config_data:
         for func_name, func_args in func_config.items():
@@ -28,23 +30,47 @@ def load_config(config_file):
                     else:
                         func(*args)
             if not found_function:
-                print(f"Error: Function '{func_name}' not found in Service class.")     
+                raise Exception(f"Error: Function '{func_name}' not found in Service class.")     
+# ------------------------------------ loadConfigInit ------------------------------------ #
+@staticmethod
+def loadConfigInit(load_file):
+
+    with open(load_file, 'r') as f:
+        config_data : dict = json.load(f)
+    if 'PaymentService' not in config_data.keys() or config_data["PaymentService"] == "":
+        raise Exception("PaymentService doesn't exist in load config")
+    if 'SupplyService' not in config_data.keys() or config_data["SupplyService"] == "":
+        raise Exception("SupplyService doesn't exist in load config")
+    if 'Database' not in config_data.keys():
+        raise Exception("Database doesn't exist in load config")
+    if 'Admins' not in config_data.keys() or config_data["Admins"] == "":
+        raise Exception("Admins doesn't exist in load config")
+    admins : dict = config_data["Admins"]
+    if len(admins.keys()) == 0:
+        raise Exception("Ateast one admin should exist in load config")
+    return config_data
+
 # ------------------------------------------------------------------------------------- #
 
 class Service:
     _instance = None
 
-    def __new__(cls, config_file=None):
+    def __new__(cls, load_file=None, config_file=None, send_notification_call=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls.store_facade = StoreFacade()
+            if config_file is None:
+                raise Exception("Config file hasn't been loaded")
+            configFileDict = loadConfigInit(config_file)
+            cls.store_facade = StoreFacade(configFileDict, send_notification_call=send_notification_call)
+
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             # load info
-            if config_file is not None:
-                load_config(config_file)
+            if load_file is not None:
+                loadFileInit(load_file)
         return cls._instance
+    
 
     # ------  logger  ------ # < TODO cuurently without toJson
     def getInfoLogs(self):
@@ -83,7 +109,8 @@ class Service:
     # ------  admin  ------ #
     # def openTheSystem(self, username):
     #     try:
-    #         self.store_facade.openSystem(username)
+    #         if self.admins.keys().__contains__(user_name):
+    #         self.store_facade = StoreFacade()
     #         logging.info("AriExpress has opened successfully. Running Admin: " + username + ".")
     #     except Exception as e:
     #         logging.error(f"openTheSystem Error: {str(e)}. By username: '{username}'")
@@ -206,9 +233,9 @@ class Service:
             logging.error(f"logOut Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def getMemberPurchaseHistory(self, username):
+    def getMemberPurchaseHistory(self, requester_id, username):
         try:
-            purchase_history = self.store_facade.getMemberPurchaseHistory(username)
+            purchase_history = self.store_facade.getMemberPurchaseHistory(requester_id, username)
             logging.debug(f"fetching purchase history of user {str(username)}.")
             data_json = []
             for transaction in purchase_history:
@@ -289,10 +316,14 @@ class Service:
     def productSearchByCategory(self, categoryName,
                                 username):  # TODO: probably each store will have its products catagorized
         try:  # TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
-            results = self.store_facade.productSearchByCategory(categoryName, username)
+            results = self.store_facade.productSearchByCategory(categoryName)
             logging.debug(
                 f"fetching all the products within the category '{str(categoryName)}'. By username: " + username + ".")
-            return Response(JsonSerialize.toJsonAttributes(results), True)
+            results_json = []
+            for item in results.values():
+                for product in item:
+                    results_json.append(product.toJson())
+            return Response(results_json, True)
         except Exception as e:
             logging.error(f"productSearchByCategory Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
@@ -328,7 +359,7 @@ class Service:
 
     def addToBasket(self, username, storename, productID, quantity):
         try:
-            answer = self.store_facade.addToBasket(username, storename, productID, quantity)
+            answer = self.store_facade.addToBasket(username, storename, int(productID), int(quantity))
             logging.debug(
                 f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ".")
@@ -383,19 +414,51 @@ class Service:
     def getAllBidsFromUser(self, username):
         try:
             bids = self.store_facade.getAllBidsFromUser(username)
+            print(f"bids {bids}")
+            print(type(bids))
             logging.debug(f"fetching all the user's bids. By username: " + username + ".")
             bids_data = {}
-            for bid in bids:
-                bids_data[bid.get_id()] = bid.toJson()
+            for a, bid in bids.items():
+                id = bid.get_id()
+                bids_data[id] = bid.toJson()
             return Response(json.dumps(bids_data), True)
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+    
+    def getAllBidsFromStore(self, storename):
+        try:
+            bids = self.store_facade.getAllBidsFromStore(storename)
+            logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
+            bids_data = {}
+            for a, bid in bids.items():
+                id = bid.get_id()
+                bids_data[id] = bid.toJson()
+            # bids_data = []
+            # for id, bid in bids.items():
+            #     bids_data.append(bid.toJson())
+            return Response(json.dumps(bids_data), True)
+            
+        except Exception as e:
+            logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
+            return Response(e, False)
+
+    def getStaffPendingForBid(self, store_name, bid_id):
+        try:
+            pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
+            logging.debug(f"fetching all pending staff for bid. By store name: {store_name} and bid id {bid_id}")
+            staff_data = {}
+            for name in pending_list:
+                staff_data[name] = name
+            return Response(json.dumps(staff_data), True)
+        except Exception as e:
+            logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
             return Response(e, False)
 
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
         try:
-            self.store_facade.purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+            self.store_facade.purchaseConfirmedBid(int(bid_id), store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode)
             logging.info(
                 "Bid purchase was made successfully. By username: " + username + ". storename: " + store_name + ". bid_id: " + str(
@@ -407,7 +470,7 @@ class Service:
 
     def approveBid(self, username, storename, bid_id):
         try:
-            approved_bid = self.store_facade.approveBid(username, storename, bid_id)
+            approved_bid = self.store_facade.approveBid(username, storename, int(bid_id))
             logging.info(
                 "Bid was added successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
                     bid_id) + ".")
@@ -487,7 +550,7 @@ class Service:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def addNewProductToStore(self, username, storename, productname, categories, quantity, price):
+    def addNewProductToStore(self, username, storename, productname, quantity, price, categories):
         try:  # TODO check whether this product details are needed
             added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price,
                                                                    categories)
@@ -596,7 +659,7 @@ class Service:
                     discounts={}):
         try:
             discount = self.store_facade.addDiscount(storename, username, discount_type,
-                                                     percent=percent, level=level, level_name=level_name, rule=rule,
+                                                     percent=int(percent), level=level, level_name=level_name, rule=rule,
                                                      discounts=discounts)
             logging.debug(
                 f"adding discount of type " + discount_type + ".")
@@ -752,7 +815,7 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By username: '{requester_id}'")
             return Response(e, False)
 
-    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, status, file=None):
+    def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file=None):
         try:
             message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, file)
             logging.info(
@@ -762,9 +825,9 @@ class Service:
             logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
             return Response(e, False)
 
-    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, status, file=None):
+    def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file=None):
         try:
-            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, status, file)
+            message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, file)
             logging.info(
                 "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
             return Response(message.toJson(), True)
@@ -791,6 +854,16 @@ class Service:
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
             return Response(e, False)
+        
+    def getAllNotifications(self, requesterID):
+        try:
+            notifications = self.store_facade.getAllNotifications(requesterID)
+            logging.debug(
+                f"fetching all the user's notifications. By username: " + requesterID + ".")
+            return Response(notifications, True)
+        except Exception as e:
+            logging.error(f"getNotifications Error: {str(e)}.")
+            return Response(e, False)
 
     def readMessage(self, requesterID, messageID):
         try:
@@ -811,6 +884,27 @@ class Service:
         except Exception as e:
             logging.error(f"deleteMessage Error: {str(e)}.")
             return Response(e, False)
+        
+    def readNotification(self, requesterID, notificationID):
+        try:
+            notification = self.store_facade.readNotification(requesterID, notificationID)
+            logging.debug(
+                f"marked as read notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(notification.toJson(), True)
+        except Exception as e:
+            logging.error(f"readNotification Error: {str(e)}.")
+            return Response(e, False)
+        
+    def deleteNotification(self, requesterID, notificationID):
+        try:
+            res = self.store_facade.deleteNotification(requesterID, notificationID)
+            logging.debug(
+                f"deleted notification with ID {notificationID}. By username: " + requesterID + ".")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"deleteNotification Error: {str(e)}.")
+            return Response(e, False)
+
 
     # def messageAsAdminToUser(self, admin_name, receiverID, message):
     #     try:
@@ -831,3 +925,16 @@ class Service:
     #     except Exception as e:
     #         logging.error(f"messageAsAdminToStore Error: {str(e)}. By username: '{admin_name}'")
     #         return Response(e, False)
+
+    def getAllMembers(self):
+        try:
+            res = self.store_facade.getAllMembers()
+            members = []
+            for member in res:
+                members.append(member.toJsonServerInit())
+            logging.debug(
+                f"getAllMembers has been called successfully")
+            return Response(json.dumps(members), True)
+        except Exception as e:
+            logging.error(f"getAllMembers Error: {str(e)}.")
+            return Response(e, False)

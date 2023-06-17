@@ -1,12 +1,13 @@
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
-from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicy import PurchasePolicy
+from ProjectCode.Domain.Repository.PurchasePolicyRepository import PurchasePolicyRepository
 
 
 class PurchasePolicies:
 
-    def __init__(self):
-        self.policies = TypedDict(int, Policy)
+    def __init__(self, store_name):
+        self.store_name = store_name
+        self.policies = PurchasePolicyRepository(store_name)
         self.pruchase_policy_id = 0
 
     def addPurchasePolicy(self, **kwargs):
@@ -17,7 +18,6 @@ class PurchasePolicies:
             policy = PurchasePolicy(level, level_value, rule)
         else:
             raise Exception("No such policy exists")
-        policy.parse()
         self.pruchase_policy_id += 1
         self.policies[self.pruchase_policy_id] = policy
         return policy
