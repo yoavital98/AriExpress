@@ -5,12 +5,12 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
-        # load_file = "../load.json"
+        load_file = "../load.json"
         config = "../default_config.json"
         # load_file = "../load_purchaseCart.json"
         # load_file = "../load_withDiscounts.json"
         # load_file = "../load_bids.json"
-        load_file = "../load_registration.json"
+        # load_file = "../load_registration.json"
         from ProjectCode.Service.Service import Service
         from .views import send_notification_lambda
         service = Service(load_file, config, send_notification_call= send_notification_lambda)
