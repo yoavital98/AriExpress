@@ -229,6 +229,9 @@ class StoreFacade:
             return self.online_members.get(user_name)
         else:
             raise Exception("user is not logged in or is not a member")
+        
+    def getAllMembers(self):
+        return self.members.getAll()
 
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):

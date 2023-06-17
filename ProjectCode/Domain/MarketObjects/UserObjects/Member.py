@@ -163,3 +163,10 @@ class Member(User):
             "cart": self.cart.toJson()
         }
         return json.dumps(data)
+    
+    def toJsonServerInit(self):
+        return {
+            "username": self.user_name,
+            "password": self.password,
+            "email": self.email
+        }
