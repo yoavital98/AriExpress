@@ -1727,6 +1727,17 @@ class TestStoreFacade(TestCase):
         with self.assertRaises(Exception):
             self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
 
+    def test_OR_PurchasePolicy_succeed(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        rule1 = {"rule_type": "amount_of_product", "product_id": self.item_paper.get_product_id(), "category": "", "operator": "<=", "user_field": "", "quantity": 5, "child": {}}
+        rule2 = {"rule_type": "amount_of_category", "product_id": "", "category": "Milk", "operator": "<=", "user_field": "", "quantity": 5, "child": {"logic_type":"OR", "rule":rule1}}
+        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule2, level="Product", level_name=oreo.get_product_id())
+        with self.assertRaises(Exception):
+            self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
 
     # purchaseCart
 

@@ -30,23 +30,27 @@ class RuleComp(LogicComp):
         if self.rule_type == "basket_total_price":
             return self.basketTotalPrice(int(total_price))
         elif self.rule_type == "amount_of_product":
-            for product_id, product_quantity in basket.items():
-                if int(product_id) == self.product_id and self.amoutOfProduct(product_quantity):
-                    return True
-            return False
+            return self.amoutOfProduct(basket)
         elif self.rule_type == "amount_of_category":
-            amount = 0
-            for product_id, product_quantity in basket.items():
-                if self.category in product.get_categories():
-                    amount += product_quantity
-            if self.compareWithOperator(amount):
-                return True
-            return False
+            return self.amountOfCategory(basket)
 
     #TODO: add base rules
 
-    def amoutOfProduct(self, amount):
-        return self.compareWithOperator(amount)
+    def amountOfCategory(self, basket):
+        amount = 0
+        for product_id, product_tuple in basket.items():
+            cur_product, cur_quantity = product_tuple[0], product_tuple[1]
+            if self.category in cur_product.get_categories():
+                amount += cur_quantity
+        if self.compareWithOperator(amount):
+            return True
+        return False
+
+    def amoutOfProduct(self, basket):
+        for product_id, product_tuple in basket.items():
+            if int(product_id) == self.product_id and self.compareWithOperator(product_tuple[1]):
+                return True
+        return False
 
     def basketTotalPrice(self, total_price):
         return self.compareWithOperator(total_price)
