@@ -49,6 +49,7 @@ urlpatterns = [
     path(r'checkoutpage/', views.checkoutpage, name='checkoutpage'),
     path(r'checkout', views.checkout, name='checkout'),
     path(r'searchpage/', views.searchpage, name='searchpage'),
+    path(r'userPurchaseHistory/', views.userPurchaseHistory, name='userPurchaseHistory'),
     
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
