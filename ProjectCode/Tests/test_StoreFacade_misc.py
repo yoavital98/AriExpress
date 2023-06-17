@@ -399,6 +399,55 @@ class TestStoreFacade(TestCase):
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(500, price_after_discount_1)
 
+    def test_calculateAddDiscountWithSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        discounts = {"1": {"discount_type": "Simple", "percent": 20, "level": "Category", "level_name": "Milk"},
+                     "2": {"discount_type": "Simple", "percent": 10, "level": "Product", "level_name": cariot.get_product_id()}}
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Add", discounts=discounts)
+        product_dict = {cariot.get_product_id(): (cariot,8)}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(cariot, product_dict, 0)
+        self.assertTrue(price_after_discount_1 == 7)
+
+    def test_calculateMaxDiscountWithSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        discounts = {"1": {"discount_type": "Simple", "percent": 20, "level": "Category", "level_name": "Milk"},
+                     "2": {"discount_type": "Simple", "percent": 10, "level": "Product", "level_name": cariot.get_product_id()}}
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Max", discounts=discounts)
+        product_dict = {cariot.get_product_id(): (cariot,8)}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(cariot, product_dict, 0)
+        self.assertTrue(price_after_discount_1 == 8)
+
+    def test_calculateAddDiscountWithThreeSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        discounts = {"1": {"discount_type": "Simple", "percent": 20, "level": "Category", "level_name": "Milk"},
+                     "2": {"discount_type": "Simple", "percent": 10, "level": "Product", "level_name": cariot.get_product_id()},
+                     "3": {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}}
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Add", discounts=discounts)
+        product_dict = {cariot.get_product_id(): (cariot,8)}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(cariot, product_dict, 0)
+        self.assertTrue(price_after_discount_1 == 5)
+
+    def test_calculateMaxDiscountWithConditionedDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 1, "cookies")
+        cariot: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "cariot", 10, 10, "Milk")
+        rule = {"rule_type": "amount_of_product", "product_id": cariot.get_product_id(),
+                "operator": ">=", "quantity": 5, "category": "", "child": {}}
+
+        discounts = {"1": {"discount_type": "Conditioned", "percent": 20, "level": "Product", "level_name": cariot.get_product_id(), "rule": rule},
+                     "2": {"discount_type": "Simple", "percent": 10, "level": "Product", "level_name": cariot.get_product_id()}}
+
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Max", discounts=discounts)
+        product_dict = {cariot.get_product_id(): (cariot,8)}
+        price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(cariot, product_dict, 0)
+        self.assertTrue(price_after_discount_1 == 7)
+
     def test_PurchaseCartWithDiscounts_byCategory_success(self):
         transaction_history = TransactionHistory()
         self.store_facade.logInAsMember("Feliks", "password456")
