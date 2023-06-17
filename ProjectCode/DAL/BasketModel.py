@@ -10,7 +10,7 @@ class BasketModel(Model):
         db_table = 'basket'
 
 
-    user_name = CharField(max_length=100, primary_key=True)
+    user_name = CharField(max_length=100)
     store = ForeignKeyField(StoreModel, backref='basket')
     #cart = ForeignKeyField(CartModel, backref='baskets')
 

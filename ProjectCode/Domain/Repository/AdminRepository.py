@@ -10,10 +10,8 @@ class AdminRepository(Repository):
         self.model = AdminModel
 
     def __getitem__(self, user_name):
-        try:
-            return self.get(user_name)
-        except Exception as e:
-            raise Exception("AdminRepository: __getitem__ failed: " + str(e))
+        return self.get(user_name)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -34,21 +32,32 @@ class AdminRepository(Repository):
             raise Exception("AdminRepository: __delitem__ failed: " + str(e))
 
     def get(self, pk=None):
-        if not pk:
-            admin_list = []
-            for entry in self.model.select():
+        try:
+            if not pk:
+                admin_list = []
+                for entry in self.model.select():
+                    admin = Admin(entry.user_name, entry.password, entry.email)
+                    admin.logged_In = entry.logged_in
+                    admin_list.append(admin)
+                return admin_list
+            else:
+                entry = self.model.get(self.model.user_name == pk)
                 admin = Admin(entry.user_name, entry.password, entry.email)
                 admin.logged_In = entry.logged_in
-                admin_list.append(admin)
-            return admin_list
-        else:
-            entry = self.model.get(self.model.user_name == pk)
-            admin = Admin(entry.user_name, entry.password, entry.email)
-            admin.logged_In = entry.logged_in
-            return admin
+                return admin
+        except Exception as e:
+            return None
 
     def add(self, admin: Admin):
-        admin_entry = self.model.create(user_name=admin.get_username(), password=admin.get_password(), email=admin.get_email(), logged_in =admin.get_logged())
+        admin_entry = self.model.get_or_none(self.model.user_name == admin.get_username())
+        if admin_entry is not None:
+            #update
+            admin_entry.password = admin.get_password()
+            admin_entry.email = admin.get_email()
+            admin_entry.logged_in = admin.get_logged()
+            admin_entry.save()
+            return admin
+        self.model.create(user_name=admin.get_username(), password=admin.get_password(), email=admin.get_email(), logged_in =admin.get_logged())
         return admin
 
     def remove(self, pk):
@@ -56,11 +65,13 @@ class AdminRepository(Repository):
         user_entry.delete_instance()
 
     def keys(self):
-        return [admin.user_name for admin in AdminModel.select()]
+        try:
+            return [admin.user_name for admin in AdminModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()
 
     def contains(self, user_name):
-        query = self.model.select().where(self.model.user_name == user_name)
-        return query.exists()
+        return user_name in self.keys()

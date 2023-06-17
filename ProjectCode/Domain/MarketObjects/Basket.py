@@ -9,13 +9,18 @@ from ProjectCode.Domain.Repository.ProductBasketRepository import ProductBasketR
 
 class Basket:
     def __init__(self, username, store):
+        # self.username = username
+        # self.store: Store = store
+        # self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
+        # self.bids = TypedDict(int, Bid) # Bid id -> Bid
+
         self.username = username
         self.store: Store = store
-        self.products = TypedDict(int, tuple)  # product id : int -> (product: Product, quantity: int, price: double)
-        self.bids = TypedDict(int, Bid) # Bid id -> Bid
+        self.products = ProductBasketRepository(username, store.get_store_name())  # product id : int -> (product: Product, quantity: int, price: double)
+        self.bids = TypedDict(int, Bid)  # Bid id -> Bid
 
         # REPOSITORY FIELD --- TO BE REPLACED
-        self.products_test = ProductBasketRepository(username, store.get_store_name())
+        #self.products_test = ProductBasketRepository(username, store.get_store_name())
 
     def add_Product(self, product_id, product, quantity):
         if quantity <= 0:
@@ -76,9 +81,16 @@ class Basket:
                 return False
         return True
 
-    def checkItemInBasketForBid(self, bid):  # checks if the item is available in the store
+    def checkItemInBasketForBid(self, bid: Bid):  # checks if the item is available in the store
         if self.bids.keys().__contains__(bid.bid_id):  # TODO:
-            return self.store.checkProductAvailability(bid.get_product(), bid.get_quantity())
+            id = bid.get_product_id()
+            quantity = bid.get_quantity()
+            try:
+                return self.store.checkProductAvailability(id, quantity)
+            except Exception as e:
+                print(e)
+
+
         else:
             Exception("product is not in the Basket")
 
@@ -89,7 +101,7 @@ class Basket:
         return self.store.calculateBasketPrice(self.products)
 
     def clearProducts(self):
-        self.products.clear()
+        self.products.remove()
 
     def clearBidFromBasket(self, bid_id):
         del self.bids[bid_id]
