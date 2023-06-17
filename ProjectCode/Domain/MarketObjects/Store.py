@@ -308,36 +308,35 @@ class Store:
         return price_after_discounts
 
     def checkBasketValidity(self, basket, product_to_add, quantity):
-        relevant_product_info = dict()
-        for product_id, product_tuple in basket.items():
-            relevant_product_info[product_id] = product_tuple[1]
-        relevant_product_info[product_to_add.get_product_id()] = quantity
+        relevant_product_info = self.__getRelevantProductDictFromBasket(basket, product_to_add, quantity)
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         #TODO: last argument suppose to be a user, need to figure out how to get it
         return self.__purchase_policy.checkAllPolicies(product_to_add, relevant_product_info, overall_price)
 
     def calculateProductPriceAfterDiscount(self, product, basket, quantity):
-        relevant_product_info = dict()
-        for product_id, product_tuple in basket.items():
-            relevant_product_info[product_id] = product_tuple[1]
-        relevant_product_info[product.get_product_id()] = quantity
+        relevant_product_info = self.__getRelevantProductDictFromBasket(basket, product, quantity)
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
         return (product, quantity, price_after_discount)
 
+    def __getRelevantProductDictFromBasket(self, basket, product_to_add=None, quantity=None):
+        relevant_product_info = dict()
+        for product_id, product_tuple in basket.items():
+            relevant_product_info[product_id] = (product_tuple[0], product_tuple[1])
+        if product_to_add is not None:
+            relevant_product_info[product_to_add.get_product_id()] = (product_to_add, quantity)
+        return relevant_product_info
+
     def calculateBasketBasePrice(self, products_dict): #tup(product,qunaiity)
         overall_price = 0
-        for product_id, quantity in products_dict.items():
-            overall_price += self.__products[product_id].get_price() * quantity
+        for product_id, product_tuple in products_dict.items():
+            overall_price += self.__products[product_id].get_price() * product_tuple[1]
         return overall_price
 
 
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
-        new_product_dict = TypedDict(int, int) # (id,quantity)
-        for product_id, product_tuple in products_dict.items():
-            new_product_dict[product_id] = product_tuple[1]
-
+        new_product_dict = self.__getRelevantProductDictFromBasket(products_dict)
         overall_price = 0
         price_after_discounts = 0
         for product_id, product_quantity in new_product_dict.items():

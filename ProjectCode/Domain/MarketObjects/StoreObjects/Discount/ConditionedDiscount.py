@@ -30,7 +30,7 @@ class ConditionedDiscount(Policy):
         return "ConditionedDiscount: " + str(self.percent) + "% off " + str(self.level) + " " + str(self.level_name) + " if " + str(self.rule)
 
     #returns price for a product after discount
-    def calculate(self, product, basket, total_price): #TODO: check here
+    def calculate(self, product, basket, total_price):
         if self.level == "Category" and self.level_name not in product.get_categories():
             return 0
         elif self.level == "Product" and int(self.level_name) != product.get_product_id():
