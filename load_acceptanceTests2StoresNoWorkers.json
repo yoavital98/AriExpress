@@ -1,0 +1,90 @@
+[{
+  "register": {"args": ["Feliks", "password333", "feliks@gmail.com"]}
+},{
+  "register": {"args": ["Amiel", "password111", "amiel@gmail.com"]}
+},{
+  "register": {"args": ["Ari", "password222", "ari@gmail.com"]}
+},{
+  "register": {"args": ["Robin", "password444", "robin@gmail.com"]}
+},{
+  "logIn": {"args": ["Feliks", "password333"]}
+},{
+  "logIn": {"args": ["Robin", "password222"]}
+},{
+  "createStore": {"args": ["Feliks", "Feliks&Sons"]}
+},{
+  "createStore": {"args": ["Robin", "Robin&Daughters"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Potato_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Onion_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "vegetables"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Mango_K", "30", "8", "fruits"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Banana_K", "30", "8", "fruits"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Melon_K", "30", "8", "fruits"]}
+},{
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cherry_K", "30", "20", "fruits"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "sauces"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Ketchup", "30", "15", "sauces"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Mustard", "30", "15", "sauces"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "sauces"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "sauces"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "chilli", "30", "2", "seasoning"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "salt", "30", "2", "seasoning"]}
+},{
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "paprika", "30", "2", "seasoning"]}
+}]
+//{
+//  "register": {"args": ["Son_A", "passwordAAA", "sona@gmail.com"]}
+//},{
+//  "register": {"args": ["Son_B", "passwordBBB", "sonb@gmail.com"]}
+//},{
+//  "register": {"args": ["Son_C", "passwordCCC", "sonc@gmail.com"]}
+//},{
+//
+//}
+//]
+//
+////{
+////  "nominateStoreOwner": {"args": ["aaa", "eee", "store123"]}
+//},
+//{
+//  "nominateStoreOwner": {"args": ["aaa", "fff", "store123"]}
+//},
+//{
+//  "nominateStoreOwner": {"args": ["eee", "bbb", "store123"]}
+//},
+//{
+//  "nominateStoreManager": {"args": ["eee", "ccc", "store123"]}
+//},
+//{
+//  "nominateStoreManager": {"args": ["eee", "ddd", "store123"]}
+//},
+//{
+//  "logOut": {"args": ["aaa"]}
+//},
+//{
+//  "logOut": {"args": ["eee"]}
+//}
+//]

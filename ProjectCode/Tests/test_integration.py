@@ -1,190 +1,316 @@
 import unittest
 from unittest import TestCase
-from ProjectCode.Domain.MarketObjects.Store import Store
-from ProjectCode.Domain.DataObjects.DataGuest import DataGuest
-from ProjectCode.Domain.DataObjects.DataMember import DataMember
-from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
-from ProjectCode.Domain.MarketObjects.UserObjects.Admin import Admin
-from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 from ProjectCode.Service.Service import Service
-from ProjectCode.Service.Response import Response
 
+default_config = "../../default_config.json"
+stores_load  = "../../load_acceptanceTests2StoresNoWorkers.json"
+true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
 class Test_Use_Cases_1(TestCase):
+    default_config = "../../default_config.json"
+    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+
     def setUp(self):
-        self.Service = Service()
+        pass
 
-    # ----------------------sysyem functionality tests----------------------
-    #Use Case 1.1
-    # def testing_starting_the_market_system_success(self):
-    #
-    #     self.Service.login("Ari", "123")
-    #     res = self.Service.openTheSystem("Ari")
-    #     self.assertEqual(res, None, "The system is not open")
-    #
-    # def testing_starting_the_market_system_failure(self):
-    #
-    #     res = self.Service.openTheSystem("Rubin")
-    #     self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't open")
+    # TODO need to add default config for all Service(default_config) calls
+    # Service(config)
+    """ ---------------------- (1) system functionality tests ---------------------- """
 
-    #Use Case 1.2
+    #  Use Case 1.1
+    def test_starting_the_market_system_success(self):
+        service = Service(default_config, true_lambda)
+        self.assertNotEqual(service.store_facade.admins.__len__(), 0)
 
-#    def tearDown(self):
-        #self.Service.closeTheSystem()
- #       pass
-    #Use Case 1.3
+    # Use Case 1.2
+
+    def test_AddSetUpdate_connection_with_supply_service_success(self):
+        service = Service(default_config, true_lambda)
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
+        # add new address
+        service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.111webhostapp.com/","new_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address("new_name") == "https://php-server-try.111webhostapp.com/")
+        # set address with wrong name
+        service.store_facade.supply_service.set_request_address("wrong_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
+        # set address with correct name
+        service.store_facade.supply_service.set_request_address("new_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.111webhostapp.com/")
+        # update address of new_name
+        service.store_facade.supply_service.addUpdate_request_address("https://php-server-try.222webhostapp.com/", "new_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address("new_name") == "https://php-server-try.222webhostapp.com/")
+        service.store_facade.supply_service.set_request_address("new_name")
+        self.assertTrue(service.store_facade.supply_service.get_request_address() == "https://php-server-try.222webhostapp.com/")
+
+    def test_AddSetUpdate_connection_with_payment_service_success(self):
+        service = Service(default_config, true_lambda)
+        self.assertTrue(
+            service.store_facade.payment_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
+        # add new address
+        service.store_facade.payment_service.addUpdate_request_address("https://php-server-try.111webhostapp.com/",
+                                                                       "new_name")
+        self.assertTrue(service.store_facade.payment_service.get_request_address(
+            "new_name") == "https://php-server-try.111webhostapp.com/")
+        # set address with wrong name
+        service.store_facade.payment_service.set_request_address("wrong_name")
+        self.assertTrue(
+            service.store_facade.payment_service.get_request_address() == "https://php-server-try.000webhostapp.com/")
+        # set address with correct name
+        service.store_facade.payment_service.set_request_address("new_name")
+        self.assertTrue(
+            service.store_facade.payment_service.get_request_address() == "https://php-server-try.111webhostapp.com/")
+        # update address of new_name
+        service.store_facade.payment_service.addUpdate_request_address("https://php-server-try.222webhostapp.com/",
+                                                                       "new_name")
+        self.assertTrue(service.store_facade.payment_service.get_request_address(
+            "new_name") == "https://php-server-try.222webhostapp.com/")
+        service.store_facade.payment_service.set_request_address("new_name")
+        self.assertTrue(
+            service.store_facade.payment_service.get_request_address() == "https://php-server-try.222webhostapp.com/")
+
+    # Use Case 1.3 & 1.4
+
+    def setup_purchase(self):
+        self.service = Service(default_config, true_lambda)
+        self.service.register("Feliks", "password456", "feliks@gmail.com")
+        self.service.register("Amiel", "password789", "amiel@gmail.com")
+        self.service.logIn("Feliks", "password456")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
+
+    def test_request_to_payment_supply_success(self):
+        self.setup_purchase()
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
+        self.assertTrue(res_added_product.getStatus())
+        res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
+                                                 "be'er sheva", "beer sheva", "israel", "1234152")
+        self.assertTrue(res_purchase.getStatus())
+
+    # Use case 1.5 & 1.6
+
+    def test_notification_to_store_founder_and_user(self):
+        self.setup_purchase()
+        self.service.logIn("Amiel", "password789")
+        self.service.logIn("Feliks", "password456")
+        notification_amount_amiel = self.service.getAllNotifications("Amiel").__len__()
+        notification_amount_feliks = self.service.getAllNotifications("Feliks").__len__()
+        self.service.logOut("Feliks")
+        self.assertTrue(notification_amount_amiel == 0)
+        self.service.addToBasket('Amiel', "Feliks&Sons", 1, 5)
+        self.service.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789", "be'er sheva",
+                                  "beer sheva", "israel", "1234152")
+        notification_amount_amiel = self.service.getAllNotifications("Amiel").__len__()
+        self.assertTrue(notification_amount_amiel == 1)
+        self.service.logIn("Feliks", "password456")
+        notification_amount_founder = self.service.getAllNotifications("Feliks").__len__()
+        self.assertTrue(notification_amount_founder == notification_amount_feliks + 1)
+
+    # Use case 1.7
+
+    def test_notify_user_at_success_and_error(self):
+        self.setup_purchase()
+        self.service.logIn("Amiel", "password789")
+        self.service.logIn("Feliks", "password456")
+        self.service.addToBasket('Amiel', "Feliks&Sons", 1, 5)
+        res = self.service.purchaseCart("Amiel", "4580020345672134", "12/20", "Amiel Saad", "555", "123456789",
+                                        "be'er sheva",
+                                        "beer sheva", "israel", "1234152")
+        self.assertFalse(res.getStatus())
+        res = self.service.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
+                                        "be'er sheva",
+                                        "beer sheva", "israel", "1234152")
+        self.assertTrue(res.getStatus())
 
     # ----------------------guest functionality tests----------------------
-
 class Test_Use_Cases_2_1(TestCase):
+    default_config = "../../default_config.json"
+    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+
     def setUp(self):
-
-        self.Service = Service()
-
+        self.service = Service(self.default_config, true_lambda)
     # Use Case 2.1.1
     def test_guest_visit_success(self):
-            
-        res = self.Service.loginAsGuest()
+        # TODO 00 - check that a guest is trackable, can know when logged out to system, etc.
+        # a guest can (1) visit the system (2) have a cart
+        # (3) add products to it (4) and purchase it.
+        # =============================================
+        self.setUp()
+        # (1)
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        return_value = res.getReturnValue()
-        self.assertTrue(return_value == '{"entrance_id": "0"}')
-
-
-    def test_guest_visit_failure(self):
-        # cannot fail!
-        pass
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.assertTrue(guest0_entrance_id == 0)
+        self.assertTrue(guest1_entrance_id == 1)
+        # (2)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["username"] == "2")
+        self.assertTrue(self.service.getCart(guest1_entrance_id).getReturnValue()["username"] == "3")
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        self.assertTrue(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"] == [])
+        # (3)
+        feliks_product_1_quantity = self.service.getProduct("Feliks&Sons", 1, "Feliks").getReturnValue()["quantity"]
+        robin_product_1_quantity = self.service.getProduct("Robin&daughters", 1, "Robin").getReturnValue()["quantity"]
+        robin_product_2_quantity = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 3)
+        self.service.addToBasket(guest0_entrance_id, "Robin&daughters", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Robin&daughters", 2, 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 8)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][1]["store"] == "Robin&daughters")
+        self.assertTrue(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
+        # (4)
+        self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                       "some_address", "be'er sheva", "Israel", "1234567")
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        feliks_product_1_quantity_after = self.service.getProduct("Feliks&Sons", 1, "Feliks").getReturnValue()["quantity"]
+        robin_product_1_quantity_after = self.service.getProduct("Robin&daughters", 1, "Robin").getReturnValue()["quantity"]
+        robin_product_2_quantity_after = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.assertTrue(feliks_product_1_quantity_after == feliks_product_1_quantity - 8)
+        self.assertTrue(robin_product_1_quantity_after == robin_product_1_quantity - 5)
+        self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     # Use Case 2.1.2
     def test_guest_exit_success(self):
-        pass
+        self.setUp()
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        robin_product_2_quantity = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.service.addToBasket(guest0_entrance_id, "Robin&daughters", 2, 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["id"] == 2)
+        self.service.leaveAsGuest(guest0_entrance_id)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        robin_product_2_quantity_after = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
-    #---------------------------------member functionality tests---------------------------------
+    # ---------------------------------member functionality tests---------------------------------
 
-    #Use Case 2.1.3
+    # Use Case 2.1.3
     def test_registration_to_the_system_success(self):
-
-        res = self.Service.register("username22", "password1", "email")
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        return_value: dict = res.getReturnValue()
-        self.assertTrue(return_value.get('email') == 'email')
-        self.assertTrue(return_value.get('entrance_id') == '0')
-        self.assertTrue(return_value.get('username') == 'username22')
+        self.assertTrue(self.service.getMemberInfo("admin", "username22")["name"] == "username22")
 
     def test_registration_to_the_system_failure(self):
-
-        res = self.Service.register("username", "password", "email")
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        res = self.Service.register("username", "password", "email")
-        self.assertIsInstance(res.getReturnValue(), Exception, "The system shouldn't register")
+        with self.assertRaises(Exception):
+            self.service.register("username22", "password1", "email")
 
 
-
- #Use Case 2.1.4
-class Test_Use_Case_2_1_4(TestCase):
-
-    def setUp(self):
-        self.service = Service()
-
+    # Use Case 2.1.4
 
     def test_login_to_the_system_success(self):
-
-        res = self.service.loginAsGuest()
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
+        member_res = self.service.logIn("username22", "password1")
+        self.assertTrue(member_res.getReturnValue()['name'] == 'username22')
+        self.assertTrue(member_res.getReturnValue()['email'] == 'email')
 
     def test_logging_in_the_system_failure(self):
-        # there is no way to fail this
-        pass
-
-
-    #Use Case 2.2.1
-class Test_Use_Case_2_guests(TestCase):
-    def setUp(self):
-        self.service = Service()
-        self.service.register("Feliks", "password456", "feliks@gmail.com")
-        self.service.register("Amiel", "password789", "amiel@gmail.com")
-        self.service.register("YuvalMelamed", "PussyDestroyer69", "fuck@gmail.com")
-        self.service.logIn("Feliks", "password456")
-        self.service.createStore("Feliks", "AriExpress")
-        self.service.addNewProductToStore("Feliks","AriExpress", "paper", "paper", 50, 100)
-        self.service.logOut("Feliks")
-
-        
-
-    def test_guest_information_fetching(self):
-        res_guest = self.service.loginAsGuest()
-        self.assertTrue(res_guest.getStatus())
-        res_product = self.service.getProductsByStore("AriExpress", "0")
-        self.assertTrue(res_product.getStatus())
-
-
-    def test_guest_information_fetching_noSuchStore_failure(self):
-        res = self.service.loginAsGuest()
+        self.setUp()
+        res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        res_product = self.service.getProductsByStore("some_store", "0")
-        self.assertFalse(res_product.getStatus())
+        with self.assertRaises(Exception):
+            self.service.logIn("username22", "password2")
+class Test_Use_Case_2_2(TestCase):
+    default_config = "../../default_config.json"
+    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+    def setUp(self):
+        self.service = Service(self.default_config, true_lambda)
+
+    # Use Case 2.2.1
+    def test_guest_information_fetching(self):
+        self.setUp()
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        self.assertTrue(store_count == 2)
+        feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
+        self.assertTrue(feliks_products == 12)
+        product1 = self.service.getProduct("Feliks&Sons", 1, guest0_entrance_id)
+        self.assertTrue(product1.getReturnValue()["name"] == "Cabbage_K")
+    def test_guest_information_fetching_noSuchStore_failure(self):
+        self.setUp()
+        res = self.service.loginAsGuest()
+        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        self.assertTrue(store_count == 2)
+        with self.assertRaises(Exception):
+            self.service.getStoreProductsInfo("Ari&Bears")
 
     def test_guest_information_fetching_noSuchProduct_failure(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.getProduct("some_store", 5, 1)
-        self.assertFalse(res_product.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        self.assertTrue(store_count == 2)
+        feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
+        self.assertTrue(feliks_products == 12)
+        with self.assertRaises(Exception):
+            self.service.getProduct("Feliks&Sons", 15, guest0_entrance_id)
 
-
-    #Use Case 2.2.2
-    #Pre-conditions: User defined as guest is connected to the system
-    #Post-conditions: None.
-    #Flow:
-    #   User types a certain product name/category/keyword on the search bar.
-    #   The system iterates over the stores and looks for a product that fits the description.
-    #   If OK:
-    #       The system returns the results of all the products that fits the description.
-    #   Else:
-    #       The system returns a message that there is no products for that description.
+    # Use Case 2.2.2
 
     def test_guest_product_search_by_name(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.productSearchByName("paper", "0")
-        self.assertTrue(res.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res_product = self.service.productSearchByName("Ca", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 3) # Cabbage, Cauliflower, Carrot
+        with self.assertRaises(Exception):
+            x = res_product.getReturnValue()["Robin&Daughters"] # None in Ca
 
     def test_guest_product_search_by_category(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        products = self.service.productSearchByCategory("paper", "0")
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res_product = self.service.productSearchByCategory("Sauces", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Robin&Daughters"].__len__() == 5) # 5 Sauces
+        with self.assertRaises(Exception):
+            x = res_product.getReturnValue()["Feliks&Sons"] # None in Feliks's
 
-        self.assertTrue(products.getStatus())
-
-    def test_guest_product_search_by_name_fail(self):
+    def test_guest_product_search_by_features_price(self):
+        #TODO
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_product = self.service.productSearchByName("some_name", "0")
-        self.assertTrue(res.getStatus())
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res_products_below10 = self.service.productFilterByFeatures({"min price": 0, "max price": 10}, guest0_entrance_id)
+        res_products_below5 = self.service.productFilterByFeatures({"min price": 0, "max price": 5}, guest0_entrance_id)
+        self.assertTrue(res_products_below10.getReturnValue()["Feliks&Sons"].__len__() == 11) # All products
+        self.assertTrue(res_products_below10.getReturnValue()["Robin&Daugthers"].__len__() == 3) # 6 products
+        self.assertTrue(res_products_below5.getReturnValue()["Robin&Daugthers"].__len__() == 3) # 6 products
+        with self.assertRaises(Exception):
+            x = res_products_below5.getReturnValue()["Feliks&Sons"] # None in Feliks's
+        with self.assertRaises(Exception):
+            x = self.service.productFilterByFeatures({"Size": 0}, guest0_entrance_id)
 
-    def test_guest_product_search_by_category_fail(self):
+
+    # Use Case 2.2.3
+
+    def test_guest_add_product_to_cart_success(self):
+        self.setUp()
         res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        products = self.service.productSearchByCategory("some_category", "0")
-
-        self.assertTrue(products.getStatus())
-
-    # def test_guest_product_search_by_keyword(self):
-    #     guest = self.Service.loginAsGuest()
-    #     products = self.Service.productFilterByFeatures("keyword1")
-    #     self.assertTrue(len(products) > 0)
-
-    #Use Case 2.2.3
-
-    def test_guest_add_product_to_cart_success(self): #TODO: check the todo in storeFacade under the productSearchByName function
-        res = self.service.loginAsGuest()
-        self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
-        self.assertTrue(res_added_product.getStatus())
-
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        robin_product_2_quantity = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.service.addToBasket(guest0_entrance_id, "Robin&daughters", 2, 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["id"] == 2)
+        self.service.leaveAsGuest(guest0_entrance_id)
+        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
+        robin_product_2_quantity_after = self.service.getProduct("Robin&daughters", 2, "Robin").getReturnValue()["quantity"]
+        self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     def test_guest_add_product_to_cart_productDoesntExists_failure(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 2, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 2, 5)
         self.assertFalse(res_added_product.getStatus())
 
     def test_guest_add_product_to_cart_StoreDoesntExists_failure(self):
@@ -196,40 +322,40 @@ class Test_Use_Case_2_guests(TestCase):
     def test_member_add_product_to_cart_success(self):
         res = self.service.logIn("Amiel", "password789")
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('Amiel', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('Amiel', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
 
-    #Use Case 2.2.4.a
+    # Use Case 2.2.4.a
 
     def test_guest_getBasket_success(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
-        res_basket = self.service.getBasket('0', "AriExpress")
+        res_basket = self.service.getBasket('0', "Feliks&Sons")
         self.assertTrue(res_basket.getStatus())
 
     # Use Case 2.2.4.b
     def test_guest_editBasket_success(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
-        res_basket = self.service.editBasketQuantity('0', "AriExpress", 1, 7)
+        res_basket = self.service.editBasketQuantity('0', "Feliks&Sons", 1, 7)
         self.assertTrue(res_basket.getStatus())
 
     def test_guest_editBasket_itemDoesntExists_fail(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
-        res_basket = self.service.editBasketQuantity('0', "AriExpress", 2, 7)
+        res_basket = self.service.editBasketQuantity('0', "Feliks&Sons", 2, 7)
         self.assertFalse(res_basket.getStatus())
 
     def test_guest_editBasket_BasketDoesntExists_fail(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_basket = self.service.editBasketQuantity('0', "some", 1, 7)
         self.assertFalse(res_basket.getStatus())
@@ -239,7 +365,7 @@ class Test_Use_Case_2_guests(TestCase):
     def test_guest_purchaseCart_success(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
@@ -248,22 +374,19 @@ class Test_Use_Case_2_guests(TestCase):
     def test_guest_purchaseCart_UserDoesntExists_fail(self):
         res = self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_purchase = self.service.purchaseCart("5", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
-                                       "be'er sheva")
+                                                 "be'er sheva")
         self.assertFail(res_purchase.getStatus())
 
     # Use Case 2.2.5.b,c guests cant participate in bids
     def test_guest_purchaseConfirmedBid_success(self):
         pass
         # todo: ver 3
-
-
-
-class Test_Use_Case_3_members(TestCase):
+class Test_Use_Case_2_3_members(TestCase):
     def setUp(self):
-        self.service = Service()
+        self.service = Service(default_config, true_lambda)
         self.service.register("username", "password", "email")
 
     # Use Case 3.1.1
@@ -300,30 +423,26 @@ class Test_Use_Case_3_members(TestCase):
     def test_createShop_Success(self):
         res = self.service.logIn("username", "password")
         self.assertTrue(res.getStatus())
-        res_create_store = self.service.createStore("username", "AriExpress")
+        res_create_store = self.service.createStore("username", "Feliks&Sons")
         self.assertTrue(res_create_store.getStatus())
 
     def test_createShop_notLoggedIn_fail(self):
-        res_create_store = self.service.createStore("username", "AriExpress")
+        res_create_store = self.service.createStore("username", "Feliks&Sons")
         self.assertFalse(res_create_store.getStatus())
-
-class Test_Use_Case_4_Management(TestCase):
+class Test_Use_Case_2_4_Management(TestCase):
     def setUp(self):
-        self.service = Service()
+        self.service = Service(self.default_config, true_lambda)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         res = self.service.logIn("Feliks", "password456")
-        self.service.createStore("Feliks", "AriExpress")
+        self.service.createStore("Feliks", "Feliks&Sons")
         self.service.logOut("Feliks")
-
-
-
 
     # Use Case 4.1.a
     def test_addProductToStore_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_new_product = self.service.addNewProductToStore("Feliks","AriExpress", "paper", "paper", 50, 100)
+        res_new_product = self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
         self.assertTrue(res_new_product.getStatus())
 
     # Use Case 4.1.b
@@ -331,113 +450,126 @@ class Test_Use_Case_4_Management(TestCase):
     def test_deleteProductFromStore_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_new_product = self.service.addNewProductToStore("Feliks","AriExpress", "paper", "paper", 50, 100)
+        res_new_product = self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
         self.assertTrue(res_new_product.getStatus())
-        res_delete = self.service.removeProductFromStore("Feliks", "AriExpress", 1)
+        res_delete = self.service.removeProductFromStore("Feliks", "Feliks&Sons", 1)
         self.assertTrue(res_delete.getStatus())
-
-
 
     # Use Case 4.1.c
     def test_changeProductinStore_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_new_product = self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
+        res_new_product = self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
         self.assertTrue(res_new_product.getStatus())
-        res_edit = self.service.editProductOfStore("Feliks", "AriExpress", 1, quantity=50)
+        res_edit = self.service.editProductOfStore("Feliks", "Feliks&Sons", 1, quantity=50)
         self.assertTrue(res_edit.getStatus())
 
+    # Use Case 4.2.a
+    def test_newDiscountToStore_StoreLevel_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_new_discount = self.service.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Store",
+                                                     level_name=1)
+        self.assertTrue(res_new_discount.getStatus())
 
+    # Use Case 4.2.b
 
+    def test_newDiscountToStore_ProductLevel_Success(self):
+        res = self.service.logIn("Feliks", "password456")
+        self.assertTrue(res.getStatus())
+        res_new_discount = self.service.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Product",
+                                                     level_name=1)
+        self.assertTrue(res_new_discount.getStatus())
     # Use Case 4.4
     def test_nominateShopOwner_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_nominate = self.service.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        res_nominate = self.service.nominateStoreOwner("Feliks", "Amiel", "Feliks&Sons")
         self.assertTrue(res_nominate.getStatus())
 
-
-# Use Case 4.6
+    # Use Case 4.6
     def test_nominateShopManager_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "Feliks&Sons")
         self.assertTrue(res_nominate.getStatus())
 
-
-# Use Case 4.7
+    # Use Case 4.7
     def test_addPermissionToShopManager_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "Feliks&Sons")
         self.assertTrue(res_nominate.getStatus())
-        res_permission = self.service.addPermission("AriExpress", "Feliks", "Amiel", "ModifyPermissions")
+        res_permission = self.service.addPermission("Feliks&Sons", "Feliks", "Amiel", "ModifyPermissions")
         self.assertTrue(res_permission.getStatus())
 
-# Use Case 4.8
+    # Use Case 4.8
     def test_removePermissionToShopManager_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "Feliks&Sons")
         self.assertTrue(res_nominate.getStatus())
-        res_permission = self.service.removePermissions("AriExpress", "Feliks", "Amiel", "Bid")
+        res_permission = self.service.removePermissions("Feliks&Sons", "Feliks", "Amiel", "Bid")
         self.assertTrue(res_permission.getStatus())
 
     def test_removePermissionToShopManager_Fail(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "Feliks&Sons")
         self.assertTrue(res_nominate.getStatus())
-        res_permission = self.service.removePermissions("AriExpress", "Feliks", "Amiel", "StaffInfo")
+        res_permission = self.service.removePermissions("Feliks&Sons", "Feliks", "Amiel", "StaffInfo")
         self.assertFalse(res_permission.getStatus())
 
-# Use Case 4.9
+    # Use Case 4.9
     def test_closeStore_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_close = self.service.closeStore("Feliks", "AriExpress")
+        res_close = self.service.closeStore("Feliks", "Feliks&Sons")
         self.assertTrue(res_close.getStatus())
 
-# Use Case 4.11.a
+    # Use Case 4.11.a
 
     def test_requestStoreStaffInfo_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
-        res_info = self.service.getStaffInfo("Feliks", "AriExpress")
+        res_info = self.service.getStaffInfo("Feliks", "Feliks&Sons")
         self.assertTrue(res_info.getStatus())
 
-# Use Case 4.13
+    # Use Case 4.13
 
     def test_requestStorePurchaseHistory_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        self.service.createStore("Feliks", "AriExpress")
-        self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
         self.assertTrue(res_purchase.getStatus())
-        res_purchase_history = self.service.getStorePurchaseHistory("Feliks", "AriExpress")
+        res_purchase_history = self.service.getStorePurchaseHistory("Feliks", "Feliks&Sons")
         self.assertTrue(res_purchase_history.getStatus())
-
+class Test_Use_Case_2_5_nominations(TestCase):
+    def setUp(self):
+        self.service = Service(self.default_config, true_lambda)
     # Use Case 5
     def test_nominatedPreformingAction_Success(self):
         res = self.service.logIn("Feliks", "password456")
         self.assertTrue(res.getStatus())
         res = self.service.logIn("Amiel", "password789")
         self.assertTrue(res.getStatus())
-        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "AriExpress")
+        res_nominate = self.service.nominateStoreManager("Feliks", "Amiel", "Feliks&Sons")
         self.assertTrue(res_nominate.getStatus())
-        res_request = self.service.addNewProductToStore("Amiel", "AriExpress", "paper", "paper", 50, 100)
+        res_request = self.service.addNewProductToStore("Amiel", "Feliks&Sons", "paper", 50, 100, "paper")
         self.assertTrue(res_request.getStatus())
-        res_request = self.service.removeProductFromStore("Amiel", "AriExpress",1)
+        res_request = self.service.removeProductFromStore("Amiel", "Feliks&Sons", 1)
         self.assertTrue(res_request.getStatus())
 
-
-# Use Case 6.4
-
+    # Use Case 6.4
+class Test_Use_Case_2_6_transactions(TestCase):
+    def setUp(self):
+        self.service = Service(self.default_config, true_lambda)
     def test_StorePurchaseHistoryAdmin_success(self):
         res = self.service.logIn("Feliks", "password456")
         self.service.loginAsGuest()
@@ -445,17 +577,17 @@ class Test_Use_Case_4_Management(TestCase):
         self.assertTrue(res.getStatus())
         self.service.loginAsGuest()
         self.assertTrue(res.getStatus())
-        self.service.createStore("Feliks", "AriExpress")
-        self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
-        res_added_product = self.service.addToBasket('0', "AriExpress", 1, 5)
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", "paper", 50, 100)
+        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
         self.assertTrue(res_purchase.getStatus())
-        res_purchase_history = self.service.getStorePurchaseHistory("admin", "AriExpress")
+        res_purchase_history = self.service.getStorePurchaseHistory("admin", "Feliks&Sons")
         self.assertTrue(res_purchase_history.getStatus())
 
-# Use Case 6.4
+    # Use Case 6.4
 
     def test_UserPurchaseHistoryAdmin_success(self):
         res = self.service.logIn("Feliks", "password456")
@@ -463,9 +595,9 @@ class Test_Use_Case_4_Management(TestCase):
         res_amiel = self.service.logIn("Amiel", "password789")
         self.assertTrue(res.getStatus())
         self.assertTrue(res_admin.getStatus())
-        self.service.createStore("Feliks", "AriExpress")
-        self.service.addNewProductToStore("Feliks", "AriExpress", "paper", "paper", 50, 100)
-        res_added_product = self.service.addToBasket('Amiel', "AriExpress", 1, 5)
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", "paper", 50, 100)
+        res_added_product = self.service.addToBasket('Amiel', "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_purchase = self.service.purchaseCart("Amiel", "4580020345672134", "Amiel saad", "123456789", "12/26", "555",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")

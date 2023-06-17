@@ -28,7 +28,7 @@ class Policy(ABC):
         elif self.level == "Category":
             return self.level_name in product.get_categories()
         elif self.level == "Product":
-            return self.level_name == product.get_product_id()
+            return int(self.level_name) == product.get_product_id()
         return False
 
 

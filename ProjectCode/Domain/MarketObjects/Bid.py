@@ -1,10 +1,10 @@
 class Bid:
-    def __init__(self,bid_id, username, storename, offer, product, quantity):
+    def __init__(self,bid_id, username, storename, offer, product_id, quantity):
         self.bid_id = bid_id
         self._username = username
         self._storename = storename
         self._offer = offer
-        self._product_ID = product
+        self._product_ID = product_id
         self._quantity = quantity
         self._status = 0 # 0-PENDING 1-APPROVED 2-REJECTED 3-ALTERNATE_OFFER
         self._left_to_approval = 0 #number of owners that needs to approve this bid
@@ -44,8 +44,8 @@ class Bid:
         self._offer = offer
 
     # Getter and setter for product
-    def get_product(self):
-        return self._product
+    def get_product_id(self):
+        return self._product_ID
 
     def set_product(self, product):
         self._product = product

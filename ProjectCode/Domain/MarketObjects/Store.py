@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-
+from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.Access import Access
@@ -22,27 +22,44 @@ class Store:
 
 
     def __init__(self, store_name, *args, **kwargs):
+        # super().__init__(*args, **kwargs)
+        # self.__store_name = store_name
+        # self.__products = TypedDict(int, Product)
+        # # TODO: policies
+        # self.active: bool = True
+        # self.closed_by_admin: bool = False
+        # self.__accesses = TypedDict(str, Access)
+        # self.product_id_counter = 0
+        # self.auction_id_counter = 0
+        # self.lottery_id_counter = 0
+        # self.__bids = TypedDict(int, Bid)
+        # self.__bids_requests = TypedDict(str, List[Bid])
+        # self.__auctions = TypedDict(int, Auction)
+        # self.__lotteries = TypedDict(int, Lottery)
+        # self.__discount_policy = DiscountPolicy(store_name)
+        # self.__purchase_policy = PurchasePolicies()
+
         super().__init__(*args, **kwargs)
         self.__store_name = store_name
-        self.__products = TypedDict(int, Product)
-        # TODO: policies
+        self.__products = ProductRepository(store_name)
         self.active: bool = True
         self.closed_by_admin: bool = False
-        self.__accesses = TypedDict(str, Access)
+        self.__accesses = AccessRepository(store_name=store_name)
         self.product_id_counter = 0
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
         self.__bids = TypedDict(int, Bid)
-        self.__bids_requests = TypedDict(str, List[Bid])
-        self.__auctions = TypedDict(int, Auction)
-        self.__lotteries = TypedDict(int, Lottery)
+        self.__bids_requests = TypedDict(str, list)
         self.__discount_policy = DiscountPolicy(store_name)
-        self.__purchase_policy = PurchasePolicies()
+        self.__purchase_policy = PurchasePolicies(store_name)
 
         #REPOSITORY FIELDS --- TO BE REPLACED
-        self.accesses_test = AccessRepository(store_name=store_name)
-        self.prods = ProductRepository(store_name)
+        # self.accesses_test = AccessRepository(store_name=store_name)
+        # self.prods = ProductRepository(store_name)
 
+
+    def __eq__(self, other):
+        return self.__store_name == other.get_store_name()
 
     def setStoreStatus(self, status, requester_username):
         cur_access: Access = self.__accesses[requester_username]
@@ -52,6 +69,7 @@ class Store:
         if status == self.active:
             raise Exception("store is already open or closed")
         self.active = status
+        self.update_fields()
 
     #-------------Permissions----------------#
 
@@ -61,14 +79,14 @@ class Store:
 
     def getFounder(self):
         for access in self.__accesses.values():
-            if access.get_role() == "Founder":
+            if access.hasRole("Founder"):
                 return access.get_user()
         return None
 
     def getOwners(self):
         owners = []
         for access in self.__accesses.values():
-            if access.get_role() == "Owner":
+            if access.hasRole("Owner"):
                 owners.append(access.get_user())
         return owners
 
@@ -76,10 +94,13 @@ class Store:
         requester_access: Access = self.__accesses[requester_username]
         if requester_access is None:
             raise Exception("The member doesn't have the access for that store")
+        if self.__accesses[nominated_username] is not None and self.__accesses[nominated_username].hasRole(role):
+            raise Exception("The member already has that role")
         if requester_access.canModifyPermissions() and requester_username == nominated_access.get_nominated_by_username():
             nominated_access.setAccess(role)
             requester_access.addNominatedUsername(nominated_username, nominated_access)
             self.__accesses[nominated_username] = nominated_access
+            self.__accesses[requester_username] = requester_access #update
             return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
@@ -91,7 +112,8 @@ class Store:
         if requester_access is None or to_be_removed_access is None:
             raise Exception("No such access exists")
         if requester_access.canModifyPermissions() and requester_username == to_be_removed_access.get_nominated_by_username():
-            requester_access.get_nominations().pop(to_be_removed_username)
+            requester_access.nominations.remove(to_be_removed_username)
+            self.__accesses[requester_username] = requester_access
             removed_usernames = self.__removeAllAccesses(to_be_removed_access)
             return removed_usernames
         else:
@@ -104,11 +126,11 @@ class Store:
         usernames_to_remove = []
         while len(accesses_to_remove) > 0:
             cur_access = accesses_to_remove[0]
-            cur_access.removeAccessFromMember()
-            self.__accesses.pop(cur_access.get_user().get_username())
-            usernames_to_remove.extend(cur_access.get_nominations().keys())
+            self.__accesses.remove(cur_access.get_user().get_username())
+            usernames_to_remove.extend(cur_access.get_nominations())
             accesses_to_remove.remove(cur_access)
-            accesses_to_remove.extend(cur_access.get_nominations().values())
+            pulled_accesses = [self.__accesses.get(username) for username in cur_access.get_nominations()]
+            accesses_to_remove.extend(pulled_accesses)
         return usernames_to_remove
 
     def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
@@ -145,7 +167,7 @@ class Store:
         access.canChangeProducts()
         if name == "":
             raise Exception("product name cannot be empty")
-        self.product_id_counter += 1
+        self.increment_product_id_counter()
         product_to_add = Product(self.product_id_counter, name, quantity, price, categories)
         self.__products.__setitem__(self.product_id_counter, product_to_add)
         return product_to_add
@@ -171,6 +193,7 @@ class Store:
                 raise Exception("No such attribute exists")
             self.checkValue(v)
             setattr(cur_product, k, v)
+        self.__products[product_id] = cur_product
         return cur_product
 
     # TODO: may cause problem for unknown reasons
@@ -222,12 +245,12 @@ class Store:
 
 
     def checkProductAvailability(self, product_id, quantity):
-        cur_product : Product = self.__products[int(product_id)]
+        cur_product : Product = self.__products.get(product_id)
         if cur_product is None:
             raise Exception("No such product exists")
         if int(cur_product.quantity) - int(quantity) < 0:
             raise Exception("There is not enough stock of the requested product")
-        if quantity < 0:
+        if quantity <= 0:
             raise Exception("quantity can't be under zero")
         return cur_product
 
@@ -254,6 +277,16 @@ class Store:
                 product_list.append(prod)
         return product_list
 
+    def searchProductByFeatures(self, featuresDict):
+        if not self.active:
+            return {}
+        product_list = []
+        for prod in self.__products.values():
+            if prod.checkFeatures(featuresDict):
+                product_list.append(prod)
+        return product_list
+
+
 
     def calculateBasketPrice(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
@@ -275,35 +308,35 @@ class Store:
         return price_after_discounts
 
     def checkBasketValidity(self, basket, product_to_add, quantity):
-        relevant_product_info = dict()
-        for product_id, product_tuple in basket.items():
-            relevant_product_info[product_id] = product_tuple[1]
-        relevant_product_info[product_to_add.get_product_id()] = quantity
+        relevant_product_info = self.__getRelevantProductDictFromBasket(basket, product_to_add, quantity)
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         #TODO: last argument suppose to be a user, need to figure out how to get it
         return self.__purchase_policy.checkAllPolicies(product_to_add, relevant_product_info, overall_price)
 
     def calculateProductPriceAfterDiscount(self, product, basket, quantity):
-        relevant_product_info = dict()
-        for product_id, product_tuple in basket.items():
-            relevant_product_info[product_id] = product_tuple[1]
+        relevant_product_info = self.__getRelevantProductDictFromBasket(basket, product, quantity)
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         price_after_discount = self.getProductPriceAfterDiscount(product, relevant_product_info, overall_price)
         return (product, quantity, price_after_discount)
 
+    def __getRelevantProductDictFromBasket(self, basket, product_to_add=None, quantity=None):
+        relevant_product_info = dict()
+        for product_id, product_tuple in basket.items():
+            relevant_product_info[product_id] = (product_tuple[0], product_tuple[1])
+        if product_to_add is not None:
+            relevant_product_info[product_to_add.get_product_id()] = (product_to_add, quantity)
+        return relevant_product_info
+
     def calculateBasketBasePrice(self, products_dict): #tup(product,qunaiity)
         overall_price = 0
-        for product_id, quantity in products_dict.items():
-            overall_price += self.__products[product_id].get_price() * quantity
+        for product_id, product_tuple in products_dict.items():
+            overall_price += self.__products[product_id].get_price() * product_tuple[1]
         return overall_price
 
 
     def purchaseBasket(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
-        new_product_dict = TypedDict(int, int) # (id,quantity)
-        for product_id, product_tuple in products_dict.items():
-            new_product_dict[product_id] = product_tuple[1]
-
+        new_product_dict = self.__getRelevantProductDictFromBasket(products_dict)
         overall_price = 0
         price_after_discounts = 0
         for product_id, product_quantity in new_product_dict.items():
@@ -312,6 +345,7 @@ class Store:
                 raise Exception("No such product exists")
             cur_product.quantity -= product_quantity
             overall_price += cur_product.price * product_quantity
+            self.__products[product_id] = cur_product
 
         for product_id, product_quantity in new_product_dict.items():
             cur_product: Product = self.__products[product_id]
@@ -327,7 +361,7 @@ class Store:
         cur_access: Access = self.__accesses.get(username)
         if cur_access is None:
             raise Exception("No such access exists")
-        if not self.__products.__contains__(level_name):
+        if level == "Product" and not self.__products.__contains__(int(level_name)):
             raise Exception("no such product exists")
         cur_access.canManageDiscounts()
         new_discount = self.__discount_policy.addDiscount(discount_type=discount_type, percent=percent, level=level,
@@ -351,25 +385,32 @@ class Store:
 
     def getPolicy(self, policy_id):
         return self.__purchase_policy.getPurchasePolicy(policy_id)
+
+
     def requestBid(self, bid: Bid):
         self.__bids[bid.bid_id] = bid
         for access in self.__accesses.values():
             if access.canManageBids():
                 username = access.get_user().get_username()
-                if self.__bids_requests[username] is None:
-                    self.__bids_requests[username] = []
+                if self.__bids_requests.get(username) is None:
+                    self.__bids_requests[username] = list()
                 self.__bids_requests[username].append(bid)
                 bid.increment_left_to_approve()
 
     def approveBid(self, username, bid_id):
+        if not self.active:
+            raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
-
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
         if cur_bid not in self.__bids_requests[username]:
             raise Exception("You already approved that bid")
+        if cur_bid.get_status() == 2:
+            raise Exception("Bid already got rejected")
+        if cur_bid.get_status() == 1:
+            raise Exception("Bid already got Accepted")
         cur_bid.approve_by_one()
         self.__bids_requests[username].remove(cur_bid)
         if cur_bid.get_left_to_approval() == 0:
@@ -377,37 +418,66 @@ class Store:
         return cur_bid
 
     def rejectBid(self, username, bid_id):
+        if not self.active:
+            raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
         cur_bid: Bid = self.__bids[bid_id]
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
+        if cur_bid.get_status() == 2:
+            raise Exception("Bid already got rejected")
+        if cur_bid.get_status() == 1:
+            raise Exception("Bid already got Accepted")
+        list_of_user_bids: list = self.__bids_requests.get(username)
+        if list_of_user_bids.__contains__(cur_bid):
+            for access_username, bid_list in self.__bids_requests.items():
+                if cur_bid in bid_list:
+                    bid_list.remove(cur_bid)
+            cur_bid.set_status(2)
+            return cur_bid
+        else:
+            raise Exception("Member cannot vote twice, or isn't involved in the bid")
+
+    def sendAlternativeBid(self, username, bid_id, alternate_offer):
+        if not self.active:
+            raise Exception("Store is closed, Actions cannot be preformed")
+        cur_access: Access = self.__accesses[username]
+        cur_access.canManageBids()
+        cur_bid: Bid = self.__bids[bid_id]
+        if cur_bid is None:
+            raise Exception("No such bid exists in the store")
+        if not cur_bid.get_status() == 0:
+            raise Exception("Bid already got rejected or Approved, or already waiting for an offer")
+        if alternate_offer <= cur_bid.get_offer():
+            raise Exception("cant set the offer lower than the Member offer ")
+        cur_bid.set_offer(alternate_offer)
         for access_username, bid_list in self.__bids_requests.items():
             if cur_bid in bid_list:
                 bid_list.remove(cur_bid)
-        cur_bid.set_status(2)
-        return cur_bid
-
-    def sendAlternativeBid(self, username, bid_id, alternate_offer):
-        cur_access: Access = self.__accesses[username]
-        cur_access.canManageBids()
-        cur_bid: Bid = self.__bids[bid_id]
-        if cur_bid is None:
-            raise Exception("No such bid exists in the store")
-        cur_bid.set_offer(alternate_offer)
         cur_bid.set_status(3)
 
     def purchaseBid(self, bid_id):
         cur_bid: Bid = self.__bids.get(bid_id)
         if cur_bid is None:
             raise Exception("No such bid exists")
-        if cur_bid.get_status() != 1 or cur_bid.get_left_to_approval() > 0:
+        if cur_bid.get_status() != 1 and cur_bid.get_status() != 3:
             raise Exception("Bid is not approved by the store owners")
-        cur_product: Product = self.__products.get(cur_bid.get_product())
+        cur_product: Product = self.__products.get(cur_bid.get_product_id())
         if cur_product is None:
             raise Exception("Product doesn't exists")
         cur_product.quantity -= cur_bid.get_quantity()
-        del self.__bids[cur_bid]
+        del self.__bids[cur_bid.get_id()]
+
+    def getStaffPendingForBid(self, bid_id):
+        name_list: list = list()
+        if not self.__bids.__contains__(bid_id):
+            raise Exception("bid doesnt exists in this store")
+        cur_bid: Bid = self.__bids.get(bid_id)
+        for access_username, bid_list in self.__bids_requests.items():
+            if cur_bid in bid_list:
+                name_list.append(access_username)
+        return name_list
 
     def startAuction(self, username, product_id, starting_price, duration):
         cur_access: Access = self.__accesses[username]
@@ -481,6 +551,12 @@ class Store:
     def getAllStaffMembersNames(self):
         return self.get_accesses().keys()
 
+    def increment_product_id_counter(self):
+        store_entry = StoreModel.get_by_id(self.__store_name)
+        store_entry.product_id_counter += 1
+        self.product_id_counter = store_entry.product_id_counter
+        store_entry.save()
+
     def get_store_name(self):
         return self.__store_name
 
@@ -523,6 +599,12 @@ class Store:
     def get_discount_policy(self):
         return self.__discount_policy
 
+    def set_counters(self, active, closed_by_admin, product_id_counter, auction_id_counter, lottery_id_counter):
+        self.active = active
+        self.closed_by_admin = closed_by_admin
+        self.product_id_counter = product_id_counter
+        self.auction_id_counter = auction_id_counter
+        self.lottery_id_counter = lottery_id_counter
 
     # =======================JSON=======================#
 
@@ -570,17 +652,23 @@ class Store:
             else:
                 self.active = False
                 self.closed_by_admin = True
+            self.update_fields()
 
+    def update_fields(self):
+        store_entry = StoreModel.get_by_id(self.__store_name)
+        store_entry.closed_by_admin = self.closed_by_admin
+        store_entry.active = self.active
+        store_entry.save()
 
-    def close_store_by_admin(self):
-        if self.closed_by_admin:
-            raise Exception("Store already closed by admin")
-        else:
-            if not self.closed_by_admin and not self.active:
-                self.active = False
-            else:
-                self.active = False
-                self.closed_by_admin = True
+    # def close_store_by_admin(self):
+    #     if self.closed_by_admin:
+    #         raise Exception("Store already closed by admin")
+    #     else:
+    #         if not self.closed_by_admin and not self.active:
+    #             self.active = False
+    #         else:
+    #             self.active = False
+    #             self.closed_by_admin = True
     def checkValue(self, value):
         if isinstance(value,int):
             if value <= 0:
@@ -589,3 +677,5 @@ class Store:
             if isinstance(value,str):
                 if value == "":
                     raise Exception("name or category cannot be empty")
+
+

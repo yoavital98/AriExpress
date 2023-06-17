@@ -39,7 +39,8 @@ class SimpleDiscount(Policy):
         return {}
 
 
-
+    def __eq__(self, other):
+        return self.percent == other.percent and self.level == other.level and self.level_name == other.level_name
     # =======================JSON=======================#
 
     def toJson(self):
