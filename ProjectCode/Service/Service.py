@@ -916,3 +916,16 @@ class Service:
     #     except Exception as e:
     #         logging.error(f"messageAsAdminToStore Error: {str(e)}. By username: '{admin_name}'")
     #         return Response(e, False)
+
+    def getAllMembers(self):
+        try:
+            res = self.store_facade.getAllMembers()
+            members = []
+            for member in res:
+                members.append(member.toJsonServerInit())
+            logging.debug(
+                f"getAllMembers has been called successfully")
+            return Response(json.dumps(members), True)
+        except Exception as e:
+            logging.error(f"getAllMembers Error: {str(e)}.")
+            return Response(e, False)
