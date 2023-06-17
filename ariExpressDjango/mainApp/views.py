@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
