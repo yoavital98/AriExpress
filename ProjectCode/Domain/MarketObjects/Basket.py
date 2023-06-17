@@ -95,6 +95,11 @@ class Basket:
         else:
             Exception("product is not in the Basket")
 
+    def updateProductPrices(self):
+        for product_id, product_tuple in self.products:
+            updated_tuple = self.store.calculateProductPriceAfterDiscount(product_tuple[0], self.products, product_tuple[1])
+            self.products[product_id] = updated_tuple
+
     def purchaseBasket(self):
         return self.store.purchaseBasket(self.products)
 
@@ -117,6 +122,7 @@ class Basket:
         return json.dumps(data)
 
     def toJson(self):
+        self.updateProductPrices()
         return {
             "username": self.username,
             "store": self.store.get_store_name(),

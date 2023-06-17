@@ -18,28 +18,29 @@ class AddComp(Policy):
     def calculate(self, product, basket, total_price):
         added_percent = 0
         for child in self.childs:
-            if child._checkIfRelevant(product):
-                added_percent += child.calculate(product, basket, total_price)
+            added_percent += child.calculate(product, basket, total_price)
         return added_percent
 
     def parse(self):
+
         for discount in self.discount_dict.values():
             new_discount = None
             discount_type, percent, level = discount["discount_type"], discount["percent"], discount["level"]
-            level_name, rule = discount["level_name"], discount["rule"]
+            level_name = discount["level_name"]
             if discount_type == "Conditioned":
-                new_discount = ConditionedDiscount(percent, level, level_name, rule)
+                new_discount = ConditionedDiscount(percent, level, level_name, discount["rule"])
             elif discount_type == "Add":
                 new_discount = AddComp(discount["discounts"])
-            elif discount_type == "Max": #TODO: impl max discount
-                pass
+            elif discount_type == "Max":
+                from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.MaxComp import MaxComp
+
+                new_discount = MaxComp(discount["discounts"])
             elif discount_type == "Simple":
                 new_discount = SimpleDiscount(percent, level, level_name)
             elif discount_type == "Coupon":  # TODO: impl coupon discount
                 pass
             else:
                 raise Exception("No such discount type exists")
-            new_discount.parse()
             self.addChild(new_discount)
 
     def get_discount_id(self):
