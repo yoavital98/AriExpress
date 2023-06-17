@@ -107,8 +107,8 @@ class Cart:
     def getBid(self, storename, bid_id):
         if not self.baskets.keys().__contains__(storename):
             raise Exception("Basket does not exists")
-        basket: Basket = self.baskets[storename]
-        return basket.get_bids()[bid_id]  # TODO: check if the bid even exists
+        basket: Basket = self.baskets.get(storename)
+        return basket.get_bid(bid_id)  # TODO: check if the bid even exists
 
     def checkAllItemsInCart(self):
         answer = None

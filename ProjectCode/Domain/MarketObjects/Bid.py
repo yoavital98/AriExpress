@@ -72,3 +72,6 @@ class Bid:
             'status': self._status,
             'left_to_approval': self._left_to_approval
         }
+
+    def set_users_to_approval(self, _left_to_approval):
+        self._left_to_approval = _left_to_approval

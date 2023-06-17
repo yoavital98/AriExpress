@@ -7,6 +7,8 @@ from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
 from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.BidModel import BidModel
+from ProjectCode.DAL.BidsRequestModel import BidsRequestModel
 from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.MemberModel import MemberModel
@@ -76,10 +78,10 @@ class StoreFacade:
         #    m.delete().execute()
 
         db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, PurchasePolicyModel])
+                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel])
         db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-              ProductBasketModel, DiscountModel, AdminModel, GuestModel, PurchasePolicyModel])
+              ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
