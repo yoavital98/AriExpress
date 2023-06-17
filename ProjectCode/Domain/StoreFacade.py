@@ -7,6 +7,8 @@ from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
 from ProjectCode.DAL.BasketModel import BasketModel
+from ProjectCode.DAL.BidModel import BidModel
+from ProjectCode.DAL.BidsRequestModel import BidsRequestModel
 from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.MemberModel import MemberModel
@@ -76,10 +78,10 @@ class StoreFacade:
         #    m.delete().execute()
 
         db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, PurchasePolicyModel])
+                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel])
         db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-              ProductBasketModel, DiscountModel, AdminModel, GuestModel, PurchasePolicyModel])
+              ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
@@ -141,23 +143,15 @@ class StoreFacade:
         guest: Guest = self.onlineGuests.get(str(entrance_id))
         if guest is None:
             raise Exception("Entrance id not found")
-        print("ok1")
-        print(self.members)
         # guest_cart: Cart = guest.get_cart()
         if self.members.keys().__contains__(user_name):
-            print("ok2")
             existing_member: Member = self.members[user_name]
             if password_validator.ConfirmPassword(password, existing_member.get_password()):
-                print("ok3")
                 existing_member.logInAsMember()
-                print("ok4")
                 existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
-                print("ok5")
                 #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
                 self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
-                print("ok6")
                 self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
-                print("ok7")
                 return existing_member
                 # return DataMember(existing_member)
             else:
@@ -229,6 +223,9 @@ class StoreFacade:
             return self.online_members.get(user_name)
         else:
             raise Exception("user is not logged in or is not a member")
+        
+    def getAllMembers(self):
+        return self.members.getAll()
 
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
@@ -371,6 +368,9 @@ class StoreFacade:
 
     def placeBid(self, username, store_name, offer, product_id, quantity):
         existing_member: Member = self.getOnlineMemberOnly(username)
+        product_id = int(product_id)
+        quantity = int(quantity)
+        offer = int(offer)
         store: Store = self.stores.get(store_name)
         if store is None:
             raise Exception("Store doesnt exists")

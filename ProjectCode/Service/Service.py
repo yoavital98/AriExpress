@@ -414,10 +414,13 @@ class Service:
     def getAllBidsFromUser(self, username):
         try:
             bids = self.store_facade.getAllBidsFromUser(username)
+            print(f"bids {bids}")
+            print(type(bids))
             logging.debug(f"fetching all the user's bids. By username: " + username + ".")
             bids_data = {}
-            for bid in bids:
-                bids_data[bid.get_id()] = bid.toJson()
+            for a, bid in bids.items():
+                id = bid.get_id()
+                bids_data[id] = bid.toJson()
             return Response(json.dumps(bids_data), True)
         except Exception as e:
             logging.error(f"getAllBidsFromUser Error: {str(e)}. By username: '{username}'")
@@ -426,12 +429,16 @@ class Service:
     def getAllBidsFromStore(self, storename):
         try:
             bids = self.store_facade.getAllBidsFromStore(storename)
-            print(f"bidsservice {bids}")
             logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
             bids_data = {}
-            for bid in bids:
-                bids_data[bid.get_id()] = bid.toJson()
+            for a, bid in bids.items():
+                id = bid.get_id()
+                bids_data[id] = bid.toJson()
+            # bids_data = []
+            # for id, bid in bids.items():
+            #     bids_data.append(bid.toJson())
             return Response(json.dumps(bids_data), True)
+            
         except Exception as e:
             logging.error(f"getAllBidsFromStore Error: {str(e)}. Storename: '{storename}'")
             return Response(e, False)
@@ -439,9 +446,11 @@ class Service:
     def getStaffPendingForBid(self, store_name, bid_id):
         try:
             pending_list = self.store_facade.getStaffPendingForBid(store_name, bid_id)
-            logging.debug(f"fetching all pending staff for bid. By store name: " + store_name + "and bid id" + bid_id +
-                          ".")
-            return Response(json.dumps(pending_list), True)
+            logging.debug(f"fetching all pending staff for bid. By store name: {store_name} and bid id {bid_id}")
+            staff_data = {}
+            for name in pending_list:
+                staff_data[name] = name
+            return Response(json.dumps(staff_data), True)
         except Exception as e:
             logging.error(f"getStaffPendingForBid Error: {str(e)}. By store name: '{store_name}' and bid id '{bid_id}")
             return Response(e, False)
@@ -449,7 +458,7 @@ class Service:
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
         try:
-            self.store_facade.purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+            self.store_facade.purchaseConfirmedBid(int(bid_id), store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode)
             logging.info(
                 "Bid purchase was made successfully. By username: " + username + ". storename: " + store_name + ". bid_id: " + str(
@@ -461,7 +470,7 @@ class Service:
 
     def approveBid(self, username, storename, bid_id):
         try:
-            approved_bid = self.store_facade.approveBid(username, storename, bid_id)
+            approved_bid = self.store_facade.approveBid(username, storename, int(bid_id))
             logging.info(
                 "Bid was added successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
                     bid_id) + ".")
@@ -916,3 +925,16 @@ class Service:
     #     except Exception as e:
     #         logging.error(f"messageAsAdminToStore Error: {str(e)}. By username: '{admin_name}'")
     #         return Response(e, False)
+
+    def getAllMembers(self):
+        try:
+            res = self.store_facade.getAllMembers()
+            members = []
+            for member in res:
+                members.append(member.toJsonServerInit())
+            logging.debug(
+                f"getAllMembers has been called successfully")
+            return Response(json.dumps(members), True)
+        except Exception as e:
+            logging.error(f"getAllMembers Error: {str(e)}.")
+            return Response(e, False)

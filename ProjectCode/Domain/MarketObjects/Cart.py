@@ -97,18 +97,19 @@ class Cart:
         basket_to_place_bid.addBidToBasket(bid)
 
     def getAllBids(self):
-        output = set()  # set of bids
+        output = dict()  # set of bids
         for basket in self.baskets.values():
             bids: TypedDict[int, Bid] = basket.get_bids()
-            for bid in bids:
-                output.add(bid)
+            for id, bid in bids.items():
+                output[id] = bid
+        print(f"output {output}")
         return output
 
     def getBid(self, storename, bid_id):
         if not self.baskets.keys().__contains__(storename):
             raise Exception("Basket does not exists")
-        basket: Basket = self.baskets[storename]
-        return basket.get_bids()[bid_id]  # TODO: check if the bid even exists
+        basket: Basket = self.baskets.get(storename)
+        return basket.get_bid(bid_id)  # TODO: check if the bid even exists
 
     def checkAllItemsInCart(self):
         answer = None
