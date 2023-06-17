@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "bbb", "asdf1233")
-    user = authenticate(request, username='bbb', password='asdf1233')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -309,7 +309,6 @@ def store_specific(request, storename):
         #products_dict = ast.literal_eval(str(products_dict))
         products_list = []
         for product in products_dict.values():
-            product = json.loads(product)
             products_list.append(product)
         active = "Open" if context['active'].lower() == "true" else "Closed"
         return render(request, 'store_specific.html',
@@ -861,8 +860,8 @@ def cart(request):
                     basket_res = basket_res.getReturnValue()
                     basket_products = ast.literal_eval(str(basket_res)).get('products')
                     basket_products = ast.literal_eval(str(basket_products))
-                    for product in basket_products.values():
-                        product['product'] = json.loads(product['product'])
+                    # for product in basket_products.values():
+                    #     product['product'] = json.loads(product['product'])
                     total_price = calculate_total_price(basket_products)
                     products[basket] = {'items': basket_products, 'total_price': total_price}
 
