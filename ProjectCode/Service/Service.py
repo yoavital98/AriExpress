@@ -541,7 +541,7 @@ class Service:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
-    def addNewProductToStore(self, username, storename, productname, categories, quantity, price):
+    def addNewProductToStore(self, username, storename, productname, quantity, price, categories):
         try:  # TODO check whether this product details are needed
             added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price,
                                                                    categories)
