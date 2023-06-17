@@ -14,5 +14,6 @@ class BidModel(Model):
     store_name = CharField(max_length=100)
     offer = DoubleField()
     product_id = IntegerField()
+    quantity = IntegerField()
     status = IntegerField()
     left_to_approval = IntegerField()

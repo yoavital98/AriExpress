@@ -4,6 +4,7 @@ from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
 import json
 
+from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
 from ProjectCode.Domain.Repository.ProductBasketRepository import ProductBasketRepository
 
 
@@ -17,8 +18,8 @@ class Basket:
         self.username = username
         self.store: Store = store
         self.products = ProductBasketRepository(username, store.get_store_name())  # product id : int -> (product: Product, quantity: int, price: double)
-        self.bids = TypedDict(int, Bid)  # Bid id -> Bid
-
+#        self.bids = TypedDict(int, Bid)  # Bid id -> Bid
+        self.bids = BidsRepository()
         # REPOSITORY FIELD --- TO BE REPLACED
         #self.products_test = ProductBasketRepository(username, store.get_store_name())
 
@@ -61,7 +62,7 @@ class Basket:
     def getBasketSize(self):
         return len(self.products)
     def getBasketBidSize(self):
-        return len(self.bids)
+        return len(self.bids.keys_for_user(self.username))
 
     def getProductsAsTuples(self):
         productList = []
@@ -132,3 +133,6 @@ class Basket:
             "quantity": self[1],
             "price": self[2],
         }
+
+    def get_bid(self, bid_id):
+        return self.bids.__getitem__(bid_id)

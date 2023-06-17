@@ -27,7 +27,7 @@ class TestStoreFacade(TestCase):
 
     def setUp(self):
         send_notification_lambda = lambda self, receiver_id, notification_id, type, subject: True
-        config = "../default_config.json"
+        config = "../../default_config.json"
         with open(config, 'r') as f:
             config_data: dict = json.load(f)
         self.store_facade = StoreFacade(config_data, send_notification_call=send_notification_lambda)
@@ -998,7 +998,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 0)
         self.assertTrue(bid.get_status() == 1)
         self.assertTrue(basket.get_bids().get(0).get_status() == 1)
@@ -1102,7 +1102,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Amiel", "password789")
         self.store_facade.closeStore("Feliks", "AriExpress")
         with self.assertRaises(Exception):
-            self.store_facade.placeBid("Amiel", "AriExpress", 2000, 2, 4)
+            self.store_facade.placeBid("Amiel", "AriExpress", 2000, 5, 4)
         member: Member = self.store_facade.members.get("Amiel")
         with self.assertRaises(Exception):
             basket: Basket = member.get_Basket("some_store")
@@ -1142,7 +1142,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 0)
         self.assertTrue(bid.get_status() == 1)
         self.assertTrue(basket.get_bids().get(0).get_status() == 1)
@@ -1176,7 +1176,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 0)
         self.assertTrue(bid.get_status() == 1)
         self.assertTrue(basket.get_bids().get(0).get_status() == 1)
@@ -1214,7 +1214,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 0)
         self.assertTrue(bid.get_status() == 1)
         self.assertTrue(basket.get_bids().get(0).get_status() == 1)
@@ -1276,7 +1276,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.rejectBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 1)
         self.assertTrue(bid.get_status() == 2)
         self.assertTrue(basket.get_bids().get(0).get_status() == 2)
@@ -1291,9 +1291,9 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("YuvalMelamed", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("YuvalMelamed", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 1)
-        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.rejectBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 1)
         self.assertTrue(bid.get_status() == 2)
         self.assertTrue(basket.get_bids().get(0).get_status() == 2)
@@ -1361,7 +1361,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("Feliks", "AriExpress", 0)
         with self.assertRaises(Exception):
             self.store_facade.rejectBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 0)
@@ -1376,7 +1376,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.rejectBid("Feliks", "AriExpress", 0)
         with self.assertRaises(Exception):
             self.store_facade.rejectBid("Feliks", "AriExpress", 0)
         self.assertTrue(bid.get_left_to_approval() == 1)
@@ -1394,7 +1394,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
+        bid: Bid = self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
         self.assertTrue(bid.get_status() == 3)
         self.assertTrue(bid.get_offer() == 2200)
         self.store_facade.purchaseConfirmedBid(0, "AriExpress", "Amiel", "4580030389763292", "23/12", "Amiel saad",
@@ -1465,7 +1465,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.approveBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.approveBid("Feliks", "AriExpress", 0)
         with self.assertRaises(Exception):
             self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
         self.assertTrue(bid.get_status() == 1)
@@ -1479,7 +1479,7 @@ class TestStoreFacade(TestCase):
         self.assertTrue(bid.get_status() == 0)
         member: Member = self.store_facade.members.get("Amiel")
         basket: Basket = member.get_Basket("AriExpress")
-        self.store_facade.rejectBid("Feliks", "AriExpress", 0)
+        bid: Bid = self.store_facade.rejectBid("Feliks", "AriExpress", 0)
         with self.assertRaises(Exception):
             self.store_facade.sendAlternativeBid("Feliks", "AriExpress", 0, 2200)
         self.assertTrue(bid.get_status() == 2)

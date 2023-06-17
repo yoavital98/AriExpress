@@ -13,6 +13,8 @@ from ProjectCode.Domain.MarketObjects.StoreObjects.Product import Product
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicies import PurchasePolicies
 import random
 
+from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
+from ProjectCode.Domain.Repository.BidsRequestRepository import BidsRequestRepository
 # ----- REPOSITORIES ----- #
 from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
 from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
@@ -48,8 +50,10 @@ class Store:
         self.product_id_counter = 0
         self.auction_id_counter = 0
         self.lottery_id_counter = 0
-        self.__bids = TypedDict(int, Bid)
-        self.__bids_requests = TypedDict(str, list)
+#        self.__bids = TypedDict(int, Bid)
+        self.__bids = BidsRepository()
+#        self.__bids_requests = TypedDict(str, list)
+        self.__bids_requests = BidsRequestRepository()
         self.__discount_policy = DiscountPolicy(store_name)
         self.__purchase_policy = PurchasePolicies()
 
@@ -389,33 +393,35 @@ class Store:
 
 
     def requestBid(self, bid: Bid):
-        self.__bids[bid.bid_id] = bid
         for access in self.__accesses.values():
             if access.canManageBids():
                 username = access.get_user().get_username()
                 if self.__bids_requests.get(username) is None:
-                    self.__bids_requests[username] = list()
-                self.__bids_requests[username].append(bid)
-                bid.increment_left_to_approve()
+                    self.__bids_requests[username] = bid
+                    bid.increment_left_to_approve()
+                    self.__bids.increment_left_to_approve(bid.bid_id)
+
 
     def approveBid(self, username, bid_id):
         if not self.active:
             raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
-        cur_bid: Bid = self.__bids[bid_id]
+        cur_bid: Bid = self.__bids.__getitem__(bid_id)
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
-        if cur_bid not in self.__bids_requests[username]:
+        if not self.__bids_requests.contains_bid_for_user(bid_id, username):
             raise Exception("You already approved that bid")
         if cur_bid.get_status() == 2:
             raise Exception("Bid already got rejected")
         if cur_bid.get_status() == 1:
             raise Exception("Bid already got Accepted")
         cur_bid.approve_by_one()
-        self.__bids_requests[username].remove(cur_bid)
+        self.__bids.decrement_left_to_approve(bid_id)
+        self.__bids_requests.delete_bid_from_user(username, bid_id)
         if cur_bid.get_left_to_approval() == 0:
             cur_bid.set_status(1)
+            self.__bids.set_status(bid_id, 1)
         return cur_bid
 
     def rejectBid(self, username, bid_id):
@@ -423,7 +429,7 @@ class Store:
             raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
-        cur_bid: Bid = self.__bids[bid_id]
+        cur_bid: Bid = self.__bids.__getitem__(bid_id)
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
         if cur_bid.get_status() == 2:
@@ -431,32 +437,48 @@ class Store:
         if cur_bid.get_status() == 1:
             raise Exception("Bid already got Accepted")
         list_of_user_bids: list = self.__bids_requests.get(username)
-        if list_of_user_bids.__contains__(cur_bid):
-            for access_username, bid_list in self.__bids_requests.items():
-                if cur_bid in bid_list:
-                    bid_list.remove(cur_bid)
-            cur_bid.set_status(2)
-            return cur_bid
+        if len(list_of_user_bids) > 0:
+            list_of_bid_ids = [bid.bid_id for bid in list_of_user_bids]
+            if list_of_bid_ids.__contains__(bid_id):
+                for user_name in self.__bids_requests.keys_in_store(self.__store_name):
+                    if self.__bids_requests.contains_bid_for_user(bid_id, user_name):
+                        self.__bids_requests.delete_bid_from_user(user_name, bid_id)
+                cur_bid.set_status(2)
+                self.__bids.set_status(bid_id, 2)
+                return cur_bid
+            else:
+                raise Exception("member already approved or rejected this bid, or has nothing to do with it")
         else:
-            raise Exception("Member cannot vote twice, or isn't involved in the bid")
+            raise Exception("member has to bids waiting for approve or reject")
 
     def sendAlternativeBid(self, username, bid_id, alternate_offer):
         if not self.active:
             raise Exception("Store is closed, Actions cannot be preformed")
         cur_access: Access = self.__accesses[username]
         cur_access.canManageBids()
-        cur_bid: Bid = self.__bids[bid_id]
+        cur_bid: Bid = self.__bids.__getitem__(bid_id)
         if cur_bid is None:
             raise Exception("No such bid exists in the store")
         if not cur_bid.get_status() == 0:
             raise Exception("Bid already got rejected or Approved, or already waiting for an offer")
         if alternate_offer <= cur_bid.get_offer():
             raise Exception("cant set the offer lower than the Member offer ")
-        cur_bid.set_offer(alternate_offer)
-        for access_username, bid_list in self.__bids_requests.items():
-            if cur_bid in bid_list:
-                bid_list.remove(cur_bid)
-        cur_bid.set_status(3)
+        list_of_user_bids: list = self.__bids_requests.get(username)
+        if len(list_of_user_bids) > 0:
+            list_of_bid_ids = [bid.bid_id for bid in list_of_user_bids]
+            if list_of_bid_ids.__contains__(bid_id):
+                for user_name in self.__bids_requests.keys_in_store(self.__store_name):
+                    if self.__bids_requests.contains_bid_for_user(bid_id, user_name):
+                        self.__bids_requests.delete_bid_from_user(user_name, bid_id)
+                cur_bid.set_offer(alternate_offer)
+                self.__bids.set_offer(bid_id, alternate_offer)
+                self.__bids.set_status(bid_id, 3)
+                cur_bid.set_status(3)
+                return cur_bid
+            else:
+                raise Exception("member already approved or rejected this bid, or has nothing to do with it")
+        else:
+            raise Exception("member has to bids waiting for approve or reject")
 
     def purchaseBid(self, bid_id):
         cur_bid: Bid = self.__bids.get(bid_id)
@@ -473,11 +495,10 @@ class Store:
     def getStaffPendingForBid(self, bid_id):
         name_list: list = list()
         if not self.__bids.__contains__(bid_id):
-            raise Exception("bid doesnt exists in this store")
-        cur_bid: Bid = self.__bids.get(bid_id)
-        for access_username, bid_list in self.__bids_requests.items():
-            if cur_bid in bid_list:
-                name_list.append(access_username)
+            raise Exception("bid doesnt exists")
+        for user_name in self.__bids_requests.keys_in_store(self.__store_name):
+            if self.__bids_requests.contains_bid_for_user(bid_id, user_name):
+                name_list.append(user_name)
         return name_list
 
     def startAuction(self, username, product_id, starting_price, duration):
