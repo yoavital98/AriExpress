@@ -57,6 +57,17 @@ class MemberRepository(Repository):
                 return member_obj
         except Exception as e:
             return None
+        
+    def getAll(self):
+        try:
+            member_list = []
+            for entry in self.model.select():
+                member = Member(entry.entrance_id, entry.user_name, entry.password, entry.email)
+                if member is not None:
+                    member_list.append(member)
+            return member_list
+        except Exception as e:
+            return None
 
     def __get_by_flag(self, entry):
         if self.banned and not entry.banned:

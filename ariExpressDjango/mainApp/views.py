@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "bbb", "asdf1233")
+    user = authenticate(request, username='bbb', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -101,7 +101,6 @@ def login(request):
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
                 else:
-                    print("got here")
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
@@ -459,10 +458,9 @@ def addNewPurchasePolicy(request, storename):  # Policies
             service = Service()
             if purchase_policy_int == 1:
                 policyRulesData = request.session['policyRulesData']
-                print(f"policyRulesData: {policyRulesData}")
+                # print(f"policyRulesData: {policyRulesData}")
                 rule = fixDiscountRulesData(policyRulesData)  # TODO: check if works
-                print(
-                    f"storename: {storename}\n username: {username}\n, purchase_policy: {purchase_policy}\n, rule: {rule}\n, levelType: {levelType}\n, levelName: {levelName}")
+                # print(f"storename: {storename}\n username: {username}\n, purchase_policy: {purchase_policy}\n, rule: {rule}\n, levelType: {levelType}\n, levelName: {levelName}")
                 actionRes = service.addPurchasePolicy(storename, username, purchase_policy, rule, levelType, levelName)
                 if actionRes.getStatus():
                     messages.success(request, ("Policy has been added"))
@@ -513,27 +511,72 @@ def viewBids(request, storename):
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
         service = Service()
+        if 'approveBid' in request.POST:
+            bid_id = int(request.POST.get('bid_id'))
+            actionRes = service.approveBid(request.user.username, storename, bid_id)
+            if not actionRes.getStatus():
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:viewBids', storename=storename)
+            else:
+                messages.success(request, (f"Bid {bid_id} was approved"))
+
+        if 'rejectBid' in request.POST:
+            bid_id = int(request.POST.get('bid_id'))
+            actionRes = service.rejectBid(request.user.username, storename, bid_id)
+            if not actionRes.getStatus():
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:viewBids', storename=storename)
+            else:
+                messages.success(request, (f"Bid {bid_id} was rejected"))
+
+        if 'offerBidPrice' in request.POST:
+            bid_id = int(request.POST.get('bid_id'))
+            offerNumber = int(request.POST.get('offerNumber'))
+            actionRes = service.sendAlternativeOffer(request.user.username, storename, bid_id, offerNumber)
+            if not actionRes.getStatus():
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+                return redirect('mainApp:viewBids', storename=storename)
+            else:
+                messages.success(request, (f"Offer for bid {bid_id} sent successfully"))
+
         bids = {}
         actionRes = service.getAllBidsFromStore(storename)
-        # print(f"status {actionRes.getStatus()}")
         if actionRes.getStatus():
-            bids = ast.literal_eval(str(actionRes.getReturnValue()))
-            # print(f"bids {bids}")
-                
-        # <td>{{ bid_id }}</td>
-        # <td>{{ bid.username }}</td>
-        # <td>{{ bid.product_name }}</td>
-        # <td>{{ bid.quantity }}</td>
-        # <td>{{ bid.price }}</td>
-        bids = {"1" : {"bid_id": 1, "username": "bbb", "product_name": "apple", "quantity": 5, "price": 10},
-                "2" : {"bid_id": 2, "username": "bbb", "product_name": "earphones", "quantity": 10, "price": 5000}
-                }
+            bids : dict = ast.literal_eval(str(actionRes.getReturnValue()))
+            for id, bid in bids.items():
+                id = int(id)
+                staff = service.getStaffPendingForBid(storename, id)
+                # print(f"status {staff.getStatus()}")
+                # print(f"value {staff.getReturnValue()}")
+                # print(f"valuetype {type(staff.getReturnValue())}")
+                bid["staffToApprove"] = ast.literal_eval(str(staff.getReturnValue()))
         return render(request, 'viewBids.html', {'storename': storename,
                                                     'bids': bids
                                                     })
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
+    
+def userBids(request):
+    username = request.user.username
+    service = Service()
+    if 'purchaseBid' in request.POST:
+        return checkoutpage_bids(request)
+        bid_id = int(request.POST.get('bid_id'))
+        actionRes = service.purchaseConfirmedBid(request.user.username, storename, bid_id)
+        if not actionRes.getStatus():
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:userBids')
+        else:
+            messages.success(request, (f"Bid {bid_id} was approved"))
+
+    bids = {}
+    actionRes = service.getAllBidsFromUser(username)
+    if actionRes.getStatus():
+        bids : dict = ast.literal_eval(str(actionRes.getReturnValue()))
+    # print(f"final bids: {bids}")
+    return render(request, 'userBids.html', {'bids': bids
+                                                })
 
 def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
@@ -634,7 +677,7 @@ def viewDiscounts(request, storename):
         actionRes = service.getAllDiscounts(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
-            print(removeNulls)
+            # print(removeNulls)
             discounts = ast.literal_eval(str(removeNulls))
             return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
         else:
@@ -895,6 +938,35 @@ def edit_basket_product(request):
         messages.error(request, "Error editting product quantity - " + str(request.method))
         return HttpResponseRedirect('/cart')
 
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def checkoutpage_bids(request):
+    if request.user.is_authenticated:
+        service = Service()
+        actionRes = service.getAllBidsFromUser(request.user.username)
+        if actionRes.getStatus():
+            username = request.user.username
+            cart = actionRes.getReturnValue()
+            allbids = ast.literal_eval(str(cart))
+            bid_id = request.POST.get('bid_id')
+            bid = allbids[bid_id]
+            # print(f"allbids {allbids}")
+            # print(f"allbidstype {type(allbids)}")
+            # print(request.POST.get('bid_id'))
+            print(f"bid {bid}")
+            product = service.getProduct(bid["storename"], bid["product_id"], username).getReturnValue()
+            product = ast.literal_eval(str(product))
+            print(f"product {product}")
+            print(f"product type {type(product)}")
+            return render(request, 'bidcheckoutpage.html',
+                          {'total_cart_price': bid["offer"], 'product': product, 'quantity': bid["quantity"], 'bid_id': bid_id, 'storename': bid["storename"]})
+        else:
+            messages.error(request, "Error loading checkout page - " + str(res.getReturnValue()))
+            return redirect('mainApp:mainpage')
+    else:
+        messages.error(request, "You must be logged in to checkout")
+        return HttpResponseRedirect('/login')
+
 
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -946,6 +1018,39 @@ def checkout(request):
                                            form.cleaned_data['country'], int(form.cleaned_data['zip']))
                 if res.getStatus():
                     messages.success(request,"Order placed successfully! thank you for shopping with us")
+
+                    return redirect('mainApp:mainpage')
+                else:
+                    messages.error(request, "Error placing order res - " + str(res.getReturnValue()))
+                    return HttpResponseRedirect('/cart')
+            else:
+                messages.error(request, "Error placing order form - " + str(form.errors))
+                return HttpResponseRedirect('/cart')
+        else:
+            messages.error(request, "You must be logged in to place an order")
+            return HttpResponseRedirect('/login')
+    else:
+        form = BasketEditProductForm()
+        messages.error(request, "Error placing an order - " + str(request.method))
+        return HttpResponseRedirect('/cart')
+    
+@login_required(login_url='/login')
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def checkout_bid(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            service = Service()
+            form = CheckoutForm(request.POST)
+            if form.is_valid():
+                bid_id = request.POST.get('bid_id')
+                storename = request.POST.get('storename')
+                res = service.purchaseConfirmedBid(bid_id, storename, request.user.username, int(form.cleaned_data['cc_number']),
+                                           form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],
+                                           int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']),
+                                           form.cleaned_data['address'], form.cleaned_data['city'],
+                                           form.cleaned_data['country'], int(form.cleaned_data['zip']))
+                if res.getStatus():
+                    messages.success(request,"Bid has been purchased successfully! thank you for shopping with us")
 
                     return redirect('mainApp:mainpage')
                 else:
@@ -1147,12 +1252,10 @@ def createGuestIfNeeded(request):
 # returns False if current user not a guest. Otherwise logges in as member and returns the username
 def guestToUser(request, username, password):
     guestusername = request.user.username
-    print(f"session: {request.session['guest']}")
     if request.user.is_authenticated and request.session['guest']:
         service = Service()
         guestnumber = get_number_at_end(guestusername)
         actionRes = service.logInFromGuestToMember(guestnumber, username, password)  # 1.
-        print(actionRes.getStatus())
         if actionRes.getStatus():
             logoutFunc(request)  # 2.
             user = authenticate(request, username=username, password=password)
