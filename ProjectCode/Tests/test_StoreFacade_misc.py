@@ -826,7 +826,7 @@ class TestStoreFacade(TestCase):
         product_tuple2: tuple = basket.products.get(1)
         self.assertFalse(product_tuple2[1] == 8)
         self.assertTrue(product_tuple2[1] == 5)
-        print("hi")
+
 
     def test_editBasketQuantity_invalidQuantity_fail(self):
         amiel: Member = self.store_facade.members.get("Amiel")
