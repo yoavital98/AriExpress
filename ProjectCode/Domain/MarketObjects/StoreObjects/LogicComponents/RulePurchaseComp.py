@@ -53,7 +53,6 @@ class RulePurchaseComp(LogicComp):
 
     def productAmount(self, basket):
         for product_id, product_tuple in basket.items():
-            print(f"product_id {product_id}")
             if int(product_id) == self.product_id and self.compareWithOperator(product_tuple[1]):
                 return True
         return False
