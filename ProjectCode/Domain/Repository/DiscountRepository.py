@@ -86,5 +86,4 @@ class DiscountRepository(Repository):
         return self.get()
 
     def contains(self, discount_id):
-        query = self.model.select().where(self.model.discount_id == discount_id)
-        return query.exists()
+        return discount_id in self.keys()

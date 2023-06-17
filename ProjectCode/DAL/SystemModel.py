@@ -7,4 +7,5 @@ class SystemModel(Model):
         database = SqliteDatabase('database.db')
         db_table = 'system'
 
-    entrance_id = IntegerField(primary_key=True)
+    entrance_id = IntegerField()
+    bid_id_counter = IntegerField()
