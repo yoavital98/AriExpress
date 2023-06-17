@@ -40,7 +40,6 @@ class Cart:
             raise Exception("Basket does not exists")
 
     def add_Product(self, username, store, product_id, product, quantity):
-        obj = self.baskets.keys()
         if not self.baskets.keys().__contains__(store.get_store_name()):
             basket_to_add = Basket(str(username), store)
             self.baskets[store.get_store_name()] = basket_to_add
@@ -185,7 +184,7 @@ class Cart:
             buyer_message_header = "Regular Purchase Completed. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
             for basket in self.get_baskets().values():  # purchase all the baskets
                 basket.purchaseBasket()
-           
+
             purchase_reports_json = []
             index = 0
             for purchase in purchaseReports.values():  # all the baskets

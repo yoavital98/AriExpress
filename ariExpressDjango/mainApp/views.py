@@ -145,7 +145,7 @@ def registerPage(request):
 
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in 
+        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
@@ -556,7 +556,7 @@ def viewBids(request, storename):
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
-    
+
 def userBids(request):
     username = request.user.username
     service = Service()
@@ -1033,7 +1033,7 @@ def checkout(request):
         form = BasketEditProductForm()
         messages.error(request, "Error placing an order - " + str(request.method))
         return HttpResponseRedirect('/cart')
-    
+
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def checkout_bid(request):
