@@ -714,18 +714,49 @@ class Test_Use_Case_2_4_Management(TestCase):
 
     # Use Case 4.1.a
     def test_addProductToStore_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cucumber_K", "30", "8", "vegetables")
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().__len__() == 13)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_quantity() == 30)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_price() == 8)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_category() == "vegetables")
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 13, 5)
 
     # Use Case 4.1.b
     def test_deleteProductFromStore_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cucumber_K", "30", "8", "vegetables")
+        self.service.removeProductFromStore("Feliks", "Feliks&Sons", 12)
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        with self.assertRaises(Exception):
+            self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 12, 5)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().__len__() == 12)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 13, 5)
+
 
     # Use Case 4.1.c
     def test_changeProductInStore_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_quantity() == 30)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_price() == 8)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "vegetables")
+        self.service.editProductOfStore("Feliks", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_quantity() == 10)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_price() == 10)
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "veggies")
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
+
 
     # Use Case 4.2.a
-    def test_newDiscountToStore_StoreLevel_Success(self):
+    def test_newDiscountToStore_Simple_StoreLevel_Success(self):
         # res = self.service.logIn("Feliks", "password456")
         # self.assertTrue(res.getStatus())
         # res_new_discount = self.service.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Store",
@@ -733,20 +764,23 @@ class Test_Use_Case_2_4_Management(TestCase):
         # self.assertTrue(res_new_discount.getStatus())
         pass
 
-    # Use Case 4.2.b
+    def test_newDiscountToStore_Simple_ProductLevel_Success(self):
+        pass
 
-    def test_newDiscountToStore_ProductLevel_Success(self):
+    def test_newDiscountToStore_Simple_CategoryLevel_Success(self):
+        pass
+
+    # Use Case 4.2.b
+    def test_newDiscountToStore_Conditional_StoreLevel_Success(self):
+        pass
+
+    def test_newDiscountToStore_Conditional_ProductLevel_Success(self):
+        pass
+
+    def test_newDiscountToStore_Conditional_CategoryLevel_Success(self):
         pass
 
     # Use Case 4.2.c
-    def test_newDiscountToStore_Category_Success(self):
-        pass
-
-    # Use Case 4.2.d
-    def test_newDiscountToStore_Conditional_Success(self):
-        pass
-
-    # Use Case 4.2.e
     def test_newDiscountToStore_Max_Success(self):
         pass
 
