@@ -1,4 +1,8 @@
 from peewee import *
+
+from ProjectCode.DAL.database_conf import DatabaseConf
+
+
 #from ProjectCode.DAL.CartModel import CartModel
 # from ProjectCode.DAL.AccessModel import AccessModel
 # from ProjectCode.DAL.AuctionModel import AuctionModel
@@ -8,7 +12,7 @@ from peewee import *
 class MemberModel(Model):
 
     class Meta:
-        database = SqliteDatabase('database.db')
+        database = DatabaseConf.database
         db_table = 'member'
 
     user_name = CharField(max_length=100, primary_key=True)

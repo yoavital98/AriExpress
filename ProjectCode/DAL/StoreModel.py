@@ -1,12 +1,15 @@
 from peewee import *
 
+from ProjectCode.DAL.database_conf import DatabaseConf
+
+
 #from ProjectCode.DAL.ProductModel import ProductModel
 
 
 class StoreModel(Model):
 
     class Meta:
-        database = SqliteDatabase('database.db')
+        database = DatabaseConf.database
         db_table = 'store'
 
 

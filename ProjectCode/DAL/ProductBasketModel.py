@@ -2,11 +2,13 @@ from peewee import *
 
 from ProjectCode.DAL.BasketModel import BasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.database_conf import DatabaseConf
+
 
 class ProductBasketModel(Model):
 
     class Meta:
-        database = SqliteDatabase('database.db')
+        database = DatabaseConf.database
         db_table = 'product_basket'
 
 
