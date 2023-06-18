@@ -10,7 +10,7 @@ class SimpleDiscount(Policy):
 
     def calculate(self, product, basket, total_price):
         if super()._checkIfRelevant(product):
-            return self.percent
+            return int(self.percent)
         else:
             return 0
 
@@ -39,7 +39,8 @@ class SimpleDiscount(Policy):
         return {}
 
 
-
+    def __eq__(self, other):
+        return self.percent == other.percent and self.level == other.level and self.level_name == other.level_name
     # =======================JSON=======================#
 
     def toJson(self):

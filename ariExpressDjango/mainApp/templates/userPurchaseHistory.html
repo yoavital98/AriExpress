@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+<br><br>
+{% if user.is_authenticated %}
+    <h1 style="text-align:center; font-size:300%;">{{ user.username }}'s Purchase History  <i class="fa-solid fa-cart-shopping fa-xs"></i></h1>
+    <br>
+    <p style="text-align:center;">
+      <button class="btn btn-light btn-outline-info btn-action btn-md" onclick="window.location.href='{% url 'mainApp:userPurchaseHistory' %}'" title="purchase history" style = "text-align:center;"> 
+        <i class="fa-solid fa-clock-rotate-left "></i> My purchase History 
+      </button>
+    </p>
+{% else %}
+    <p>You must be logged in to enter this page!</p>
+    <br>
+{% endif %}
+
+<br><br>
+
+{% if purchaseList %}
+<div class="row justify-content-lg-center">
+  <div class="col-lg-9">
+      <ul>
+          {% for id, purchase in purchaseList.items %}
+          <li style=" list-style-type: none;">
+              <h2 ><i class="fa-solid fa-bag-shopping"></i> Purchase {{ purchase.transaction_id }} (placed at {{ purchase.date }})</h2>
+              {% for storename, products in purchase.products.items %}
+              <h3 ><i class="fa-solid fa-store"></i> {{ storename }}</h3>
+              <table class="table table-hover">
+                <thead>
+                  <tr class="table-primary">
+                      <th style="width: 30%;">Name</th>
+                      <th style="width: 20%;">Quantity</th>
+                      <th style="width: 20%;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                  <tr>
+                      <td>{{ product.1 }}</td>
+                      <td>{{ product.2 }}</td>
+                      <td>{{ product.3 }}</td>
+                  </tr> 
+                    {% endfor %}  
+                </tbody>
+              </table>
+              {% endfor %}
+              <p style=" font-size:120%; color:#FF9800">
+                <b>Total Price: {{ purchase.overall_price }}</b>
+              </p> 
+          </li>
+          <br><br>
+          {% empty %}
+          <li>No baskets available.</li>
+          {% endfor %}
+      </ul>
+    </div>
+  </div>
+  </button>
+{% else %}
+    <p style="text-align:center; font-size:150%;">you have no purchase history</p>
+{% endif %}
+
+{% endblock %}

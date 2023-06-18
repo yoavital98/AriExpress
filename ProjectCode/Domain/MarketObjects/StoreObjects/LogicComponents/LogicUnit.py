@@ -35,5 +35,5 @@ class LogicUnit(LogicComp):
         else:
             child_rule = self.rule["child"]["rule"]
             self.right_rule = RuleComp(child_rule["rule_type"], child_rule["product_id"],
-                                       child_rule["operator"], child_rule["quantity"], self.rule["category"])
+                                       child_rule["operator"], child_rule["quantity"], child_rule["category"])
 

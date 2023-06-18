@@ -4,11 +4,13 @@ import requests
 class SupplyService:
     _instance = None
 
-    def __new__(cls, paymentAddress):
+    def __new__(cls, supplyAddress=None):
         if cls._instance is None:
+            if not supplyAddress:
+                raise Exception("SupplyService must be initialized with supplyAddress")
             cls._instance = super().__new__(cls)
             # Add any initialization code here
-            cls._instance.paymentAddress = str(paymentAddress)
+            cls._instance.paymentAddress = str(supplyAddress)
 
         return cls._instance
 
