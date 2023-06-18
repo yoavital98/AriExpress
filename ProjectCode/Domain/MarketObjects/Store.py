@@ -294,20 +294,21 @@ class Store:
 
     def calculateBasketPrice(self, products_dict): #tup(product,qunaiity)
         #need to add a user arguments so we will be able to check policies
-        new_product_dict = TypedDict(int, int) # (id,quantity)
+        new_product_dict = dict() # (id,quantity)
         for product_id, product_tuple in products_dict.items():
-            new_product_dict[product_id] = product_tuple[1]
+            new_product_dict[product_id] = (product_tuple[0], product_tuple[1])
         overall_price = 0
         price_after_discounts = 0
-        for product_id, product_quantity in new_product_dict.items():
+        for product_id, product_tuple in new_product_dict.items():
             cur_product = self.__products[product_id]
+            cur_quantity = product_tuple[1]
             if cur_product is None:
                 raise Exception("No such product exists")
-            overall_price += cur_product.price * product_quantity
+            overall_price += cur_product.price * cur_quantity
 
-        for product_id, product_quantity in new_product_dict.items():
-            cur_product: Product = self.__products[product_id]
-            price_after_discounts += product_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict,
+        for product_id, product_tuple in new_product_dict.items():
+            cur_product, cur_quantity = self.__products[product_id], product_tuple[1]
+            price_after_discounts += cur_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict,
                                                                                           overall_price)
         return price_after_discounts
 
@@ -343,23 +344,23 @@ class Store:
         new_product_dict = self.__getRelevantProductDictFromBasket(products_dict)
         overall_price = 0
         price_after_discounts = 0
-        for product_id, product_quantity in new_product_dict.items():
-            cur_product = self.__products[product_id]
+        for product_id, product_tuple in new_product_dict.items():
+            cur_product, cur_quantity = self.__products[product_id], product_tuple[1]
             if cur_product is None:
                 raise Exception("No such product exists")
-            cur_product.quantity -= product_quantity
-            overall_price += cur_product.price * product_quantity
+            cur_product.quantity -= cur_quantity
+            overall_price += cur_product.price * cur_quantity
             self.__products[product_id] = cur_product
 
-        for product_id, product_quantity in new_product_dict.items():
-            cur_product: Product = self.__products[product_id]
-            price_after_discounts += product_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict, overall_price)
+        for product_id, product_tuple in new_product_dict.items():
+            cur_product, cur_quantity = self.__products[product_id], product_tuple[1]
+            price_after_discounts += cur_quantity * self.getProductPriceAfterDiscount(cur_product, new_product_dict, overall_price)
         return price_after_discounts
 
 
     def getProductPriceAfterDiscount(self, product, product_quantity_dict, overall_price):
         cur_percent = self.__discount_policy.calculateDiscountForProduct(product, product_quantity_dict, overall_price)
-        return product.get_price() - product.get_price() * (cur_percent / 100)
+        return float(product.get_price()) - float(product.get_price()) * float((cur_percent) / 100)
 
     def addDiscount(self, username, discount_type, percent=0, level="", level_name="", rule={}, discounts={}):
         cur_access: Access = self.__accesses.get(username)

@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "bbb", "asdf1233")
-    user = authenticate(request, username='bbb', password='asdf1233')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ def registerPage(request):
 
             messages.success(request, ("Error: A User is already logged in"))
             return render(request, 'login.html', {'form': loginForm()})
-        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in 
+        elif request.user.is_authenticated and request.session['guest']:  # user (guest) is logged in
             form = CreateMemberForm(request.POST)
             if form.is_valid():
                 username = form.cleaned_data['username']
@@ -309,7 +309,6 @@ def store_specific(request, storename):
         #products_dict = ast.literal_eval(str(products_dict))
         products_list = []
         for product in products_dict.values():
-            product = json.loads(product)
             products_list.append(product)
         active = "Open" if context['active'].lower() == "true" else "Closed"
         return render(request, 'store_specific.html',
@@ -556,7 +555,7 @@ def viewBids(request, storename):
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
-    
+
 def userBids(request):
     username = request.user.username
     service = Service()
@@ -862,8 +861,8 @@ def cart(request):
                     basket_res = basket_res.getReturnValue()
                     basket_products = ast.literal_eval(str(basket_res)).get('products')
                     basket_products = ast.literal_eval(str(basket_products))
-                    for product in basket_products.values():
-                        product['product'] = json.loads(product['product'])
+                    # for product in basket_products.values():
+                    #     product['product'] = json.loads(product['product'])
                     total_price = calculate_total_price(basket_products)
                     products[basket] = {'items': basket_products, 'total_price': total_price}
 
@@ -1034,7 +1033,7 @@ def checkout(request):
         form = BasketEditProductForm()
         messages.error(request, "Error placing an order - " + str(request.method))
         return HttpResponseRedirect('/cart')
-    
+
 @login_required(login_url='/login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def checkout_bid(request):
