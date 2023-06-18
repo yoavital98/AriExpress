@@ -25,8 +25,6 @@ class PurchasePolicies:
 
 
     def checkAllPolicies(self, product, basket, total_price, user=None):
-        print(self.policies.keys())
-        print(self.policies.values())
         for policy in self.policies.values():
             if not policy.calculate(product, basket, total_price, user):
                 return False

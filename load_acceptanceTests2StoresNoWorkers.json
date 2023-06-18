@@ -31,7 +31,7 @@
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "vegetables"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Mango_K", "30", "8", "fruits"]}
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Mango_K", "30", "20", "fruits"]}
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Banana_K", "30", "8", "fruits"]}
 },{
@@ -54,37 +54,28 @@
   "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "salt", "30", "2", "seasoning"]}
 },{
   "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "paprika", "30", "2", "seasoning"]}
+},{
+  "register": {"args": ["Son_A", "passwordAAA", "sona@gmail.com"]}
+},{
+  "register": {"args": ["Son_B", "passwordBBB", "sonb@gmail.com"]}
+},{
+  "register": {"args": ["Son_C", "passwordCCC", "sonc@gmail.com"]}
+},{
+  "register": {"args": ["Son_D", "passwordDDD", "sond@gmail.com"]}
+},{
+  "register": {"args": ["Son_E", "passwordEEE", "sone@gmail.com"]}
+},{
+  "register": {"args": ["Son_F", "passwordFFF", "sonf@gmail.com"]}
+},{
+  "nominateStoreOwner": {"args": ["Feliks", "Son_A", "Feliks&Sons"]}
+},{
+  "nominateStoreOwner": {"args": ["Feliks", "Son_B", "Feliks&Sons"]}
+},{
+  "nominateStoreManager": {"args": ["Feliks", "Son_C", "Feliks&Sons"]}
+},{
+  "nominateStoreManager": {"args": ["Son_A", "Son_D", "Feliks&Sons"]}
+},{
+  "addDiscount": {"args": ["Feliks&Sons", "Feliks", "Simple", "25", "Product", "5", ""]}
+},{
+  "addDiscount": {"args": ["Feliks&Sons", "Feliks", "Simple", "25", "Category", "", "fruits"]}
 }]
-//{
-//  "register": {"args": ["Son_A", "passwordAAA", "sona@gmail.com"]}
-//},{
-//  "register": {"args": ["Son_B", "passwordBBB", "sonb@gmail.com"]}
-//},{
-//  "register": {"args": ["Son_C", "passwordCCC", "sonc@gmail.com"]}
-//},{
-//
-//}
-//]
-//
-////{
-////  "nominateStoreOwner": {"args": ["aaa", "eee", "store123"]}
-//},
-//{
-//  "nominateStoreOwner": {"args": ["aaa", "fff", "store123"]}
-//},
-//{
-//  "nominateStoreOwner": {"args": ["eee", "bbb", "store123"]}
-//},
-//{
-//  "nominateStoreManager": {"args": ["eee", "ccc", "store123"]}
-//},
-//{
-//  "nominateStoreManager": {"args": ["eee", "ddd", "store123"]}
-//},
-//{
-//  "logOut": {"args": ["aaa"]}
-//},
-//{
-//  "logOut": {"args": ["eee"]}
-//}
-//]

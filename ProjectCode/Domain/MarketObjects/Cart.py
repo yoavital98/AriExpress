@@ -146,8 +146,8 @@ class Cart:
 
     def PurchaseCart(self, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city,
                      country, zipcode, is_member):
-        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
-        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        payment_service = PaymentService()
+        supply_service = SupplyService()
         transaction_history = TransactionHistory()
         message_controller = MessageController()
         overall_price = 0  # overall price for the user
@@ -241,15 +241,11 @@ class Cart:
                 store.purchaseBid(bid_id)
                 message_header = "Bid Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(
                     supply_id)
-                transaction_history.addNewUserTransaction(transaction_id, supply_id, user_name, single_product_dict,
-                                                          bid.get_offer())
-                transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,
-                                                           single_product_dict, bid.get_offer())
-                message_controller.send_notification(user_name, message_header, single_product_dict,
-                                                          datetime.now())
-
-                message_controller.send_notification(store.getFounder().get_username(), message_header, single_product_dict,
-                                                           datetime.now())
+                transaction_history.addNewUserTransaction(transaction_id, supply_id, user_name, single_product_dict, bid.get_offer())
+                transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,  single_product_dict, bid.get_offer())
+                message_controller.send_notification(user_name, message_header, single_product_dict,datetime.now())
+                for staff_member in store.getAllStaffMembersNames():
+                    message_controller.send_notification(staff_member, message_header, single_product_dict, datetime.now())
                 self.clearBidFromBasket(store_name, bid_id)
                 return {
                     "message": "Bid Purchase was successful",

@@ -2192,6 +2192,27 @@ class TestStoreFacade(TestCase):
         self.assertTrue(transaction.get_overall_price() == 4500)
         transaction_history.clearAllHistory()
 
+    def test_getUserPurchaseHistory_success(self):
+        transaction_history = TransactionHistory()
+        transaction_history.insertEmptyListToUser("Amiel")
+        transaction_history.insertEmptyListToStore("AriExpress")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        transaction_history_of_amiel = self.store_facade.getMemberPurchaseHistory("Amiel", "Amiel")
+        self.assertTrue(len(transaction_history_of_amiel) == 0)
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.addToBasket("Amiel", "AriExpress",
+                                      1, 9)
+        self.store_facade.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
+                                       "some_address", "be'er sheva", "Israel", "1234567")
+        transaction_history_of_amiel = self.store_facade.getMemberPurchaseHistory("Amiel", "Amiel")
+        # integrity
+        self.assertTrue(len(transaction_history_of_amiel) == 1)
+        transaction: StoreTransaction = transaction_history_of_amiel[0]
+        self.assertTrue(transaction.get_overall_price() == 4500)
+        transaction_history.clearAllHistory()
+
+
     def test_getStorePurchaseHistory_Admin_success(self):
         transaction_history = TransactionHistory()
         transaction_history.insertEmptyListToUser("Amiel")

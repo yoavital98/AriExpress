@@ -4,8 +4,10 @@ import requests
 class PaymentService:
     _instance = None
 
-    def __new__(cls, paymentAddress):
+    def __new__(cls, paymentAddress=None):
         if cls._instance is None:
+            if not paymentAddress:
+                raise Exception("PaymentService must be initialized with paymentAddress")
             cls._instance = super().__new__(cls)
             # Add any initialization code here
             cls._instance.paymentAddress = str(paymentAddress)
