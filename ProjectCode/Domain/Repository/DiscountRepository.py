@@ -2,6 +2,7 @@ from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
+from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.MaxComp import MaxComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
 from ProjectCode.Domain.Repository.Repository import Repository
 
@@ -13,10 +14,8 @@ class DiscountRepository(Repository):
         self.store_name = store_name
 
     def __getitem__(self, discount_id):
-        try:
-            return self.get(discount_id)
-        except Exception as e:
-            raise Exception("DiscountRepository: __getitem__ failed: " + str(e))
+        return self.get(discount_id)
+
 
     def __setitem__(self, key, value): #key is meaningless
         try:
@@ -38,15 +37,18 @@ class DiscountRepository(Repository):
 
 
     def get(self, pk=None):
-        if pk is None:
-            store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
-            discount_list = []
-            for discount_entry in store_entry.discounts:
-                discount_list.append(self.__createDomainObject(discount_entry))
-            return discount_list
-        else:
-            discount_entry = self.model.get(self.model.discount_id == pk)
-            return self.__createDomainObject(discount_entry)
+        try:
+            if pk is None:
+                store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
+                discount_list = []
+                for discount_entry in store_entry.discounts:
+                    discount_list.append(self.__createDomainObject(discount_entry))
+                return discount_list
+            else:
+                discount_entry = self.model.get(self.model.discount_id == pk)
+                return self.__createDomainObject(discount_entry)
+        except Exception as e:
+            return None
 
     def __createDomainObject(self, discount_entry):
         discount = None
@@ -58,7 +60,7 @@ class DiscountRepository(Repository):
         elif discount_type == "Coupon":
             pass
         elif discount_type == "Max":
-            pass
+            discount = MaxComp(discount_entry.discount_dict, discount_id=discount_entry.discount_id)
         elif discount_type == "Add":
             discount = AddComp(discount_entry.discount_dict, discount_id=discount_entry.discount_id)
         else:
@@ -76,11 +78,13 @@ class DiscountRepository(Repository):
         return True
 
     def keys(self):
-        return [discount.discount_id for discount in DiscountModel.select()]
+        try:
+            return [discount.discount_id for discount in DiscountModel.select()]
+        except Exception as e:
+            return []
 
     def values(self):
         return self.get()
 
     def contains(self, discount_id):
-        query = self.model.select().where(self.model.discount_id == discount_id)
-        return query.exists()
+        return discount_id in self.keys()

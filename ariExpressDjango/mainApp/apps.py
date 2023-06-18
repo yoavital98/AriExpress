@@ -7,12 +7,20 @@ class MainappConfig(AppConfig):
     def ready(self):
         # load_file = "../load.json"
         config = "../default_config.json"
-        # load_file = "../load_purchaseCart.json"
+        load_file = "../load_purchaseCart.json"
         # load_file = "../load_withDiscounts.json"
-        load_file = "../load_bids.json"
+        # load_file = "../load_bids.json"
+        # load_file = "../load_registration.json"
         from ProjectCode.Service.Service import Service
         from .views import send_notification_lambda
         service = Service(load_file, config, send_notification_call= send_notification_lambda)
+        members = service.getAllMembers()
+        # print(f"members status: {members.getStatus()}")
+        # print(f"members type: {type(members.getReturnValue())}")
+        # print(f"members: {members.getReturnValue()}")
+        # print(f"members loads: {json.loads(members.getReturnValue())}")
+        # print(f"members loads: {type(json.loads(members.getReturnValue()))}")
+        self.loadUsers(json.loads(members.getReturnValue()))
         # service = Service()
 
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
@@ -115,6 +123,13 @@ class MainappConfig(AppConfig):
             print(name, pwd)
             if not User.objects.filter(username=name).exists():
                 user = User.objects.create_user(username=name, password=pwd)
+                user.save()
+
+    def loadUsers(self, memberlist):
+        from django.contrib.auth.models import User
+        for memberDict in memberlist:
+            if not User.objects.filter(username=memberDict["username"]).exists():
+                user = User.objects.create_user(username=memberDict["username"], password=memberDict["password"], email=memberDict["email"])
                 user.save()
 
 

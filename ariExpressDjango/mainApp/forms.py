@@ -42,12 +42,10 @@ class NewProductForm(forms.Form):
     productPrice = forms.IntegerField()
     productQuantity = forms.IntegerField()
     
-# TODO: change name to something like BasketRemoveProductForm
 class BasketRemoveProductForm(forms.Form):
     product_id = forms.IntegerField()
     store_name = forms.CharField(max_length=100)
 
-# TODO: change name to something like BasketEditQuantityProductForm
 class BasketEditProductForm(forms.Form):
     product_id = forms.IntegerField()
     store_name = forms.CharField(max_length=100)

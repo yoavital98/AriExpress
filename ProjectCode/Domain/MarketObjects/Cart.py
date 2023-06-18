@@ -19,11 +19,19 @@ from ProjectCode.Domain.Repository.BasketRepository import BasketRepository
 class Cart:
 
     def __init__(self, username):
+        # self.username = username
+        # self.baskets = TypedDict(str, Basket)
+
         self.username = username
-        self.baskets = TypedDict(str, Basket)
+        self.baskets = BasketRepository(username)
 
         # REPOSITORY FIELD --- TO BE REPLACED
-        self.basket_test = BasketRepository(username)
+        # self.basket_test = BasketRepository(username)
+
+    def __eq__(self, other):
+        if isinstance(other, Cart):
+            return self.username == other.username
+        return False
 
     def get_Basket(self, storename):
         if self.baskets.keys().__contains__(storename):
@@ -88,18 +96,19 @@ class Cart:
         basket_to_place_bid.addBidToBasket(bid)
 
     def getAllBids(self):
-        output = set()  # set of bids
+        output = dict()  # set of bids
         for basket in self.baskets.values():
             bids: TypedDict[int, Bid] = basket.get_bids()
-            for bid in bids:
-                output.add(bid)
+            for id, bid in bids.items():
+                output[id] = bid
+        print(f"output {output}")
         return output
 
     def getBid(self, storename, bid_id):
         if not self.baskets.keys().__contains__(storename):
             raise Exception("Basket does not exists")
-        basket: Basket = self.baskets[storename]
-        return basket.get_bids()[bid_id]  # TODO: check if the bid even exists
+        basket: Basket = self.baskets.get(storename)
+        return basket.get_bid(bid_id)  # TODO: check if the bid even exists
 
     def checkAllItemsInCart(self):
         answer = None
@@ -175,7 +184,7 @@ class Cart:
             buyer_message_header = "Regular Purchase Completed. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(supply_id)
             for basket in self.get_baskets().values():  # purchase all the baskets
                 basket.purchaseBasket()
-           
+
             purchase_reports_json = []
             index = 0
             for purchase in purchaseReports.values():  # all the baskets

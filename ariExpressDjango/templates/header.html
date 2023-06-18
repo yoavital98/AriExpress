@@ -1,7 +1,8 @@
+{% load static i18n %}
+{% load notifications_tags %}
 <!DOCTYPE html>
 <html>
-    {% load static i18n %}
-    {% load notifications_tags %}
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -66,11 +67,9 @@
                                 <li><a class="dropdown-item" href="{% url 'mainApp:mystores'%}">My Stores</a></li>
                                 <li><a class="dropdown-item" href="{% url 'mainApp:createStore'%}">Create a new Store</a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="#">Action</a></li>
-                                <li><a class="dropdown-item" href="#">Action</a></li>
-                                <li><a class="dropdown-item" href="#">Another action</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                                {% if request.session.guest is 0%}
+                                <li><a class="dropdown-item" href="{% url 'mainApp:userBids'%}">User Bids</a></li>
+                                {% endif %}
                             </ul>
                         </li>
                         {% if request.session.guest is 0 or user.is_superuser %}

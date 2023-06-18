@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import json
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 
@@ -32,7 +32,7 @@ class UserTransaction:
         return self._supply_id
 
     def __str__(self):
-        return f"Purchase made by {self._username} at {self._storename} on {self._date}\nProducts: {self._products_dict}\nOverall price: {self._overall_price}"
+        return f"Purchase made by {self._username} on {self._date}\nProducts: {self._products_dict}\nOverall price: {self._overall_price}"
 
     # =======================JSON=======================#
 
@@ -41,7 +41,7 @@ class UserTransaction:
             "transaction_id": self._transaction_id,
             "supply_id": self._supply_id,
             "username": self._username,
-            "products": JsonSerialize.toJsonAttributes(self._products_dict),
+            "products": self._products_dict,
             "overall_price": self._overall_price,
             "date": self._date
         }

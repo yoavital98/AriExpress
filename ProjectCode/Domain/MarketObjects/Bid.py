@@ -66,9 +66,12 @@ class Bid:
             'bid_id': self.bid_id,
             'username': self._username,
             'storename': self._storename,
-            'offer': self._offer.toJson(),
-            'product': self._product.toJson(),
+            'offer': self._offer,
+            'product_id': self._product_ID,
             'quantity': self._quantity,
             'status': self._status,
             'left_to_approval': self._left_to_approval
         }
+
+    def set_users_to_approval(self, _left_to_approval):
+        self._left_to_approval = _left_to_approval

@@ -13,12 +13,12 @@
 </head>
 
 <body>
-  <h1>Store Bids</h1>
+  <h1>User Bids</h1>
   <table class="table table-hover">
       <thead>
           <tr>
               <th>ID</th>            
-              <th>Bid Placer</th>
+              <th>Status</th>
               <th>Store Name</th>
               <th>Product</th>
               <th>Quantity</th>
@@ -30,31 +30,20 @@
           {% for bid_id, bid in bids.items %}
           <tr>
               <td>{{ bid_id }}</td>
-              <td>{{ bid.username }}</td>
+              <td>{{ bid.status }}</td>
               <td>{{ bid.storename }}</td>
               <td>{{ bid.product_id }}</td>
               <td>{{ bid.quantity }}</td>
               <td>{{ bid.offer }}</td>
               <td>
                 <div class="d-flex justify-content-start">
-                  {% if user.username in bid.staffToApprove %}
+                  {% if bid.status == 1 or bid.status == 3 %}
                   <form method="post" action="">
                     {% csrf_token %}
                     <input type="hidden" name="bid_id" value="{{ bid_id }}">
-                    <button type="submit" class="btn btn-outline-dark" name="approveBid">Approve</button>
-                  </form>
-                  <form method="post" action="">
-                    {% csrf_token %}
-                    <input type="hidden" name="bid_id" value="{{ bid_id }}">
-                    <button type="submit" class="btn btn-outline-dark" name="rejectBid">Reject</button>
+                    <button type="submit" class="btn btn-outline-dark" name="purchaseBid">Purchase Bid</button>
                   </form>
                   {% endif %}
-                  <form method="post" action="">
-                    {% csrf_token %}
-                    <input type="hidden" name="bid_id" value="{{ bid_id }}">
-                    <button type="submit" class="btn btn-outline-dark" name="offerBidPrice">Offer</button>
-                    <input type="text" id="myTextbox" name="offerNumber">
-                  </form>
                 </div>
               </td>
           </tr>

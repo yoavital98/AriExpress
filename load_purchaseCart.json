@@ -33,22 +33,19 @@
     "addNewProductToStore": {"args": ["aaa", "store123", "headphones", "10", "700", "electronics"]}
   },
   {
+    "addToBasket": {"args": ["aaa", "store123", "1", "3"]}
+  },
+  {
+    "addToBasket": {"args": ["aaa", "store123", "2", "10"]}
+  },
+  {
+    "addToBasket": {"args": ["aaa", "store123", "3", "1"]}
+  },
+  {
+    "purchaseCart": {"args":["aaa", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789","be'er sheva", "beer sheva", "israel", "1234152"]}
+  },
+  {
     "logOut": {"args": ["aaa"]}
-  },
-  {
-    "logIn": {"args": ["bbb", "asdf1233"]}
-  },
-  {
-    "addToBasket": {"args": ["bbb", "store123", "1", "3"]}
-  },
-  {
-    "addToBasket": {"args": ["bbb", "store123", "2", "10"]}
-  },
-  {
-    "addToBasket": {"args": ["bbb", "store123", "3", "1"]}
-  },
-  {
-    "logOut": {"args": ["bbb"]}
   }
 ]
 

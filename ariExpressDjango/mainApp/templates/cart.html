@@ -5,11 +5,19 @@
 <br><br>
 {% if user.is_authenticated %}
     <h1 style="text-align:center; font-size:300%;">{{ user.username }}'s cart  <i class="fa-solid fa-cart-shopping fa-xs"></i></h1>
+    <br>
+    <p style="text-align:center;">
+      <button class="btn btn-light btn-outline-info btn-action btn-md" onclick="window.location.href='{% url 'mainApp:userPurchaseHistory' %}'" title="purchase history" style = "text-align:center;"> 
+        <i class="fa-solid fa-clock-rotate-left "></i> My purchase History 
+      </button>
+    </p>
 {% else %}
     <p>My cart <i class="fa-light fa-cart-shopping"></i></p>
+    <br>
 {% endif %}
 
-<br><br><br>
+<br><br>
+
 {% if baskets %}
 <div class="row justify-content-lg-center">
   <div class="col-lg-9">
