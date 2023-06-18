@@ -389,9 +389,9 @@ class Store:
         self.__bids_requests[username].remove(cur_bid)
         if cur_bid.get_left_to_approval() == 0:
             cur_bid.set_status(1)
-            MessageController().send_notification(cur_bid.get_username(), "Bid request was approved", "Bid ID: "+bid_id + ". From store: " + self.get_store_name(), datetime.datetime.now())
+            MessageController().send_notification(cur_bid.get_username(), "Bid request was approved", f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
             for staff_member in self.getAllStaffMembersNames():
-                MessageController().send_notification(staff_member, "Bid request was approved", "Bid ID: " + bid_id + ". For user: " + cur_bid.get_username(), datetime.datetime.now())
+                MessageController().send_notification(staff_member, "Bid request was approved", f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}", datetime.datetime.now())
         return cur_bid
 
     def rejectBid(self, username, bid_id):
@@ -412,9 +412,9 @@ class Store:
                 if cur_bid in bid_list:
                     bid_list.remove(cur_bid)
             cur_bid.set_status(2)
-            MessageController().send_notification(cur_bid.get_username(), "Bid request was rejected", "Bid ID: " + bid_id + ". From store: " + self.get_store_name(), datetime.datetime.now())
+            MessageController().send_notification(cur_bid.get_username(), "Bid request was rejected", f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
             for staff_member in self.getAllStaffMembersNames():
-                MessageController().send_notification(staff_member, "Bid request was rejected", "Bid ID: " + bid_id + ". For user: " + cur_bid.get_username() + ". rejecting member: " + username, datetime.datetime.now())
+                MessageController().send_notification(staff_member, "Bid request was rejected", f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. rejecting member: {username}", datetime.datetime.now())
             return cur_bid
         else:
             raise Exception("Member cannot vote twice, or isn't involved in the bid")
@@ -435,9 +435,9 @@ class Store:
         for access_username, bid_list in self.__bids_requests.items():
             if cur_bid in bid_list:
                 bid_list.remove(cur_bid)
-        MessageController().send_notification(cur_bid.get_username(), "Alternative offer was sent for your bid", "Bid ID: " + bid_id + ". From store: " + self.get_store_name(), datetime.datetime.now())
+        MessageController().send_notification(cur_bid.get_username(), "Alternative offer was sent for your bid", f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
         for staff_member in self.getAllStaffMembersNames():
-            MessageController().send_notification(staff_member, "Alternative offer was sent for a bid", "Bid ID: " + bid_id + ". For user: " + cur_bid.get_username() + ". sending member: " + username, datetime.datetime.now())
+            MessageController().send_notification(staff_member, "Alternative offer was sent for a bid", f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. sending member: {username}", datetime.datetime.now())
 
         cur_bid.set_status(3)
 
