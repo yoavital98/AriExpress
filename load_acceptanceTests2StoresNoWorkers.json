@@ -23,7 +23,7 @@
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "vegetables"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "vegetables"]} // id 5 - simple discount 25
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "vegetables"]}
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Potato_K", "30", "8", "vegetables"]}
 },{
@@ -31,13 +31,13 @@
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "vegetables"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Mango_K", "30", "20", "fruits"]} //all fruits 25 simple discount id 9
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Mango_K", "30", "20", "fruits"]}
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Banana_K", "30", "8", "fruits"]}
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Melon_K", "30", "8", "fruits"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cherry_K", "30", "20", "fruits"]} //id 12
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cherry_K", "30", "20", "fruits"]}
 },{
   "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "sauces"]}
 },{
@@ -55,17 +55,17 @@
 },{
   "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "paprika", "30", "2", "seasoning"]}
 },{
-  "register": {"args": ["Son_A", "passwordAAA", "sona@gmail.com"]} // first owner from feliks
+  "register": {"args": ["Son_A", "passwordAAA", "sona@gmail.com"]}
 },{
-  "register": {"args": ["Son_B", "passwordBBB", "sonb@gmail.com"]} // second owner from feliks
+  "register": {"args": ["Son_B", "passwordBBB", "sonb@gmail.com"]}
 },{
-  "register": {"args": ["Son_C", "passwordCCC", "sonc@gmail.com"]} // manager from feliks
+  "register": {"args": ["Son_C", "passwordCCC", "sonc@gmail.com"]}
 },{
-  "register": {"args": ["Son_D", "passwordDDD", "sond@gmail.com"]} // manager from SonA
+  "register": {"args": ["Son_D", "passwordDDD", "sond@gmail.com"]}
 },{
-  "register": {"args": ["Son_E", "passwordEEE", "sone@gmail.com"]} // to be: owner from sonA
+  "register": {"args": ["Son_E", "passwordEEE", "sone@gmail.com"]}
 },{
-  "register": {"args": ["Son_F", "passwordFFF", "sonf@gmail.com"]} // to be: manager from sonE
+  "register": {"args": ["Son_F", "passwordFFF", "sonf@gmail.com"]}
 },{
   "nominateStoreOwner": {"args": ["Feliks", "Son_A", "Feliks&Sons"]}
 },{

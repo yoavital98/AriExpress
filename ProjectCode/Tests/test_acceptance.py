@@ -76,7 +76,7 @@ class Test_Use_Cases_1(TestCase):
     # Use Case 1.3 & 1.4
 
     def setup_purchase(self):
-        self.service = Service(default_config, true_lambda)
+        self.service = Service(default_config, None, true_lambda)
         self.service.register("Feliks", "password456", "feliks@gmail.com")
         self.service.register("Amiel", "password789", "amiel@gmail.com")
         self.service.logIn("Feliks", "password456")
@@ -132,11 +132,12 @@ class Test_Use_Cases_1(TestCase):
 
 
 class Test_Use_Cases_2_1(TestCase):
-    default_config = "../../default_config.json"
-    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+    default_config = "../../../default_config.json"
+    stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+    true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
     def setUp(self):
-        self.service = Service(self.default_config, true_lambda)
+        self.service = Service(self.default_config, None, self.true_lambda)
 
     # Use Case 2.1.1
     def test_guest_visit_success(self):
@@ -243,7 +244,7 @@ class Test_Use_Case_2_2(TestCase):
     stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
 
     def setUp(self):
-        self.service = Service(self.default_config, true_lambda)
+        self.service = Service(self.default_config, None, true_lambda)
 
     # Use Case 2.2.1
     def test_guest_information_fetching_success(self):
@@ -650,7 +651,7 @@ class Test_Use_Case_2_3_members(TestCase):
     stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
 
     def setUp(self):
-        self.service = Service(self.default_config, true_lambda)
+        self.service = Service(self.default_config, None, true_lambda)
 
     # Use Case 2.3.1
     def test_log_out_from_the_system_success(self):
@@ -710,7 +711,7 @@ class Test_Use_Case_2_4_Management(TestCase):
     stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
 
     def setUp(self):
-        self.service = Service(self.default_config, true_lambda)
+        self.service = Service(self.default_config, None, true_lambda)
 
     # Use Case 4.1.a
     def test_addProductToStore_Success(self):
@@ -861,7 +862,7 @@ class Test_Use_Case_2_4_Management(TestCase):
 
 class Test_Use_Case_2_5_nominations(TestCase):
     def setUp(self):
-        self.service = Service(self.default_config, true_lambda)
+        self.service = Service(self.default_config, None, true_lambda)
 
     # Use Case 5
     def test_nominatedPreformingGivenAction_Success(self):
@@ -874,7 +875,7 @@ class Test_Use_Case_2_5_nominations(TestCase):
 
 class Test_Use_Case_2_6_transactions(TestCase):
     def setUp(self):
-        self.service = Service(self.default_config, true_lambda)
+        self.service = Service(self.default_config, None, true_lambda)
 
     # Use Case 2.6.2
     def test_AdminBanMember_success(self):
