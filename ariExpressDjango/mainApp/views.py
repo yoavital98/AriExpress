@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -961,7 +961,7 @@ def checkoutpage_bids(request):
             return render(request, 'bidcheckoutpage.html',
                           {'total_cart_price': bid["offer"], 'product': product, 'quantity': bid["quantity"], 'bid_id': bid_id, 'storename': bid["storename"]})
         else:
-            messages.error(request, "Error loading checkout page - " + str(res.getReturnValue()))
+            messages.error(request, "Error loading checkout page - " + str(actionRes.getReturnValue()))
             return redirect('mainApp:mainpage')
     else:
         messages.error(request, "You must be logged in to checkout")
@@ -987,8 +987,8 @@ def checkoutpage(request):
                     basket_res = basket_res.getReturnValue()
                     basket_products = ast.literal_eval(str(basket_res)).get('products')
                     basket_products = ast.literal_eval(str(basket_products))
-                    for product in basket_products.values():
-                        product['product'] = json.loads(product['product'])
+                    # for product in basket_products.values():
+                    #     product['product'] = json.loads(product['product'])
                     total_cart_price += calculate_total_price(basket_products)
                     quantity += len(basket_products)
                     products.append(basket_products)
@@ -1103,12 +1103,8 @@ def userPurchaseHistory(request):
         purchasehistory = service.getMemberPurchaseHistory(request.user.username,request.user.username)
         if purchasehistory.getStatus():
             purchasehistory = purchasehistory.getReturnValue()
-            purchasehistory = json.loads(purchasehistory)
-            purchaseList=[]
-            for purchase in purchasehistory:
-                purchase = ast.literal_eval(str(purchase))
-                purchaseList.append(purchase)
-            return render(request, 'userPurchaseHistory.html',{'purchaseList': purchaseList})
+            purchasehistory = ast.literal_eval(str(purchasehistory))
+            return render(request, 'userPurchaseHistory.html',{'purchaseList': purchasehistory})
         else:
             messages.error(request, "Error: " + str(purchasehistory.getReturnValue()))
             return redirect('mainApp:cart')

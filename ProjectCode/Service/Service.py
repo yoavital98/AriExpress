@@ -237,9 +237,10 @@ class Service:
         try:
             purchase_history = self.store_facade.getMemberPurchaseHistory(requester_id, username)
             logging.debug(f"fetching purchase history of user {str(username)}.")
-            data_json = []
+            data_json = {}
             for transaction in purchase_history:
-                data_json.append(transaction.toJson())
+                data_json[transaction.get_transaction_id()] = transaction.toJson()
+                # data_json.append(transaction.toJson())
             return Response(json.dumps(data_json), True)
         except Exception as e:
             logging.error(f"getMemberPurchaseHistory Error: {str(e)}. By username: '{username}'")
