@@ -22,9 +22,9 @@
 <div class="row justify-content-lg-center">
   <div class="col-lg-9">
       <ul>
-          {% for purchase in purchaseList %}
+          {% for id, purchase in purchaseList.items %}
           <li style=" list-style-type: none;">
-              <h2 ><i class="fa-solid fa-bag-shopping"></i> Purchase {{purchase.transaction_id}} (placed at {{purchase.date}})</h2>
+              <h2 ><i class="fa-solid fa-bag-shopping"></i> Purchase {{ purchase.transaction_id }} (placed at {{ purchase.date }})</h2>
               {% for storename, products in purchase.products.items %}
               <h3 ><i class="fa-solid fa-store"></i> {{ storename }}</h3>
               <table class="table table-hover">
@@ -33,17 +33,17 @@
                       <th style="width: 30%;">Name</th>
                       <th style="width: 20%;">Quantity</th>
                       <th style="width: 20%;">Price</th>
-
                   </tr>
                 </thead>
+                <tbody>
                     {% for product in products %}
                   <tr>
-                      <td>{{ product[1] }}</td>
-                      <td>{{ product[2] }}</td>
-                      <td>{{ product[3]}}</td>
-
+                      <td>{{ product.1 }}</td>
+                      <td>{{ product.2 }}</td>
+                      <td>{{ product.3 }}</td>
                   </tr> 
                     {% endfor %}  
+                </tbody>
               </table>
               {% endfor %}
               <p style=" font-size:120%; color:#FF9800">

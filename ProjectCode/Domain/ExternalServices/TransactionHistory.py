@@ -57,12 +57,12 @@ class TransactionHistory:
         pass
             
     def toJsonMember(self, user_name):
-        if user_name not in self.user_transactions:
-            raise ValueError(f"User: '{user_name}' has no transaction history.")
+        # if user_name not in self.user_transactions:
+        #     raise ValueError(f"User: '{user_name}' has no transaction history.")
         transaction_list = []
-        for user_transaction in self.user_transactions[user_name]:
+        for user_transaction in self.user_transactions.get(user_name):
             products_list = []
-            for product_store, product_data in user_transaction.products.items():
+            for product_store, product_data in user_transaction.get_products().items():
                 product_name, quantity, price = product_data
                 product_info = {
                     "store_name": product_store,

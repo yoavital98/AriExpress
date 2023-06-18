@@ -5,9 +5,9 @@ class MainappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mainApp'
     def ready(self):
-        load_file = "../load.json"
+        # load_file = "../load.json"
         config = "../default_config.json"
-        # load_file = "../load_purchaseCart.json"
+        load_file = "../load_purchaseCart.json"
         # load_file = "../load_withDiscounts.json"
         # load_file = "../load_bids.json"
         # load_file = "../load_registration.json"
