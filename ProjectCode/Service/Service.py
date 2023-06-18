@@ -402,7 +402,7 @@ class Service:
 
     def placeBid(self, username, storename, offer, productID, quantity):
         try:
-            bid = self.store_facade.placeBid(username, storename, offer, productID, quantity)
+            bid = self.store_facade.placeBid(username, storename, float(offer), int(productID), int(quantity))
             logging.info(
                 "Bid was placed successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
                     productID) + ". quantity: " + str(quantity) + ". offer: " + str(offer) + ".")

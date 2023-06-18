@@ -723,26 +723,27 @@ def homepage_guest(request):
 
 @login_required(login_url='/login')
 def inbox(request):
-    service = Service()
-    # all_user_messages = UserMessage.objects.filter(receiver=request.user.username).order_by('-creation_date')
-    # pending = UserMessage.objects.filter(receiver=request.user.username, status='pending').count()
-
-    all_user_messages = service.getAllMessagesReceived(request.user.username)
-    if all_user_messages.getStatus():
-        all_user_notifications = service.getAllNotifications(request.user.username)
-        if all_user_notifications.getStatus():
-            all_user_messages = all_user_messages.getReturnValue()
-            all_user_notifications = all_user_notifications.getReturnValue()
-            paginator = Paginator(all_user_messages, 5)
-            page = request.GET.get('page')
-            all_messages = paginator.get_page(page)
-            return render(request, 'inbox.html',
-                          {'usermessages': all_messages, 'usernotifications': all_user_notifications})
+    if request.user.is_authenticated:
+        service = Service()
+        all_user_messages = service.getAllMessagesReceived(request.user.username)
+        if all_user_messages.getStatus():
+            all_user_notifications = service.getAllNotifications(request.user.username)
+            if all_user_notifications.getStatus():
+                all_user_messages = all_user_messages.getReturnValue()
+                all_user_notifications = all_user_notifications.getReturnValue()
+                paginator = Paginator(all_user_messages, 5)
+                page = request.GET.get('page')
+                all_messages = paginator.get_page(page)
+                return render(request, 'inbox.html',
+                            {'usermessages': all_messages, 'usernotifications': all_user_notifications})
+            else:
+                messages.error(request, "Error: " + str(all_user_notifications.getReturnValue()))
+                return redirect('mainApp:mainpage')
         else:
-            messages.error(request, "Error: " + str(all_user_notifications.getReturnValue()))
+            messages.error(request, "Error: " + str(all_user_messages.getReturnValue()))
             return redirect('mainApp:mainpage')
     else:
-        messages.error(request, "Error: " + str(all_user_messages.getReturnValue()))
+        messages.error(request, "Error: User not authenticated")
         return redirect('mainApp:mainpage')
 
 
@@ -1093,7 +1094,28 @@ def add_product_to_cart(request):
         return redirect('mainApp:mainpage')
 
 
-# ---------------------------------------------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------Purchase History----------------------------------------------------------------#
+
+@login_required(login_url='/login')
+def userPurchaseHistory(request):
+    if request.user.is_authenticated:
+        service = Service()
+        purchasehistory = service.getMemberPurchaseHistory(request.user.username,request.user.username)
+        if purchasehistory.getStatus():
+            purchasehistory = purchasehistory.getReturnValue()
+            purchasehistory = json.loads(purchasehistory)
+            purchaseList=[]
+            for purchase in purchasehistory:
+                purchase = ast.literal_eval(str(purchase))
+                purchaseList.append(purchase)
+            return render(request, 'userPurchaseHistory.html',{'purchaseList': purchaseList})
+        else:
+            messages.error(request, "Error: " + str(purchasehistory.getReturnValue()))
+            return redirect('mainApp:cart')
+    else:
+        messages.error(request, "Error: User not authenticated")
+        return redirect('mainApp:mainpage')
+
 
 
 # -------------------------------------------------------Searchbar functionality---------------------------------------------------------#
