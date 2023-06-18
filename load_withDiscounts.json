@@ -39,6 +39,9 @@
     "addDiscount": {"args": ["store123", "aaa", "Conditioned", "60", "Product", "3", {"rule_type": "basket_total_price", "product_id": "", "operator": ">=", "quantity": "100", "category": "", "child": {"logic_type": "AND", "rule": {"rule_type": "amount_of_category", "product_id": "", "operator": "<=", "quantity": "5", "category": "fruit", "child": {}}}}, {}]}
   },
   {
+    "addToBasket": {"args": ["aaa", "store123", "1", "3"]}
+  },
+  {
     "logOut": {"args": ["aaa"]}
   }
 ]

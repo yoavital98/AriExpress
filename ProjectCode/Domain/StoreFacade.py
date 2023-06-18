@@ -14,9 +14,14 @@ from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
+from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
+from ProjectCode.DAL.ProductUserTransactionModel import ProductUserTransactionModel
 from ProjectCode.DAL.PurchasePolicyModel import PurchasePolicyModel
 from ProjectCode.DAL.StoreModel import StoreModel
+from ProjectCode.DAL.StoreOfUserTransactionModel import StoreOfUserTransactionModel
+from ProjectCode.DAL.StoreTransactionModel import StoreTransactionModel
 from ProjectCode.DAL.SystemModel import SystemModel
+from ProjectCode.DAL.UserTransactionModel import UserTransactionModel
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
@@ -78,10 +83,16 @@ class StoreFacade:
         #    m.delete().execute()
 
         db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel])
+                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel,
+                        PurchasePolicyModel,
+                        UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
+                        StoreTransactionModel,
+                        ProductStoreTransactionModel])
         db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-              ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel])
+              ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
+              StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
+              ProductStoreTransactionModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins

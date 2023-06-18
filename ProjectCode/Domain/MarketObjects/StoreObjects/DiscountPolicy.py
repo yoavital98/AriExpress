@@ -2,6 +2,7 @@ from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Domain.Helpers.TypedDict import TypedDict
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
+from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.MaxComp import MaxComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
 from ProjectCode.Domain.Repository.DiscountRepository import DiscountRepository
@@ -47,7 +48,7 @@ class DiscountPolicy:
         elif discount_type == "Add":
             discount = AddComp(kwargs["discounts"])
         elif discount_type == "Max": #TODO: impl max discount
-            pass
+            discount = MaxComp(kwargs["discounts"])
         elif discount_type == "Simple":
             if percent < 1 or percent > 100:
                 raise Exception("discount percentage can be only within 1-100")

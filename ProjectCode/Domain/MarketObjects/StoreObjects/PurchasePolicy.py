@@ -38,9 +38,9 @@ class PurchasePolicy(Policy):
 
     def checkIfRelevant(self, product: Product, user):
         if self.level == "Category":
-            return self.level_name in product.get_categories()
+            return str(self.level_name) in product.get_categories()
         elif self.level == "Product":
-            return self.level_name == product.get_product_id()
+            return int(self.level_name) == product.get_product_id()
         elif self.level == "Basket" or hasattr(user, self.level_name):
             return True
         return False

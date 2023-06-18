@@ -2,6 +2,7 @@ from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.ConditionedDiscount import ConditionedDiscount
+from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.MaxComp import MaxComp
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.SimpleDiscount import SimpleDiscount
 from ProjectCode.Domain.Repository.Repository import Repository
 
@@ -59,7 +60,7 @@ class DiscountRepository(Repository):
         elif discount_type == "Coupon":
             pass
         elif discount_type == "Max":
-            pass
+            discount = MaxComp(discount_entry.discount_dict, discount_id=discount_entry.discount_id)
         elif discount_type == "Add":
             discount = AddComp(discount_entry.discount_dict, discount_id=discount_entry.discount_id)
         else:

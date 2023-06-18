@@ -10,7 +10,7 @@ class SimpleDiscount(Policy):
 
     def calculate(self, product, basket, total_price):
         if super()._checkIfRelevant(product):
-            return self.percent
+            return int(self.percent)
         else:
             return 0
 
