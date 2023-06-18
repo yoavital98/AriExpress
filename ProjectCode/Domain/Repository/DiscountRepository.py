@@ -1,3 +1,5 @@
+from peewee import fn
+
 from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.MarketObjects.StoreObjects.Discount.AddComp import AddComp
@@ -48,6 +50,8 @@ class DiscountRepository(Repository):
                 discount_entry = self.model.get(self.model.discount_id == pk)
                 return self.__createDomainObject(discount_entry)
         except Exception as e:
+            if pk is None:
+                return []
             return None
 
     def __createDomainObject(self, discount_entry):
@@ -79,7 +83,7 @@ class DiscountRepository(Repository):
 
     def keys(self):
         try:
-            return [discount.discount_id for discount in DiscountModel.select()]
+            return [discount.discount_id for discount in DiscountModel.select().where(DiscountModel.store == self.store_name).execute()]
         except Exception as e:
             return []
 
@@ -88,3 +92,6 @@ class DiscountRepository(Repository):
 
     def contains(self, discount_id):
         return discount_id in self.keys()
+
+    def get_highest_id(self):
+        return self.model.select(fn.Max(self.model.discount_id)).scalar()

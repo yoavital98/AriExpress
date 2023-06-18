@@ -1,11 +1,12 @@
 from peewee import *
 
+from ProjectCode.DAL.database_conf import DatabaseConf
 
 
 class AccessStateModel(Model):
 
     class Meta:
-        database = SqliteDatabase('database.db')
+        database = DatabaseConf.database
         db_table = 'access_states'
 
     permissions = CharField(max_length=1000)

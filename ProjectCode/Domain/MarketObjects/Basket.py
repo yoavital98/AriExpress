@@ -96,7 +96,7 @@ class Basket:
             Exception("product is not in the Basket")
 
     def updateProductPrices(self):
-        for product_id, product_tuple in self.products:
+        for product_id, product_tuple in self.products.items():
             updated_tuple = self.store.calculateProductPriceAfterDiscount(product_tuple[0], self.products, product_tuple[1])
             self.products[product_id] = updated_tuple
 

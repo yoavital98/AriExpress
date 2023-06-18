@@ -123,8 +123,9 @@ class AccessRepository(Repository):
         store_entry = StoreModel.get(StoreModel.store_name == self.store_name)
         user_entry = MemberModel.get(MemberModel.user_name == pk)
         access_entry = AccessModel.get(AccessModel.store == store_entry, AccessModel.user == user_entry)
-        access_entry.access_state.delete_instance()
+        access_state = access_entry.access_state
         access_entry.delete_instance()
+        access_state.delete_instance()
 
     def contains(self, item):
         return item in self.keys()

@@ -1,8 +1,9 @@
 import json
 from datetime import datetime
 
-from peewee import SqliteDatabase
-
+import peewee
+from peewee import SqliteDatabase, MySQLDatabase, PostgresqlDatabase
+import psycopg2
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
@@ -17,6 +18,7 @@ from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.PurchasePolicyModel import PurchasePolicyModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.DAL.SystemModel import SystemModel
+from ProjectCode.DAL.database_conf import DatabaseConf
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
 from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
 from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
@@ -70,10 +72,15 @@ class StoreFacade:
         # # load data
         # self.loadData()
 
-        db = SqliteDatabase('database.db')
-        db.connect()
+        # Create a database object
+        db = DatabaseConf.database
+
+        # db = PostgresqlDatabase('postgres', user='postgres', password='01592580',
+        #                                host='database-1.ckwkbfc5249a.eu-north-1.rds.amazonaws.com', port=5432)
+        if db.is_closed():
+            db.connect()
         # model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-        #                ProductBasketModel, DiscountModel, AdminModel, GuestModel]
+        #       ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel]
         # for m in model_list:
         #    m.delete().execute()
 

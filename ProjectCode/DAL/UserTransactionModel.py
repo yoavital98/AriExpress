@@ -1,9 +1,12 @@
 from datetime import datetime
 from peewee import *
 
+from ProjectCode.DAL.database_conf import DatabaseConf
+
+
 class UserTransactionModel(Model):
     class Meta:
-        database = SqliteDatabase('database.db')
+        database = DatabaseConf.database
         db_table = 'user_transaction'
 
     transaction_id = IntegerField(primary_key=True)

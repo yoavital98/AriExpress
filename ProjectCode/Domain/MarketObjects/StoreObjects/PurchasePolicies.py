@@ -19,12 +19,14 @@ class PurchasePolicies:
         else:
             raise Exception("No such policy exists")
         self.pruchase_policy_id += 1
-        self.policies[self.pruchase_policy_id] = policy
+        self.policies[self.get_policy_id()] = policy
+        policy = self.policies[self.get_policy_id()]
         return policy
 
 
     def checkAllPolicies(self, product, basket, total_price, user=None):
-        print(f"policies {len(self.policies.values())}")
+        print(self.policies.keys())
+        print(self.policies.values())
         for policy in self.policies.values():
             if not policy.calculate(product, basket, total_price, user):
                 return False
@@ -35,6 +37,9 @@ class PurchasePolicies:
             if policy.level != "User" and not policy.calculate(basket, total_price, None):
                 return False
         return True
+
+    def get_policy_id(self):
+        return self.policies.get_highest_id()
 
     def checkUserPolicies(self, user):
         for policy in self.policies.values():
