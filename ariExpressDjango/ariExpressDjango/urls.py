@@ -3,7 +3,6 @@ from django.urls import path, include
 import notifications.urls
 
 from ProjectCode.Domain.ExternalServices.MessageObjects import routing
-from . import views
 
 urlpatterns = [
     path(r'admin/', admin.site.urls),
