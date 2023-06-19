@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    user = authenticate(request, username='aaa', password='asdf1233')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ def viewAllStores(request):
 def store_specific(request, storename):
     service = Service()
     username = request.user.username
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.session['guest'] == 0:
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else:

@@ -102,23 +102,25 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
                       {% endif %}
                       <button class="btn btn-outline-dark" name="addToCart" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}">Add to cart</button>
                       {% include 'products/addToCart.html' with storename=storename product=product %}
-                    </div>
-                    <div class="btn-group-sm" role="group" aria-label="Basic example">
-                      <form method="post" action="" class="d-flex">
-                        {% csrf_token %}
-                        <input type="hidden" name="product_id" value="{{ product.product_id }}">
-                        <button type="submit" class="btn btn-outline-dark" name="placeBid">Place Bid</button>
-                        <div class="text-center" style="width: 20%;">
-                          <label for="quantity" class="form-label">Bid:</label>
-                          <input type="number" id="bidAmount" name="bidAmount" placeholder="1" size="2" min="1" required>
-                        </div>
-                        
-                        <div class="text-center" style="width: 30%; margin-left: 100px;">
-                          <label for="quantity" class="form-label">Quantity:</label>
-                          <input type="number" id="quantity" name="quantity" placeholder="1" size="2" min="1" required>
-                        </div>
-                      </form>
-                    </div>
+                      </div>
+                      {% if "Bid" in permissions %}
+                      <div class="btn-group-sm" role="group" aria-label="Basic example">
+                        <form method="post" action="" class="d-flex">
+                          {% csrf_token %}
+                          <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                          <button type="submit" class="btn btn-outline-dark" name="placeBid">Place Bid</button>
+                          <div class="text-center" style="width: 20%;">
+                            <!-- <label for="quantity" class="form-label">Bid:</label> -->
+                            <input type="number" id="bidAmount" name="bidAmount" placeholder="Bid" size="2" min="1" required>
+                          </div>
+                          
+                          <div class="text-center" style="width: 30%; margin-left: 100px;">
+                            <!-- <label for="quantity" class="form-label">Quantity:</label> -->
+                            <input type="number" id="quantity" name="quantity" placeholder="Quantity" size="2" min="1" required>
+                          </div>
+                        </form>
+                      </div>
+                      {% endif %}
                   </td>
               </tr>
             {% endfor %}
