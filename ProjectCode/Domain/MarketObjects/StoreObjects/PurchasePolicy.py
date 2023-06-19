@@ -32,7 +32,7 @@ class PurchasePolicy(Policy):
 
     def calculate(self, product, basket, additional_value, user=None):
         if self.checkIfRelevant(product, user):
-            return self.logic_comp.checkIfSatisfy(product, basket, additional_value)
+            return self.logic_comp.checkIfSatisfy(product, basket, additional_value, user)
         return True #if not relevant, then it is satisfied
 
 
@@ -41,7 +41,7 @@ class PurchasePolicy(Policy):
             return str(self.level_name) in product.get_categories()
         elif self.level == "Product":
             return int(self.level_name) == product.get_product_id()
-        elif self.level == "Basket" or hasattr(user, self.level_name):
+        elif self.level == "Basket" or self.level == "User":
             return True
         return False
 
@@ -73,3 +73,12 @@ class PurchasePolicy(Policy):
 
     def get_rule(self):
         return self.rule
+
+    def toJson(self):
+        return {
+            "policy_id": self.policy_id,
+            "level": self.level,
+            "level_name": self.level_name,
+            "rule": self.rule,
+            "policy_type": "PurchasePolicy"
+        }

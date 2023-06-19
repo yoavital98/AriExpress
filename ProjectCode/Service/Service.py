@@ -671,6 +671,16 @@ class Service:
             logging.error(f"addDiscount Error: {str(e)}")
             return Response(e, False)
 
+    def removeDiscount(self, storename, username, discount_id):
+        try:
+            discount = self.store_facade.removeDiscount(storename, username, discount_id)
+            logging.debug(
+                f"removing discount of id " + discount_id + ".")
+            return Response(discount, True)
+        except Exception as e:
+            logging.error(f"removeDiscount Error: {str(e)}")
+            return Response(e, False)
+
     def getDiscount(self, storename, discount_id):
         try:
             discount = self.store_facade.getDiscount(storename, discount_id)
@@ -699,6 +709,24 @@ class Service:
             logging.error(f"addPurchasePolicy Error: {str(e)}")
             return Response(e, False)
 
+    def removePurchasePolicy(self, storename, username, purchase_policy_id):
+        try:
+            policy = self.store_facade.removePurchasePolicy(storename, username, purchase_policy_id)
+            return Response(policy, True)
+        except Exception as e:
+            logging.error(f"removePurchasePolicy Error: {str(e)}")
+            return Response(e, False)
+
+    def getAllPurchasePolicies(self, storename):
+        try:
+            policies = self.store_facade.getAllPurchasePolicies(storename)
+            policies_json = {}
+            for policy_id, policy in policies.items():
+                policies_json[policy_id] = policy.toJson()
+            return Response(json.dumps(policies_json), True)
+        except Exception as e:
+            logging.error(f"getAllPurchasePolicies Error: {str(e)}")
+            return Response(e, False)
 
     def openStore(self, username, storename):
         try:

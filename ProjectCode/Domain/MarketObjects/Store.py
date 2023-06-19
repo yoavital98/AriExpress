@@ -320,11 +320,11 @@ class Store:
                                                                                           overall_price)
         return price_after_discounts
 
-    def checkBasketValidity(self, basket, product_to_add, quantity):
+    def checkBasketValidity(self, basket, product_to_add, quantity, username):
         relevant_product_info = self.__getRelevantProductDictFromBasket(basket, product_to_add, quantity)
         overall_price = self.calculateBasketBasePrice(relevant_product_info)
         #TODO: last argument suppose to be a user, need to figure out how to get it
-        return self.__purchase_policy.checkAllPolicies(product_to_add, relevant_product_info, overall_price)
+        return self.__purchase_policy.checkAllPolicies(product_to_add, relevant_product_info, overall_price, user=username)
 
     def calculateProductPriceAfterDiscount(self, product, basket, quantity):
         relevant_product_info = self.__getRelevantProductDictFromBasket(basket, product, quantity)
@@ -381,6 +381,13 @@ class Store:
                                            level_name=level_name, rule=rule, discounts=discounts)
         return new_discount
 
+    def removeDiscount(self, username, discount_id):
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("No such access exists")
+        cur_access.canManageDiscounts()
+        self.__discount_policy.removeDiscount(discount_id)
+
     def getDiscount(self, discount_id):
         return self.__discount_policy.getDiscount(discount_id)
 
@@ -395,6 +402,13 @@ class Store:
         new_policy = self.__purchase_policy.addPurchasePolicy(purchase_policy=purchase_policy, rule=rule,
                                                  level=level, level_name=level_name)
         return new_policy
+
+    def removePurchasePolicy(self, username, policy_id):
+        cur_access: Access = self.__accesses.get(username)
+        if cur_access is None:
+            raise Exception("No such access exists")
+        cur_access.canManagePolicies()
+        self.__purchase_policy.removePurchasePolicy(policy_id)
 
     def getPolicy(self, policy_id):
         return self.__purchase_policy.getPurchasePolicy(policy_id)
