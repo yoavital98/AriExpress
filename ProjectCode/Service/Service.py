@@ -122,7 +122,7 @@ class Service:
         try:
             admin = self.store_facade.addAdmin(username, newAdminName, newPassword, newEmail)
             logging.info(
-                "admin has been added successfully. New Admin username: " + newAdminName + ". Added by: " + username + ".")
+                f"admin has been added successfully. New Admin username: {newAdminName} . Added by: {username}.")
             return Response(admin.toJson(), True)
         except Exception as e:
             logging.error(f"addAdmin Error: {str(e)}. By username: '{username}'")
@@ -142,7 +142,7 @@ class Service:
         try:
             removedMember = self.store_facade.removePermissionFreeMember(username, memberName)
             logging.info(
-                "Member has been removed successfully. By username: " + username + ". Removed username: " + memberName + ".")
+                f"Member has been removed successfully. By username: {username}. Removed username: {memberName}.")
             return Response(removedMember.toJson(), True)
         except Exception as e:
             logging.error(f"removeMember Error: {str(e)}. By username: '{username}'")
@@ -152,7 +152,7 @@ class Service:
         try:
             returnedMember = self.store_facade.returnPermissionFreeMember(username, memberName)
             logging.info(
-                "Member's ban has been lifted. By username: " + username + ". Returned username: " + memberName + ".")
+                f"Member's ban has been lifted. By username: {username}. Returned username: {memberName}.")
             return Response(returnedMember.toJson(), True)
         except Exception as e:
             logging.error(f"returnMember Error: {str(e)}. By username: '{username}'")
@@ -180,7 +180,7 @@ class Service:
     def leaveAsGuest(self, entrance_id):
         try:
             self.store_facade.leaveAsGuest(entrance_id)
-            logging.info("Guest left successfully. Guest Entrance ID: " + str(entrance_id))
+            logging.info(f"Guest left successfully. Guest Entrance ID: {entrance_id}")
             data = {'entrance_id': entrance_id}
             return Response(json.dumps(data), True)
         except ValueError as e:
@@ -190,7 +190,7 @@ class Service:
     def loginAsGuest(self):
         try:
             entrance_id = self.store_facade.loginAsGuest()
-            logging.info("Logged in as guest successfully. Guest Entrance ID: " + str(entrance_id))
+            logging.info(f"Logged in as guest successfully. Guest Entrance ID: {entrance_id}")
             data = {'entrance_id': entrance_id}
             return Response(json.dumps(data), True)
         except Exception as e:
@@ -201,7 +201,7 @@ class Service:
     def register(self, user_name, password, email):
         try:
             member = self.store_facade.register(user_name, password, email)
-            logging.info("Registered successfully. By username: " + user_name + ".")
+            logging.info(f"Registered successfully. By username: {user_name}.")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"register Error: {str(e)}.")
@@ -210,7 +210,7 @@ class Service:
     def logIn(self, username, password):
         try:
             member = self.store_facade.logInAsMember(username, password)
-            logging.info("Logged in successfully. By username: " + username + ".")
+            logging.info(f"Logged in successfully. By username: {username}.")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"logIn Error: {str(e)}. By username: '{username}'")
@@ -219,7 +219,7 @@ class Service:
     def logInFromGuestToMember(self, entrance_id, username, password):
         try:
             member = self.store_facade.logInFromGuestToMember(entrance_id, username, password)
-            logging.info("Logged in successfully. By username: " + username + ".")
+            logging.info(f"Logged in successfully. By username: {username}.")
             return Response(member.toJson(), True)
         except Exception as e:
             logging.error(f"logInFromGuestToMember Error: {str(e)}. By username: '{username}'")
@@ -229,7 +229,7 @@ class Service:
         try:
             guest = self.store_facade.logOut(username)
             data = {'username': username, 'entrance_id': guest.get_entrance_id()}
-            logging.info(f"Logged out successfully. By username: " + username + ". Became a guest with id: " + str(guest.get_entrance_id()) + ".")
+            logging.info(f"Logged out successfully. By username: {username}. Became a guest with id: {guest.get_entrance_id()}.")
             return Response(json.dumps(data), True)
         except Exception as e:
             logging.error(f"logOut Error: {str(e)}. By username: '{username}'")
@@ -290,7 +290,7 @@ class Service:
     def getProductsByStore(self, storename, username):
         try:
             products = self.store_facade.getProductsByStore(storename, username)
-            logging.debug(f"fetching all products in store '{str(storename)}'. By username: " + username + ".")
+            logging.debug(f"fetching all products in store: {storename}. By username: {username}.")
             return Response(JsonSerialize.toJsonAttributes(products), True)
         except Exception as e:
             logging.error(f"getProductsByStore Error: {str(e)}. By username: '{username}'")
@@ -299,8 +299,7 @@ class Service:
     def getProduct(self, storename, product_id, username):
         try:
             product = self.store_facade.getProduct(storename, product_id, username)
-            logging.debug(
-                f"fetching product '{str(product_id)}' from store '{str(storename)}'. By username: " + username + ".")
+            logging.debug(f"fetching product '{product_id}' from store '{storename}'. By username: {username}.")
             return Response(product.toJson(), True)
         except Exception as e:
             logging.error(f"getProduct Error: {str(e)}. By username: '{username}'")
@@ -310,7 +309,7 @@ class Service:
         try:
             results = self.store_facade.productSearchByName(productName)
             logging.debug(
-                f"fetching all the products with keyname '{str(productName)}'. By username: " + username + ".")
+                f"fetching all the products with keyname '{productName}'. By username: {username}.")
             return Response(results, True) #eddited by rubin - results is already json after modifing the facade function 1.6.23
         except Exception as e:
             logging.error(f"productSearchByName Error: {str(e)}. By username: '{username}'")
@@ -321,7 +320,7 @@ class Service:
         try:  # TODO: need to create an enum set of categories, shopowners does not create categories.!!!!!!!
             results = self.store_facade.productSearchByCategory(categoryName)
             logging.debug(
-                f"fetching all the products within the category '{str(categoryName)}'. By username: " + username + ".")
+                f"fetching all the products within the category '{categoryName}'. By username: {username}.")
             results_json = []
             for item in results.values():
                 for product in item:
@@ -336,7 +335,7 @@ class Service:
         try:
             products = self.store_facade.productFilterByFeatures(featuresDict, username)
             logging.debug(
-                f"fetching all the products within the features '{str(featuresDict)}'. By username: " + username + ".")
+                f"fetching all the products within the features '{str(featuresDict)}'. By username: {username}.")
             return Response(JsonSerialize.toJsonAttributes(products), True)
         except Exception as e:
             logging.error(f"productFilterByFeatures Error: {str(e)}. By username: '{username}'")
@@ -345,7 +344,7 @@ class Service:
     def getBasket(self, username, storename):
         try:
             basket = self.store_facade.getBasket(username, storename)
-            logging.debug(f"fetching the basket of store '{str(storename)}'. By username: " + username + ".")
+            logging.debug(f"fetching the basket of store '{str(storename)}'. By username: {username}.")
             return Response(basket.toJson(), True)
         except Exception as e:
             logging.error(f"getBasket Error: {str(e)}. By username: '{username}'")
@@ -354,7 +353,7 @@ class Service:
     def getCart(self, username):
         try:
             cart = self.store_facade.getCart(username)
-            logging.debug(f"fetching the cart of '{str(username)}'. By username: " + username + ".")
+            logging.debug(f"fetching the cart of '{str(username)}'. By username: {username}.")
             return Response(cart.toJson(), True)
         except Exception as e:
             logging.error(f"getCart Error: {str(e)}. By username: '{username}'")
@@ -364,8 +363,7 @@ class Service:
         try:
             answer = self.store_facade.addToBasket(username, storename, int(productID), int(quantity))
             logging.debug(
-                f"Item has been added to the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
-                    productID) + ". quantity: " + str(quantity) + ".")
+                f"Item has been added to the cart successfully. By username: {username}. storename: {storename}. productID: {productID}. quantity: {quantity}")
             return Response(answer.toJson(), True)
         except Exception as e:
             logging.error(f"addToBasket Error: {str(e)}. By username: '{username}'")
@@ -375,8 +373,7 @@ class Service:
         try:
             answer = self.store_facade.removeFromBasket(username, storename, productID)
             logging.debug(
-                f"Item has been removed from the cart successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
-                    productID) + ".")
+                f"Item has been removed from the cart successfully. By username: {username}. storename: {storename}. productID: {productID}.")
             return Response(answer, True)
         except Exception as e:
             logging.error(f"removeFromBasket Error: {str(e)}. By username: '{username}'")
@@ -386,8 +383,7 @@ class Service:
         try:
             basket = self.store_facade.editBasketQuantity(username, storename, product_id, quantity)
             logging.debug(
-                f"Item quantity has been edited successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
-                    product_id) + ". quantity: " + str(quantity) + ".")
+                f"Item quantity has been edited successfully. By username: {username}. storename: {storename}. productID: {product_id}. quantity: {quantity}.")
             return Response(basket.toJson(), True)
         except Exception as e:
             logging.error(f"editBasketQuantity Error: {str(e)}. By username: '{username}'")
@@ -397,7 +393,7 @@ class Service:
         # return baskets of all stores
         try:
             info_dict = self.store_facade.purchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode)
-            logging.info("Cart was purchased successfully. By username: " + user_name + ".")
+            logging.info(f"Cart was purchased successfully. By username: {user_name}.")
             return Response(json.dumps(info_dict), True)
         except Exception as e:
             logging.error(f"purchaseCart Error: {str(e)}.")
@@ -406,9 +402,7 @@ class Service:
     def placeBid(self, username, storename, offer, productID, quantity):
         try:
             bid = self.store_facade.placeBid(username, storename, float(offer), int(productID), int(quantity))
-            logging.info(
-                "Bid was placed successfully. By username: " + username + ". storename: " + storename + ". productID: " + str(
-                    productID) + ". quantity: " + str(quantity) + ". offer: " + str(offer) + ".")
+            logging.info(f"Bid was placed successfully. By username: {username}. storename: {storename}. productID: {productID}. quantity: {quantity}. offer: {offer}.")
             return Response(bid.toJson(), True)
         except Exception as e:
             logging.error(f"placeBid Error: {str(e)}. By username: '{username}'")
@@ -419,7 +413,7 @@ class Service:
             bids = self.store_facade.getAllBidsFromUser(username)
             print(f"bids {bids}")
             print(type(bids))
-            logging.debug(f"fetching all the user's bids. By username: " + username + ".")
+            logging.debug(f"fetching all the user's bids. By username: {username}.")
             bids_data = {}
             for a, bid in bids.items():
                 id = bid.get_id()
@@ -432,7 +426,7 @@ class Service:
     def getAllBidsFromStore(self, storename):
         try:
             bids = self.store_facade.getAllBidsFromStore(storename)
-            logging.debug(f"fetching all the store's bids. Storename: " + storename + ".")
+            logging.debug(f"fetching all the store's bids. Storename: {storename}.")
             bids_data = {}
             for a, bid in bids.items():
                 id = bid.get_id()
@@ -464,8 +458,7 @@ class Service:
             self.store_facade.purchaseConfirmedBid(int(bid_id), store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode)
             logging.info(
-                "Bid purchase was made successfully. By username: " + username + ". storename: " + store_name + ". bid_id: " + str(
-                    bid_id) + ".")
+                f"Bid purchase was made successfully. By username: {username}. storename: {store_name}. bid_id: {bid_id}.")
             return Response(True, True)
         except Exception as e:
             logging.error(f"purchaseConfirmedBid Error: {str(e)}. By username: '{username}'")
@@ -475,8 +468,7 @@ class Service:
         try:
             approved_bid = self.store_facade.approveBid(username, storename, int(bid_id))
             logging.info(
-                "Bid was added successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
-                    bid_id) + ".")
+                f"Bid was added successfully. By username: {username}. storename: {storename}. bid_id: {bid_id}.")
             return Response(approved_bid.toJson(), True)
         except Exception as e:
             logging.error(f"approveBid Error: {str(e)}. By username: '{username}'")
@@ -485,9 +477,7 @@ class Service:
     def rejectBid(self, username, storename, bid_id):
         try:
             rejected_bid = self.store_facade.rejectBid(username, storename, bid_id)
-            logging.info(
-                "Bid was rejected successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
-                    bid_id) + ".")
+            logging.info(f"Bid was rejected successfully. By username: {username}. storename: {storename}. bid_id: {bid_id}.")
             return Response(rejected_bid.toJson(), True)
         except Exception as e:
             logging.error(f"rejectBid Error: {str(e)}. By username: '{username}'")
@@ -496,9 +486,7 @@ class Service:
     def sendAlternativeOffer(self, username, storename, bid_id, alternate_offer):
         try:
             alt_bid = self.store_facade.sendAlternativeBid(username, storename, bid_id, alternate_offer)
-            logging.debug(
-                f"Alternative offer was sent successfully. By username: " + username + ". storename: " + storename + ". bid_id: " + str(
-                    bid_id) + ". alternate_offer: " + str(alternate_offer) + ".")
+            logging.debug(f"Alternative offer was sent successfully. By username: {username}. storename: {storename}. bid_id: {bid_id}. alternate_offer: {alternate_offer}.")
             return Response(alt_bid.toJson(), True)
         except Exception as e:
             logging.error(f"sendAlternativeOffer Error: {str(e)}. By username: '{username}'")
@@ -507,9 +495,7 @@ class Service:
     def addAuction(self, username, storename, product_id, starting_price, duration):
         try:
             new_auc = self.store_facade.addAuction(username, storename, product_id, starting_price, duration)
-            logging.info(
-                "Auction has been added successfully. By username: " + username + ". storename: " + storename + ". product_id: " + str(
-                    product_id) + ". starting_price: " + str(starting_price) + ". duration: " + str(duration) + ".")
+            logging.info(f"Auction has been added successfully. By username: {username}. storename: {storename}. product_id: {product_id}. starting_price: {starting_price}. duration: {duration}.")
             return Response(new_auc.toJson(), True)
         except Exception as e:
             logging.error(f"addAuction Error: {str(e)}. By username: '{username}'")
@@ -518,9 +504,7 @@ class Service:
     def placeOfferInAuction(self, username, storename, auction_id, offer):
         try:
             auc = self.store_facade.placeOfferInAuction(username, storename, auction_id, offer)
-            logging.info(
-                "Offer has been placed successfully. By username: " + username + ". storename: " + storename + ". auction_id: " + str(
-                    auction_id) + ". offer: " + str(offer) + ".")
+            logging.info(f"Offer has been placed successfully. By username: {username}. storename: {storename}. auction_id: {auction_id}. offer: {offer}.")
             return Response(auc.toJson(), True)
         except Exception as e:
             logging.error(f"placeOfferInAuction Error: {str(e)}. By username: '{username}'")
@@ -547,7 +531,7 @@ class Service:
         try:
             cur_store = self.store_facade.createStore(username, store_name)
             logging.info(
-                "Store has been created successfully. By username: " + username + ". store_name: " + store_name + ".")
+                f"Store has been created successfully. By username: {username}. storename: {store_name}.")
             return Response(cur_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"createStore Error: {str(e)}. By username: '{username}'")
@@ -557,9 +541,7 @@ class Service:
         try:  # TODO check whether this product details are needed
             added_product = self.store_facade.addNewProductToStore(username, storename, productname, quantity, price,
                                                                    categories)
-            logging.info(
-                "Product has been added successfully. By username: " + username + ". storename: " + storename + ". productname: " + productname + ". categories: " + str(
-                    categories) + ". quantity: " + str(quantity) + ". price: " + str(price) + ".")
+            logging.info(f"Product has been added successfully. By username: {username}. storename: {storename}. productname: {productname}. categories: {categories}. quantity: {quantity}. price: {price}.")
             return Response(added_product.toJson(), True)
         except Exception as e:
             logging.error(f"addNewProductToStore Error: {str(e)}. By username: '{username}'")
@@ -568,9 +550,7 @@ class Service:
     def removeProductFromStore(self, username, storename, product_id):
         try:
             deleted_product_id = self.store_facade.removeProductFromStore(username, storename, product_id)
-            logging.info(
-                "Product has been removed successfully. By username: " + username + ". storename: " + storename + ". product_id: " + str(
-                    product_id) + ".")
+            logging.info(f"Product has been removed successfully. By username: {username}. storename: {storename}. product_id: {product_id}.")
             return Response(deleted_product_id, True)
         except Exception as e:
             logging.error(f"removeProductFromStore Error: {str(e)}. By username: '{username}'")
@@ -580,8 +560,7 @@ class Service:
                            **kwargs):  # TODO (opt) we will assume there's a dict that can say which features will change
         try:
             changed_product = self.store_facade.editProductOfStore(username, storename, product_id, **kwargs)
-            logging.debug(
-                f"Product has been edited successfully. By username: " + username + ". storename: " + storename + ".")
+            logging.debug(f"Product has been edited successfully. By username: {username}. storename: {storename}. product_id: {product_id}.")
             return Response(changed_product.toJson(), True)
         except Exception as e:
             logging.error(f"editProductOfStore Error: {str(e)}. By username: '{username}'")
@@ -590,8 +569,7 @@ class Service:
     def nominateStoreOwner(self, username, nominated_username, store_name):
         try:
             new_access = self.store_facade.nominateStoreOwner(username, nominated_username, store_name)
-            logging.info(
-                "Store owner has been nominated successfully. By username: " + username + ". nominated_username: " + nominated_username + ". store_name: " + store_name + ".")
+            logging.info(f"Store owner has been nominated successfully. By username: {username} . nominated_username: {nominated_username}. store_name: {store_name}.")
             return Response(new_access.toJson(), True)
         except Exception as e:
             logging.error(f"nominateStoreOwner Error: {str(e)}. By username: '{username}'")
@@ -600,8 +578,7 @@ class Service:
     def nominateStoreManager(self, username, nominated_username, store_name):  # TODO
         try:
             new_access = self.store_facade.nominateStoreManager(username, nominated_username, store_name)
-            logging.info(
-                "Store manager has been nominated successfully. By username: " + username + ". nominated_username: " + nominated_username + ". store_name: " + store_name + ".")
+            logging.info(f"Store manager has been nominated successfully. By username: {username}. nominated_username: {nominated_username}. store_name: {store_name}.")
             return Response(new_access.toJson(), True)
         except Exception as e:
             logging.error(f"nominateStoreManager Error: {str(e)}. By username: '{username}'")
@@ -610,8 +587,7 @@ class Service:
     def removeAccess(self, requester_username, to_remove_username, store_name):
         try:
             removed_usernames = self.store_facade.removeAccess(requester_username, to_remove_username, store_name)
-            logging.info(
-                "Access removal succeed. By username: " + requester_username + ". removed username: " + to_remove_username)
+            logging.info(f"Access removal succeed. By username: {requester_username}. removed username: {to_remove_username}")
             return Response(removed_usernames, True)
         except Exception as e:
             logging.error(f"removeAccess Error: {str(e)}. By username: '{requester_username}'")
@@ -621,18 +597,17 @@ class Service:
         try:
             access = self.store_facade.addPermissions(storename, requesterID, nominated_username, permission)
             logging.info(
-                "Permission has been added successfully. By username: " + requesterID + ". nominated_username: " + nominated_username + ". permission: " + permission + ".")
+                f"Permission has been added successfully. By username: {requesterID}. nominated_username: {nominated_username}. permission: {permission}.")
             return Response(access.toJson(), True)
         except Exception as e:
             logging.error(f"addPermission Error: {str(e)}.")
             return Response(e, False)
 
-    def removePermissions(self, storename, requesterID, nominatedID,
-                          permission):  # TODO still don't know the implementation
+    def removePermissions(self, storename, requesterID, nominatedID,  permission):  # TODO still don't know the implementation
         try:
             access = self.store_facade.removePermissions(storename, requesterID, nominatedID, permission)
             logging.info(
-                "Permission has been edited successfully. By username: " + requesterID + ". nominated_username: " + nominatedID + ". permission: " + permission + ".")
+                f"Permission has been edited successfully. By username: {requesterID}. nominated_username: {nominatedID}. permission: {permission}.")
             return Response(access.toJson(), True)
         except Exception as e:
             logging.error(f"editPermissions Error: {str(e)}.")
@@ -641,8 +616,7 @@ class Service:
     def getPermissions(self, storename, requesterID, nominatedID):  # TODO still don't know the implementation
         try:
             permissions = self.store_facade.getPermissions(storename, requesterID, nominatedID)
-            logging.debug(
-                f"fetching all the store's permissions. By username: " + requesterID + ". nominated_username: " + nominatedID + ".")
+            logging.debug( f"fetching all the store's permissions. By username: {requesterID}. nominated_username: {nominatedID}.")
             return Response(json.dumps(permissions), True)
         except Exception as e:
             logging.error(f"getPermissions Error: {str(e)}.")
@@ -651,21 +625,18 @@ class Service:
     def getPermissionsAsJson(self, storename, requesterID):  # TODO still don't know the implementation
         try:
             permissions = self.store_facade.getPermissionsAsJson(storename, requesterID)
-            logging.debug(
-                f"fetching all the store's permissions as json. By username: " + requesterID + ". nominated_username: ")
+            logging.debug(f"fetching all the store's permissions as json. By username: {requesterID}. store name: {storename}.")
             return Response(permissions, True)
         except Exception as e:
             logging.error(f"getPermissionsAsJson Error: {str(e)}.")
             return Response(e, False)
 
-    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={},
-                    discounts={}):
+    def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={},discounts={}):
         try:
             discount = self.store_facade.addDiscount(storename, username, discount_type,
                                                      percent=int(percent), level=level, level_name=level_name, rule=rule,
                                                      discounts=discounts)
-            logging.debug(
-                f"adding discount of type " + discount_type + ".")
+            logging.debug(f"adding discount of type {discount_type} to store: {storename}. by: {username}")
             return Response(discount, True)
         except Exception as e:
             logging.error(f"addDiscount Error: {str(e)}")
@@ -674,6 +645,7 @@ class Service:
     def getDiscount(self, storename, discount_id):
         try:
             discount = self.store_facade.getDiscount(storename, discount_id)
+            logging.debug(f"fetching discount of id {discount_id} from store: {storename}.")
             return Response(discount, True)
         except Exception as e:
             logging.error(f"getDiscount Error: {str(e)}")
@@ -686,6 +658,7 @@ class Service:
             discounts_json = {}
             for discount_id, discount in discounts.items():
                 discounts_json[discount_id] = discount.toJson()
+            logging.debug(f"fetching all discounts from store: {storename}.")
             return Response(json.dumps(discounts_json), True)
         except Exception as e:
             logging.error(f"getAllDiscounts Error: {str(e)}")
@@ -694,6 +667,7 @@ class Service:
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         try:
             policy = self.store_facade.addPurchasePolicy(storename, username, purchase_policy, rule, level, level_name)
+            logging.debug(f"adding purchase policy to store: {storename}. by: {username}")
             return Response(policy, True)
         except Exception as e:
             logging.error(f"addPurchasePolicy Error: {str(e)}")
@@ -703,8 +677,7 @@ class Service:
     def openStore(self, username, storename):
         try:
             opened_store = self.store_facade.openStore(username, storename)
-            logging.info(
-                "Store has been opened successfully. By username: " + username + ". storename: " + storename + ".")
+            logging.info(f"Store has been opened successfully. By username: {username}. storename: {storename}.")
             return Response(opened_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"openStore Error: {str(e)}. By username: '{username}'")
@@ -713,8 +686,7 @@ class Service:
     def closeStore(self, username, storename):
         try:
             closed_store = self.store_facade.closeStore(username, storename)
-            logging.info(
-                "Store has been closed successfully. By username: " + username + ". storename: " + storename + ".")
+            logging.info(f"Store has been closed successfully. By username: {username}. storename: {storename}.")
             return Response(closed_store.toJsonInfo(), True)
         except Exception as e:
             logging.error(f"closeStore Error: {str(e)}. By username: '{username}'")
@@ -723,12 +695,10 @@ class Service:
     def getStaffInfo(self, username, storename):
         try:
             store_accesses_dict = self.store_facade.getStaffInfo(username, storename)
-            logging.debug(
-                f"fetching all the store's staff info. By username: " + username + ". For store: " + storename + ".")
+            logging.debug(f"fetching all the store's staff info. By username: {username}. For store: {storename}.")
             store_accesses_json = []
             for username, access in store_accesses_dict.items():
-                data = {'username': username,
-                        'access': access.toJson()}
+                data = {'username': username, 'access': access.toJson()}
                 store_accesses_json.append(data)
             return Response(json.dumps(store_accesses_json), True)
         except Exception as e:
@@ -738,8 +708,7 @@ class Service:
     def getAllOnlineMembers(self, requesterID):
         try:
             users = self.store_facade.getAllOnlineMembers(requesterID)
-            logging.debug(
-                f"fetching all the online members. By username: " + requesterID + ".")
+            logging.debug(f"fetching all the online members. By username: {requesterID}.")
             return Response(json.dumps(users), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
@@ -749,7 +718,7 @@ class Service:
         try:
             users = self.store_facade.getAllOfflineMembers(requesterID)
             logging.debug(
-                f"fetching all the online members. By username: " + requesterID + ".")
+                f"fetching all the online members. By username: {requesterID}.")
             return Response(json.dumps(users), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
@@ -758,7 +727,7 @@ class Service:
     def getAllStaffMembersNames(self, storename):
         try:
             staffNames = self.store_facade.getAllStaffMembersNames(storename)
-            logging.debug(f"fetching all the store members. By username: " + storename + ".")
+            logging.debug(f"fetching all the store members. By username: {storename}.")
             return Response(json.dumps(staffNames), True)
         except Exception as e:
             logging.error(f"getAllStaffMembersNames Error: {str(e)}.")
@@ -773,7 +742,7 @@ class Service:
     def getMemberInfo(self, requesterID, username):
         try:
             member, purchaseHistory = self.store_facade.getMemberInfo(requesterID, username)
-            logging.debug("fetching member info. By username: " + requesterID + ".")
+            logging.debug(f"fetching member info. By username: {requesterID}.")
             member_info_dict = {'member': member.toJsonAll(),
                              'purchaseHistory': self.makeListOfObjectsToJson(purchaseHistory)}
             return Response(json.dumps(member_info_dict), True)
@@ -784,7 +753,7 @@ class Service:
     def checkUsernameExistence(self, username):
         try:
             exist=self.store_facade.checkIfUsernameExists(username)
-            logging.debug("checking username existence. By username: " + username + ".")
+            logging.debug(f"checking username existence. By username: {username}.")
             if exist:
                 return Response("username exists", True)
             else:
@@ -797,7 +766,7 @@ class Service:
         try:
             store_list = self.store_facade.getUserStores(username)
             logging.debug(
-                f"fetching all the user stores info. By username: " + username + ".")
+                f"fetching all the user stores info. By username: {username}.")
             store_json = []
             for cur_store in store_list:
                 store_json.append(cur_store.toJsonProducts())
@@ -811,8 +780,7 @@ class Service:
         try:
             message = self.store_facade.sendMessageUsers(requester_id, receiver_id, subject, content, creation_date, file)
             # TODO save to database
-            logging.info(
-                "Message has been sent successfully. By username: " + requester_id + ". receiver_username: " + receiver_id + ".")
+            logging.info(f"Message has been sent successfully. By username: {requester_id}. receiver_username: {receiver_id}.")
             return Response(message.toJson(), True)
         except Exception as e:
             logging.error(f"sendMessage Error: {str(e)}. By username: '{requester_id}'")
@@ -821,8 +789,7 @@ class Service:
     def sendMessageFromStore(self, store_name, receiverID, subject, content, creation_date, file=None):
         try:
             message = self.store_facade.sendMessageFromStore(store_name, receiverID, subject, content, creation_date, file)
-            logging.info(
-                "Message has been sent successfully. By store_name: " + store_name + ". receiver_username: " + receiverID + ".")
+            logging.info(f"Message has been sent successfully. By store_name: {store_name}. receiver_username: {receiverID}.")
             return Response(message.toJson(), True)
         except Exception as e:
             logging.error(f"sendMessage Error: {str(e)}. By store_name: '{store_name}'")
@@ -831,8 +798,7 @@ class Service:
     def sendMessageToStore(self, requesterID, storeID, subject, content, creation_date, file=None):
         try:
             message = self.store_facade.sendMessageToStore(requesterID, storeID, subject, content, creation_date, file)
-            logging.info(
-                "Message has been sent successfully. By username: " + requesterID + ". store_name: " + storeID + ".")
+            logging.info(f"Message has been sent successfully. By username: {requesterID}. store_name: {storeID}.")
             return Response(message.toJson(), True)
         except Exception as e:
             logging.error(f"sendMessage Error: {str(e)}. By username: '{requesterID}'")
@@ -842,7 +808,7 @@ class Service:
         try:
             messages = self.store_facade.getAllMessagesSent(requesterID, username)
             logging.debug(
-                f"fetching all the user's messages. By username: " + requesterID + ".")
+                f"fetching all the user's messages. By username: {requesterID}.")
             return Response(messages, True)
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
@@ -852,7 +818,7 @@ class Service:
         try:
             messages = self.store_facade.getAllMessagesReceived(requesterID)
             logging.debug(
-                f"fetching all the user's messages. By username: " + requesterID + ".")
+                f"fetching all the user's messages. By username: {requesterID}.")
             return Response(messages, True)
         except Exception as e:
             logging.error(f"getMessages Error: {str(e)}.")
@@ -862,7 +828,7 @@ class Service:
         try:
             notifications = self.store_facade.getAllNotifications(requesterID)
             logging.debug(
-                f"fetching all the user's notifications. By username: " + requesterID + ".")
+                f"fetching all the user's notifications. By username: {requesterID}.")
             return Response(notifications, True)
         except Exception as e:
             logging.error(f"getNotifications Error: {str(e)}.")
@@ -872,7 +838,7 @@ class Service:
         try:
             message = self.store_facade.readMessage(requesterID, messageID)
             logging.debug(
-                f"marked as read message with ID {messageID}. By username: " + requesterID + ".")
+                f"marked as read message with ID {messageID}. By username: {requesterID}.")
             return Response(message.toJson(), True)
         except Exception as e:
             logging.error(f"readMessage Error: {str(e)}.")
@@ -882,7 +848,7 @@ class Service:
         try:
             res = self.store_facade.deleteMessage(requesterID, messageID)
             logging.debug(
-                f"deleted message with ID {messageID}. By username: " + requesterID + ".")
+                f"deleted message with ID {messageID}. By username: {requesterID}.")
             return Response(res, True)
         except Exception as e:
             logging.error(f"deleteMessage Error: {str(e)}.")
@@ -892,7 +858,7 @@ class Service:
         try:
             notification = self.store_facade.readNotification(requesterID, notificationID)
             logging.debug(
-                f"marked as read notification with ID {notificationID}. By username: " + requesterID + ".")
+                f"marked as read notification with ID {notificationID}. By username: {requesterID}.")
             return Response(notification.toJson(), True)
         except Exception as e:
             logging.error(f"readNotification Error: {str(e)}.")
@@ -902,7 +868,7 @@ class Service:
         try:
             res = self.store_facade.deleteNotification(requesterID, notificationID)
             logging.debug(
-                f"deleted notification with ID {notificationID}. By username: " + requesterID + ".")
+                f"deleted notification with ID {notificationID}. By username: {requesterID}.")
             return Response(res, True)
         except Exception as e:
             logging.error(f"deleteNotification Error: {str(e)}.")
