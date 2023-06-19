@@ -1,5 +1,5 @@
 from peewee import *
-from playhouse.sqlite_ext import *
+from playhouse.mysql_ext import *
 # from playhouse.postgres_ext import *
 
 from ProjectCode.DAL.StoreModel import StoreModel

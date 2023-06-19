@@ -32,7 +32,7 @@ class TestStoreFacade(TestCase):
             config_data: dict = json.load(f)
         self.store_facade = StoreFacade(config_data, send_notification_call=send_notification_lambda)
 
-        #self.store_facade = StoreFacade({})
+        #self.store_facade = StoreFacadDe({})
         self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
         self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
         self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
@@ -1756,7 +1756,7 @@ class TestStoreFacade(TestCase):
         oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
         rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
                 "quantity": 5, "child": {}}
-        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        policy = self.store_facade.addPurchasePolicy("AriExpress","Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
         added_discount = self.my_store.getPolicy(1)
         self.assertEqual(policy, added_discount)
 

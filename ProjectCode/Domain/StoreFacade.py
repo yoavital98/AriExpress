@@ -52,7 +52,9 @@ from ProjectCode.Domain.Repository.UserTransactionRepository import UserTransact
 
 
 class StoreFacade:
-  
+
+
+
     def __init__(self, config, send_notification_call=None):
         # Store Data
         # self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
@@ -78,24 +80,24 @@ class StoreFacade:
         # self.loadData()
 
         # Create a database object
-        db = DatabaseConf.database
 
+        self.db = DatabaseConf.database
         # db = PostgresqlDatabase('postgres', user='postgres', password='01592580',
         #                                host='database-1.ckwkbfc5249a.eu-north-1.rds.amazonaws.com', port=5432)
-        if db.is_closed():
-            db.connect()
+        if self.db.is_closed():
+            self.db.connect()
         # model_list = [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
         #       ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel]
         # for m in model_list:
         #    m.delete().execute()
 
-        db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        self.db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
                          ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel,
                         PurchasePolicyModel,
                         UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
                         StoreTransactionModel,
                         ProductStoreTransactionModel])
-        db.create_tables(
+        self.db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
               ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
               StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
@@ -122,10 +124,13 @@ class StoreFacade:
         self.loadData()
 
         # handshake with supply service and payment service
-        self.supply_service = SupplyService(config["SupplyService"])
-        self.payment_service = PaymentService(config["PaymentService"])
-        self.supply_service.perform_handshake()
-        self.payment_service.perform_handshake()
+        # self.supply_service = SupplyService(config["SupplyService"])
+        # self.payment_service = PaymentService(config["PaymentService"])
+        # self.supply_service.perform_handshake()
+        # self.payment_service.perform_handshake()
+        self.supply_service = None
+        self.payment_service = None
+
 
         # database config init
         # TODO: connect to db # ------------------- TODO ------------------- #
@@ -157,25 +162,26 @@ class StoreFacade:
     # Login from Guest to Member, this login is not from the main login screen. and from the state of a guest to Member
 
     def logInFromGuestToMember(self, entrance_id, user_name, password):
-        password_validator = PasswordValidationService()
-        guest: Guest = self.onlineGuests.get(str(entrance_id))
-        if guest is None:
-            raise Exception("Entrance id not found")
-        # guest_cart: Cart = guest.get_cart()
-        if self.members.keys().__contains__(user_name):
-            existing_member: Member = self.members[user_name]
-            if password_validator.ConfirmPassword(password, existing_member.get_password()):
-                existing_member.logInAsMember()
-                existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
-                #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
-                self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
-                self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
-                return existing_member
-                # return DataMember(existing_member)
+        with self.db.atomic():
+            password_validator = PasswordValidationService()
+            guest: Guest = self.onlineGuests.get(str(entrance_id))
+            if guest is None:
+                raise Exception("Entrance id not found")
+            # guest_cart: Cart = guest.get_cart()
+            if self.members.keys().__contains__(user_name):
+                existing_member: Member = self.members[user_name]
+                if password_validator.ConfirmPassword(password, existing_member.get_password()):
+                    existing_member.logInAsMember()
+                    existing_member.setEntranceId(str(entrance_id))  # it's the same entrance id
+                    #  existing_member.addGuestProductsToMemberCart(guest_cart) # TODO: do I need it?
+                    self.online_members[existing_member.get_username()] = existing_member  # keeping track who's online
+                    self.leaveAsGuest(entrance_id)  # he isn't a guest anymore
+                    return existing_member
+                    # return DataMember(existing_member)
+                else:
+                    raise Exception("username or password does not match")
             else:
                 raise Exception("username or password does not match")
-        else:
-            raise Exception("username or password does not match")
 
     def exitTheSystem(self):  # TODO: @Ari and @Yoav should decide if we need this function
         pass
@@ -247,59 +253,62 @@ class StoreFacade:
 
     # Registers a guest, register doesn't mean the user is logged in
     def register(self, user_name, password, email):
-        password_validator = PasswordValidationService()
-        if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):
-            if password_validator.ValidatePassword(password):
-                new_member: Member = Member(str(0), user_name, password, email)
-                self.members[str(user_name)] = new_member
-                return new_member
+        with self.db.atomic():
+            password_validator = PasswordValidationService()
+            if not (self.members.keys().__contains__(str(user_name)) or user_name == ""):
+                if password_validator.ValidatePassword(password):
+                    new_member: Member = Member(str(0), user_name, password, email)
+                    self.members[str(user_name)] = new_member
+                    return new_member
+                else:
+                    raise Exception("password is too weak")
             else:
-                raise Exception("password is too weak")
-        else:
-            raise Exception("This username is already in the system")
+                raise Exception("This username is already in the system")
 
     #  only members
 
     # Login straight to Member and not as guest from the home logging screen.
     def logInAsMember(self, username, password):
-        password_validator = PasswordValidationService()
-        # check if the user is an admin
-        if self.admins.keys().__contains__(username):
-            return self.logInAsAdmin(username, password)
-        # check if the member is an actual user
-        if self.members.keys().__contains__(username):
-            if not self.online_members.__contains__(username):
-                existing_member: Member = self.members[username]
-                if password_validator.ConfirmPassword(password, existing_member.get_password()):
-                    existing_member.logInAsMember()
-                    existing_member.setEntranceId(str(self.nextEntranceID))
-                    self.nextEntranceID += 1
-                    self.online_members[username] = existing_member  # indicates that the user is logged in
-                    return existing_member
-                    # return DataMember(existing_member)
+        with self.db.atomic():
+            password_validator = PasswordValidationService()
+            # check if the user is an admin
+            if self.admins.keys().__contains__(username):
+                return self.logInAsAdmin(username, password)
+            # check if the member is an actual user
+            if self.members.keys().__contains__(username):
+                if not self.online_members.__contains__(username):
+                    existing_member: Member = self.members[username]
+                    if password_validator.ConfirmPassword(password, existing_member.get_password()):
+                        existing_member.logInAsMember()
+                        existing_member.setEntranceId(str(self.nextEntranceID))
+                        self.nextEntranceID += 1
+                        self.online_members[username] = existing_member  # indicates that the user is logged in
+                        return existing_member
+                        # return DataMember(existing_member)
+                    else:
+                        raise Exception("username or password does not match")
                 else:
-                    raise Exception("username or password does not match")
+                    raise Exception("user is already logged in")
             else:
-                raise Exception("user is already logged in")
-        else:
-            raise Exception("username or password does not match")
+                raise Exception("username or password does not match")
 
     #  only members
 
     # logout a member
     def logOut(self, username):
-        if self.admins.keys().__contains__(username):
-            self.logOutAsAdmin(username)
-            guest: Guest = self.returnToGuest(str(self.nextEntranceID))  # returns as a guest
-            self.nextEntranceID += 1
-            return guest
-        if self.members.keys().__contains__(username):
-            existing_member: Member = self.members[username]
-            del self.online_members[username]  # deletes the user from the online users
-            guest: Guest = self.returnToGuest(str(existing_member.get_entrance_id()))  # returns as a guest
-            return guest
-        else:
-            raise Exception("Logout is not an option")
+        with self.db.atomic():
+            if self.admins.keys().__contains__(username):
+                self.logOutAsAdmin(username)
+                guest: Guest = self.returnToGuest(str(self.nextEntranceID))  # returns as a guest
+                self.nextEntranceID += 1
+                return guest
+            if self.members.keys().__contains__(username):
+                existing_member: Member = self.members[username]
+                del self.online_members[username]  # deletes the user from the online users
+                guest: Guest = self.returnToGuest(str(existing_member.get_entrance_id()))  # returns as a guest
+                return guest
+            else:
+                raise Exception("Logout is not an option")
 
     #  only members
     # getting the user purchase history
@@ -330,80 +339,85 @@ class StoreFacade:
     # guest and member
     # adding a product to basket, checking with store if the item is available
     def addToBasket(self, username, store_name, product_id, quantity):
-        user: User = self.getUserOrMember(str(username))
-        store: Store = self.stores.get(store_name)
-        if store is None:
-            raise Exception("Store doesnt exists")
-        with self.lock_for_adding_and_purchasing:
-            product = store.checkProductAvailability(product_id, quantity)
-        if product is not None:
-            filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
-            return filled_basket
-        else:
-            raise Exception("Product is not available or quantity is higher than the stock")
+        with self.db.atomic():
+            user: User = self.getUserOrMember(str(username))
+            store: Store = self.stores.get(store_name)
+            if store is None:
+                raise Exception("Store doesnt exists")
+            with self.lock_for_adding_and_purchasing:
+                product = store.checkProductAvailability(product_id, quantity)
+            if product is not None:
+                filled_basket = user.add_to_cart(username, store, product_id, product, quantity)
+                return filled_basket
+            else:
+                raise Exception("Product is not available or quantity is higher than the stock")
 
     # guest and member
     # deleting an item from a basket, if the item exists there
     def removeFromBasket(self, username, store_name, product_id):
-        user: User = self.getUserOrMember(username)
-        remove_success = user.removeFromBasket(store_name, product_id)
-        if remove_success:
-            return remove_success
-        else:
-            raise Exception("there was a problem with removing the item or either the item doesnt exists in the basket")
+        with self.db.atomic():
+            user: User = self.getUserOrMember(username)
+            remove_success = user.removeFromBasket(store_name, product_id)
+            if remove_success:
+                return remove_success
+            else:
+                raise Exception("there was a problem with removing the item or either the item doesnt exists in the basket")
 
     # guest and member
     # editing aa product quantity from a specific basket
     def editBasketQuantity(self, username, store_name, product_id, quantity):
-        user: User = self.getUserOrMember(username)
+        with self.db.atomic():
+            user: User = self.getUserOrMember(username)
 
-        answer = user.checkProductExistance(store_name, product_id)  # answer is boolean
-        if answer:
-            store: Store = self.stores[store_name]
-            with self.lock_for_adding_and_purchasing:
-                product = store.checkProductAvailability(product_id, quantity)
-            if product is not None:
-                return user.edit_Product_Quantity(store_name, product_id, quantity)
+            answer = user.checkProductExistance(store_name, product_id)  # answer is boolean
+            if answer:
+                store: Store = self.stores[store_name]
+                with self.lock_for_adding_and_purchasing:
+                    product = store.checkProductAvailability(product_id, quantity)
+                if product is not None:
+                    return user.edit_Product_Quantity(store_name, product_id, quantity)
+                else:
+                    raise Exception("Product is not available or quantity is higher than the stock")
             else:
-                raise Exception("Product is not available or quantity is higher than the stock")
-        else:
-            raise Exception("product does not exists in the basket")
+                raise Exception("product does not exists in the basket")
 
     # guest and member
     # getting all the items in the cart and makes a purchase, adding all the items to the Member history and the store's
     def purchaseCart(self, user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode):
-        user: User = self.getUserOrMember(user_name)
-        if self.online_members.__contains__(user_name):
-            with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
-        else: # guest user
-            with self.lock_for_adding_and_purchasing:
-                return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
+        with self.db.atomic():
+            user: User = self.getUserOrMember(user_name)
+            if self.online_members.__contains__(user_name):
+                with self.lock_for_adding_and_purchasing:
+                    return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, True)
+            else: # guest user
+                with self.lock_for_adding_and_purchasing:
+                    return user.get_cart().PurchaseCart(user_name, card_number, card_date, card_user_full_name, ccv, card_holder_id, address, city, country, zipcode, False)
 
 
     # Bids! -------------------------------------- Bids are for members only --------------------------------------
 
 
     def placeBid(self, username, store_name, offer, product_id, quantity):
-        existing_member: Member = self.getOnlineMemberOnly(username)
-        product_id = int(product_id)
-        quantity = int(quantity)
-        offer = int(offer)
-        store: Store = self.stores.get(store_name)
-        if store is None:
-            raise Exception("Store doesnt exists")
-        with self.lock_for_adding_and_purchasing:
-            answer = store.checkProductAvailability(product_id, quantity)
-        if answer is not None:
-            bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
-            self.bid_id_counter += 1
-            existing_member.addBidToBasket(bid, store)
-            store: Store = self.stores[store_name]
-            store.requestBid(bid)
-            self.message_controller.send_notification(username, "Bid request was placed", "", datetime.now())
-            for staff_member in store.getAllStaffMembersNames():
-                self.message_controller.send_notification(staff_member, "Bid request was placed", "", datetime.now())
-            return bid
+        with self.db.atomic():
+            existing_member: Member = self.getOnlineMemberOnly(username)
+            product_id = int(product_id)
+            quantity = int(quantity)
+            offer = int(offer)
+            store: Store = self.stores.get(store_name)
+            if store is None:
+                raise Exception("Store doesnt exists")
+            with self.lock_for_adding_and_purchasing:
+                answer = store.checkProductAvailability(product_id, quantity)
+            if answer is not None:
+                bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
+                self.bid_id_counter += 1
+                existing_member.addBidToBasket(bid, store)
+                store: Store = self.stores[store_name]
+                store.requestBid(bid)
+                self.message_controller.send_notification(username, "Bid request was placed", "", datetime.now())
+                for staff_member in store.getAllStaffMembersNames():
+                    self.message_controller.send_notification(staff_member, "Bid request was placed", "", datetime.now())
+                return bid
         # return DataBid(bid)
 
     def getAllBidsFromUser(self, username):
@@ -421,10 +435,11 @@ class StoreFacade:
 
     def purchaseConfirmedBid(self, bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
                              , address, city, country, zipcode):
-        existing_member: Member = self.getOnlineMemberOnly(username)
-        with self.lock_for_adding_and_purchasing:
-            existing_member.get_cart().purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
-                             , address, city, country, zipcode)
+        with self.db.atomic():
+            existing_member: Member = self.getOnlineMemberOnly(username)
+            with self.lock_for_adding_and_purchasing:
+                existing_member.get_cart().purchaseConfirmedBid(bid_id, store_name, username, card_number, card_date, card_user_full_name, ccv, card_holder_id
+                                 , address, city, country, zipcode)
 
 
     # ------  stores  ------ #
@@ -503,114 +518,122 @@ class StoreFacade:
     # TODO: add check if user is loggedin to each function
 
     def createStore(self, username, store_name):
-        cur_member: Member = self.getOnlineMemberOnly(username)
-        if cur_member is None:
-            raise Exception("The user is not a member or not logged in")
-        if self.stores.keys().__contains__(store_name):
-            raise Exception("Store name already taken")
+        with self.db.atomic():
+            cur_member: Member = self.getOnlineMemberOnly(username)
+            if cur_member is None:
+                raise Exception("The user is not a member or not logged in")
+            if self.stores.keys().__contains__(store_name):
+                raise Exception("Store name already taken")
 
-        cur_store = Store(store_name)
-        self.stores[store_name] = cur_store
-        new_access = Access(cur_store, cur_member, username)
-        #cur_member.accesses[store_name] = new_access -- ORM CHANGE
-        cur_store.setFounder(cur_member.get_username(), new_access)
-        return cur_store
+            cur_store = Store(store_name)
+            self.stores[store_name] = cur_store
+            new_access = Access(cur_store, cur_member, username)
+            #cur_member.accesses[store_name] = new_access -- ORM CHANGE
+            cur_store.setFounder(cur_member.get_username(), new_access)
+            return cur_store
         # return DataStore(cur_store)
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
+        with self.db.atomic():
+            member: Member = self.getOnlineMemberOnly(username)
+            cur_store: Store = self.stores.get(store_name)
+            if cur_store is None:
+                raise Exception("No such store exists")
 
-        member: Member = self.getOnlineMemberOnly(username)
-        cur_store: Store = self.stores.get(store_name)
-        if cur_store is None:
-            raise Exception("No such store exists")
-
-        if member.get_accesses().keys().__contains__(store_name):
-            access: Access = member.get_accesses().get(store_name)
-        else:
-            raise Exception("No access for this member to the store")
-        new_product = cur_store.addProduct(access, name, quantity, price,
-                                           categories)  # TODO: change first atribute to access
-        return new_product
-        # return DataProduct(new_product)
+            if member.get_accesses().keys().__contains__(store_name):
+                access: Access = member.get_accesses().get(store_name)
+            else:
+                raise Exception("No access for this member to the store")
+            new_product = cur_store.addProduct(access, name, quantity, price,
+                                               categories)  # TODO: change first atribute to access
+            return new_product
+            # return DataProduct(new_product)
 
     def removeProductFromStore(self, username, store_name, product_id):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        cur_store: Store = self.stores[store_name]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_access = self.members[username].get_accesses().get(store_name)
-        if cur_access is None:
-            raise Exception("The member doesn't have a permission for that action")
-        deleted_product_id = cur_store.deleteProduct(cur_access, product_id)
-        return deleted_product_id
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            cur_access = self.members[username].get_accesses().get(store_name)
+            if cur_access is None:
+                raise Exception("The member doesn't have a permission for that action")
+            deleted_product_id = cur_store.deleteProduct(cur_access, product_id)
+            return deleted_product_id
 
     def editProductOfStore(self, username, store_name, product_id, **kwargs):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        cur_store: Store = self.stores.get(store_name)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_access = self.members[username].get_accesses().get(store_name)
-        if cur_access is None:
-            raise Exception("The member doesn't have a permission for that action")
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores.get(store_name)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            cur_access = self.members[username].get_accesses().get(store_name)
+            if cur_access is None:
+                raise Exception("The member doesn't have a permission for that action")
 
-        changed_product = cur_store.changeProduct(cur_access, product_id, **kwargs)
-        # return DataProduct(changed_product)
-        return changed_product
+            changed_product = cur_store.changeProduct(cur_access, product_id, **kwargs)
+            # return DataProduct(changed_product)
+            return changed_product
 
     def nominateStoreOwner(self, requester_username, nominated_username, store_name):
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
-        cur_store: Store = self.stores[store_name]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        self.checkIfMemberExists(nominated_username)
-        nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
-                                                        "Owner")
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            self.checkIfMemberExists(nominated_username)
+            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
+            nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
+                                                            "Owner")
 
-        # return DataAccess(nominated_modified_access)
-        return nominated_modified_access
+            # return DataAccess(nominated_modified_access)
+            return nominated_modified_access
 
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
-        cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
-        if cur_store is None:
-            raise Exception("No such store exists")
-        nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
-                                                        "Manager")
-        return nominated_modified_access
+        with self.db.atomic():
+            cur_store: Store = self.stores[store_name]
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            if cur_store is None:
+                raise Exception("No such store exists")
+            nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
+            nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
+                                                            "Manager")
+            return nominated_modified_access
 
     def removeAccess(self, requester_username, to_remove_username, store_name):
-        cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
-        if cur_store is None:
-            raise Exception("No such store exists")
-        removed_username = cur_store.removeAccess(to_remove_username, requester_username)
-        MessageController().send_notification(to_remove_username, "Removed Permissions", "Your permissions from store "+ store_name + " have been removed", datetime.now())
-        return removed_username
+        with self.db.atomic():
+            cur_store: Store = self.stores[store_name]
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            if cur_store is None:
+                raise Exception("No such store exists")
+            removed_username = cur_store.removeAccess(to_remove_username, requester_username)
+            MessageController().send_notification(to_remove_username, "Removed Permissions", "Your permissions from store "+ store_name + " have been removed", datetime.now())
+            return removed_username
 
     def addPermissions(self, store_name, requester_username, nominated_username, permission):
-        cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
-        if cur_store is None:
-            raise Exception("No such store exists")
-        modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="ADD")
-        return modified_access
+        with self.db.atomic():
+            cur_store: Store = self.stores[store_name]
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            if cur_store is None:
+                raise Exception("No such store exists")
+            modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="ADD")
+            return modified_access
 
     def removePermissions(self, store_name, requester_username, nominated_username, permission):
-        cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
-        if cur_store is None:
-            raise Exception("No such store exists")
-        modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="REMOVE")
-        return modified_access
+        with self.db.atomic():
+            cur_store: Store = self.stores[store_name]
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            if cur_store is None:
+                raise Exception("No such store exists")
+            modified_access = cur_store.modifyPermission(requester_username, nominated_username, permission, op="REMOVE")
+            return modified_access
 
     def getPermissions(self, store_name, requester_username, nominated_username):
         cur_store: Store = self.stores[store_name]
@@ -632,15 +655,16 @@ class StoreFacade:
 
     def addDiscount(self, storename, username, discount_type, percent=0, level="", level_name="", rule={},
                     discounts={}):
-        cur_store: Store = self.stores.get(storename)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User isn't logged in")
-        new_discount = cur_store.addDiscount(username, discount_type, percent=percent, level=level,
-                                             level_name=level_name,
-                                             rule=rule, discounts=discounts)
-        return new_discount
+        with self.db.atomic():
+            cur_store: Store = self.stores.get(storename)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User isn't logged in")
+            new_discount = cur_store.addDiscount(username, discount_type, percent=percent, level=level,
+                                                 level_name=level_name,
+                                                 rule=rule, discounts=discounts)
+            return new_discount
 
     def getDiscount(self, storename, discount_id):
         cur_store: Store = self.stores.get(storename)
@@ -656,13 +680,14 @@ class StoreFacade:
 
 
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
-        cur_store: Store = self.stores.get(storename)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User isn't logged in")
-        new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
-        return new_policy
+        with self.db.atomic():
+            cur_store: Store = self.stores.get(storename)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User isn't logged in")
+            new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
+            return new_policy
 
     def getPurchasePolicy(self, storename, policy_id):
         cur_store: Store = self.stores.get(storename)
@@ -671,30 +696,33 @@ class StoreFacade:
         return cur_store.getPolicy(policy_id)
 
     def approveBid(self, username, storename, bid_id):
-        member: Member = self.getOnlineMemberOnly(username)
-        cur_store: Store = self.stores[storename]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        approved_bid = cur_store.approveBid(username, bid_id)
-        return approved_bid
+        with self.db.atomic():
+            member: Member = self.getOnlineMemberOnly(username)
+            cur_store: Store = self.stores[storename]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            approved_bid = cur_store.approveBid(username, bid_id)
+            return approved_bid
         # return DataBid(approved_bid)
 
     def rejectBid(self, username, storename, bid_id):
-        member: Member = self.getOnlineMemberOnly(username)
-        cur_store: Store = self.stores[storename]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        rejected_bid = cur_store.rejectBid(username, bid_id)
-        return rejected_bid
+        with self.db.atomic():
+            member: Member = self.getOnlineMemberOnly(username)
+            cur_store: Store = self.stores[storename]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            rejected_bid = cur_store.rejectBid(username, bid_id)
+            return rejected_bid
         # return DataBid(rejected_bid)
 
     def sendAlternativeBid(self, username, storename, bid_id, alternate_offer):
-        member: Member = self.getOnlineMemberOnly(username)
-        cur_store: Store = self.stores[storename]
-        if cur_store is None:
-            raise Exception("No such store exists")
-        alternative_bid = cur_store.sendAlternativeBid(username, bid_id, alternate_offer)
-        return alternative_bid
+        with self.db.atomic():
+            member: Member = self.getOnlineMemberOnly(username)
+            cur_store: Store = self.stores[storename]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            alternative_bid = cur_store.sendAlternativeBid(username, bid_id, alternate_offer)
+            return alternative_bid
         # return DataBid(alternative_bid)
 
     def getStaffPendingForBid(self,store_name, bid_id):
@@ -720,28 +748,30 @@ class StoreFacade:
 
 
     def openStore(self, username, store_name):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        cur_store: Store = self.stores.get(store_name)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_store.setStoreStatus(True, username)
-        MessageController().send_notification(cur_store.getFounder().get_username(), "Store Re-Opened", "", datetime.now())
-        for owner in cur_store.getOwners():
-            MessageController().send_notification(owner.get_username(), "Store Re-Opened", "", datetime.now())
-        return cur_store
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores.get(store_name)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            cur_store.setStoreStatus(True, username)
+            MessageController().send_notification(cur_store.getFounder().get_username(), "Store Re-Opened", "", datetime.now())
+            for owner in cur_store.getOwners():
+                MessageController().send_notification(owner.get_username(), "Store Re-Opened", "", datetime.now())
+            return cur_store
 
     def closeStore(self, username, store_name):
-        if not self.checkIfUserIsLoggedIn(username):
-            raise Exception("User is not logged in")
-        cur_store: Store = self.stores.get(store_name)
-        if cur_store is None:
-            raise Exception("No such store exists")
-        cur_store.setStoreStatus(False, username)
-        self.sendNotificationToUser(cur_store.getFounder().get_username(), "Store Closed", "", datetime.now())
-        for owner in cur_store.getOwners():
-            self.sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
-        return cur_store
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores.get(store_name)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            cur_store.setStoreStatus(False, username)
+            self.sendNotificationToUser(cur_store.getFounder().get_username(), "Store Closed", "", datetime.now())
+            for owner in cur_store.getOwners():
+                self.sendNotificationToUser(owner.get_username(), "Store Closed", "", datetime.now())
+            return cur_store
 
     def getStaffInfo(self, username, store_name):
         if not self.checkIfUserIsLoggedIn(username):
@@ -769,42 +799,45 @@ class StoreFacade:
 
     # ------  Admins  ------ #
     def logInAsAdmin(self, username, password):
-        if self.admins.keys().__contains__(username):
-            existing_admin: Admin = self.admins[username]
-            if existing_admin.logged_In:
-                raise Exception("admin is already in the system")
-            if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
-                existing_admin.logInAsAdmin()
-                self.admins[username] = existing_admin
-                return existing_admin
+        with self.db.atomic():
+            if self.admins.keys().__contains__(username):
+                existing_admin: Admin = self.admins[username]
+                if existing_admin.logged_In:
+                    raise Exception("admin is already in the system")
+                if PasswordValidationService().ConfirmPassword(password, existing_admin.get_password()):
+                    existing_admin.logInAsAdmin()
+                    self.admins[username] = existing_admin
+                    return existing_admin
+                else:
+                    raise Exception("admin name or password does not match")
             else:
                 raise Exception("admin name or password does not match")
-        else:
-            raise Exception("admin name or password does not match")
 
     def logOutAsAdmin(self, user_name):
-        if self.admins.keys().__contains__(user_name):
-            existing_admin: Admin = self.admins[user_name]
-            if not existing_admin.logged_In:
-                raise Exception("Admin is not logged in")
-            existing_admin.logOffAsAdmin()
-            self.admins[user_name] = existing_admin
+        with self.db.atomic():
+            if self.admins.keys().__contains__(user_name):
+                existing_admin: Admin = self.admins[user_name]
+                if not existing_admin.logged_In:
+                    raise Exception("Admin is not logged in")
+                existing_admin.logOffAsAdmin()
+                self.admins[user_name] = existing_admin
 
     def messageAsAdmin(self, admin_name, message, receiver_user_name):
         pass  # no messanger this version
 
     def closeStoreAsAdmin(self, admin_name, store_name):
-        if self.admins.keys().__contains__(admin_name):
-            admin: Admin = self.admins.get(admin_name)
-            if admin.logged_In:
-                cur_store: Store = self.stores.get(store_name)
-                if cur_store is None:
-                    raise Exception("No such store exists")
-                cur_store.close_store_by_admin()
+        with self.db.atomic():
+            if self.admins.keys().__contains__(admin_name):
+                admin: Admin = self.admins.get(admin_name)
+                if admin.logged_In:
+                    cur_store: Store = self.stores.get(store_name)
+                    if cur_store is None:
+                        raise Exception("No such store exists")
+                    cur_store.close_store_by_admin()
+                else:
+                    raise Exception("admin is not logged in")
             else:
-                raise Exception("admin is not logged in")
-        else:
-            raise Exception("no such admin exists")
+                raise Exception("no such admin exists")
 
     def getAdmin(self, user_name):
         if self.admins.keys().__contains__(user_name):
@@ -813,19 +846,20 @@ class StoreFacade:
             raise Exception("no admin was found")
 
     def addAdmin(self, username, newAdminName, newPassword, newEmail):
-        password_validator = PasswordValidationService()
-        if self.admins.keys().__contains__(username):
-            if not self.admins.keys().__contains__(newAdminName):
-                if password_validator.ValidatePassword(newPassword):
-                    new_admin = Admin(newAdminName, newPassword, newEmail)
-                    self.admins[newAdminName] = new_admin
-                    return new_admin
+        with self.db.atomic():
+            password_validator = PasswordValidationService()
+            if self.admins.keys().__contains__(username):
+                if not self.admins.keys().__contains__(newAdminName):
+                    if password_validator.ValidatePassword(newPassword):
+                        new_admin = Admin(newAdminName, newPassword, newEmail)
+                        self.admins[newAdminName] = new_admin
+                        return new_admin
+                    else:
+                        raise Exception("password is too weak")
                 else:
-                    raise Exception("password is too weak")
+                    raise Exception("Admin with the same name already exists")
             else:
-                raise Exception("Admin with the same name already exists")
-        else:
-            raise Exception("only an admin can add a new admin.")
+                raise Exception("only an admin can add a new admin.")
 
     def getAllOnlineMembers(self, user_name):
         if self.admins.__contains__(user_name):
@@ -855,21 +889,22 @@ class StoreFacade:
             raise Exception("only admin can get the offline members list")
 
     def removePermissionFreeMember(self, requesterID, memberName):
-        if self.admins.keys().__contains__(requesterID):
-            if self.members.keys().__contains__(memberName):
-                if self.accesses.keys().__contains__(memberName):
-                    self.members[memberName].logOut()
-                    self.messageAsAdminToUser(self, requesterID, memberName, "BAN",
-                                              "You have been banned from the system")  # TOdo : add message to login screen or something
-                    banned_member = self.members.pop(memberName)
-                    self.banned_members[memberName] = banned_member
-                    return banned_member
+        with self.db.atomic():
+            if self.admins.keys().__contains__(requesterID):
+                if self.members.keys().__contains__(memberName):
+                    if self.accesses.keys().__contains__(memberName):
+                        self.members[memberName].logOut()
+                        self.messageAsAdminToUser(self, requesterID, memberName, "BAN",
+                                                  "You have been banned from the system")  # TOdo : add message to login screen or something
+                        banned_member = self.members.pop(memberName)
+                        self.banned_members[memberName] = banned_member
+                        return banned_member
+                    else:
+                        raise Exception("Can't remove member with store roles")
                 else:
-                    raise Exception("Can't remove member with store roles")
+                    raise Exception("no such member exists")
             else:
-                raise Exception("no such member exists")
-        else:
-            raise Exception("only admin can remove a member")
+                raise Exception("only admin can remove a member")
 
     def returnPermissionFreeMember(self, requesterID, memberName):
         if self.admins.keys().__contains__(requesterID):
