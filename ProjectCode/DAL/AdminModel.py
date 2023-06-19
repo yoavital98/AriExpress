@@ -1,11 +1,12 @@
 from peewee import *
 
+from ProjectCode.DAL.database_conf import DatabaseConf
 
 
 class AdminModel(Model):
 
     class Meta:
-        database = SqliteDatabase('database.db')
+        database = DatabaseConf.database
         db_table = 'admin'
 
     user_name = CharField(max_length=100, primary_key=True)

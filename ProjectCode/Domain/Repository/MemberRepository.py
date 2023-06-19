@@ -165,3 +165,10 @@ class MemberRepository(Repository):
     #         cart.baskets[basket_entry.store.store_name] = basket
     #
     #     return cart
+    def logInReset(self):
+        query = self.model.select()
+        for entry in query:
+            entry.logged_in = False
+            entry.save()
+            # for felix
+

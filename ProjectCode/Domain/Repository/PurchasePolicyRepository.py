@@ -1,3 +1,5 @@
+from peewee import fn
+
 from ProjectCode.DAL.PurchasePolicyModel import PurchasePolicyModel
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicy import PurchasePolicy
@@ -45,6 +47,8 @@ class PurchasePolicyRepository(Repository):
                 policy_entry = self.model.get(self.model.policy_id == pk)
                 return self.__createDomainObject(policy_entry)
         except Exception as e:
+            if pk is None:
+                return []
             return None
 
     def __createDomainObject(self, policy_entry):
@@ -68,7 +72,7 @@ class PurchasePolicyRepository(Repository):
 
     def keys(self):
         try:
-            return [policy.policy_id for policy in self.model.select()]
+            return [policy.policy_id for policy in self.model.select().where(self.model.store == self.store_name).execute()]
         except Exception as e:
             return []
 
@@ -77,3 +81,6 @@ class PurchasePolicyRepository(Repository):
 
     def contains(self, policy_id: int):
         return policy_id in self.keys()
+
+    def get_highest_id(self):
+        return self.model.select(fn.Max(self.model.policy_id)).scalar()

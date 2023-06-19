@@ -3,6 +3,7 @@ import logging
 import os
 import inspect
 import pickle
+from peewee import *
 
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -66,6 +67,7 @@ class Service:
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            logging.getLogger('peewee').setLevel(logging.WARNING)
             # load info
             if load_file is not None:
                 loadFileInit(load_file)
