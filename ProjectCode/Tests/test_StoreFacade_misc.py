@@ -4,6 +4,8 @@ from datetime import datetime
 from unittest import TestCase
 
 from ProjectCode.Domain.ExternalServices.MessageController import MessageController
+from ProjectCode.Domain.ExternalServices.PaymetService import PaymentService
+from ProjectCode.Domain.ExternalServices.SupplyService import SupplyService
 from ProjectCode.Domain.ExternalServices.TransactionHistory import TransactionHistory
 from ProjectCode.Domain.ExternalServices.TransactionObjects.StoreTransaction import StoreTransaction
 from ProjectCode.Domain.ExternalServices.TransactionObjects.UserTransaction import UserTransaction
@@ -3078,10 +3080,135 @@ class TestStoreFacade(TestCase):
                                                       "creation_date")
 
     # ----------------------------------------------------------------------------------
+    # ----------------------------External Services Tests-------------------------------
 
-    # MORE TESTS IDEAS:
-    # 1. check if guest can add to cart, login as member and still have the cart
-    # 2. check if guest can add to cart, turn off browser, login as guest back and still have the cart
+    def test_ExternalServicePayment_handshake_success(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        self.assertTrue(answer)
+
+    def test_ExternalServicePayment_handshake_fail(self):
+        payment_service = PaymentService("https://php-server-try.00p.com/")
+        with self.assertRaises(Exception):
+            answer = payment_service.perform_handshake()
+
+    def test_ExternalServiceSupply_handshake_success(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        self.assertTrue(answer)
+
+    def test_ExternalServiceSupply_handshake_fail(self):
+        supply_service = PaymentService("https://php-server-try.00p.com/")
+        with self.assertRaises(Exception):
+            answer = supply_service.perform_handshake()
+
+
+    def test_ExternalServicePayment_Pay_success(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        transaction_id = payment_service.pay("4580029349543845","3","27","Amiel saad", "555", "123456789")
+        self.assertTrue(isinstance(transaction_id, str))
+
+    def test_ExternalServicePayment_Pay_cardnum_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        with self.assertRaises(Exception):
+            transaction_id = payment_service.pay("4545","3","27","Amiel saad", "555", "123456789")
+
+    def test_ExternalServicePayment_Pay_month_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        with self.assertRaises(Exception):
+            transaction_id = payment_service.pay("4580029349543845","","27","Amiel saad", "555", "123456789")
+
+    def test_ExternalServicePayment_Pay_year_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        with self.assertRaises(Exception):
+            transaction_id = payment_service.pay("4580029349543845", "3", "", "Amiel saad", "555", "123456789")
+
+    def test_ExternalServicePayment_Pay_name_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        with self.assertRaises(Exception):
+            transaction_id = payment_service.pay("4580029349543845","3","27","", "555", "123456789")
+
+    def test_ExternalServicePayment_Pay_cvv_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        with self.assertRaises(Exception):
+            transaction_id = payment_service.pay("4580029349543845","3","27","Amiel saad", "5", "123456789")
+
+    def test_ExternalServicePayment_Pay_id_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        with self.assertRaises(Exception):
+            transaction_id = payment_service.pay("4580029349543845","3","27","Amiel saad", "555", "1789")
+
+
+    def test_ExternalServiceSupply_dispatch_success(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        supply_id = supply_service.dispatch_supply("Amiel saad", "shimoni", "Beer sheva", "Israel", "493047")
+        self.assertTrue(isinstance(supply_id, str))
+
+    def test_ExternalServiceSupply_dispatch_name_fail(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        with self.assertRaises(Exception):
+            supply_id = supply_service.dispatch_supply("", "shimoni", "Beer sheva", "Israel", "493047")
+
+    def test_ExternalServiceSupply_dispatch_address_fail(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        with self.assertRaises(Exception):
+            supply_id = supply_service.dispatch_supply("Amiel saad", "", "Beer sheva", "Israel", "493047")
+
+    def test_ExternalServiceSupply_dispatch_city_fail(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        with self.assertRaises(Exception):
+            supply_id = supply_service.dispatch_supply("Amiel saad", "shimoni", "", "Israel", "493047")
+
+    def test_ExternalServiceSupply_dispatch_country_fail(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        with self.assertRaises(Exception):
+            supply_id = supply_service.dispatch_supply("Amiel saad", "shimoni", "Beer sheva", "", "493047")
+
+    def test_ExternalServiceSupply_dispatch_zipCode_fail(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        with self.assertRaises(Exception):
+            supply_id = supply_service.dispatch_supply("Amiel saad", "shimoni", "Beer sheva", "Israel", "")
+
+    def test_ExternalServicePayment_cancel_success(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        self.assertTrue(answer)
+        answer = payment_service.cancel_pay(answer)
+        self.assertTrue(answer)
+
+    def test_ExternalServicePayment_cancel_fail(self):
+        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
+        answer = payment_service.perform_handshake()
+        self.assertTrue(answer)
+        with self.assertRaises(Exception):
+            answer = payment_service.cancel_pay("some_id")
+
+    def test_ExternalServiceSupply_cancel_success(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        self.assertTrue(answer)
+        answer = supply_service.cancel_supply(answer)
+        self.assertTrue(answer)
+
+    def test_ExternalServiceSupply_cancel_fail(self):
+        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        answer = supply_service.perform_handshake()
+        self.assertTrue(answer)
+        with self.assertRaises(Exception):
+            answer = supply_service.cancel_supply("some_id")
 
 
 if __name__ == '__main__':
