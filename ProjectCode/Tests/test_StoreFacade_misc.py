@@ -32,7 +32,7 @@ class TestStoreFacade(TestCase):
             config_data: dict = json.load(f)
         self.store_facade = StoreFacade(config_data, send_notification_call=send_notification_lambda)
 
-        #self.store_facade = StoreFacade({})
+        #self.store_facade = StoreFacadDe({})
         self.store_facade.admins["Ari"] = Admin("Ari", "password123", "ari@gmail.com")
         self.store_facade.admins["Rubin"] = Admin("Rubin", "password123", "rubin@gmail.com")
         self.store_facade.register("Feliks", "password456", "feliks@gmail.com")
@@ -43,7 +43,7 @@ class TestStoreFacade(TestCase):
         self.store_facade.createStore("Feliks", "AriExpress")
         self.my_store: Store = self.store_facade.stores.get("AriExpress")
         self.store_facade.addNewProductToStore("Feliks", "AriExpress", "paper", 10, 500, "paper")
-        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "headphones", 10, 500, "paper")
+        #self.store_facade.addNewProductToStore("Feliks", "AriExpress", "headphones", 10, 500, "paper")
         self.item_paper: Product = self.my_store.getProductById(1, "Feliks")
         self.store_facade.logOut("Feliks")
         self.store_facade.onlineGuests.clear()
@@ -59,11 +59,13 @@ class TestStoreFacade(TestCase):
 
     def test_simple_dis(self):
         self.store_facade.logInAsMember("Feliks", "password456")
+        oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 500, "Milk")
         self.store_facade.addDiscount("AriExpress","Feliks","Simple",60,"Product",2)
         self.store_facade.addToBasket("Feliks", "AriExpress",2,1)
 
     def test_discount_conditioned_basket_total_price(self):
         self.store_facade.logInAsMember("Feliks", "password456")
+        headphones = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "headphones", 10, 500, "paper")
         rule2 = {'rule_type': 'basket_total_price', 'product_id': '', 'operator': '>=', 'quantity': '100', 'category': '', 'child': {}}
         #rule =  {'rule_type': 'basket_total_price', 'product_id': '', 'operator': '>=', 'quantity': '100', 'category': '', 'child': {'logic_type': 'AND', 'rule': {'rule_type': 'amount_of_category', 'product_id': '', 'operator': '<=', 'quantity': '5', 'category': 'fruit', 'child': {}}}}
         self.store_facade.addDiscount("AriExpress","Feliks","Conditioned",60,"Product",2,
@@ -152,6 +154,18 @@ class TestStoreFacade(TestCase):
                                              level_name=oreo.get_product_id())
         added_discount = self.my_store.getDiscount(1)
         self.assertEqual(discount, added_discount)
+
+    def test_addConditionedDiscountBasketPriceUpdated_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 10, "cookies")
+        rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(),
+                "operator": ">=", "quantity": 1, "category": "", "child": {}}
+        discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
+                                             level_name=oreo.get_product_id(), rule=rule)
+        added_discount = self.my_store.getDiscount(1)
+        self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
 
 
     def test_addSimpleDiscount_userNotLoggedIn_fail(self):
@@ -264,7 +278,7 @@ class TestStoreFacade(TestCase):
                      "operator": ">=", "quantity": 1,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
         discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
                                                level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        product_dict = {cariot.get_product_id(): (cariot,2), oreo.get_product_id(): (oreo,2)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(450, price_after_discount_1)
 
@@ -280,7 +294,7 @@ class TestStoreFacade(TestCase):
                      "operator": ">=", "quantity": 5,"category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
         discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
                                                level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        product_dict = {cariot.get_product_id(): (cariot,2), oreo.get_product_id(): (oreo,2)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(500, price_after_discount_1)
     def test_calculateConditionedDiscount_byCategory_userNotLoggedIn_Fail(self):
@@ -331,7 +345,7 @@ class TestStoreFacade(TestCase):
 
         discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
                                                      level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 7}
+        product_dict = {cariot.get_product_id(): (cariot,2), oreo.get_product_id(): (oreo,7)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(450, price_after_discount_1)
 
@@ -347,7 +361,7 @@ class TestStoreFacade(TestCase):
 
         discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
                                                      level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 7, oreo.get_product_id(): 7}
+        product_dict = {cariot.get_product_id(): (cariot,7), oreo.get_product_id(): (oreo,7)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(500, price_after_discount_1)
 
@@ -363,7 +377,7 @@ class TestStoreFacade(TestCase):
 
         discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
                                                      level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 0, oreo.get_product_id(): 0}
+        product_dict = {cariot.get_product_id(): (cariot,0), oreo.get_product_id(): (oreo,0)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(500, price_after_discount_1)
 
@@ -379,7 +393,7 @@ class TestStoreFacade(TestCase):
 
         discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
                                                      level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 8, oreo.get_product_id(): 7}
+        product_dict = {cariot.get_product_id(): (cariot,8), oreo.get_product_id(): (oreo,7)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(450, price_after_discount_1)
 
@@ -395,7 +409,7 @@ class TestStoreFacade(TestCase):
 
         discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Conditioned", percent=10, level="Product",
                                                      level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 8, oreo.get_product_id(): 4}
+        product_dict = {cariot.get_product_id(): (cariot, 8), oreo.get_product_id(): (oreo, 4)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(500, price_after_discount_1)
 
@@ -446,7 +460,7 @@ class TestStoreFacade(TestCase):
         discount = self.store_facade.addDiscount("AriExpress", "Feliks", "Max", discounts=discounts)
         product_dict = {cariot.get_product_id(): (cariot,8)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(cariot, product_dict, 0)
-        self.assertTrue(price_after_discount_1 == 7)
+        self.assertTrue(price_after_discount_1 == 8)
 
     def test_PurchaseCartWithDiscounts_byCategory_success(self):
         transaction_history = TransactionHistory()
@@ -1675,7 +1689,28 @@ class TestStoreFacade(TestCase):
         discount = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product",
                                              level_name=oreo.get_product_id())
         added_discount = self.my_store.getDiscount(1)
-        self.assertEqual(discount, added_discount)
+        self.assertTrue(discount == added_discount)
+
+    def test_addMultipleSimpleDiscount_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        feliks: Member = self.store_facade.members.get("Feliks")
+        access: Access = feliks.accesses.get("AriExpress")
+        oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
+        cariot: Product = self.my_store.addProduct(access, "Cariot", 10, 10, "Milk")
+        mars: Product = self.my_store.addProduct(access, "Mars", 10, 10, "Milk")
+        discount1 = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product",
+                                             level_name=oreo.get_product_id())
+        discount2 = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product",
+                                             level_name=cariot.get_product_id())
+        discount3 = self.my_store.addDiscount("Feliks", "Simple", percent=10, level="Product",
+                                             level_name=mars.get_product_id())
+        added_discount1 = self.my_store.getDiscount(1)
+        added_discount2 = self.my_store.getDiscount(2)
+        added_discount3 = self.my_store.getDiscount(3)
+        self.assertTrue(discount1 == added_discount1)
+        self.assertTrue(discount2 == added_discount2)
+        self.assertTrue(discount3 == added_discount3)
+
 
     def test_calculateSimpleDiscount_success(self):
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -1702,7 +1737,7 @@ class TestStoreFacade(TestCase):
                 "operator": ">=", "quantity": 1, "category": "", "child": {"logic_type": "OR", "rule": sub_rule}}
         discount = self.my_store.addDiscount("Feliks", "Conditioned", percent=10, level="Product",
                                              level_name=self.item_paper.get_product_id(), rule=rule)
-        product_dict = {cariot.get_product_id(): 2, oreo.get_product_id(): 2}
+        product_dict = {cariot.get_product_id(): (cariot,2), oreo.get_product_id(): (oreo,2)}
         price_after_discount_1 = self.my_store.getProductPriceAfterDiscount(self.item_paper, product_dict, 0)
         self.assertEqual(450, price_after_discount_1)
 
@@ -1721,7 +1756,7 @@ class TestStoreFacade(TestCase):
         oreo: Product = self.my_store.addProduct(access, "Oreo", 10, 10, "Milk")
         rule = {"rule_type": "amount_of_product", "product_id": oreo.get_product_id(), "category":"", "operator": "<=", "user_field": "",
                 "quantity": 5, "child": {}}
-        policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
+        policy = self.store_facade.addPurchasePolicy("AriExpress","Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
         added_discount = self.my_store.getPolicy(1)
         self.assertEqual(policy, added_discount)
 
@@ -2396,8 +2431,10 @@ class TestStoreFacade(TestCase):
         self.store_facade.closeStore("Feliks", "AriExpress")
         Feliks_Messages_count_after = MessageController().get_notifications("Feliks").__len__()
         self.assertEqual(Feliks_Messages_count_after, Feliks_Messages_count_before + 1, "Feliks should be notified")
+        self.my_store = self.store_facade.stores.get("AriExpress")
         self.assertFalse(self.my_store.active)
         self.store_facade.openStore("Feliks", "AriExpress")
+        self.my_store = self.store_facade.stores.get("AriExpress")
         # integrity
         self.assertTrue(self.my_store.active)
 

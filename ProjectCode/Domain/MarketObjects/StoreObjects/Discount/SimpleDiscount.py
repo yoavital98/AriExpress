@@ -8,6 +8,9 @@ class SimpleDiscount(Policy):
         self.discount_id = discount_id
         self.percent = percent
 
+    def __eq__(self, other):
+        return self.discount_id == other.discount_id
+
     def calculate(self, product, basket, total_price):
         if super()._checkIfRelevant(product):
             return int(self.percent)

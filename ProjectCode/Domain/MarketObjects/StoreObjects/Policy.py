@@ -13,6 +13,10 @@ class Policy(ABC):
         #self.percent = percent
         self.level = level
         self.level_name = level_name
+        self.__defineLevelType()
+    def __eq__(self, other):
+        return self.level == other.level and self.level_name == other.level_name
+
 
     @abstractmethod
     def calculate(self, product, basket, total_price):
@@ -31,5 +35,7 @@ class Policy(ABC):
             return int(self.level_name) == int(product.get_product_id())
         return False
 
-
+    def __defineLevelType(self):
+        if self.level == "Product":
+            self.level_name = int(self.level_name)
 

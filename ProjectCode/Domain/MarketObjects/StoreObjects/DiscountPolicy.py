@@ -58,8 +58,9 @@ class DiscountPolicy:
         else:
             raise Exception("No such discount type exists")
         #discount.parse() -- orm change
-        self.discount_id += 1
-        self.discounts[self.discount_id] = discount
+        #self.discount_id += 1
+        self.discounts[self.get_discount_id()] = discount
+        discount = self.discounts[self.get_discount_id()]
         return discount
 
     def calculateDiscountForProduct(self, product, basket, total_price):
@@ -75,6 +76,9 @@ class DiscountPolicy:
 
     def getAllDiscounts(self):
         return self.discounts
+
+    def get_discount_id(self):
+        return self.discounts.get_highest_id()
 
     # =======================JSON=======================#
 
