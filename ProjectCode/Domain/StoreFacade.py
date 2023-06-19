@@ -106,6 +106,7 @@ class StoreFacade:
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
         self.members = MemberRepository()  # dict of members
+        self.members.logInReset()
         self.onlineGuests = GuestRepository()  # dict of users
         self.stores = StoreRepository()  # dict of stores
         self.online_members = MemberRepository(online=True)  # dict from username to online members
