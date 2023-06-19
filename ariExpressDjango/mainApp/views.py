@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -301,6 +301,24 @@ def store_specific(request, storename):
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
 
+    if 'placeBid' in request.POST:
+        product_id = request.POST.get('product_id')
+        bidAmount = request.POST.get('bidAmount')
+        quantity = request.POST.get('quantity')
+        try:
+            bidAmount = int(bidAmount)
+        except Exception as e:
+            messages.success(request, (f"Error: bid should be a number."))
+            return redirect('mainApp:store_specific', storename=storename)
+        actionRes = service.placeBid(request.user.username, storename, bidAmount, product_id, quantity)
+        if actionRes.getStatus():
+            messages.success(request, ("Bid placed successfully."))
+            return redirect('mainApp:store_specific', storename=storename)
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mystores')
+
+        
     else:
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
