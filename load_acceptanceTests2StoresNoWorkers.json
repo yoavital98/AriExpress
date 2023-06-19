@@ -15,7 +15,7 @@
 },{
   "createStore": {"args": ["Robin", "Robin&Daughters"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "vegetables"]}
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "vegetables"]} // 1
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "vegetables"]}
 },{
@@ -23,7 +23,7 @@
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "vegetables"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "vegetables"]}
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "vegetables"]} // 5
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Potato_K", "30", "8", "vegetables"]}
 },{
@@ -33,7 +33,7 @@
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Mango_K", "30", "20", "fruits"]}
 },{
-  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Banana_K", "30", "8", "fruits"]}
+  "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Banana_K", "30", "8", "fruits"]} // 10
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Melon_K", "30", "8", "fruits"]}
 },{

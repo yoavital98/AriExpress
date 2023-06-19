@@ -4,19 +4,22 @@ from unittest import TestCase
 from ProjectCode.Domain.MarketObjects.Basket import Basket
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.MarketObjects.Store import Store
+from ProjectCode.Domain.MarketObjects.StoreObjects import Discount
+from ProjectCode.Domain.MarketObjects.StoreObjects.Policy import Policy
+from ProjectCode.Domain.MarketObjects.StoreObjects.PurchasePolicy import PurchasePolicy
 from ProjectCode.Service.Service import Service
 
-default_config = "../../default_config.json"
-stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+default_config = "../../../default_config.json"
+stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+empty_load = "../../../empty_load.json"
 true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
 
 class Test_Use_Cases_1(TestCase):
-    default_config = "../../default_config.json"
-    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+    default_config = "../../../default_config.json"
+    stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+    empty_load = "../../../empty_load.json"
 
-    def setUp(self):
-        pass
 
     # TODO need to add default config for all Service(default_config) calls
     # Service(config)
@@ -24,8 +27,8 @@ class Test_Use_Cases_1(TestCase):
 
     #  Use Case 1.1
     def test_starting_the_market_system_success(self):
-        service = Service(default_config, true_lambda)
-        self.assertNotEqual(service.store_facade.admins.__len__(), 0)
+        service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.assertNotEqual(service.store_facade.admins.__len__(), 1)
 
     # Use Case 1.2
 
@@ -75,19 +78,44 @@ class Test_Use_Cases_1(TestCase):
 
     # Use Case 1.3 & 1.4
 
-    def setup_purchase(self):
-        self.service = Service(default_config, None, true_lambda)
-        self.service.register("Feliks", "password456", "feliks@gmail.com")
-        self.service.register("Amiel", "password789", "amiel@gmail.com")
-        self.service.logIn("Feliks", "password456")
+    def setUp(self):
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
         self.service.createStore("Feliks", "Feliks&Sons")
-        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "paper", 50, 100, "paper")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
 
     def test_request_to_payment_supply_success(self):
-        self.setup_purchase()
+        self.setUp()
         res = self.service.loginAsGuest()
+        guest_id = int(res.getReturnValue()["entrance_id"])
         self.assertTrue(res.getStatus())
-        res_added_product = self.service.addToBasket('0', "Feliks&Sons", 1, 5)
+        res_added_product = self.service.addToBasket(guest_id, "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
         res_purchase = self.service.purchaseCart("0", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
@@ -96,7 +124,7 @@ class Test_Use_Cases_1(TestCase):
     # Use case 1.5 & 1.6
 
     def test_notification_to_store_founder_and_user(self):
-        self.setup_purchase()
+        self.setUp()
         self.service.logIn("Amiel", "password789")
         self.service.logIn("Feliks", "password456")
         notification_amount_amiel = self.service.getAllNotifications("Amiel").__len__()
@@ -111,11 +139,12 @@ class Test_Use_Cases_1(TestCase):
         self.service.logIn("Feliks", "password456")
         notification_amount_founder = self.service.getAllNotifications("Feliks").__len__()
         self.assertTrue(notification_amount_founder == notification_amount_feliks + 1)
+        self.assertTrue(self.service.getAllNotifications("Feliks").getNotification(0).get_status() == "pending")
 
     # Use case 1.7
 
     def test_notify_user_at_success_and_error(self):
-        self.setup_purchase()
+        self.setUp()
         self.service.logIn("Amiel", "password789")
         self.service.logIn("Feliks", "password456")
         self.service.addToBasket('Amiel', "Feliks&Sons", 1, 5)
@@ -134,10 +163,40 @@ class Test_Use_Cases_1(TestCase):
 class Test_Use_Cases_2_1(TestCase):
     default_config = "../../../default_config.json"
     stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+    empty_load = "../../../empty_load.json"
     true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
     def setUp(self):
-        self.service = Service(self.default_config, None, self.true_lambda)
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
 
     # Use Case 2.1.1
     def test_guest_visit_success(self):
@@ -240,11 +299,52 @@ class Test_Use_Cases_2_1(TestCase):
 
 
 class Test_Use_Case_2_2(TestCase):
-    default_config = "../../default_config.json"
-    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
-
+    default_config = "../../../default_config.json"
+    stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+    empty_load = "../../../empty_load.json"
     def setUp(self):
-        self.service = Service(self.default_config, None, true_lambda)
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
+        self.service.register("Son_A", "passwordAAA", "sona@gmail.com")
+        self.service.register("Son_B", "passwordBBB", "sonb@gmail.com")
+        self.service.register("Son_C", "passwordCCC", "sonc@gmail.com")
+        self.service.register("Son_D", "passwordDDD", "sond@gmail.com")
+        self.service.register("Son_E", "passwordEEE", "sone@gmail.com")
+        self.service.register("Son_F", "passwordFFF", "sonf@gmail.com")
+        self.service.nominateStoreOwner("Feliks", "Son_A", "Feliks&Sons")
+        self.service.nominateStoreOwner("Feliks", "Son_B", "Feliks&Sons")
+        self.service.nominateStoreManager("Feliks", "Son_C", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_D", "Feliks&Sons")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Product", "5", "")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Category", "", "Fruits")
 
     # Use Case 2.2.1
     def test_guest_information_fetching_success(self):
@@ -375,8 +475,8 @@ class Test_Use_Case_2_2(TestCase):
         self.setUp()
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
-        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
         self.service.editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 1, 7)
         self.service.editBasketQuantity(guest0_entrance_id, "Robin&Daughters", 1, 8)
         self.assertTrue(
@@ -396,8 +496,8 @@ class Test_Use_Case_2_2(TestCase):
         self.setUp()
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
-        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
         with self.assertRaises(Exception):
             self.service.editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 2, 7)
 
@@ -405,7 +505,7 @@ class Test_Use_Case_2_2(TestCase):
         self.setUp()
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
         with self.assertRaises(Exception):
             self.service.editBasketQuantity(guest0_entrance_id, "Robin&Daughters", 1, 7)
 
@@ -415,8 +515,8 @@ class Test_Use_Case_2_2(TestCase):
         self.setUp()
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
-        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
         self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"].__len__() == 2)
         feliks_notification_count = self.service.getNotifications("Feliks").getReturnValue().__len__()
         robin_notification_count = self.service.getNotifications("Robin").getReturnValue().__len__()
@@ -442,9 +542,9 @@ class Test_Use_Case_2_2(TestCase):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 5,
-                                 5)  # "Tomato_K", "30", "8", "vegetables" simple discount 25
+                                 5)  # "Tomato_K", "30", "8", "Vegetables" simple discount 25
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9,
-                                 5)  # "Mango_K", "30", "20", "fruits" all fruits 25 simple discount
+                                 5)  # "Mango_K", "30", "20", "Fruits" all Fruits 25 simple discount
         self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"].__len__() == 1)
         basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
             "Feliks&Sons").calculateBasketPrice()
@@ -459,8 +559,8 @@ class Test_Use_Case_2_2(TestCase):
         self.setUp()
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
-        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
         with self.assertRaises(Exception):
             self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/20", "Amiel Saad", "555", "123456789",
                                       "be'er sheva", "beer sheva", "israel", "1234152")
@@ -475,8 +575,8 @@ class Test_Use_Case_2_2(TestCase):
         sonc_notifications_count = self.service.getNotifications("Sonc").getReturnValue().__len__()
         sond_notifications_count = self.service.getNotifications("Sond").getReturnValue().__len__()
         amiel_notifications_count = self.service.getNotifications("Amiel").getReturnValue().__len__()
-        self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "vegetables", 4K = 32 ins
-        self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "vegetables"  , 4K = 32 ins
+        self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "Vegetables", 4K = 32 ins
+        self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "Vegetables"  , 4K = 32 ins
         # ////////////
         feliks_notifications_count_afterplace = self.service.getNotifications("Feliks").getReturnValue().__len__()
         sona_notifications_count_afterplace = self.service.getNotifications("Sona").getReturnValue().__len__()
@@ -552,8 +652,8 @@ class Test_Use_Case_2_2(TestCase):
 
     def test_member_BidPurchaseRejected_success(self):
         self.service.logIn("Amiel", "password111")
-        self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "vegetables", 4K = 32 ins
-        self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "vegetables"  , 4K = 32 ins
+        self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "Vegetables", 4K = 32 ins
+        self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "Vegetables"  , 4K = 32 ins
         # ////////////
         basket = self.service.getBasket("Amiel", "Feliks&Sons")
         bid1: Bid = basket.get_bids().get(0)
@@ -601,8 +701,8 @@ class Test_Use_Case_2_2(TestCase):
 
     def test_member_BidPurchaseAlternate_success(self):
         self.service.logIn("Amiel", "password111")
-        self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "vegetables", 4K = 32 ins
-        self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "vegetables"  , 4K = 32 ins
+        self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "Vegetables", 4K = 32 ins
+        self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "Vegetables"  , 4K = 32 ins
         # ////////////
         basket = self.service.getBasket("Amiel", "Feliks&Sons")
         bid1: Bid = basket.get_bids().get(0)
@@ -647,11 +747,53 @@ class Test_Use_Case_2_2(TestCase):
 
 
 class Test_Use_Case_2_3_members(TestCase):
-    default_config = "../../default_config.json"
-    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+    default_config = "../../../default_config.json"
+    stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+    empty_load = "../../../empty_load.json"
 
     def setUp(self):
-        self.service = Service(self.default_config, None, true_lambda)
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
+        self.service.register("Son_A", "passwordAAA", "sona@gmail.com")
+        self.service.register("Son_B", "passwordBBB", "sonb@gmail.com")
+        self.service.register("Son_C", "passwordCCC", "sonc@gmail.com")
+        self.service.register("Son_D", "passwordDDD", "sond@gmail.com")
+        self.service.register("Son_E", "passwordEEE", "sone@gmail.com")
+        self.service.register("Son_F", "passwordFFF", "sonf@gmail.com")
+        self.service.nominateStoreOwner("Feliks", "Son_A", "Feliks&Sons")
+        self.service.nominateStoreOwner("Feliks", "Son_B", "Feliks&Sons")
+        self.service.nominateStoreManager("Feliks", "Son_C", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_D", "Feliks&Sons")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Product", "5", "")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Category", "", "Fruits")
 
     # Use Case 2.3.1
     def test_log_out_from_the_system_success(self):
@@ -697,8 +839,8 @@ class Test_Use_Case_2_3_members(TestCase):
     def test_getPurchaseHistory_forMember_success(self):
         # a member buys stuff, and we need to check that it is in his purchase history
         self.setUp()
-        self.service.addToBasket("Amiel", "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
-        self.service.addToBasket("Amiel", "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        self.service.addToBasket("Amiel", "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
+        self.service.addToBasket("Amiel", "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
         self.assertTrue(self.service.getCart("Amiel").getReturnValue()["baskets"].__len__() == 2)
         self.service.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                   "be'er sheva", "beer sheva", "israel", "1234152")
@@ -707,21 +849,64 @@ class Test_Use_Case_2_3_members(TestCase):
 
 
 class Test_Use_Case_2_4_Management(TestCase):
-    default_config = "../../default_config.json"
-    stores_load = "../../load_acceptanceTests2StoresNoWorkers.json"
+    default_config = "../../../default_config.json"
+    stores_load = "../../../load_acceptanceTests2StoresNoWorkers.json"
+    empty_load = "../../../empty_load.json"
 
     def setUp(self):
-        self.service = Service(self.default_config, None, true_lambda)
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
+        self.service.register("Son_A", "passwordAAA", "sona@gmail.com")
+        self.service.register("Son_B", "passwordBBB", "sonb@gmail.com")
+        self.service.register("Son_C", "passwordCCC", "sonc@gmail.com")
+        self.service.register("Son_D", "passwordDDD", "sond@gmail.com")
+        self.service.register("Son_E", "passwordEEE", "sone@gmail.com")
+        self.service.register("Son_F", "passwordFFF", "sonf@gmail.com")
+        self.service.nominateStoreOwner("Feliks", "Son_A", "Feliks&Sons")
+        self.service.nominateStoreOwner("Feliks", "Son_B", "Feliks&Sons")
+        self.service.nominateStoreManager("Feliks", "Son_C", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_D", "Feliks&Sons")
+        # self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Product", "5", "")
+        # self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Category", "", "Fruits")
 
+    # =================================================================================================================
     # Use Case 4.1.a
     def test_addProductToStore_Success(self):
         self.setUp()
-        self.service.logIn("Feliks", "password333")
-        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cucumber_K", "30", "8", "vegetables")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.addNewProductToStore("Son_A", "Feliks&Sons", "Cucumber_K", "30", "8", "Vegetables")
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().__len__() == 13)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_quantity() == 30)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_price() == 8)
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_category() == "vegetables")
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_category() == "Vegetables")
         res = self.service.loginAsGuest()
         guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 13, 5)
@@ -729,9 +914,9 @@ class Test_Use_Case_2_4_Management(TestCase):
     # Use Case 4.1.b
     def test_deleteProductFromStore_Success(self):
         self.setUp()
-        self.service.logIn("Feliks", "password333")
-        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cucumber_K", "30", "8", "vegetables")
-        self.service.removeProductFromStore("Feliks", "Feliks&Sons", 12)
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.addNewProductToStore("Son_A", "Feliks&Sons", "Cucumber_K", "30", "8", "Vegetables")
+        self.service.removeProductFromStore("Son_A", "Feliks&Sons", 12)
         res = self.service.loginAsGuest()
         guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
         with self.assertRaises(Exception):
@@ -743,11 +928,11 @@ class Test_Use_Case_2_4_Management(TestCase):
     # Use Case 4.1.c
     def test_changeProductInStore_Success(self):
         self.setUp()
-        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_quantity() == 30)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_price() == 8)
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "vegetables")
-        self.service.editProductOfStore("Feliks", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "Vegetables")
+        self.service.editProductOfStore("Son_A", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_quantity() == 10)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_price() == 10)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "veggies")
@@ -755,68 +940,893 @@ class Test_Use_Case_2_4_Management(TestCase):
         guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
 
-
-    # Use Case 4.2.a
-    def test_newDiscountToStore_Simple_StoreLevel_Success(self):
-        # res = self.service.logIn("Feliks", "password456")
-        # self.assertTrue(res.getStatus())
-        # res_new_discount = self.service.addDiscount("AriExpress", "Feliks", "Simple", percent=10, level="Store",
-        #                                             level_name=1)
-        # self.assertTrue(res_new_discount.getStatus())
-        pass
+    # =================================================================================================================
+    # Use Case 4.2.a - Simple
 
     def test_newDiscountToStore_Simple_ProductLevel_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 40)
+        # add 25% discount to prod id 1
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Product", level_name=1)
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 30)
 
     def test_newDiscountToStore_Simple_CategoryLevel_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5) # "Banana_K", "30", "8", "fruits"
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5*8 + 5*20 + 5*8)
+        # add 25% discount to all Fruits Category in Feliks&Sons
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Category", level_name="Fruits")
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 * 0.75 + 5 * 8 * 0.75)
 
-    # Use Case 4.2.b
-    def test_newDiscountToStore_Conditional_StoreLevel_Success(self):
-        pass
+    def test_newDiscountToStore_Simple_StoreLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8 + 5 * 15)
+        # add 25% discount to all store: Feliks&Sons
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Store", level_name="")
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 * 0.75 + 5 * 20 * 0.75 + 5 * 8 * 0.75 + 5 * 15)
+
+    def test_removeDiscountFromStore_Simple_ProductLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 40)
+        # add 25% discount to prod id 1, then remove it
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Product", level_name=1)
+        added_discount: Discount = res.getReturnValue()
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 40)
+
+    def test_removeDiscountFromStore_Simple_CategoryLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8)
+        # add 25% discount to all Fruits Category in Feliks&Sons, then remove it
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Category", level_name="Fruits")
+        added_discount: Discount = res.getReturnValue()
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8)
+
+    def test_removeDiscountFromStore_Simple_StoreLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8 + 5 * 15)
+        # add 25% discount to all store: Feliks&Sons, then remove it
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Store", level_name="")
+        added_discount: Discount = res.getReturnValue()
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8 + 5 * 15)
+
+    # =================================================================================================================
+    # Use Case 4.2.b - Conditional
 
     def test_newDiscountToStore_Conditional_ProductLevel_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: if all basket price is greater than 120 OR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
+        #               then: 50% off mango
+        rule3 = {"rule_type":"amount_of_product", "product":1, "category":"","operator":">=","quantity":5,"child":{}}
+        rule2 = {"rule_type":"amount_of_product", "product":2, "category":"","operator":">=","quantity":5,"child":{"logic_type":"AND","rule":rule3}}
+        rule1 = {"rule_type":"basket_total_price", "product":-1, "category":"","operator":">=","quantity":120,"child":{"logic_type":"OR","rule":rule2}}
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Product", level_name=9, rule=rule1)
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest3_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 4 mango - no discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 4)
+        # guest1 will have just 5 cauliflower and 1 mango - no discount
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 9, 1)
+        # guest2 will have a big basket from 7 mango - discount
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 9, 7) # 20*6 > 120
+        # guest 3 will have 5 cabbage 5 cauliflower and 1 mango - discount
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
+
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 4 * 20)
+        self.assertTrue(basket1_price == 5 * 8 + 20 * 1)
+        self.assertTrue(basket2_price == 7 * 20 * 0.5)
+        self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1 * 0.5)
 
     def test_newDiscountToStore_Conditional_CategoryLevel_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
+        #               then: 50% off all fruits
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5, "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5, "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200, "child": {"logic_type": "XOR", "rule": rule2}}
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category", level_name="Fruits", rule=rule1)
 
-    # Use Case 4.2.c
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest3_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 4 mango 4 bananas - no discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 4)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 4)
+        # guest1 will have just 5 cauliflower and 1 mango and 1 banana - no discount
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 9, 1)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 1)
+        # guest2 will have a big basket from 10 mango AND 5 cabbages and 5 cauliflower - no discount, XOR fault
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 9, 10)  # 20*10 > 120
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 2, 5)
+        # guest 3 will have 5 cabbage 5 cauliflower and 1 mango and 1 banana - discount
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 10, 1)
+
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 4 * 20 + 4 * 8)
+        self.assertTrue(basket1_price == 5 * 8 + 20 * 1 + 8 * 1)
+        self.assertTrue(basket2_price == 10 * 20 + 5 * 8 + 5 * 8)
+        self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1 * 0.5 + 8 * 1 * 0.5)
+
+    def test_newDiscountToStore_Conditional_StoreLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
+        #               then: 50% off all store
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,"child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,"child": {"logic_type": "XOR", "rule": rule2}}
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",level_name="Fruits", rule=rule1)
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest3_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 4 mango 4 bananas - no discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 4)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 4)
+        # guest1 will have just 5 cauliflower and 1 mango and 1 banana - no discount
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 9, 1)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 1)
+        # guest2 will have a big basket from 10 mango AND 5 cabbages and 5 cauliflower - no discount, XOR fault
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 9, 10)  # 20*10 > 120
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 2, 5)
+        # guest 3 will have 5 cabbage 5 cauliflower and 1 mango and 1 banana - discount
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 10, 1)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 3, 5)
+
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 4 * 20 + 4 * 8)
+        self.assertTrue(basket1_price == 5 * 8 + 20 * 1 + 8 * 1)
+        self.assertTrue(basket2_price == 10 * 20 + 5 * 8 + 5 * 8)
+        self.assertTrue(basket3_price == 5 * 8 * 0.5 + 5 * 8 * 0.5 + 20 * 1 * 0.5 + 8 * 1 * 0.5)
+
+
+    def test_removeDiscountFromStore_Conditional_ProductLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: if all basket price is greater than 120 OR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
+        #               then: 50% off mango
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,"child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 120, "child": {"logic_type": "OR", "rule": rule2}}
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Product", level_name=9,rule=rule1)
+        added_discount: Discount = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest3_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest2 will have a big basket from 7 mango - discount
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 9, 7)  # 20*6 > 120
+        # guest 3 will have 5 cabbage 5 cauliflower and 1 mango - discount
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
+
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket2_price == 7 * 20)
+        self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1)
+
+    def test_removeDiscountFromStore_Conditional_CategoryLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
+        #               then: 50% off all fruits
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5, "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,"child": {"logic_type": "XOR", "rule": rule2}}
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",level_name="Fruits", rule=rule1)
+        added_discount: Discount = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest3_entrance_id = int(res.getReturnValue()["entrance_id"])
+        # guest 3 will have 5 cabbage 5 cauliflower and 1 mango and 1 banana - discount
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
+
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1 + 8 * 1)
+
+    def test_removeDiscountFromStore_Conditional_StoreLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
+        #               then: 50% off all store
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,"child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,"child": {"logic_type": "XOR", "rule": rule2}}
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",level_name="Fruits", rule=rule1)
+        added_discount: Discount = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest3_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest 3 will have 5 cabbage 5 cauliflower and 1 mango and 1 banana - discount
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 10, 1)
+        self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 3, 5)
+
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1 + 8 * 1)
+
+    # =================================================================================================================
+    # Use Case 4.2.c - Max
     def test_newDiscountToStore_Max_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Max discount: 1) 50% off cauliflower 2) 25% off all vegetables 3) 20% off all store
+        discount1 = {"discount_type": "Simple", "percent": 50, "level": "Product", "level_name": 1}
+        discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
+        discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
 
-    # Use Case 4.2.f
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Max", discounts={"1": discount1, "2": discount2, "3": discount3})
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 5 cauliflower - 50% discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        # guest1 will have just 5 cabbage and 5 cauliflower - 50% discount cauliflower 25% discount cabbage
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        # guest2 will have just 5 cabbage and 5 cauliflower and 5 banana - 50% discount cauliflower 25% discount cabbage 20% banana
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
+
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 5 * 8 * 0.5)
+        self.assertTrue(basket1_price == 5 * 8 * 0.5 + 5 * 8 * 0.75)
+        self.assertTrue(basket2_price == 5 * 8 * 0.5 + 5 * 8 * 0.75 + 5 * 8 * 0.8)
+
+    def test_removeDiscountFromStore_Max_ProductLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Max discount: 1) 50% off cauliflower 2) 25% off all vegetables 3) 20% off all store
+        discount1 = {"discount_type": "Simple", "percent": 50, "level": "Product", "level_name": 1}
+        discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
+        discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
+
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Max", discounts={"1": discount1, "2": discount2, "3": discount3})
+        added_discount: Discount = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 5 cauliflower - 50% discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        # guest1 will have just 5 cabbage and 5 cauliflower - 50% discount cauliflower 25% discount cabbage
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        # guest2 will have just 5 cabbage and 5 cauliflower and 5 banana - 50% discount cauliflower 25% discount cabbage 20% banana
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
+
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 5 * 8)
+        self.assertTrue(basket1_price == 5 * 8 + 5 * 8)
+        self.assertTrue(basket2_price == 5 * 8 + 5 * 8 + 5 * 8)
+
+
+    # =================================================================================================================
+    # Use Case 4.2.d - Add
     def test_newDiscountToStore_Add_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: 1) 50% off cauliflower 2) 25% off all vegetables 3) 20% off all store
+        discount1 = {"discount_type": "Simple", "percent": 50, "level": "Product", "level_name": 1}
+        discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
+        discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
 
-    # Use Case 4.2.g
-    def test_newPolicyToStore_StoreLevel_Success(self):
-        pass
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Add", discounts={"1": discount1, "2": discount2, "3": discount3})
 
-    # Use Case 4.2.h
-    def test_newPolicyToStore_ProductLevel_Success(self):
-        pass
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
 
-    # Use Case 4.2.i
-    def test_newPolicyToStore_Category_Success(self):
-        pass
+        # guest0 will just buy 5 cauliflower - 50%+25%+20% discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        # guest1 will have just 5 cabbage and 5 cauliflower - 50%+25%+20% discount cauliflower 25%+20% discount cabbage
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        # guest2 will have just 5 cabbage and 5 cauliflower and 5 banana - 50%+25%+20% discount cauliflower 25%+20% discount cabbage 20% banana
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
 
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 5 * 8 * 0.05)
+        self.assertTrue(basket1_price == 5 * 8 * 0.05 + 5 * 8 * 0.55)
+        self.assertTrue(basket2_price == 5 * 8 * 0.05 + 5 * 8 * 0.55 + 5 * 8 * 0.8)
+
+    def test_removeDiscountFromStore_Add_ProductLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add discount: 1) 50% off cauliflower 2) 25% off all vegetables 3) 20% off all store
+        discount1 = {"discount_type": "Simple", "percent": 50, "level": "Product", "level_name": 1}
+        discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
+        discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
+
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Add", discounts={"1": discount1, "2": discount2, "3": discount3})
+        added_discount: Discount = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest2_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 5 cauliflower - 50% discount
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        # guest1 will have just 5 cabbage and 5 cauliflower - 50% discount cauliflower 25% discount cabbage
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        # guest2 will have just 5 cabbage and 5 cauliflower and 5 banana - 50% discount cauliflower 25% discount cabbage 20% banana
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
+
+        self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
+
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+
+        self.assertTrue(basket0_price == 5 * 8)
+        self.assertTrue(basket1_price == 5 * 8 + 5 * 8)
+        self.assertTrue(basket2_price == 5 * 8 + 5 * 8 + 5 * 8)
+
+    # =================================================================================================================
+    # Use Case 4.2.e
+
+    def test_newPurchasePolicyToStore_ProductLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add policy: cannot have more than 5 cauliflowers_K and then buy Melon
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product", level_name=11)
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 6 cauliflower and then try to buy melon - fail
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 6)
+        with self.assertRaises(Exception):
+            self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 11, 6)
+        # guest1 will have buy 5 cauliflower then buy melon - success
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 11, 6)
+        # guest1 will then add a cauliflower - fail
+        with self.assertRaises(Exception):
+            self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+
+    def test_newPurchasePolicyToStore_CategoryLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add policy: cannot have more than 5 vegetables and then buy fruits
+        rule1 = {"rule_type": "amount_of_category", "product": "", "category": "Vegetables", "operator": "<=", "quantity": 5,"child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Category",level_name="Fruits")
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        # guest0 will just buy 3 cauliflower 3 cabbage and then will try to buy fruit - fail
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 3)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 3)
+        with self.assertRaises(Exception):
+            self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 6)
+        # guest1 will have buy 5 cauliflower and then will try to buy fruit - success
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 6)
+        # guest1 will then add a vegetable - fail
+        with self.assertRaises(Exception):
+            self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+
+    def test_newPurchasePolicyToStore_StoreLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add policy: cannot have more than 5 cauliflowers_K
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Basket",level_name="")
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        with self.assertRaises(Exception):
+            # guest0 will just buy 6 cauliflower - fail
+            self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 6)
+        # guest1 will have buy 5 cauliflower - success
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        with self.assertRaises(Exception):
+            # guest1 will just buy 1 more cauliflower - fail
+            self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+    def test_newPurchasePolicyToStore_UserLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Ari", "password222")
+        # Add policy: Ari can't buy banana
+        rule1 = {"rule_type": "username_restriction", "product": -1, "category": "", "operator": "", "quantity": 0, "user_field":"Ari" ,"child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product", level_name=10)
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        #guest can add banana
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 1)
+        #guest can add mango
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 1)
+        #Ari can add mango
+        self.service.addToBasket("Ari", "Feliks&Sons", 9, 1)
+        #Ari can't add banana
+        with self.assertRaises(Exception):
+            self.service.addToBasket("Ari", "Feliks&Sons", 10, 1)
+
+    def test_removePurchasePolicyFromStore_ProductLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add policy: cannot have more than 5 cauliflowers_K and then buy Melon
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",level_name=11)
+        added_Policy: PurchasePolicy = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        self.service.removePurchasePolicy("Feliks&Sons", "Son_A", added_Policy.get_policy_id())
+
+        # guest0 will just buy 6 cauliflower and then try to buy melon - no more fail
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 6)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 11, 6)
+        # guest1 will have buy 5 cauliflower then buy melon - success
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 11, 6)
+        # guest1 will then add a cauliflower - no more fail
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+
+    def test_removePurchasePolicyFromStore_CategoryLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add policy: cannot have more than 5 vegetables and then buy fruits
+        rule1 = {"rule_type": "amount_of_category", "product": "", "category": "Vegetables", "operator": "<=","quantity": 5, "child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Category",level_name="Fruits")
+        added_Policy: PurchasePolicy = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        self.service.removePurchasePolicy("Feliks&Sons", "Son_A", added_Policy.get_policy_id())
+
+        # guest0 will just buy 3 cauliflower 3 cabbage and then will try to buy fruit - no more fail
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 3)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 3)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 6)
+        # guest1 will have buy 5 cauliflower and then will try to buy fruit - success
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 6)
+        # guest1 will then add a vegetable - no more fail
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+
+    def test_removePurchasePolicyFromStore_StoreLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        # Add policy: cannot have more than 5 cauliflowers_K
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Basket",level_name="")
+        added_Policy: PurchasePolicy = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        res = self.service.loginAsGuest()
+        guest1_entrance_id = int(res.getReturnValue()["entrance_id"])
+
+        self.service.removePurchasePolicy("Feliks&Sons", "Son_A", added_Policy.get_policy_id())
+
+        # guest0 will just buy 6 cauliflower - no more fail
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 6)
+        # guest1 will have buy 5 cauliflower - success
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
+        # guest1 will just buy 1 more cauliflower - no more fail
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+
+    def test_removePurchasePolicyFromStore_UserLevel_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Ari", "password222")
+        # Add policy: Ari can't buy banana
+        rule1 = {"rule_type": "username_restriction", "product": -1, "category": "", "operator": "", "quantity": 0,"user_field": "Ari", "child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",level_name=10)
+        added_Policy: PurchasePolicy = res.getReturnValue()
+
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(res.getReturnValue()["entrance_id"])
+        self.service.removePurchasePolicy("Feliks&Sons", "Son_A", added_Policy.get_policy_id())
+
+        # guest can add banana
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 1)
+        # guest can add mango
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 1)
+        # Ari can add mango
+        self.service.addToBasket("Ari", "Feliks&Sons", 9, 1)
+        # Ari can't add banana - now can
+        self.service.addToBasket("Ari", "Feliks&Sons", 10, 1)
+
+    # =================================================================================================================
     # Use Case 4.4.a
-    def test_nominateShopOwnerByOwner_Success(self):
-        pass
+    def test_nominateShopOwnerByOwner_AllApprove_Success(self):
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        sona_notification_count = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        sona_notification_count_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after, sona_notification_count + 1)
+        self.assertEqual(sonb_notification_count_after, sonb_notification_count + 1)
+        self.assertEqual(sonc_notification_count_after, sonc_notification_count)
+        self.assertEqual(sond_notification_count_after, sond_notification_count)
+        self.assertEqual(sone_notification_count_after, sone_notification_count + 1)
+        self.assertEqual(feliks_notification_count_after, feliks_notification_count + 1)
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_E" in staff_list)
+        self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_E" in staff_list)
+        self.service.approveNomination("Son_B", "Son_E", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertTrue("Son_E" in staff_list)
+        sona_notification_count_after_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after_after, sona_notification_count_after + 1)
+        self.assertEqual(sonb_notification_count_after_after, sonb_notification_count_after + 1)
+        self.assertEqual(sonc_notification_count_after_after, sonc_notification_count_after + 1)
+        self.assertEqual(sond_notification_count_after_after, sond_notification_count_after + 1)
+        self.assertEqual(sone_notification_count_after_after, sone_notification_count_after + 1)
+        self.assertEqual(feliks_notification_count_after_after, feliks_notification_count_after + 1)
+
+    def test_nominateShopOwnerByOwner_oneReject_Success(self):
+        self.setUp()
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        self.service.rejectNomination("Feliks", "Son_E", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_E" in staff_list)
+        with self.assertRaises(Exception): #shouldn't approve now, agreement cancelled
+            self.service.approveNomination("Son_B", "Son_E", "Feliks&Sons")
+
+    def test_nominateShopOwnerByOwner_OneGotFireBeforeOtherApproved_Success(self):
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_E" in staff_list)
+        self.service.removeAccess("Feliks", "Son_B", "Feliks&Sons")
+        sona_notification_count_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertTrue("Son_E" in staff_list)
+        sona_notification_count_after_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after_after, sona_notification_count_after + 1)
+        self.assertEqual(sonb_notification_count_after_after, sonb_notification_count_after + 1)
+        self.assertEqual(sonc_notification_count_after_after, sonc_notification_count_after + 1)
+        self.assertEqual(sond_notification_count_after_after, sond_notification_count_after + 1)
+        self.assertEqual(sone_notification_count_after_after, sone_notification_count_after + 1)
+        self.assertEqual(feliks_notification_count_after_after, feliks_notification_count_after + 1)
+
+    def test_nominateShopOwnerByOwner_LastOneToApproveFired_Success(self):
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_E" in staff_list)
+        sona_notification_count_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_E" in staff_list)
+        self.service.removeAccess("Feliks", "Son_B", "Feliks&Sons")
+        self.assertTrue("Son_E" in staff_list)
+        sona_notification_count_after_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after_after, sona_notification_count_after + 1)
+        self.assertEqual(sonb_notification_count_after_after, sonb_notification_count_after + 1)
+        self.assertEqual(sonc_notification_count_after_after, sonc_notification_count_after + 1)
+        self.assertEqual(sond_notification_count_after_after, sond_notification_count_after + 1)
+        self.assertEqual(sone_notification_count_after_after, sone_notification_count_after + 1)
+        self.assertEqual(feliks_notification_count_after_after, feliks_notification_count_after + 1)
+
 
     # Use Case 4.4.b
     def test_nominateShopOwnerByFounder_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        sona_notification_count_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.service.nominateStoreOwner("Feliks", "Son_E", "Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertTrue("Son_E" in staff_list)
+        sona_notification_count_after_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after_after, sona_notification_count_after + 1)
+        self.assertEqual(sonb_notification_count_after_after, sonb_notification_count_after + 1)
+        self.assertEqual(sonc_notification_count_after_after, sonc_notification_count_after + 1)
+        self.assertEqual(sond_notification_count_after_after, sond_notification_count_after + 1)
+        self.assertEqual(sone_notification_count_after_after, sone_notification_count_after + 1)
+        self.assertEqual(feliks_notification_count_after_after, feliks_notification_count_after + 1)
 
+    # =================================================================================================================
     # Use Case 4.5.a
     def test_removeShopOwnerByHisNomineeOwner_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
+        self.service.approveNomination("Son_B", "Son_E", "Feliks&Sons")
+        sona_notification_count = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.service.removeAccess("Son_A", "Son_E", "Feliks&Sons")
+        sona_notification_count_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons"))
+        self.assertEqual(sona_notification_count_after, sona_notification_count + 1)
+        self.assertEqual(sonb_notification_count_after, sonb_notification_count + 1)
+        self.assertEqual(sonc_notification_count_after, sonc_notification_count + 1)
+        self.assertEqual(sond_notification_count_after, sond_notification_count + 1)
+        self.assertEqual(sone_notification_count_after, sone_notification_count + 1)
+        self.assertEqual(feliks_notification_count_after, feliks_notification_count + 1)
 
     # Use Case 4.5.b
     def test_removeShopOwnerByFounder_Success(self):
-        pass
+        self.setUp()
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        sona_notification_count_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.service.removeAccess("Feliks", "Son_A", "Feliks&Sons")  # should remove son_D as well
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        self.assertFalse("Son_A" in staff_list)
+        self.assertFalse("Son_D" in staff_list)
+        sona_notification_count_after_after = self.service.getNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after_after = self.service.getNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after_after = self.service.getNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after_after = self.service.getNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after_after = self.service.getNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after_after = self.service.getNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after_after, sona_notification_count_after + 1)
+        self.assertEqual(sonb_notification_count_after_after, sonb_notification_count_after + 1)
+        self.assertEqual(sonc_notification_count_after_after, sonc_notification_count_after + 1)
+        self.assertEqual(sond_notification_count_after_after, sond_notification_count_after + 1)
+        self.assertEqual(sone_notification_count_after_after, sone_notification_count_after + 1)
+        self.assertEqual(feliks_notification_count_after_after, feliks_notification_count_after + 1)
 
+    # =================================================================================================================
     # Use Case 4.6.a
     def test_nominateShopManagerByOwner_Success(self):
         pass
@@ -825,6 +1835,7 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_nominateShopManagerByFounder_Success(self):
         pass
 
+    # =================================================================================================================
     # Use Case 4.7.a
     def test_addPermissionToShopManager_Success(self):
         pass
@@ -833,6 +1844,7 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_removePermissionToShopManager_success(self):
         pass
 
+    # =================================================================================================================
     # Use Case 4.8.a
     def test_removeShopManagerByHisNomineeOwner_Success(self):
         pass
@@ -841,6 +1853,7 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_removeShopManagerByFounder_Success(self):
         pass
 
+    # =================================================================================================================
     # Use Case 4.9
     def test_closeStore_success(self):
         # also to check users can't see items from there after close
@@ -861,8 +1874,50 @@ class Test_Use_Case_2_4_Management(TestCase):
 
 
 class Test_Use_Case_2_5_nominations(TestCase):
+    empty_load = "../../../empty_load.json"
     def setUp(self):
-        self.service = Service(self.default_config, None, true_lambda)
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
+        self.service.register("Son_A", "passwordAAA", "sona@gmail.com")
+        self.service.register("Son_B", "passwordBBB", "sonb@gmail.com")
+        self.service.register("Son_C", "passwordCCC", "sonc@gmail.com")
+        self.service.register("Son_D", "passwordDDD", "sond@gmail.com")
+        self.service.register("Son_E", "passwordEEE", "sone@gmail.com")
+        self.service.register("Son_F", "passwordFFF", "sonf@gmail.com")
+        self.service.nominateStoreOwner("Feliks", "Son_A", "Feliks&Sons")
+        self.service.nominateStoreOwner("Feliks", "Son_B", "Feliks&Sons")
+        self.service.nominateStoreManager("Feliks", "Son_C", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_D", "Feliks&Sons")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Product", "5", "")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Category", "", "Fruits")
 
     # Use Case 5
     def test_nominatedPreformingGivenAction_Success(self):
@@ -874,8 +1929,51 @@ class Test_Use_Case_2_5_nominations(TestCase):
 
 
 class Test_Use_Case_2_6_transactions(TestCase):
+    empty_load = "../../../empty_load.json"
+
     def setUp(self):
-        self.service = Service(self.default_config, None, true_lambda)
+        self.service = Service(config_file=default_config, load_file=self.empty_load, send_notification_call=true_lambda)
+        self.service.register("Feliks", "password333", "feliks@gmail.com")
+        self.service.register("Amiel", "password111", "amiel@gmail.com")
+        self.service.register("Ari", "password222", "ari@gmail.com")
+        self.service.register("Robin", "password444", "robin@gmail.com")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Robin", "password222")
+        self.service.createStore("Feliks", "Feliks&Sons")
+        self.service.createStore("Robin", "Robin&Daughters")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cabbage_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Broccoli_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Carrot_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Tomato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Potato_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Onion_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Garlic_K", "30", "8", "Vegetables")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Mango_K", "30", "20", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Banana_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Feliks", "Feliks&Sons", "Cherry_K", "30", "8", "Fruits")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Ketchup", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mustard", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Mayonnaise", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "Sauces")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "chilli", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "salt", "30", "2", "Seasonings")
+        self.service.addNewProductToStore("Robin", "Robin&Daughters", "paprika", "30", "2", "Seasonings")
+        self.service.register("Son_A", "passwordAAA", "sona@gmail.com")
+        self.service.register("Son_B", "passwordBBB", "sonb@gmail.com")
+        self.service.register("Son_C", "passwordCCC", "sonc@gmail.com")
+        self.service.register("Son_D", "passwordDDD", "sond@gmail.com")
+        self.service.register("Son_E", "passwordEEE", "sone@gmail.com")
+        self.service.register("Son_F", "passwordFFF", "sonf@gmail.com")
+        self.service.nominateStoreOwner("Feliks", "Son_A", "Feliks&Sons")
+        self.service.nominateStoreOwner("Feliks", "Son_B", "Feliks&Sons")
+        self.service.nominateStoreManager("Feliks", "Son_C", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_D", "Feliks&Sons")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Product", "5", "")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", "25", "Category", "", "Fruits")
 
     # Use Case 2.6.2
     def test_AdminBanMember_success(self):
