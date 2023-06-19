@@ -560,9 +560,7 @@ class StoreFacade:
             raise Exception("No such store exists")
         self.checkIfMemberExists(nominated_username)
         nominated_access = Access(cur_store, self.members[nominated_username], requester_username)
-        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
-                                                        "Owner")
-
+        nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,"Owner")
         # return DataAccess(nominated_modified_access)
         return nominated_modified_access
 
