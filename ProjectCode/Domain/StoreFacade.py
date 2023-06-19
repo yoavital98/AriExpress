@@ -126,12 +126,11 @@ class StoreFacade:
         self.loadData()
 
         # handshake with supply service and payment service
-        # self.supply_service = SupplyService(config["SupplyService"])
-        # self.payment_service = PaymentService(config["PaymentService"])
+        self.supply_service = SupplyService(config["SupplyService"])
+        self.payment_service = PaymentService(config["PaymentService"])
         # self.supply_service.perform_handshake()
         # self.payment_service.perform_handshake()
-        self.supply_service = None
-        self.payment_service = None
+
 
 
         # database config init
