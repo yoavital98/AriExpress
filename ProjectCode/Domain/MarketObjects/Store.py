@@ -131,12 +131,19 @@ class Store:
         usernames_to_remove = []
         while len(accesses_to_remove) > 0:
             cur_access = accesses_to_remove[0]
+            self.__handleBidApprovalBeforeRemovingAccess(cur_access.get_user().get_username())
             self.__accesses.remove(cur_access.get_user().get_username())
             usernames_to_remove.extend(cur_access.get_nominations())
             accesses_to_remove.remove(cur_access)
             pulled_accesses = [self.__accesses.get(username) for username in cur_access.get_nominations()]
             accesses_to_remove.extend(pulled_accesses)
         return usernames_to_remove
+
+    def __handleBidApprovalBeforeRemovingAccess(self, to_be_removed_username):
+        bid_request_list = self.__bids_requests.get(to_be_removed_username)
+        if bid_request_list is not None:
+            for bid in bid_request_list:
+                self.approveBid(to_be_removed_username, bid.get_id())
 
     def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
         requester_access: Access = self.__accesses.get(requester_username)

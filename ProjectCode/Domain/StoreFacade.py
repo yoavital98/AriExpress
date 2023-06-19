@@ -13,6 +13,8 @@ from ProjectCode.DAL.BidsRequestModel import BidsRequestModel
 from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.MessageModel import MessageModel
+from ProjectCode.DAL.NotificationModel import NotificationModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
@@ -96,12 +98,12 @@ class StoreFacade:
                         PurchasePolicyModel,
                         UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
                         StoreTransactionModel,
-                        ProductStoreTransactionModel])
+                        ProductStoreTransactionModel, MessageModel, NotificationModel])
         self.db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
               ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
               StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-              ProductStoreTransactionModel])
+              ProductStoreTransactionModel, MessageModel, NotificationModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
