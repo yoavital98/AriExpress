@@ -738,10 +738,12 @@ class Service:
     def getAllOnlineMembers(self, requesterID):
         try:
             users = self.store_facade.getAllOnlineMembers(requesterID)
-            print(users)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
-            return Response(json.dumps(users), True)
+            onlineUsers = {}
+            for user in users:
+                onlineUsers[user.get_username()] = user.toJson()
+            return Response(json.dumps(onlineUsers), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)
@@ -749,6 +751,10 @@ class Service:
     def getAllOfflineMembers(self, requesterID):
         try:
             users = self.store_facade.getAllOfflineMembers(requesterID)
+            offline = {}
+            for user in users:
+                offline[user.get_username()] = user.toJson()
+            return Response(json.dumps(offline), True)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
             return Response(json.dumps(users), True)

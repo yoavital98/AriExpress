@@ -157,6 +157,7 @@ class StoreFacade:
         for name, pwd in admins.items():
             new_admin: Admin = Admin(name, pwd, "admin@admin.com")
             self.admins[name] = new_admin
+            # print(name, pwd)
 
 
     # ------  users  ------ #

@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "admin", "12341234")
-    user = authenticate(request, username='admin', password='12341234')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "admin", "12341234")
+    # user = authenticate(request, username='admin', password='12341234')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -812,24 +812,47 @@ def adminPage(request):
     actionRes = service.checkIfAdmin(username)
     if actionRes.getStatus():
         allusers = {}
-        if 'onlineUsers' in request.POST:
-            resOnline = service.getAllOnlineMembers(request.user.username)
-            resOffline = service.getAllOfflineMembers(request.user.username)
-            if resOnline.getStatus() and resOffline.getStatus():
-                onlinemembers = resOnline.getReturnValue()  # returns a list
-                offlinemembers = resOffline.getReturnValue()  # returns a list
-                onlinemembers = ast.literal_eval(str(onlinemembers))
-                offlinemembers = ast.literal_eval(str(offlinemembers))
-                allusers = {'online': onlinemembers, 'offline': offlinemembers}
+        onlinemembers = {}
+        offlinemembers = {}
+        storesInfoDict = {}
+        historyInfo = None
+        resOnline = service.getAllOnlineMembers(request.user.username)
+        resOffline = service.getAllOfflineMembers(request.user.username)
+        if resOnline.getStatus() and resOffline.getStatus():
+            onlinemembers = resOnline.getReturnValue()  # returns a list
+            offlinemembers = resOffline.getReturnValue()  # returns a list
+            onlinemembers = ast.literal_eval(str(onlinemembers))
+            offlinemembers = ast.literal_eval(str(offlinemembers))
+            allusers = {}
+            for key, value in onlinemembers.items():
+                allusers[key] = value
+            for key, value in offlinemembers.items():
+                allusers[key] = value
+        storesInfo = service.getStoresBasicInfo()
+        if storesInfo.getStatus():
+            string_data = storesInfo.getReturnValue()
+            storesInfoDict = ast.literal_eval(str(string_data))
 
-        # if 'transactionHistory' in request.POST:
+        if 'transactionHistory' in request.POST:
+            userOrStore = request.POST.get('userStoreSelect')
+            if userOrStore == "1":
+                user = request.POST.get('selectUser')
+                print(user)
+                actionRes = service.getMemberPurchaseHistory(username, user)
+                if actionRes.getStatus():
+                    historyInfo = actionRes.getReturnValue()
+                    historyInfo = ast.literal_eval(str(historyInfo))
+
+            else:
+                store = request.POST.get('selectStore')
+                print(store)
+                actionRes = service.getStorePurchaseHistory(username, store)
+                if actionRes.getStatus():
+                    historyInfo = actionRes.getReturnValue()
+                    historyInfo = ast.literal_eval(str(historyInfo))
 
 
-
-
-
-
-        return render(request, 'adminPage.html', {'allusers': allusers})
+        return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
         return redirect('mainApp:mainpage')
