@@ -170,4 +170,5 @@ class MemberRepository(Repository):
         for entry in query:
             entry.logged_in = False
             entry.save()
+            # for felix
 
