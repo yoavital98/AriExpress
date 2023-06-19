@@ -16,7 +16,7 @@ class RulePurchaseComp(LogicComp):
     def __init__(self, rule_type, product, category, user_field, operator, quantity):
         super().__init__("")
         self.rule_types = {"amount_of_product": True, "alcohol_restriction": True, "basket_total_price": True,
-                      "day_of_the_week": True, "amount_of_category": True}
+                      "day_of_the_week": True, "amount_of_category": True,  "username_restrictions":True}
         self.rule_type = self.__validateRuleType(rule_type)
         self.product_id = product
         self.category = category
@@ -37,9 +37,16 @@ class RulePurchaseComp(LogicComp):
                 return self.amountOfCategory(basket)
         elif basket is None or total_price is None: #Basket policies
             if self.rule_type == "alcohol_restriction":
-                return self.alcoholRestriction(user.get_age())
+                return True
+            elif self.rule_type == "username_restrictions":
+                return self.usernameRestriction(user)
         raise Exception("No such rule type exists")
 
+
+    def usernameRestriction(self, user):
+        if self.user_field == user:
+            raise Exception(f"{user} is not allowed to purchase")
+        return True
 
     def amountOfCategory(self,basket):
         amount = 0
@@ -53,9 +60,9 @@ class RulePurchaseComp(LogicComp):
 
     def productAmount(self, basket):
         for product_id, product_tuple in basket.items():
-            if int(product_id) == self.product_id and self.compareWithOperator(product_tuple[1]):
-                return True
-        return False
+            if int(product_id) == self.product_id and not self.compareWithOperator(product_tuple[1]):
+                return False
+        return True
 
     def dayOfTheWeek(self):
         days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']

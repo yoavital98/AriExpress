@@ -63,3 +63,10 @@ class MaxComp(Policy):
 
     def get_discount_dict(self):
         return self.discount_dict
+
+    def toJson(self):
+        return {
+            "discount_id": self.discount_id,
+            "discount_type": self.get_discount_type(),
+            "discounts": self.discount_dict
+        }
