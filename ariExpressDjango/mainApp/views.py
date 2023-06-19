@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -817,6 +817,26 @@ def viewDiscounts(request, storename):
             # print(removeNulls)
             discounts = ast.literal_eval(str(removeNulls))
             return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:store_specific', storename=storename)
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
+
+
+def viewPurchasePolicies(request, storename):
+    return render(request, 'viewPurchasePolicies.html', {'storename': storename})
+
+    service = Service()
+    permissionName = 'Policies'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        actionRes = service.getAllPurchasePolicies(storename)
+        if actionRes.getStatus():
+            removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
+            # print(removeNulls)
+            policies = ast.literal_eval(str(removeNulls))
+            return render(request, 'viewPurchasePolicies.html', {'storename': storename, 'policies': policies})
         else:
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
             return redirect('mainApp:store_specific', storename=storename)

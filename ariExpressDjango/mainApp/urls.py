@@ -30,6 +30,8 @@ urlpatterns = [
     
     path(r'addNewPurchasePolicy/<str:storename>', views.addNewPurchasePolicy, name='addNewPurchasePolicy'),
     path(r'viewDiscounts/<str:storename>', views.viewDiscounts, name='viewDiscounts'),
+    path(r'viewPurchasePolicies/<str:storename>', views.viewPurchasePolicies, name='viewPurchasePolicies'),
+
     path(r'viewBids/<str:storename>', views.viewBids, name='viewBids'),
     path(r'userBids/', views.userBids, name='userBids'),
     path(r'viewStoreStaff/<str:storename>', views.viewStoreStaff, name='viewStoreStaff'),

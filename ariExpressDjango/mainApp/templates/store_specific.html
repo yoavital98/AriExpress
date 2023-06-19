@@ -180,6 +180,10 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">Add new Purchase Policy</button>
       </form>
+      <form method="post" action="{% url 'mainApp:viewPurchasePolicies' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">View Purchase Policies</button>
+      </form>
       {% endif %}
       {% if "Bid" in permissions %}
       <form method="post" action="{% url 'mainApp:viewBids' storename %}">
