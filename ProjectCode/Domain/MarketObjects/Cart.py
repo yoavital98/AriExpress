@@ -216,8 +216,8 @@ class Cart:
     def purchaseConfirmedBid(self, bid_id, store_name, user_name, card_number, card_date, card_user_full_name, ccv,
                              card_holder_id
                              , address, city, country, zipcode):
-        payment_service = PaymentService("https://php-server-try.000webhostapp.com/")
-        supply_service = SupplyService("https://php-server-try.000webhostapp.com/")
+        payment_service = PaymentService()
+        supply_service = SupplyService()
         transaction_history = TransactionHistory()
         message_controller = MessageController()
         bid: Bid = self.getBid(store_name, bid_id)
