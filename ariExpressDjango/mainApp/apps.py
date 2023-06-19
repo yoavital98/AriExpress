@@ -9,10 +9,10 @@ class MainappConfig(AppConfig):
     def ready(self):
         if 'runserver' not in sys.argv:
             return True
-        load_file = "../load.json"
+        # load_file = "../load.json"
         config = "../default_config.json"
         # load_file = "../load_purchaseCart.json"
-        # load_file = "../load_withDiscounts.json"
+        load_file = "../load_withDiscounts.json"
         # load_file = "../load_bids.json"
         # load_file = "../load_registration.json"
         

@@ -793,6 +793,16 @@ def viewDiscounts(request, storename):
     permissionName = 'Discounts'
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
+        if 'removeDiscount' in request.POST:
+            discount_id = request.POST.get('discount_id')
+            # actionRes = service.removeDiscount()
+            # if actionRes.getStatus():
+            #     messages.success(request, (f"Discount {discount_id} has been removed."))
+            # else:
+            #     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+
+
         actionRes = service.getAllDiscounts(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
