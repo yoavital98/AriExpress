@@ -56,8 +56,8 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    user = authenticate(request, username='aaa', password='asdf1233')
+    Service().logInFromGuestToMember(0, "admin", "12341234")
+    user = authenticate(request, username='admin', password='12341234')
     loginFunc(request, user)
     request.session['guest'] = 0
     # ------------------------------------------------------------------------------
@@ -807,17 +807,40 @@ def viewDiscounts(request, storename):
 
 
 def adminPage(request):
-    if request.user.is_superuser:
-        return render(request, 'adminPage.html', {})
+    service = Service()
+    username = request.user.username
+    actionRes = service.checkIfAdmin(username)
+    if actionRes.getStatus():
+        allusers = {}
+        if 'onlineUsers' in request.POST:
+            resOnline = service.getAllOnlineMembers(request.user.username)
+            resOffline = service.getAllOfflineMembers(request.user.username)
+            if resOnline.getStatus() and resOffline.getStatus():
+                onlinemembers = resOnline.getReturnValue()  # returns a list
+                offlinemembers = resOffline.getReturnValue()  # returns a list
+                onlinemembers = ast.literal_eval(str(onlinemembers))
+                offlinemembers = ast.literal_eval(str(offlinemembers))
+                allusers = {'online': onlinemembers, 'offline': offlinemembers}
+
+        # if 'transactionHistory' in request.POST:
+
+
+
+
+
+
+        return render(request, 'adminPage.html', {'allusers': allusers})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
         return redirect('mainApp:mainpage')
 
 
 def viewOnlineUsers(request):
+    service = Service()
+    username = request.user.username
+    actionRes = service.checkIfAdmin(username)
     if request.method == 'POST':
         if request.user.is_superuser:
-            service = Service()
             resOnline = service.getAllOnlineMembers(request.user.username)
             resOffline = service.getAllOfflineMembers(request.user.username)
             if resOnline.getStatus() and resOffline.getStatus():

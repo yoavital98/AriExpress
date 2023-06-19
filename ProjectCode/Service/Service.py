@@ -738,6 +738,7 @@ class Service:
     def getAllOnlineMembers(self, requesterID):
         try:
             users = self.store_facade.getAllOnlineMembers(requesterID)
+            print(users)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
             return Response(json.dumps(users), True)
