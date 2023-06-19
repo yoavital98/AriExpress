@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
 <script>
-	var discountRulesData = {};
+	var discountRulesDataSpecial = {};	
+	var discountsData = {};
+
 </script>
 <head>
   <title>{{ storename }}</title>
@@ -13,27 +15,24 @@
 </head>
 
 <body onload="handleLevelChange(document.getElementById('levelType'))">
-	<h1 class="mb-3">{{ storename }} - Add a new Discount</h1>
+	<h1 class="mb-3">{{ storename }} - Add a Special Discount - {{ discount_type }}</h1>
 
 	<div class="d-flex justify-content-start" name="firstDiv">
 		<div class="container" id="firstContainer">
 			<div class="card">
 				<div class="card-body">
-					<form method="post" action="{% url 'mainApp:addNewDiscount' storename=storename %}" id="addRuleForm" onsubmit="handleFormSubmit(event)">
+					<form method="post" action="{% url 'mainApp:addNewDiscountSpecial' storename=storename discount_type=discount_type %}" id="addRuleForm" onsubmit="handleFormSubmit(event)">
 						{% csrf_token %}
-					<input type="hidden" name="discountRulesData" value="{{ discountRulesData|safe }}">
+					<input type="hidden" name="discountRulesDataSpecial" value="{{ discountRulesDataSpecial|safe }}">
 					<select class="form-select mb-3" aria-label="Default select example" name="discountType" onchange="toggleConditioned(this)">
 						<option selected disabled>Discount Type</option>
 						<option value="1" {% if discountType == "Simple" %} selected {% endif %}>Simple</option>
 						<option value="2" {% if discountType == "Conditioned" %} selected {% endif %}>Conditioned</option>
-						<option value="3" {% if discountType == "Coupon" %} selected {% endif %}>Coupon</option>
-						<option value="4" {% if discountType == "Max" %} selected {% endif %}>Max</option>
-						<option value="5" {% if discountType == "Add" %} selected {% endif %}>Add</option>
 
 					</select>
 
 					<div class="mb-3">
-						<label for="discountAmountRange" class="form-label" id="discountPercentage">Discount Percentage</label>
+						<label for="discountAmountRange" class="form-label">Discount Percentage</label>
 						<input type="range" class="form-range" min="1" max="100" id="discountAmountRange" name="discountAmountRange" value="{{ percent|default_if_none:'50' }}"> 
 					</div>
 					<p id="rangeAmount"></p>
@@ -54,14 +53,14 @@
 					</script>
 					
 
-					<select class="form-select mb-3" aria-label="Default select example" name="levelType" id="levelType" onchange="handleLevelChange(this)">
+					<select class="form-select mb-3" aria-label="Default select example" name="levelType" onchange="handleLevelChange(this)">
 						<option selected disabled>Store/Category/Product</option>
 						<option value="1" {% if levelType == "Store" %} selected {% endif %}>Store</option>
 						<option value="2" {% if levelType == "Category" %} selected {% endif %}>Category</option>
 						<option value="3" {% if levelType == "Product" %} selected {% endif %}>Product</option>
 					</select>
 					
-					<div class="form-floating mb-3" id="floatingInputDiv">
+					<div class="form-floating mb-3">
 						<input type="text" class="form-control" id="floatingInput" name="levelName" value="{{ levelName|default_if_none:'' }}">
 						<label for="floatingInput">{{ levelType|default_if_none:''|title }}</label>
 					</div>
@@ -85,7 +84,9 @@
                         }
                     </script>
 					
-					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" name="submitDiscount">Submit Discount</button>
+					<button type="submit" class="btn btn-primary" id="submitButtonFirstContainer" name="addDiscount">Add Discount</button>
+					<button type="submit" class="btn btn-primary" id="doneButtonFirstContainer" name="resetInfo">Reset</button>
+					<button type="submit" class="btn btn-primary" id="doneButtonFirstContainer" name="sendDiscount">Finish</button>
 
 				</div>
 			</div>
@@ -161,49 +162,14 @@
 			//   const submitButtonFirstContainer = document.getElementById("submitButtonFirstContainer");
 			  const submitButtonSecondContainerFirstHalf = document.getElementById("submitButtonSecondContainerFirstHalf");
 			  const secondContainer = document.getElementById("secondContainer");
-			  const slider = document.getElementById("discountAmountRange");
-			  const sliderinfo = document.getElementById("rangeAmount");
-			  const inputElement = document.getElementById("floatingInputDiv");
-			  const levelTypeElement = document.getElementById("levelType");
-			  const discountPercentageElement = document.getElementById("discountPercentage");
-			  
-
 			  if (element.value === "1") {
 				secondContainer.style.display = "none";
-				slider.style.display = "block";
-				sliderinfo.style.display = "block";
-				inputElement.style.display = "block";
-				levelTypeElement.style.display = "block";
-				discountPercentageElement.style.display = "block";
 				// submitButtonFirstContainer.style.display = "block";
 			  } else if (element.value === "2") {
 				secondContainer.style.display = "block";
-				slider.style.display = "block";
-				sliderinfo.style.display = "block";
-				inputElement.style.display = "block";
-				levelTypeElement.style.display = "block";
-				discountPercentageElement.style.display = "block";
 				// submitButtonFirstContainer.style.display = "none";
-			  } else if (element.value === "4") {
-				slider.style.display = "none";
-				sliderinfo.style.display = "none";
-				inputElement.style.display = "none";
-				levelTypeElement.style.display = "none";
-				discountPercentageElement.style.display = "none";
-			  } else if (element.value === "5") {
-				slider.style.display = "none";
-				sliderinfo.style.display = "none";
-				inputElement.style.display = "none";
-				levelTypeElement.style.display = "none";
-				discountPercentageElement.style.display = "none";
-			  } 
-			  else {
+			  } else {
 				secondContainer.style.display = "none";
-				slider.style.display = "block";
-				sliderinfo.style.display = "block";
-				inputElement.style.display = "block";
-				levelTypeElement.style.display = "block";
-				discountPercentageElement.style.display = "block";
 				// submitButtonFirstContainer.style.display = "none";
 			  }
 			}
@@ -231,7 +197,7 @@
 				var logicRadioValue = logicOption ? logicOption.value : '';
 
 				// Create a dictionary object to store the values
-				var discountRulesData = {
+				var discountRulesDataSpecial = {
 					'rule_type': ruleType,
 					'product_id': ruleProductName,
 					'operator': operatorRadioValue,
@@ -240,7 +206,7 @@
 					'logic_type': logicRadioValue,
 					'child': {}
 				};
-				return JSON.stringify(discountRulesData);
+				return JSON.stringify(discountRulesDataSpecial);
 			}
 		// 	rule_type := "basket_total_price" | "amount_of_product" | "amount_of_category"
         // product := product_id | -1 for non-specific product rule
@@ -253,13 +219,13 @@
 				event.preventDefault();
 
 				// Capture the input values and create the dictionary
-				var discountRulesData = captureInputValues();
+				var discountRulesDataSpecial = captureInputValues();
 
 				// Set the dictionary value in a hidden input field
 				var hiddenInput = document.createElement('input');
 				hiddenInput.setAttribute('type', 'hidden');
-				hiddenInput.setAttribute('name', 'discountRulesData');
-				hiddenInput.setAttribute('value', discountRulesData);
+				hiddenInput.setAttribute('name', 'discountRulesDataSpecial');
+				hiddenInput.setAttribute('value', discountRulesDataSpecial);
 				document.getElementById('addRuleForm').appendChild(hiddenInput);
 
 				// Submit the form

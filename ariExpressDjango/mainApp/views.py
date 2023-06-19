@@ -408,10 +408,11 @@ def addNewDiscount(request, storename):  # Discounts
                 pass
 
             if discountTypeInt == 4:
-                pass
+                return addNewDiscountSpecial(request, storename, "Max")
 
             if discountTypeInt == 5:
-                pass
+                return addNewDiscountSpecial(request, storename, "Add")
+
 
         if 'conditionedAddRule' in request.POST:
             # Retrieve the submitted discountRulesData
@@ -440,6 +441,125 @@ def addNewDiscount(request, storename):  # Discounts
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
+
+
+def addNewDiscountSpecial(request, storename, discount_type):
+    username = request.user.username
+    permissionName = 'Discounts'
+    if permissionCheck(username, storename, permissionName):
+        service = Service()
+        discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
+        discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
+        percent = 50 if request.POST.get('discountAmountRange') == None else int(
+            request.POST.get('discountAmountRange'))
+        levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+        levelType = None if levelTypeInt == None else getDiscountLevelType(levelTypeInt)
+        levelName = "" if request.POST.get('levelName') == None else request.POST.get('levelName')
+
+        if 'addDiscount' in request.POST:
+            if discountTypeInt == 1:
+                newdiscount = {"discount_type": "Simple", "percent": percent, "level": levelType, "level_name": levelName}
+                if 'discountsData' not in request.session:
+                    request.session['discountsData'] = {}
+                    request.session['discountCounterSpecial'] = 1
+                counter = request.session['discountCounterSpecial']
+                request.session['discountsData'][counter] = newdiscount
+                request.session['discountCounterSpecial'] = int(request.session['discountCounterSpecial']) + 1
+                print(f"discounts: {request.session['discountsData']}")
+                print(f"counter: {request.session['discountCounterSpecial']}")
+                messages.success(request, (f"Discount has been added to the \"{discount_type}\" list"))
+
+            if discountTypeInt == 2:
+                discountRulesData = request.session['discountRulesDataSpecial']
+                fixedRulesData = fixDiscountRulesData(discountRulesData)
+                newdiscount = {"discount_type": "Conditioned", "percent": percent, "level": levelType, "level_name": levelName, "rule": fixedRulesData}
+                if 'discountsData' not in request.session:
+                    request.session['discountsData'] = {}
+                    request.session['discountCounterSpecial'] = 1
+                counter = request.session['discountCounterSpecial']
+                request.session['discountsData'][counter] = newdiscount
+                request.session['discountCounterSpecial'] = int(request.session['discountCounterSpecial']) + 1
+                print(f"discounts: {request.session['discountsData']}")
+                print(f"counter: {request.session['discountCounterSpecial']}")
+                messages.success(request, (f"Discount has been added to the \"{discount_type}\" list"))
+
+            # if discountTypeInt == 3:
+            #     pass
+
+            # if discountTypeInt == 4:
+            #     return addNewDiscountSpecial(request, storename, "Max")
+
+            # if discountTypeInt == 5:
+            #     return addNewDiscountSpecial(request, storename, "Add")
+
+
+        if 'conditionedAddRule' in request.POST:
+            # Retrieve the submitted discountRulesDataSpecial
+            discountRulesDataSpecial = request.POST.get('discountRulesDataSpecial')
+            ruleData = json.loads(discountRulesDataSpecial)
+
+            if 'discountRulesDataSpecial' not in request.session:
+                request.session['discountRulesDataSpecial'] = {}
+                request.session['discountRuleCounterSpecial'] = 0
+
+            # Check if ruleData is not already in the session
+            if ruleData not in dict(request.session['discountRulesDataSpecial']).values():
+                counter = request.session['discountRuleCounterSpecial']
+                ruleDict = request.session['discountRulesDataSpecial']
+                ruleDict[counter] = ruleData
+                request.session['discountRuleCounterSpecial'] += 1
+
+        if 'clearAllRules' in request.POST:
+            if 'discountRulesDataSpecial' in request.session:
+                del request.session['discountRulesDataSpecial']
+            request.session['discountRuleCounterSpecial'] = 0
+
+        if 'sendDiscount' in request.POST:
+            discounts = request.session['discountsData']
+            discounts = fixDiscountSpecial(discounts)
+            print(f"final dict: {discounts}")
+            print(f"type: {discount_type}")
+            actionRes = service.addDiscount(storename, username, discount_type, discounts=discounts)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+                if 'discountRulesDataSpecial' in request.session:
+                    del request.session['discountRulesDataSpecial']
+                if 'discountsData' in request.session:
+                    del request.session['discountsData']
+                if 'discountRuleCounterSpecial' in request.session:
+                    del request.session['discountRuleCounterSpecial']
+                if 'discountCounterSpecial' in request.session:
+                    del request.session['discountCounterSpecial']
+                return redirect('mainApp:store_specific', storename=storename)
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+        if 'resetInfo' in request.POST:
+            if 'discountRulesDataSpecial' in request.session:
+                del request.session['discountRulesDataSpecial']
+            if 'discountsData' in request.session:
+                del request.session['discountsData']
+            if 'discountRuleCounterSpecial' in request.session:
+                del request.session['discountRuleCounterSpecial']
+            if 'discountCounterSpecial' in request.session:
+                del request.session['discountCounterSpecial']
+                
+
+        # init discounts data
+
+        if 'discountsData' not in request.session:
+            request.session['discountsData'] = {}
+            request.session['discountRuleCounterSpecial'] = 0
+            request.session['discountCounterSpecial'] = 1
+            request.session['discountRulesDataSpecial'] = {}
+            
+        return render(request, 'addNewDiscountSpecial.html', {'storename': storename, 'discount_type': discount_type})
+
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
+
+
 
 
 def addNewPurchasePolicy(request, storename):  # Policies
@@ -1149,10 +1269,8 @@ def getDiscountType(discount):
     if discount == 1: return "Simple"
     if discount == 2: return "Conditioned"
     if discount == 3: return "Coupon"
-    if discount == 4:
-        return "Max"
-    else:
-        return "Add"
+    if discount == 4: return "Max"
+    else: return "Add"
 
 
 def getPurchasePolicyType(policy):
@@ -1193,6 +1311,13 @@ def getlevelName(level, name):
         return ""
     else:
         return name
+
+def fixDiscountSpecial(discounts):
+    new_dict = {}
+    for key, value in discounts.items():
+        new_key = str(key)
+        new_dict[new_key] = value
+    return new_dict
 
 
 def fixDiscountRulesData(rulesData):

@@ -3,7 +3,7 @@ from datetime import datetime
 
 import peewee
 from peewee import SqliteDatabase, MySQLDatabase, PostgresqlDatabase
-import psycopg2
+# import psycopg2
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
@@ -124,8 +124,8 @@ class StoreFacade:
         self.loadData()
 
         # handshake with supply service and payment service
-        # self.supply_service = SupplyService(config["SupplyService"])
-        # self.payment_service = PaymentService(config["PaymentService"])
+        self.supply_service = SupplyService(config["SupplyService"])
+        self.payment_service = PaymentService(config["PaymentService"])
         # self.supply_service.perform_handshake()
         # self.payment_service.perform_handshake()
         self.supply_service = None
