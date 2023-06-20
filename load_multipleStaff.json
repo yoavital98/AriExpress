@@ -51,10 +51,10 @@
     "nominateStoreOwner": {"args": ["eee", "bbb", "store123"]}
   },
   {
-    "nominateStoreManager": {"args": ["eee", "ccc", "store123"]}
+    "nominateStoreOwner": {"args": ["eee", "ccc", "store123"]}
   },
   {
-    "nominateStoreManager": {"args": ["eee", "ddd", "store123"]}
+    "nominateStoreOwner": {"args": ["eee", "ddd", "store123"]}
   },
   {
     "logOut": {"args": ["aaa"]}

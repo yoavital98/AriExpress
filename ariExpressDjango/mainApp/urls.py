@@ -30,13 +30,15 @@ urlpatterns = [
     
     path(r'addNewPurchasePolicy/<str:storename>', views.addNewPurchasePolicy, name='addNewPurchasePolicy'),
     path(r'viewDiscounts/<str:storename>', views.viewDiscounts, name='viewDiscounts'),
+    path(r'viewPurchasePolicies/<str:storename>', views.viewPurchasePolicies, name='viewPurchasePolicies'),
+
     path(r'viewBids/<str:storename>', views.viewBids, name='viewBids'),
     path(r'userBids/', views.userBids, name='userBids'),
     path(r'viewStoreStaff/<str:storename>', views.viewStoreStaff, name='viewStoreStaff'),
 
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
     path(r'adminPage/', views.adminPage, name='adminPage'),
-    path(r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
+    # path(r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
     # path to send the message
     path(r'send_message', views.send_message, name='send_message'),
     path(r'check_username/', views.check_username, name='check_username'),

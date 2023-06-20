@@ -27,7 +27,7 @@ class Basket:
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(product_id):
-            if not self.store.checkBasketValidity(self.products, product, quantity):
+            if not self.store.checkBasketValidity(self.products, product, quantity, self.username):
                 raise Exception("product cannot be added to basket due to policy restrictions")
             product_tup = self.store.calculateProductPriceAfterDiscount(product, self.products, quantity)
             self.products[product_id] = product_tup
@@ -38,7 +38,7 @@ class Basket:
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         product: tuple = self.products[product_id]
-        self.products[product_id] = (product[0], quantity, product[2])
+        self.products[product_id] = self.store.calculateProductPriceAfterDiscount(product[0], self.products, quantity)
 
     def remove_Product(self, product_ID):
         if self.products.keys().__contains__(product_ID):

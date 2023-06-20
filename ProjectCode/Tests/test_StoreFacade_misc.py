@@ -59,6 +59,20 @@ class TestStoreFacade(TestCase):
         self.store_facade.nominateStoreOwner("Feliks", "YuvalMelamed","AriExpress")
         self.store_facade.removeAccess("Feliks","Amiel","AriExpress")
 
+    def test_nominationAgreements_success(self):
+        self.store_facade.register("Sup", "password789", "ari@gmail.com")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks","Amiel","AriExpress")
+        self.store_facade.nominateStoreOwner("Feliks","Sup","AriExpress")
+        self.store_facade.logInAsMember("Amiel","password789")
+        self.store_facade.logInAsMember("Sup","password789")
+        self.store_facade.nominateStoreOwner("Amiel", "YuvalMelamed","AriExpress")
+        request = self.store_facade.rejectStoreOwnerNomination("Feliks","YuvalMelamed","AriExpress")
+        print("hi")
+        # self.store_facade.approveStoreOwnerNomination("Sup","YuvalMelamed","AriExpress")
+
+
+
     def test_simple_dis(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 500, "Milk")
@@ -1015,6 +1029,25 @@ class TestStoreFacade(TestCase):
         product_in_basket: Product = basket.products.get(1)[0]
         self.assertTrue(product.price == 1000)
         self.assertTrue(product_in_basket.price == 1000)
+
+    def test_addToBasketInTwoStoresAndEdit_success(self):
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.createStore("YuvalMelamed","yuval_store")
+        oreo: Product = self.store_facade.addNewProductToStore("YuvalMelamed","yuval_store","oreo", 20, 1, "cookies")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        self.store_facade.editBasketQuantity("Amiel", self.my_store.get_store_name(), 1, 8)
+        self.store_facade.addToBasket("Amiel", "yuval_store", 1, 5)
+        self.store_facade.editBasketQuantity("Amiel", "yuval_store", 1, 15)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        basket2: Basket = amiel.cart.baskets.get("yuval_store")
+        product_from_feliks = basket.products.get(1)
+        product_from_yuval = basket.products.get(1)
+        print("hi")
+
+
 
     # getAllBidsFromUser TODO:BIDS
     def test_getAllBidsFromUser_success(self):
@@ -2908,6 +2941,14 @@ class TestStoreFacade(TestCase):
         self.assertEqual(Feliks_Messages_count_before, Feliks_Messages_count_after)
         self.assertEqual(Feliks_sentMessages_count_before + 1, Feliks_sentMessages_count_after)
 
+    def test_sendMessageUsers_deleteMessage_success(self):
+        # Test sending a message to a receiver who is logged in
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.sendMessageUsers("Feliks", "Amiel", "subject", "content", "creation_date", "file")
+        self.store_facade.deleteMessage("Amiel", 1)
+
+
     def test_sendMessageUsers_receiverNotLoggedIn_success(self):
         # Test sending a message to a receiver who is not logged in
         self.store_facade.logInAsMember("Feliks", "password456")
@@ -2952,6 +2993,16 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Amiel", "password789")
         Amiel_sentMessages_count_after = self.store_facade.getAllMessagesSent("Amiel").__len__()
         self.assertEqual(Amiel_sentMessages_count_before, Amiel_sentMessages_count_after)
+
+    def test_sendMultipleMessages_succeed(self):
+        # Test sending a message to a receiver who does not exist
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.sendMessageUsers("Amiel", "Feliks", "subject", "content", "creation_date", "file")
+        self.store_facade.sendMessageUsers("Amiel", "Feliks", "subject1", "content", "creation_date", "file")
+        self.store_facade.sendMessageUsers("Amiel", "YuvalMelamed", "subject2", "content", "creation_date", "file")
+        self.store_facade.deleteMessage("Feliks", 1)
+
 
     def test_readMessage_messageExists_success(self):
         # Test reading a message that exists in the inbox
@@ -3007,11 +3058,11 @@ class TestStoreFacade(TestCase):
         self.store_facade.logInAsMember("Amiel", "password789")
         self.store_facade.sendNotificationToUser("Amiel", "header", "notification_content", "creation_date")
         notification = self.store_facade.getAllNotificationsReceived("Amiel")[-1]
-        self.assertFalse(notification["read"])
+        self.assertTrue(notification["status"] == 'pending')
         notification_id = notification["id"]
         self.store_facade.readNotification("Amiel", notification_id)
         notification = self.store_facade.getAllNotificationsReceived("Amiel")[-1]
-        self.assertTrue(notification["read"])
+        self.assertTrue(notification["status"] == 'read')
 
     def test_readNotification_notificationNotExists_fail(self):
         # Test reading a notification that does not exist in the inbox
