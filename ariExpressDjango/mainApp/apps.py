@@ -26,6 +26,7 @@ class MainappConfig(AppConfig):
         # print(f"members loads: {type(json.loads(members.getReturnValue()))}")
         self.loadUsers(json.loads(members.getReturnValue()))
         self.loadAdmins(config)
+
         # service = Service()
 
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
@@ -119,7 +120,7 @@ class MainappConfig(AppConfig):
         # users = User.objects.all()
         # for i in range(1, len(users)):
         #     User.objects.all()[i].delete()
-    def loadAdmins(self, config):
+    def loadAdmins(self, admins):
         from django.contrib.auth.models import User
         with open(config, 'r') as f:
             config_data : dict = json.load(f)

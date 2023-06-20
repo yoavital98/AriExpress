@@ -14,15 +14,9 @@
 
 
 <body>
-  <h1>Discounts</h1>
-    {% for key, value in discounts.items %}
+  <h1>Purchase Policies</h1>
+    {% for key, value in policies.items %}
         <h3>{{ key }} : {{ value }}</h3>
-    
-      <form method="post" action="{% url 'mainApp:viewDiscounts' storename %}">
-        {% csrf_token %}
-        <input type="hidden" name="discount_id" value="{{ key }}">
-        <button type="submit" class="btn btn-outline-dark" name="removeDiscount">Remove</button>
-      </form>
     {% endfor %}
 </body>
 {% endblock %}

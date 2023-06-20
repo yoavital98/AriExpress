@@ -538,7 +538,7 @@ class StoreFacade:
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
         with self.db.atomic():
-            member: Member = self.getOnlineMemberOnly(username)
+            member: Member = self.getUserOrMember(username)
             cur_store: Store = self.stores.get(store_name)
             if cur_store is None:
                 raise Exception("No such store exists")
@@ -669,6 +669,16 @@ class StoreFacade:
                                                  rule=rule, discounts=discounts)
             return new_discount
 
+    def removeDiscount(self, storename, username, discount_id):
+        with self.db.atomic():
+            cur_store: Store = self.stores.get(storename)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User isn't logged in")
+            cur_store.removeDiscount(username, discount_id)
+            return True
+
     def getDiscount(self, storename, discount_id):
         cur_store: Store = self.stores.get(storename)
         if cur_store is None:
@@ -691,6 +701,22 @@ class StoreFacade:
                 raise Exception("User isn't logged in")
             new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
             return new_policy
+
+    def removePurchasePolicy(self, storename, username, policy_id):
+        with self.db.atomic():
+            cur_store: Store = self.stores.get(storename)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User isn't logged in")
+            cur_store.removePurchasePolicy(username, policy_id)
+            return True
+
+    def getAllPurchasePolicies(self, storename):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getAllPurchasePolicies()
 
     def getPurchasePolicy(self, storename, policy_id):
         cur_store: Store = self.stores.get(storename)

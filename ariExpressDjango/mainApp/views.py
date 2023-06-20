@@ -248,7 +248,7 @@ def viewAllStores(request):
 def store_specific(request, storename):
     service = Service()
     username = request.user.username
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.session['guest'] == 0:
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else:
@@ -301,6 +301,24 @@ def store_specific(request, storename):
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
 
+    if 'placeBid' in request.POST:
+        product_id = request.POST.get('product_id')
+        bidAmount = request.POST.get('bidAmount')
+        quantity = request.POST.get('quantity')
+        try:
+            bidAmount = int(bidAmount)
+        except Exception as e:
+            messages.success(request, (f"Error: bid should be a number."))
+            return redirect('mainApp:store_specific', storename=storename)
+        actionRes = service.placeBid(request.user.username, storename, bidAmount, product_id, quantity)
+        if actionRes.getStatus():
+            messages.success(request, ("Bid placed successfully."))
+            return redirect('mainApp:store_specific', storename=storename)
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mystores')
+
+        
     else:
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
@@ -793,12 +811,42 @@ def viewDiscounts(request, storename):
     permissionName = 'Discounts'
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
+        if 'removeDiscount' in request.POST:
+            discount_id = request.POST.get('discount_id')
+            # actionRes = service.removeDiscount()
+            # if actionRes.getStatus():
+            #     messages.success(request, (f"Discount {discount_id} has been removed."))
+            # else:
+            #     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+
+
         actionRes = service.getAllDiscounts(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
             # print(removeNulls)
             discounts = ast.literal_eval(str(removeNulls))
             return render(request, 'viewDiscounts.html', {'storename': storename, 'discounts': discounts})
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:store_specific', storename=storename)
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
+
+
+def viewPurchasePolicies(request, storename):
+    return render(request, 'viewPurchasePolicies.html', {'storename': storename})
+
+    service = Service()
+    permissionName = 'Policies'
+    username = request.user.username
+    if permissionCheck(username, storename, permissionName):
+        actionRes = service.getAllPurchasePolicies(storename)
+        if actionRes.getStatus():
+            removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
+            # print(removeNulls)
+            policies = ast.literal_eval(str(removeNulls))
+            return render(request, 'viewPurchasePolicies.html', {'storename': storename, 'policies': policies})
         else:
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
             return redirect('mainApp:store_specific', storename=storename)
