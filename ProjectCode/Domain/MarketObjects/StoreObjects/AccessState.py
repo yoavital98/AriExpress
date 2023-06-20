@@ -59,6 +59,11 @@ class AccessState(ABC):
         for permission in permissions:
             self.addPermission(permission)
 
+    def overridePermissions(self, permissions):
+        self.permissions = dict()
+        for permission in permissions:
+            self.addPermission(permission)
+
 
     def get_permissions(self):
         return self.permissions

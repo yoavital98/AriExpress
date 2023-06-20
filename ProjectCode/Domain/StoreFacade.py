@@ -207,7 +207,8 @@ class StoreFacade:
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
         guest: Guest = Guest(entrance_id)
-        self.onlineGuests[entrance_id] = guest
+        if self.onlineGuests.get(entrance_id) is None:
+            self.onlineGuests[entrance_id] = guest
         return guest
 
     # only guests

@@ -588,6 +588,14 @@ class TestStoreFacade(TestCase):
         self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     # addPermissions
+
+    def test_modifyPermissions(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.store_facade.removePermissions( "AriExpress", "Feliks", "Amiel", "Bid")
+        self.store_facade.removePermissions( "AriExpress", "Feliks", "Amiel", "ProductChange")
+        self.assertTrue(self.my_store.get_accesses().get("Amiel").hasRole("Owner"))
+
     def test_Owner_success(self):
         member_to_nominate: Member = self.store_facade.members.get("Amiel")
         # before

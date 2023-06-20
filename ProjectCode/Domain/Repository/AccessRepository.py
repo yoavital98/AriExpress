@@ -92,7 +92,7 @@ class AccessRepository(Repository):
         access_dom = Access(store_dom, user_dom, access_entry.nominated_by_username)
         access_dom.setAccess(access_entry.role)
         access_dom.set_nominations(access_entry.nominations.split(','))
-        access_dom.get_access_state().setPermissions(list(access_entry.access_state.permissions.split(',')))
+        access_dom.get_access_state().overridePermissions(list(access_entry.access_state.permissions.split(',')))
 
         return access_dom
 
