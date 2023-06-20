@@ -134,4 +134,5 @@ class BidsRepository(Repository):
         highest_id = self.model.select(fn.Max(self.model.bid_id)).scalar()
         if highest_id is None:
             return 0
-        return highest_id
+        return int(highest_id)+1
+

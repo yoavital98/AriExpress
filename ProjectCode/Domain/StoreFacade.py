@@ -95,17 +95,17 @@ class StoreFacade:
         # for m in model_list:
         #    m.delete().execute()
 
-        self.db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel,
-                        PurchasePolicyModel,
-                        UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
-                        StoreTransactionModel,
-                        ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
-        self.db.create_tables(
-             [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-              ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
-              StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-              ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
+        # self.db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                  ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel,
+        #                 PurchasePolicyModel,
+        #                 UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
+        #                 StoreTransactionModel,
+        #                 ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
+        # self.db.create_tables(
+        #      [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #       ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
+        #       StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
+        #       ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
