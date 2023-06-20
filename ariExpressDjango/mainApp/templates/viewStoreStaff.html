@@ -12,7 +12,7 @@
     <script src="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous"></script>
     <style>
       .action-column {
-          width: 15%;
+          width: 25%;
       }
     </style>
 </head>
@@ -43,6 +43,31 @@
                   <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
                   <button type="submit" class="btn btn-outline-dark" name="removeAccessButton">Remove Access</button>
                 </form>
+                <form class="d-flex" method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="nominated" value="{{ item.user.username }}">
+                  <select class="form-select" aria-label="Default select example" name="selectAddPermission" id="selectAddPermission">
+                    {% for perm in allPermissions %}
+                      {% if perm not in item.permissions %}
+                        <option value="{{perm}}">{{perm}}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-outline-dark" name="addAccessButton">Add Permission</button>
+                </form>
+                <form class="d-flex" method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="nominated" value="{{ item.user.username }}">
+                  <select class="form-select" aria-label="Default select example" name="selectRemovePermission" id="selectRemovePermission">
+                    {% for perm in allPermissions %}
+                      {% if perm in item.permissions %}
+                        <option value="{{perm}}">{{perm}}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-outline-dark" name="removeAccessButton">Remove Permission</button>
+                </form>
+
               </td>
           </tr>
           {% endfor %}

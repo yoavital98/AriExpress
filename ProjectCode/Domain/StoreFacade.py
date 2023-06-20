@@ -249,6 +249,12 @@ class StoreFacade:
             else:
                 raise Exception("user is not guest nor a member")
 
+    def checkIfBanned(self, username):
+        if self.members.keys().__contains__(str(username)):
+            return self.members.isBanned(username)
+        else:
+            raise Exception("Member doesn't exists.")
+
 
     # gets an online member.
     def getOnlineMemberOnly(self, user_name):
@@ -685,8 +691,8 @@ class StoreFacade:
 
     def getPermissionsAsJson(self, store_name, requester_username):
         cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
+        # if not self.checkIfUserIsLoggedIn(requester_username):
+        #     raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
         permissions: dict = cur_store.getPermissionsAsJson(requester_username)

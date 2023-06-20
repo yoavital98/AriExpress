@@ -979,3 +979,13 @@ class Service:
         except Exception as e:
             logging.error(f"getAllMembers Error: {str(e)}.")
             return Response(e, False)
+        
+    def checkIfBanned(self, username):
+        try:
+            res = self.store_facade.checkIfBanned(username)
+            logging.debug(
+                f"checkIfBanned has been called successfully")
+            return Response(res, True)
+        except Exception as e:
+            logging.error(f"checkIfBanned Error: {str(e)}.")
+            return Response(e, False)

@@ -1,0 +1,51 @@
+[
+  {
+    "register": {"args": ["aaa", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["bbb", "asdf1233", "a@a.com"]}
+  },
+  {
+    "logIn": {"args": ["bbb", "asdf1233"]}
+  },
+  {
+    "createStore": {"args": ["bbb", "TESTSTORE"]}
+  },
+  {
+    "logOut": {"args": ["bbb"]}
+  },
+  {
+    "logIn": {"args": ["aaa", "asdf1233"]}
+  },
+  {
+    "createStore": {"args": ["aaa", "store123"]}
+  },
+  {
+    "createStore": {"args": ["aaa", "456store"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["aaa", "store123", "apple", "20", "3", "fruit"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["aaa", "store123", "banana", "30", "8", "fruit"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["aaa", "store123", "headphones", "10", "700", "electronics"]}
+  },
+  {
+    "logOut": {"args": ["aaa"]}
+  },
+  {
+    "logIn": {"args": ["admin", "12341234"]}
+  },
+  {
+    "removePermissionFreeMember": {"args": ["admin", "bbb"]}
+  },
+  {
+    "logOut": {"args": ["admin"]}
+  }
+]
+
+
+
+        
