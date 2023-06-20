@@ -863,6 +863,7 @@ def adminPage(request):
         onlinemembers = {}
         offlinemembers = {}
         storesInfoDict = {}
+        data_type = 0
         historyInfo = None
         resOnline = service.getAllOnlineMembers(request.user.username)
         resOffline = service.getAllOfflineMembers(request.user.username)
@@ -890,6 +891,7 @@ def adminPage(request):
                 if actionRes.getStatus():
                     historyInfo = actionRes.getReturnValue()
                     historyInfo = ast.literal_eval(str(historyInfo))
+                    data_type = 1
 
             else:
                 store = request.POST.get('selectStore')
@@ -898,9 +900,13 @@ def adminPage(request):
                 if actionRes.getStatus():
                     historyInfo = actionRes.getReturnValue()
                     historyInfo = ast.literal_eval(str(historyInfo))
+                    data_type = 2
+                    for trans in historyInfo:
+                        trans['products'] = eval(trans['products'])
+                        # print(trans['products'])
+                        # print(type(trans['products']))
 
-
-        return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo})
+        return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo, 'data_type': data_type})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
         return redirect('mainApp:mainpage')
