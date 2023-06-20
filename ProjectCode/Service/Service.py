@@ -597,6 +597,37 @@ class Service:
             logging.error(f"nominateStoreOwner Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
+    def approveStoreOwnerNomination(self, username, nominated_username, store_name):
+        try:
+            left_requestes = self.store_facade.approveStoreOwnerNomination(username, nominated_username, store_name)
+            logging.info(
+                "Store owner has been approved successfully. By username: " + username + ". nominated_username: " + nominated_username + ". store_name: " + store_name + ".")
+            return Response(left_requestes, True)
+        except Exception as e:
+            logging.error(f"approveStoreOwnerNomination Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
+    def rejectStoreOwnerNomination(self, username, nominated_username, store_name):
+        try:
+            left_requestes = self.store_facade.rejectStoreOwnerNomination(username, nominated_username, store_name)
+            logging.info(
+                "Store owner has been rejected successfully. By username: " + username + ". nominated_username: " + nominated_username + ". store_name: " + store_name + ".")
+            return Response(left_requestes, True)
+        except Exception as e:
+            logging.error(f"rejectStoreOwnerNomination Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
+
+    def getAllNominationRequests(self, store_name, username):
+        try:
+            requests = self.store_facade.getAllNominationRequests(store_name, username)
+            logging.info(
+                "Store owner has been approved successfully. By username: " + username + ". store_name: " + store_name + ".")
+            return Response(requests, True)
+        except Exception as e:
+            logging.error(f"getAllNominationRequests Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
     def nominateStoreManager(self, username, nominated_username, store_name):  # TODO
         try:
             new_access = self.store_facade.nominateStoreManager(username, nominated_username, store_name)
