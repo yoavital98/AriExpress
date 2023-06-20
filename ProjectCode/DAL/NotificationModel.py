@@ -10,9 +10,9 @@ class NotificationModel(Model):
         db_table = 'notification'
 
     notification_id = AutoField()
-    sender_id = CharField(max_length=100)
-    receiver_id = CharField(max_length=100)
-    subject = CharField(max_length=100)
-    content = CharField(max_length=100)
+    sender_id = CharField(max_length=1000)
+    receiver_id = CharField(max_length=1000)
+    subject = CharField(max_length=1000)
+    content = CharField(max_length=1000)
     date = DateTimeField()
     read = BooleanField(default=False)
