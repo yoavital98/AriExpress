@@ -150,13 +150,26 @@ class Store:
                 nominated_access.get_access_state().removePermission(permission)
         return nominated_access
 
+    def checkIfInNominationChain(self,requester_username, nominated_username): # Feliks -> SonA -> SonB -> SonC
+        requester_access: Access = self.__accesses.get(requester_username)
+        nominated_access: Access = self.__accesses.get(nominated_username)
+        curr_nominator_username = nominated_access.get_nominated_by_username()
+        founder = nominated_access.get_store().getFounder().get_username()
+        while requester_username != curr_nominator_username:
+            nominated_access = self.__accesses.get(curr_nominator_username)
+            curr_nominator_username = nominated_access.get_nominated_by_username()
+            if curr_nominator_username == founder and requester_username != founder:
+                return False
+        return True
+
+
     def getPermissions(self, requester_username, nominated_username):
         requester_access: Access = self.__accesses.get(requester_username)
         nominated_access: Access = self.__accesses.get(nominated_username)
         if requester_access is None or nominated_access is None:
             raise Exception("No such access exists")
-        if requester_username == nominated_username or requester_username == nominated_access.get_nominated_by_username():    
-            return requester_access.get_access_state().get_permissions()
+        if requester_username == nominated_username or self.checkIfInNominationChain(requester_username, nominated_username):
+            return nominated_access.get_access_state().get_permissions()
         else:
             raise Exception("You dont have access to get this user permission")
 
@@ -670,8 +683,6 @@ class Store:
             "accesses": JsonSerialize.toJsonAttributes(self.__accesses),
             "bids": JsonSerialize.toJsonAttributes(self.__bids),
             "bids_requests": JsonSerialize.toJsonAttributes(self.__bids_requests),
-            "auctions": JsonSerialize.toJsonAttributes(self.__auctions),
-            "lotteries": JsonSerialize.toJsonAttributes(self.__lotteries),
             "discounts": self.__discount_policy.toJson()
         }
 
