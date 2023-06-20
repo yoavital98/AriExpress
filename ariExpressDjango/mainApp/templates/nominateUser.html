@@ -3,13 +3,7 @@
 
 {% extends 'base.html' %}
 {% block content %}
-<style>
 
-  .form-select, .userSelect {
-    width: 300px;
-
-  }
-</style>
 <head>
     <title>Nominate User</title>
   </head>
@@ -32,10 +26,43 @@
         <input type="hidden" name="storename" value="{{ storename }}">
         <br>
       </div>
-
-      <button type="submit" class="btn btn-primary">Nominate</button>
+      <button type="submit" class="btn btn-primary" name="nominateUser">Nominate</button>
     </form>
-
+    {{nominees}}
+    <table class="table table-hover">
+      <thead>
+          <tr>
+              <th>Username</th>            
+              <th>Nominated by</th>
+              <th>Actions</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for id, nominee in nominees.items %}
+          <tr>
+              <td>{{ nominee.nominated_username }}</td>
+              <td>{{ nominee.nominated_by }}</td>
+              <td>{{ bid.offer }}</td>
+              <td>
+                <div class="d-flex justify-content-start">
+                  {% if user.username in nominee.usernames_left_to_approve %}
+                  <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="toBeNominated" value="{{ nominee.nominated_username }}">
+                    <button type="submit" class="btn btn-outline-dark" name="approveNomination">Approve</button>
+                  </form>
+                  <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="toBeNominated" value="{{ nominee.nominated_username }}">
+                    <button type="submit" class="btn btn-outline-dark" name="rejectNomination">Reject</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
 
 
     </body>

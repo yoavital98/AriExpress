@@ -11,10 +11,12 @@ class MainappConfig(AppConfig):
             return True
         # load_file = "../load.json"
         config = "../default_config.json"
-        load_file = "../load_purchaseCart.json"
+        # load_file = "../load_purchaseCart.json"
         # load_file = "../load_withDiscounts.json"
         # load_file = "../load_bids.json"
         # load_file = "../load_registration.json"
+        load_file = "../load_multipleStaff.json"
+        
         
         from .views import send_notification_lambda
         service = Service(load_file, config, send_notification_call= send_notification_lambda)

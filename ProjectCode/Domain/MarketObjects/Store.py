@@ -220,8 +220,15 @@ class Store:
     def getAllNominationRequests(self, username):
         nomination_requests_accesses = self.__nomination_requests.get(username)
         if nomination_requests_accesses is None:
-            return []
-        return [access.get_user().get_username() for access in nomination_requests_accesses]
+            return {}
+        nomination_dict = {}
+        dict_count = 0
+        for access in nomination_requests_accesses:
+            nomination_dict[dict_count] = {"nominated_username": access.get_user().get_username(),
+                                           "nominated_by": access.get_nominated_by_username(),
+                                           "usernames_left_to_approve": self.__nomination_requests.get_by_nominee(access.get_user().get_username())}
+            dict_count += 1
+        return nomination_dict
 
     def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
         requester_access: Access = self.__accesses.get(requester_username)
