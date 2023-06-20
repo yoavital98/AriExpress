@@ -1,14 +1,158 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load static %}
 
-{% if user.is_authenticated %}
+<!DOCTYPE html>
+<html>
+
+<style>
+  .hero-section {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hero-section .main-picture {
+    width: 100%;
+    height: 270px;
+    padding: 0 15px;
+    background-image: url({% static 'images/AriExpressMainPage.png'%});
+    background-size: cover;
+    background-position: center;
+  }
+
+  .home-firstscreen {
+    margin-right: 100px;
+    margin-left: 200px;
+    margin-top: 50px;
+
+    .row {
+      margin-right: auto;
+      margin-left: auto;
+      padding-left: 0;
+      padding-right: 0;
+      width: 90%;
+    }
+  }
+  .categories-container {
+    background: linear-gradient(#648cc4,75%, #de8622);
+    padding-left: 30px;
+    position: relative;
+    border-radius: 10px;
+  }
+  .category-link {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .carousel-container {
+    background: #fbf4e0;
+    max-width: 960px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  }
+  .category-list-group-item {
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    padding-left: 20px;
+    padding-bottom: 5px;
+  }
+  .user-space{
+    padding-left:50px;
+    background-image: url({% static 'images/user-page.png'%});
+    background-size: cover;
+    border-radius: 10px;
+  }
+  .user-space-text{
+    font-size:120%;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black, 0 0 0.4em #FC0, 0 0 0.2em #FC0;
+  }
+</style>
 <body>
-	<h1>Hello, {{ user.username }}</h1>
+  <header class="hero-section">
+    <div class="main-picture"></div>
+  </header>
+  <main class="justify-content-between align-items-right" style="width: 100%">
+    <div id="home-firstscreen" class="home-firstscreen global-sale-firstscreen">
+      <div class="row">
+        <div class="col-md-3 order-md-3 categories-container" style="position: relative;">
+          <h2 class="d-flex justify-content-between align-items-center mb-4 mt-4">
+            <span class="text-light" style="padding-left: 20px; font-size:110%;"><i class="fa-solid fa-list"></i> categories</span>
+          </h2>
+          <ul class="list-group mb-3 ">
+            <li class="category-list-group-item d-flex justify-content-between" >
+              <a class="category-link" href="#" id="cl-item-fruit">
+                <h6 class="text-light" style="text-align:left; font-size:110%;"><i class="fa-solid fa-apple-whole"></i>  Fruits</h6>
+              </a>
+            </li>
+            <li class="category-list-group-item d-flex justify-content-between" >
+              <a class="category-link" href="#" id="cl-item-veg">
+                <h6 class="text-light" style="text-align:left; font-size:110%;"><i class="fa-solid fa-carrot"></i>  Vegetables</h6>
+              </a>
+            </li>
+            <li class="category-list-group-item d-flex justify-content-between" >
+              <a class="category-link" href="#" id="cl-item-electronic">
+                <h6 class="text-light" style="text-align:left; font-size:110%;"><i class="fa-solid fa-computer"></i>  Electronics</h6>
+              </a>
+            </li>
+            <li class="category-list-group-item d-flex justify-content-between" >
+              <a class="category-link" href="#" id="cl-item-clothing">
+                <h6 class="text-light" style="text-align:left; font-size:110%;"><i class="fa-solid fa-shirt"></i>  Clothing and Fashion</h6>
+              </a>
+            </li>
+            <li class="category-list-group-item d-flex justify-content-between">
+              <a class="category-link" href="#" id="cl-item-shoes">
+                <h6 class="text-light" style="text-align:left; font-size:110%;"><i class="fa-solid fa-briefcase"></i>  Bags and Shoes</h6>
+              </a>
+            </li>
+            <li class="category-list-group-item d-flex justify-content-between">
+              <a class="category-link" href="#" id="cl-item-toy">
+                <h6 class="text-light" style="text-align:left; font-size:110%;"><i class="fa-solid fa-robot"></i>  Toys </h6>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-5 order-md-2 advertise-main" >
+          <div class="carousel-container">
+            <div id="carousel-slider" class="carousel slide" data-ride="carousel" >
+              <div class="carousel-inner" style="border-radius: 10px;">
+                <div class="carousel-item active">
+                  <img class="d-block w-100" src="{% static 'images/Adv1.png'%}" alt="First slide">
+                </div>
+                <div class="carousel-item">
+                  <img class="d-block w-100" src="{% static 'images/Adv2.png'%}" alt="Second slide">
+                </div>
+                <div class="carousel-item">
+                  <img class="d-block w-100" src="{% static 'images/Adv3.png'%}" alt="Third slide">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 order-md-1 user-space justify-content-between align-items-center" style=" position: relative;">
+          <br><br>
+          {% if request.session.guest is 0 or user.is_superuser %}
+          <h2 class="d-flex justify-content-between align-items-center mb-2 mt-4">
+            <span class="text-light user-space-text">Welcom back {{user.username}}!</span>
+          </h2>
+          <p class="text-light user-space-text"  > what would you like to do today?</p>
+          {% endif %}
+          {% if request.session.guest is 1 %}
+          <h2 class="d-flex justify-content-between align-items-center mb-2 mt-4">
+            <span class="text-light user-space-text" >Welcom to AriExpress!</span>
+          </h2>
+          <p class="text-light user-space-text" > what would you like to do today?</p>
+          
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </main>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </body>
-{% else %}
-  <p>You are not logged in</p>
-{% endif %}
-
-
-
+</html>
 {% endblock %}
