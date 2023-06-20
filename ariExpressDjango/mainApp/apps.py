@@ -12,11 +12,11 @@ class MainappConfig(AppConfig):
         # load_file = "../load.json"
         config = "../default_config.json"
         # load_file = "../load_purchaseCart.json"
-        load_file = "../load_withDiscounts.json"
-
+        # load_file = "../load_withDiscounts.json"
+        load_file = "../load_withDiscountsAndPolicy.json"
         # load_file = "../load_bids.json"
         # load_file = "../load_registration.json"
-        load_file = "../load_multipleStaff.json"
+        # load_file = "../load_multipleStaff.json"
         
         
         from .views import send_notification_lambda

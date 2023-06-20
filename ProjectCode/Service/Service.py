@@ -735,6 +735,8 @@ class Service:
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         try:
             policy = self.store_facade.addPurchasePolicy(storename, username, purchase_policy, rule, level, level_name)
+            logging.info(
+                f"Purchase Policy has been added successfully. By username: {username}, storename: {storename}.")
             return Response(policy, True)
         except Exception as e:
             logging.error(f"addPurchasePolicy Error: {str(e)}")
@@ -743,6 +745,8 @@ class Service:
     def removePurchasePolicy(self, storename, username, purchase_policy_id):
         try:
             policy = self.store_facade.removePurchasePolicy(storename, username, purchase_policy_id)
+            logging.info(
+                f"Purchase Policy has been removed successfully. By username: {username}, storename: {storename}.")
             return Response(policy, True)
         except Exception as e:
             logging.error(f"removePurchasePolicy Error: {str(e)}")
@@ -751,9 +755,10 @@ class Service:
     def getAllPurchasePolicies(self, storename):
         try:
             policies = self.store_facade.getAllPurchasePolicies(storename)
+            print(policies)
             policies_json = {}
-            for policy_id, policy in policies.items():
-                policies_json[policy_id] = policy.toJson()
+            for policy in policies:
+                policies_json[policy.get_policy_id()] = policy.toJson()
             return Response(json.dumps(policies_json), True)
         except Exception as e:
             logging.error(f"getAllPurchasePolicies Error: {str(e)}")
