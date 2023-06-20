@@ -64,6 +64,8 @@ In order to run the server, we need to have two configuration files: Load file (
     ```
 
 The JSON is a list that contains dictionaries with the key being the function name and the value is a dict of arguments (as shown above).
+Note: the load JSON is not mandatory, meaning we can create a Service without a load file and the system will startup in a "clean" state.
+
 
 ## Running the Server
 
