@@ -15,13 +15,8 @@ stores_load = "../../../load_acceptanceTests2StoresSonsWorkers.json"
 empty_load = "../../../empty_load.json"
 true_lambda = lambda self, receiver_id, notification_id, type, subject: True
 
-
+""" ---------------------- (1) System Functionality tests ---------------------- """
 class Test_Use_Cases_1(TestCase):
-
-
-    # TODO need to add default config for all Service(default_config) calls
-    # Service(config)
-    """ ---------------------- (1) system functionality tests ---------------------- """
 
     #  Use Case 1.1
     def test_starting_the_market_system_success(self):
@@ -89,7 +84,8 @@ class Test_Use_Cases_1(TestCase):
         self.assertTrue(res.getStatus())
         res_added_product = self.service.addToBasket(guest_id, "Feliks&Sons", 1, 5)
         self.assertTrue(res_added_product.getStatus())
-        res_purchase = self.service.purchaseCart(guest_id, "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
+        res_purchase = self.service.purchaseCart(guest_id, "4580020345672134", "12/26", "Amiel Saad", "555",
+                                                 "123456789",
                                                  "be'er sheva", "beer sheva", "israel", "1234152")
         self.assertTrue(res_purchase.getStatus())
 
@@ -127,16 +123,17 @@ class Test_Use_Cases_1(TestCase):
                                         "beer sheva", "israel", "1234152")
         self.assertTrue(res.getStatus())
 
-    # ----------------------guest functionality tests----------------------
 
-
+""" ---------------------- (2.1) User system Functionality tests ---------------------- """
 class Test_Use_Cases_2_1(TestCase):
 
     def setUp(self):
         self.service = Service(config_file=default_config, load_file=stores_load, send_notification_call=true_lambda)
+
     def tearDown(self):
         # Reset the singleton instance of Service
         Service._instance = None
+
     # Use Case 2.1.1
     def test_guest_visit_success(self):
         # TODO 00 - check that a guest is trackable, can know when logged out to system, etc.
@@ -171,9 +168,15 @@ class Test_Use_Cases_2_1(TestCase):
         basket = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
         basket1 = ast.literal_eval(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"])
 
-        self.assertTrue(ast.literal_eval(ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])["Feliks&Sons"]["products"])["1"]["quantity"] == 8)
-        self.assertTrue(ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"]).keys().__contains__("Robin&Daughters"))
-        self.assertTrue(ast.literal_eval(ast.literal_eval(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"])["Robin&Daughters"]["products"])["2"]["quantity"] == 5)
+        self.assertTrue(ast.literal_eval(
+            ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])["Feliks&Sons"][
+                "products"])["1"]["quantity"] == 8)
+        self.assertTrue(
+            ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"]).keys().__contains__(
+                "Robin&Daughters"))
+        self.assertTrue(ast.literal_eval(
+            ast.literal_eval(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"])["Robin&Daughters"][
+                "products"])["2"]["quantity"] == 5)
         # (4)
         self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
                                   "some_address", "be'er sheva", "Israel", "1234567")
@@ -204,8 +207,6 @@ class Test_Use_Cases_2_1(TestCase):
             "quantity"]
         self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
-    # ---------------------------------member functionality tests---------------------------------
-
     # Use Case 2.1.3
     def test_registration_to_the_system_success(self):
         with self.assertRaises(Exception):
@@ -215,6 +216,7 @@ class Test_Use_Cases_2_1(TestCase):
         self.assertTrue(self.service.getMemberInfo("admin", "username22")["name"] == "username22")
         res = self.service.logIn("username22", "password1")
         self.assertTrue(res.getStatus())
+
     def test_registration_to_the_system_failure(self):
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
@@ -237,12 +239,15 @@ class Test_Use_Cases_2_1(TestCase):
             self.service.logIn("username22", "password2")
 
 
+""" ---------------------- (2.2) User Purchase tests ---------------------- """
 class Test_Use_Case_2_2(TestCase):
     def setUp(self):
         self.service = Service(config_file=default_config, load_file=stores_load, send_notification_call=true_lambda)
+
     def tearDown(self):
         # Reset the singleton instance of Service
         Service._instance = None
+
     # Use Case 2.2.1
     def test_guest_information_fetching_success(self):
         res = self.service.loginAsGuest()
@@ -284,7 +289,6 @@ class Test_Use_Case_2_2(TestCase):
         self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 1)  # Cherry
         self.assertTrue(res_product.getReturnValue()["Robin&Daughters"].__len__() == 1)  # Chilli
 
-
     # Use Case 2.2.2.b
     def test_guest_product_search_by_category_success(self):
         res = self.service.loginAsGuest()
@@ -299,7 +303,8 @@ class Test_Use_Case_2_2(TestCase):
         # TODO
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
-        res_products_below10 = self.service.productFilterByFeatures({"min price": 0, "max price": 10},guest0_entrance_id)
+        res_products_below10 = self.service.productFilterByFeatures({"min price": 0, "max price": 10},
+                                                                    guest0_entrance_id)
         res_products_below5 = self.service.productFilterByFeatures({"min price": 0, "max price": 5}, guest0_entrance_id)
         self.assertTrue(res_products_below10.getReturnValue()["Feliks&Sons"].__len__() == 11)  # All products
         self.assertTrue(res_products_below10.getReturnValue()["Robin&Daugthers"].__len__() == 3)  # 6 products
@@ -322,7 +327,8 @@ class Test_Use_Case_2_2(TestCase):
             self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["id"] == 2)
         self.service.leaveAsGuest(guest0_entrance_id)
         self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == [])
-        robin_product_2_quantity_after = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()["quantity"]
+        robin_product_2_quantity_after = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()[
+            "quantity"]
         self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     def test_guest_add_product_to_cart_productDoesntExists_failure(self):
@@ -601,7 +607,8 @@ class Test_Use_Case_2_2(TestCase):
         self.service.sendAlternativeOffer("SonD", "Feliks&Sons", 3, 30)
         self.service.approveBid("Feliks", "Feliks&Sons", 4)
         self.service.approveBid("SonA", "Feliks&Sons", 4)
-        feliks_notifications_count_afteralternate = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        feliks_notifications_count_afteralternate = self.service.getAllNotifications(
+            "Feliks").getReturnValue().__len__()
         sona_notifications_count_afteralternate = self.service.getAllNotifications("Sona").getReturnValue().__len__()
         sonb_notifications_count_afteralternate = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
         sonc_notifications_count_afteralternate = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
@@ -629,13 +636,16 @@ class Test_Use_Case_2_2(TestCase):
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(3).get_quantity() == 30)
 
 
+""" ---------------------- (2.3) Member Functionality tests ---------------------- """
 class Test_Use_Case_2_3_members(TestCase):
 
     def setUp(self):
         self.service = Service(config_file=default_config, load_file=stores_load, send_notification_call=true_lambda)
+
     def tearDown(self):
         # Reset the singleton instance of Service
         Service._instance = None
+
     # Use Case 2.3.1
     def test_log_out_from_the_system_success(self):
         self.service.loginAsGuest()
@@ -664,7 +674,7 @@ class Test_Use_Case_2_3_members(TestCase):
         amiels_store: Store = self.service.store_facade.getStores()["Amiel&sons"]
         self.assertTrue(self.service.store_facade.getStores().__len__() == 3)
         self.assertTrue(amiels_store.getFounder().get_username() == "Amiel")
-        self.assertTrue(amiels_store.getAllStaffMembersNames().__len__() == 1)
+        self.assertTrue(amiels_store.getAllStaffMembersNames("Amiel&Sons", "Amiel").__len__() == 1)
 
     def test_createShop_exists_failure(self):
         # a member creates a shop but the name is already taken
@@ -684,13 +694,16 @@ class Test_Use_Case_2_3_members(TestCase):
         self.assertTrue(self.service.getPurchaseHistory("Amiel").getReturnValue()[0].get_basket().getBasketSize() == 2)
 
 
+""" ---------------------- (2.4 & 2.5) Owner & Manager Functionality tests ---------------------- """
 class Test_Use_Case_2_4_Management(TestCase):
 
     def setUp(self):
         self.service = Service(config_file=default_config, load_file=stores_load, send_notification_call=true_lambda)
+
     def tearDown(self):
         # Reset the singleton instance of Service
         Service._instance = None
+
     # =================================================================================================================
     # Use Case 4.1.a
     def test_addProductToStore_Success(self):
@@ -699,7 +712,8 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().__len__() == 13)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_quantity() == 30)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_price() == 8)
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_category() == "Vegetables")
+        self.assertTrue(
+            self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(12).get_category() == "Vegetables")
         res = self.service.loginAsGuest()
         guest1_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 13, 5)
@@ -716,17 +730,18 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().__len__() == 12)
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 13, 5)
 
-
     # Use Case 4.1.c
     def test_changeProductInStore_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_quantity() == 30)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_price() == 8)
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "Vegetables")
+        self.assertTrue(
+            self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "Vegetables")
         self.service.editProductOfStore("Son_A", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_quantity() == 10)
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_price() == 10)
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "veggies")
+        self.assertTrue(
+            self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(10).get_category() == "veggies")
         res = self.service.loginAsGuest()
         guest1_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
@@ -740,11 +755,13 @@ class Test_Use_Case_2_4_Management(TestCase):
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 40)
         # add 25% discount to prod id 1
         self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Product", level_name=1)
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 30)
 
     def test_newDiscountToStore_Simple_CategoryLevel_Success(self):
@@ -754,12 +771,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(1).get_price() == 8)
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5) # "Banana_K", "30", "8", "fruits"
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        self.assertTrue(basket_price == 5*8 + 5*20 + 5*8)
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8)
         # add 25% discount to all Fruits Category in Feliks&Sons
         self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Category", level_name="Fruits")
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 + 5 * 20 * 0.75 + 5 * 8 * 0.75)
 
     def test_newDiscountToStore_Simple_StoreLevel_Success(self):
@@ -771,11 +790,13 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8 + 5 * 15)
         # add 25% discount to all store: Feliks&Sons
         self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Store", level_name="")
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 * 0.75 + 5 * 20 * 0.75 + 5 * 8 * 0.75 + 5 * 15)
 
     def test_removeDiscountFromStore_Simple_ProductLevel_Success(self):
@@ -783,13 +804,15 @@ class Test_Use_Case_2_4_Management(TestCase):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 40)
         # add 25% discount to prod id 1, then remove it
         res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Product", level_name=1)
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 40)
 
     def test_removeDiscountFromStore_Simple_CategoryLevel_Success(self):
@@ -800,13 +823,16 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "vegetables"
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8)
         # add 25% discount to all Fruits Category in Feliks&Sons, then remove it
-        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Category", level_name="Fruits")
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Category",
+                                       level_name="Fruits")
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8)
 
     def test_removeDiscountFromStore_Simple_StoreLevel_Success(self):
@@ -818,13 +844,15 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "fruits"
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 5)  # "Banana_K", "30", "8", "fruits"
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "sauces"
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8 + 5 * 15)
         # add 25% discount to all store: Feliks&Sons, then remove it
         res = self.service.addDiscount("Feliks&Sons", "Son_A", "Simple", percent=25, level="Store", level_name="")
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 + 5 * 20 + 5 * 8 + 5 * 15)
 
     # =================================================================================================================
@@ -834,10 +862,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_A", "passwordAAA")
         # Add discount: if all basket price is greater than 120 OR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
         #               then: 50% off mango
-        rule3 = {"rule_type":"amount_of_product", "product":1, "category":"","operator":">=","quantity":5,"child":{}}
-        rule2 = {"rule_type":"amount_of_product", "product":2, "category":"","operator":">=","quantity":5,"child":{"logic_type":"AND","rule":rule3}}
-        rule1 = {"rule_type":"basket_total_price", "product":-1, "category":"","operator":">=","quantity":120,"child":{"logic_type":"OR","rule":rule2}}
-        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Product", level_name=9, rule=rule1)
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 120,
+                 "child": {"logic_type": "OR", "rule": rule2}}
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Product", level_name=9,
+                                 rule=rule1)
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -854,16 +886,20 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 5)
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 9, 1)
         # guest2 will have a big basket from 7 mango - discount
-        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 9, 7) # 20*6 > 120
+        self.service.addToBasket(guest2_entrance_id, "Feliks&Sons", 9, 7)  # 20*6 > 120
         # guest 3 will have 5 cabbage 5 cauliflower and 1 mango - discount
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 1, 5)
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 2, 5)
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 4 * 20)
         self.assertTrue(basket1_price == 5 * 8 + 20 * 1)
@@ -874,10 +910,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_A", "passwordAAA")
         # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
         #               then: 50% off all fruits
-        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5, "child": {}}
-        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5, "child": {"logic_type": "AND", "rule": rule3}}
-        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200, "child": {"logic_type": "XOR", "rule": rule2}}
-        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category", level_name="Fruits", rule=rule1)
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,
+                 "child": {"logic_type": "XOR", "rule": rule2}}
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",
+                                 level_name="Fruits", rule=rule1)
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -905,10 +945,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 10, 1)
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 4 * 20 + 4 * 8)
         self.assertTrue(basket1_price == 5 * 8 + 20 * 1 + 8 * 1)
@@ -919,10 +963,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_A", "passwordAAA")
         # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
         #               then: 50% off all store
-        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
-        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,"child": {"logic_type": "AND", "rule": rule3}}
-        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,"child": {"logic_type": "XOR", "rule": rule2}}
-        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",level_name="Fruits", rule=rule1)
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,
+                 "child": {"logic_type": "XOR", "rule": rule2}}
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",
+                                 level_name="Fruits", rule=rule1)
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -951,25 +999,32 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 10, 1)
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 3, 5)
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 4 * 20 + 4 * 8)
         self.assertTrue(basket1_price == 5 * 8 + 20 * 1 + 8 * 1)
         self.assertTrue(basket2_price == 10 * 20 + 5 * 8 + 5 * 8)
         self.assertTrue(basket3_price == 5 * 8 * 0.5 + 5 * 8 * 0.5 + 20 * 1 * 0.5 + 8 * 1 * 0.5)
 
-
     def test_removeDiscountFromStore_Conditional_ProductLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add discount: if all basket price is greater than 120 OR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
         #               then: 50% off mango
-        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
-        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,"child": {"logic_type": "AND", "rule": rule3}}
-        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 120, "child": {"logic_type": "OR", "rule": rule2}}
-        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Product", level_name=9,rule=rule1)
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 120,
+                 "child": {"logic_type": "OR", "rule": rule2}}
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Product", level_name=9,
+                                       rule=rule1)
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -986,8 +1041,10 @@ class Test_Use_Case_2_4_Management(TestCase):
 
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
 
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket2_price == 7 * 20)
         self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1)
@@ -996,10 +1053,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_A", "passwordAAA")
         # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
         #               then: 50% off all fruits
-        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
-        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5, "child": {"logic_type": "AND", "rule": rule3}}
-        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,"child": {"logic_type": "XOR", "rule": rule2}}
-        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",level_name="Fruits", rule=rule1)
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,
+                 "child": {"logic_type": "XOR", "rule": rule2}}
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",
+                                       level_name="Fruits", rule=rule1)
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1010,7 +1071,8 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest3_entrance_id, "Feliks&Sons", 9, 1)
 
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
-        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1 + 8 * 1)
 
@@ -1018,10 +1080,14 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_A", "passwordAAA")
         # Add discount: if all basket price is greater than 200 XOR (cabbage(2) amount >= 5 AND cauliflower(1) amount >= 5)
         #               then: 50% off all store
-        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,"child": {}}
-        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,"child": {"logic_type": "AND", "rule": rule3}}
-        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,"child": {"logic_type": "XOR", "rule": rule2}}
-        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",level_name="Fruits", rule=rule1)
+        rule3 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {}}
+        rule2 = {"rule_type": "amount_of_product", "product": 2, "category": "", "operator": ">=", "quantity": 5,
+                 "child": {"logic_type": "AND", "rule": rule3}}
+        rule1 = {"rule_type": "basket_total_price", "product": -1, "category": "", "operator": ">=", "quantity": 200,
+                 "child": {"logic_type": "XOR", "rule": rule2}}
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Conditioned", percent=50, level="Category",
+                                       level_name="Fruits", rule=rule1)
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1036,7 +1102,8 @@ class Test_Use_Case_2_4_Management(TestCase):
 
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
 
-        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket3_price = self.service.store_facade.getCart(guest3_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket3_price == 5 * 8 + 5 * 8 + 20 * 1 + 8 * 1)
 
     # =================================================================================================================
@@ -1048,7 +1115,8 @@ class Test_Use_Case_2_4_Management(TestCase):
         discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
         discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
 
-        self.service.addDiscount("Feliks&Sons", "Son_A", "Max", discounts={"1": discount1, "2": discount2, "3": discount3})
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Max",
+                                 discounts={"1": discount1, "2": discount2, "3": discount3})
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -1067,9 +1135,12 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 5 * 8 * 0.5)
         self.assertTrue(basket1_price == 5 * 8 * 0.5 + 5 * 8 * 0.75)
@@ -1082,7 +1153,8 @@ class Test_Use_Case_2_4_Management(TestCase):
         discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
         discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
 
-        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Max", discounts={"1": discount1, "2": discount2, "3": discount3})
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Max",
+                                       discounts={"1": discount1, "2": discount2, "3": discount3})
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1104,14 +1176,16 @@ class Test_Use_Case_2_4_Management(TestCase):
 
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 5 * 8)
         self.assertTrue(basket1_price == 5 * 8 + 5 * 8)
         self.assertTrue(basket2_price == 5 * 8 + 5 * 8 + 5 * 8)
-
 
     # =================================================================================================================
     # Use Case 4.2.d - Add
@@ -1122,7 +1196,8 @@ class Test_Use_Case_2_4_Management(TestCase):
         discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
         discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
 
-        self.service.addDiscount("Feliks&Sons", "Son_A", "Add", discounts={"1": discount1, "2": discount2, "3": discount3})
+        self.service.addDiscount("Feliks&Sons", "Son_A", "Add",
+                                 discounts={"1": discount1, "2": discount2, "3": discount3})
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -1141,9 +1216,12 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
         self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 10, 5)
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 5 * 8 * 0.05)
         self.assertTrue(basket1_price == 5 * 8 * 0.05 + 5 * 8 * 0.55)
@@ -1156,7 +1234,8 @@ class Test_Use_Case_2_4_Management(TestCase):
         discount2 = {"discount_type": "Simple", "percent": 25, "level": "Category", "level_name": "Vegetable"}
         discount3 = {"discount_type": "Simple", "percent": 20, "level": "Store", "level_name": ""}
 
-        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Add", discounts={"1": discount1, "2": discount2, "3": discount3})
+        res = self.service.addDiscount("Feliks&Sons", "Son_A", "Add",
+                                       discounts={"1": discount1, "2": discount2, "3": discount3})
         added_discount: Discount = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1178,9 +1257,12 @@ class Test_Use_Case_2_4_Management(TestCase):
 
         self.service.removeDiscount("Feliks&Sons", "Son_A", added_discount.get_discount_id())
 
-        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
-        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
+        basket0_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket1_price = self.service.store_facade.getCart(guest1_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
+        basket2_price = self.service.store_facade.getCart(guest2_entrance_id).get_Basket(
+            "Feliks&Sons").calculateBasketPrice()
 
         self.assertTrue(basket0_price == 5 * 8)
         self.assertTrue(basket1_price == 5 * 8 + 5 * 8)
@@ -1192,8 +1274,10 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_newPurchasePolicyToStore_ProductLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add policy: cannot have more than 5 cauliflowers_K and then buy Melon
-        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
-        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product", level_name=11)
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,
+                 "child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",
+                                       level_name=11)
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -1214,8 +1298,10 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_newPurchasePolicyToStore_CategoryLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add policy: cannot have more than 5 vegetables and then buy fruits
-        rule1 = {"rule_type": "amount_of_category", "product": "", "category": "Vegetables", "operator": "<=", "quantity": 5,"child": {}}
-        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Category",level_name="Fruits")
+        rule1 = {"rule_type": "amount_of_category", "product": "", "category": "Vegetables", "operator": "<=",
+                 "quantity": 5, "child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Category",
+                                       level_name="Fruits")
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -1237,8 +1323,10 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_newPurchasePolicyToStore_StoreLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add policy: cannot have more than 5 cauliflowers_K
-        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
-        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Basket",level_name="")
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,
+                 "child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Basket",
+                                       level_name="")
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
@@ -1253,31 +1341,36 @@ class Test_Use_Case_2_4_Management(TestCase):
         with self.assertRaises(Exception):
             # guest1 will just buy 1 more cauliflower - fail
             self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 1, 1)
+
     def test_newPurchasePolicyToStore_UserLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         self.service.logIn("Ari", "password222")
         # Add policy: Ari can't buy banana
-        rule1 = {"rule_type": "username_restriction", "product": -1, "category": "", "operator": "", "quantity": 0, "user_field":"Ari" ,"child": {}}
-        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product", level_name=10)
+        rule1 = {"rule_type": "username_restriction", "product": -1, "category": "", "operator": "", "quantity": 0,
+                 "user_field": "Ari", "child": {}}
+        self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",
+                                       level_name=10)
 
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
 
-        #guest can add banana
+        # guest can add banana
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 1)
-        #guest can add mango
+        # guest can add mango
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 10, 1)
-        #Ari can add mango
+        # Ari can add mango
         self.service.addToBasket("Ari", "Feliks&Sons", 9, 1)
-        #Ari can't add banana
+        # Ari can't add banana
         with self.assertRaises(Exception):
             self.service.addToBasket("Ari", "Feliks&Sons", 10, 1)
 
     def test_removePurchasePolicyFromStore_ProductLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add policy: cannot have more than 5 cauliflowers_K and then buy Melon
-        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
-        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",level_name=11)
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,
+                 "child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",
+                                             level_name=11)
         added_Policy: PurchasePolicy = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1299,8 +1392,10 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_removePurchasePolicyFromStore_CategoryLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add policy: cannot have more than 5 vegetables and then buy fruits
-        rule1 = {"rule_type": "amount_of_category", "product": "", "category": "Vegetables", "operator": "<=","quantity": 5, "child": {}}
-        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Category",level_name="Fruits")
+        rule1 = {"rule_type": "amount_of_category", "product": "", "category": "Vegetables", "operator": "<=",
+                 "quantity": 5, "child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Category",
+                                             level_name="Fruits")
         added_Policy: PurchasePolicy = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1323,8 +1418,10 @@ class Test_Use_Case_2_4_Management(TestCase):
     def test_removePurchasePolicyFromStore_StoreLevel_Success(self):
         self.service.logIn("Son_A", "passwordAAA")
         # Add policy: cannot have more than 5 cauliflowers_K
-        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,"child": {}}
-        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Basket",level_name="")
+        rule1 = {"rule_type": "amount_of_product", "product": 1, "category": "", "operator": "<=", "quantity": 5,
+                 "child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Basket",
+                                             level_name="")
         added_Policy: PurchasePolicy = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1345,8 +1442,10 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_A", "passwordAAA")
         self.service.logIn("Ari", "password222")
         # Add policy: Ari can't buy banana
-        rule1 = {"rule_type": "username_restriction", "product": -1, "category": "", "operator": "", "quantity": 0,"user_field": "Ari", "child": {}}
-        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",level_name=10)
+        rule1 = {"rule_type": "username_restriction", "product": -1, "category": "", "operator": "", "quantity": 0,
+                 "user_field": "Ari", "child": {}}
+        res = self.service.addPurchasePolicy("Feliks&Sons", "Son_A", "PurchasePolicy", rule=rule1, level="Product",
+                                             level_name=10)
         added_Policy: PurchasePolicy = ast.literal_eval(res.getReturnValue())
 
         res = self.service.loginAsGuest()
@@ -1390,13 +1489,13 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertEqual(sond_notification_count_after, sond_notification_count)
         self.assertEqual(sone_notification_count_after, sone_notification_count + 1)
         self.assertEqual(feliks_notification_count_after, feliks_notification_count + 1)
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         self.service.approveNomination("Son_B", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertTrue("Son_E" in staff_list)
         sona_notification_count_after_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
         sonb_notification_count_after_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
@@ -1419,9 +1518,9 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_E", "passwordEEE")
         self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
         self.service.rejectNomination("Feliks", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
-        with self.assertRaises(Exception): #shouldn't approve now, agreement cancelled
+        with self.assertRaises(Exception):  # shouldn't approve now, agreement cancelled
             self.service.approveNomination("Son_B", "Son_E", "Feliks&Sons")
 
     def test_nominateShopOwnerByOwner_OneGotFireBeforeOtherApproved_Success(self):
@@ -1432,7 +1531,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
         self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         self.service.removeAccess("Feliks", "Son_B", "Feliks&Sons")
         sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
@@ -1442,7 +1541,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertTrue("Son_E" in staff_list)
         FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
         self.assertTrue(FeliksSons_roles['Son_E']['role'] == 'Owner')
@@ -1467,7 +1566,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
         self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
         sonb_notification_count_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
@@ -1476,7 +1575,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         self.service.removeAccess("Feliks", "Son_B", "Feliks&Sons")
         self.assertTrue("Son_E" in staff_list)
@@ -1495,7 +1594,6 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertEqual(sone_notification_count_after_after, sone_notification_count_after + 1)
         self.assertEqual(feliks_notification_count_after_after, feliks_notification_count_after + 1)
 
-
     # Use Case 4.4.b
     def test_nominateShopOwnerByFounder_Success(self):
         self.service.logIn("Feliks", "password333")
@@ -1511,7 +1609,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         self.service.nominateStoreOwner("Feliks", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Son_A").getReturnValue()
         self.assertTrue("Son_E" in staff_list)
         FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
         self.assertTrue(FeliksSons_roles['Son_E']['role'] == 'Owner')
@@ -1553,7 +1651,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons"))
+        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks"))
         self.assertEqual(sona_notification_count_after, sona_notification_count + 1)
         self.assertEqual(sonb_notification_count_after, sonb_notification_count + 1)
         self.assertEqual(sonc_notification_count_after, sonc_notification_count + 1)
@@ -1576,7 +1674,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         self.service.removeAccess("Feliks", "Son_A", "Feliks&Sons")  # should remove son_D as well
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_A" in staff_list)
         self.assertFalse("Son_D" in staff_list)
         sona_notification_count_after_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
@@ -1608,7 +1706,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sone_notification_count = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         self.service.nominateStoreManager("Son_A", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertTrue("Son_E" in staff_list)
         FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
         self.assertTrue(FeliksSons_roles['Son_E']['role'] == 'Manager')
@@ -1640,7 +1738,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sone_notification_count = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         self.service.nominateStoreManager("Feliks", "Son_E", "Feliks&Sons")
-        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons")
+        staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertTrue("Son_E" in staff_list)
         FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
         self.assertTrue(FeliksSons_roles['Son_E']['role'] == 'Manager')
@@ -1709,7 +1807,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons"))
+        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks"))
         FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
         self.assertFalse(FeliksSons_roles.__contains__('Son_E'))
         self.assertEqual(sona_notification_count_after, sona_notification_count)
@@ -1741,7 +1839,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons"))
+        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks"))
         FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
         self.assertFalse(FeliksSons_roles.__contains__('Son_E'))
         self.assertEqual(sona_notification_count_after, sona_notification_count)
@@ -1788,7 +1886,6 @@ class Test_Use_Case_2_4_Management(TestCase):
         products_with_ca = ast.literal_eval(self.service.productSearchByName("Ca", guest0_entrance_id)["baskets"])
         self.assertTrue(products_with_ca == {})
 
-
     # Use Case 4.10
     def test_reopenStore_success(self):
         res = self.service.loginAsGuest()
@@ -1832,7 +1929,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(access_SonD_names.__len__() == 2)
 
     # Use Case 4.13
-    def test_requestStorePurchaseHistory_success(self):
+    def test_OwnerRequestStorePurchaseHistory_success(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         res = self.service.loginAsGuest()
@@ -1845,14 +1942,15 @@ class Test_Use_Case_2_4_Management(TestCase):
                                   "some_address", "be'er sheva", "Israel", "1234567")
         self.service.purchaseCart(guest1_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
                                   "some_address", "be'er sheva", "Israel", "1234567")
-        PurchaseHistory_FeliksSons = ast.literal_eval(self.service.getStorePurchaseHistory("Feliks", "Feliks&Sons").getReturnValue())
+        PurchaseHistory_FeliksSons = ast.literal_eval(
+            self.service.getStorePurchaseHistory("Feliks", "Feliks&Sons").getReturnValue())
         self.assertTrue(PurchaseHistory_FeliksSons.__len__() == 2)
         guest0_transaction = PurchaseHistory_FeliksSons[0]
         self.assertTrue(guest0_transaction['username'] == guest0_entrance_id)
         self.assertTrue(guest0_transaction['storename'] == "Feliks&Sons")
         self.assertTrue(guest0_transaction['products'][0][1] == 'Cauliflower_K')
         self.assertTrue(guest0_transaction['products'][0][2] == 5)
-        self.assertTrue(guest0_transaction['overall_price'] == 8*5)
+        self.assertTrue(guest0_transaction['overall_price'] == 8 * 5)
         guest1_transaction = PurchaseHistory_FeliksSons[1]
         self.assertTrue(guest1_transaction['username'] == guest1_entrance_id)
         self.assertTrue(guest1_transaction['storename'] == "Feliks&Sons")
@@ -1864,7 +1962,7 @@ class Test_Use_Case_2_4_Management(TestCase):
 
     # =================================================================================================================
     # Use Case 5.13
-    def test_requestStorePurchaseHistory_success(self):
+    def test_MemberRequestStorePurchaseHistory_success(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         res = self.service.loginAsGuest()
@@ -1896,29 +1994,130 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.assertTrue(guest1_transaction['overall_price'] == 8 * 5 + 8 * 5)
 
 
+""" ---------------------- (2.6) Admin Functionality tests ---------------------- """
 class Test_Use_Case_2_6_transactions(TestCase):
     def setUp(self):
         self.service = Service(config_file=default_config, load_file=stores_load, send_notification_call=true_lambda)
+
     def tearDown(self):
         # Reset the singleton instance of Service
         Service._instance = None
+
     # Use Case 2.6.2
     def test_AdminBanMember_success(self):
-        pass
+        self.service.logIn("admin", "12341234")
+        self.service.logIn("Amiel", "password111")
+        self.service.removePermissionFreeMember("admin", "Amiel")
+        online_member_dict = ast.literal_eval(self.service.getAllOnlineMembers("admin").getReturnValue())
+        self.assertFalse(self.service.getAllOnlineMembers("admin").getReturnValue().__contains__("Amiel"))
+        with self.assertRaises(Exception):
+            self.service.logIn("Amiel", "password111")
+        self.service.returnPermissionFreeMember("admin", "Amiel")
+        self.service.logIn("Amiel", "password111")
+        self.assertTrue(self.service.getAllOnlineMembers("admin").getReturnValue().__contains__("Amiel"))
 
     # Use Case 2.6.4
     def test_StorePurchaseHistoryAdmin_success(self):
-        pass
+        self.service.logIn("admin", "12341234")
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        guest1_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 3, 5)
+        self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        self.service.purchaseCart(guest1_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        PurchaseHistory_FeliksSons = ast.literal_eval(
+            self.service.getStorePurchaseHistory("admin", "Feliks&Sons").getReturnValue())
+        self.assertTrue(PurchaseHistory_FeliksSons.__len__() == 2)
+        guest0_transaction = PurchaseHistory_FeliksSons[0]
+        self.assertTrue(guest0_transaction['username'] == guest0_entrance_id)
+        self.assertTrue(guest0_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest0_transaction['products'][0][1] == 'Cauliflower_K')
+        self.assertTrue(guest0_transaction['products'][0][2] == 5)
+        self.assertTrue(guest0_transaction['overall_price'] == 8 * 5)
+        guest1_transaction = PurchaseHistory_FeliksSons[1]
+        self.assertTrue(guest1_transaction['username'] == guest1_entrance_id)
+        self.assertTrue(guest1_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest1_transaction['products'][0][1] == 'Cabbage_K')
+        self.assertTrue(guest1_transaction['products'][0][2] == 5)
+        self.assertTrue(guest1_transaction['products'][1][1] == 'Broccoli_K')
+        self.assertTrue(guest1_transaction['products'][1][2] == 5)
+        self.assertTrue(guest1_transaction['overall_price'] == 8 * 5 + 8 * 5)
 
     def test_UserPurchaseHistoryAdmin_success(self):
-        pass
+        self.service.logIn("admin", "12341234")
+        self.service.logIn("Amiel", "password111")
+        self.service.addToBasket("Amiel", "Feliks&Sons", 1, 5)
+        self.service.addToBasket("Amiel", "Robin&Daughters", 2, 5)
+        self.service.addToBasket("Amiel", "Robin&Daughters", 3, 5)
+        self.service.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        PurchaseHistory_Amiel = ast.literal_eval(
+            self.service.getMemberPurchaseHistory("Admin", "Amiel").getReturnValue())
+        self.assertTrue(PurchaseHistory_Amiel.__len__() == 2)
+        FStore_transaction = PurchaseHistory_Amiel[0]
+        self.assertTrue(FStore_transaction['username'] == "Amiel")
+        self.assertTrue(FStore_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(FStore_transaction['products'][0][1] == 'Cauliflower_K')
+        self.assertTrue(FStore_transaction['products'][0][2] == 5)
+        self.assertTrue(FStore_transaction['overall_price'] == 8 * 5)
+        RStore_transaction = PurchaseHistory_Amiel[1]
+        self.assertTrue(RStore_transaction['username'] == "Amiel")
+        self.assertTrue(RStore_transaction['storename'] == "Robin&Daughters")
+        self.assertTrue(RStore_transaction['products'][0][1] == 'BBQ_Sauce')
+        self.assertTrue(RStore_transaction['products'][0][2] == 5)
+        self.assertTrue(RStore_transaction['products'][1][1] == 'Ketchup')
+        self.assertTrue(RStore_transaction['products'][1][2] == 5)
+        self.assertTrue(RStore_transaction['overall_price'] == 15 * 5 + 15 * 5)
 
     # Use Case 2.6.6
     def test_AdminGetInfoMembersOnOff_success(self):
-        pass
+        self.service.logIn("admin", "12341234")
+        self.service.logIn("Amiel", "password111")
+        online_members_dict = ast.literal_eval(self.service.getAllOnlineMembers("admin").getReturnValue())
+        self.assertTrue(online_members_dict.__len__() == 3) # Feliks Robin Amiel
+        self.assertTrue(online_members_dict.keys().__contains__("Amiel"))
+        self.assertTrue(online_members_dict.keys().__contains__("Robin"))
+        self.assertTrue(online_members_dict.keys().__contains__("Feliks"))
+        offline_members_dict = ast.literal_eval(self.service.getAllOfflineMembers("admin").getReturnValue())
+        self.assertTrue(offline_members_dict.__len__() == 7)  # Ari and SonA-SonF = 7
+        self.assertTrue(offline_members_dict.keys().__contains__("Ari"))
+        self.assertTrue(offline_members_dict.keys().__contains__("Son_A"))
+        self.assertTrue(offline_members_dict.keys().__contains__("Son_B"))
+        self.assertTrue(offline_members_dict.keys().__contains__("Son_C"))
+        self.assertTrue(offline_members_dict.keys().__contains__("Son_D"))
+        self.assertTrue(offline_members_dict.keys().__contains__("Son_E"))
+        self.assertTrue(offline_members_dict.keys().__contains__("Son_F"))
 
     def test_AdminGetInfoMember_success(self):
-        pass
+        self.service.logIn("admin", "12341234")
+        self.service.logIn("Amiel", "password111")
+        self.service.addToBasket("Amiel", "Feliks&Sons", 1, 5)
+        self.service.addToBasket("Amiel", "Robin&Daughters", 2, 5)
+        self.service.addToBasket("Amiel", "Robin&Daughters", 3, 5)
+        self.service.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        amiel_info = ast.literal_eval(ast.literal_eval(self.service.getMemberInfo("admin", "Amiel").getReturnValue())['member'])
+        self.assertTrue(amiel_info['username'] == "Amiel")
+        self.assertTrue(amiel_info['email'] == "amiel@gmail.com")
+        self.assertTrue(amiel_info['accesses'] == '{}')
+        Feliks_info = ast.literal_eval(ast.literal_eval(self.service.getMemberInfo("admin", "Feliks").getReturnValue())['member'])
+        self.assertTrue(Feliks_info['username'] == "Feliks")
+        self.assertTrue(Feliks_info['email'] == "feliks@gmail.com")
+        Feliks_accesses = ast.literal_eval(Feliks_info['accesses'])
+        self.assertTrue(Feliks_accesses["Feliks&Sons"]["store"]["store_name"] == "Feliks&Sons")
+        self.assertTrue(Feliks_accesses["Feliks&Sons"]["role"] == "Founder")
+        SonA_info = ast.literal_eval(ast.literal_eval(self.service.getMemberInfo("admin", "Son_A").getReturnValue())['member'])
+        self.assertTrue(SonA_info['username'] == "Son_A")
+        self.assertTrue(SonA_info['email'] == "sona@gmail.com")
+        SonA_accesses = ast.literal_eval(SonA_info['accesses'])
+        self.assertTrue(SonA_accesses["Feliks&Sons"]["store"]["store_name"] == "Feliks&Sons")
+        self.assertTrue(SonA_accesses["Feliks&Sons"]["role"] == "Owner")
 
 
 if __name__ == '__main__':

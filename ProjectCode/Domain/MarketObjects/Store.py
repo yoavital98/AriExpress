@@ -545,7 +545,7 @@ class Store:
         if cur_bid.get_left_to_approval() == 0:
             cur_bid.set_status(1)
             MessageController().send_notification(cur_bid.get_username(), "Bid request was approved", f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
-            for staff_member in self.getAllStaffMembersNames():
+            for staff_member in self.getAllStaffMembersNames(username):
                 MessageController().send_notification(staff_member, "Bid request was approved", f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}", datetime.datetime.now())
             self.__bids.set_status(bid_id, 1)
         return cur_bid
@@ -572,7 +572,7 @@ class Store:
                 cur_bid.set_status(2)
                 self.__bids.set_status(bid_id, 2)
                 MessageController().send_notification(cur_bid.get_username(), "Bid request was rejected",f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
-                for staff_member in self.getAllStaffMembersNames():
+                for staff_member in self.getAllStaffMembersNames(username):
                     MessageController().send_notification(staff_member, "Bid request was rejected",f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. rejecting member: {username}",datetime.datetime.now())
                 return cur_bid
             else:
@@ -604,7 +604,7 @@ class Store:
                 self.__bids.set_status(bid_id, 3)
                 cur_bid.set_status(3)
                 MessageController().send_notification(cur_bid.get_username(), "Alternative offer was sent for your bid",  f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
-                for staff_member in self.getAllStaffMembersNames():
+                for staff_member in self.getAllStaffMembersNames(username):
                     MessageController().send_notification(staff_member, "Alternative offer was sent for a bid",    f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. sending member: {username}", datetime.datetime.now())
                 return cur_bid
             else:
@@ -702,8 +702,13 @@ class Store:
             raise Exception("The requested share is too high")
         return cur_lottery
 
-    def getAllStaffMembersNames(self):
-        return self.get_accesses().keys()
+    def getAllStaffMembersNames(self, username):
+        cur_access: Access = self.accesses[username]
+        if cur_access is None:
+            raise Exception("Member has no access for that store")
+        if not cur_access.canViewStaffInformation():
+            raise Exception("You have no permission to view staff information")
+        return [access.get_user().get_username() for access in self.accesses.values()]
 
     def increment_product_id_counter(self):
         store_entry = StoreModel.get_by_id(self.__store_name)

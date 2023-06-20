@@ -791,9 +791,9 @@ class Service:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)
 
-    def getAllStaffMembersNames(self, storename):
+    def getAllStaffMembersNames(self, storename, username):
         try:
-            staffNames = self.store_facade.getAllStaffMembersNames(storename)
+            staffNames = self.store_facade.getAllStaffMembersNames(storename, username)
             logging.debug(f"fetching all the store members. By username: {storename}.")
             return Response(json.dumps(staffNames), True)
         except Exception as e:
