@@ -207,7 +207,8 @@ class StoreFacade:
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
         guest: Guest = Guest(entrance_id)
-        self.onlineGuests[entrance_id] = guest
+        if self.onlineGuests.get(entrance_id) is None:
+            self.onlineGuests[entrance_id] = guest
         return guest
 
     # only guests
@@ -247,6 +248,13 @@ class StoreFacade:
                 return self.onlineGuests.get(str(user_name))
             else:
                 raise Exception("user is not guest nor a member")
+
+    def checkIfBanned(self, username):
+        if self.members.keys().__contains__(str(username)):
+            return self.members.isBanned(username)
+        else:
+            raise Exception("Member doesn't exists.")
+
 
     # gets an online member.
     def getOnlineMemberOnly(self, user_name):

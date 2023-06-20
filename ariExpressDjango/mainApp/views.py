@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    user = authenticate(request, username='aaa', password='asdf1233')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -101,6 +101,9 @@ def login(request):
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
                 else:
+                    if Service().checkIfBanned(username).getReturnValue() == True:
+                        messages.success(request, (f"Error: {username} is banned!"))
+                        return redirect('mainApp:mainpage')
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
@@ -1568,7 +1571,6 @@ def guestToUser(request, username, password):
             return username
             # ret = ast.literal_eval(str(actionRes.getReturnValue()))
             # return ret['entrance_id']
-
     return False
 
 
