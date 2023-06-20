@@ -704,12 +704,15 @@ class Store:
         return cur_lottery
 
     def getAllStaffMembersNames(self, username):
-        cur_access: Access = self.accesses[username]
+        cur_access: Access = self.__accesses[username]
         if cur_access is None:
             raise Exception("Member has no access for that store")
         if not cur_access.canViewStaffInformation():
             raise Exception("You have no permission to view staff information")
-        return [access.get_user().get_username() for access in self.accesses.values()]
+        return [access.get_user().get_username() for access in self.__accesses.values()]
+
+    def getAllStaffMembers(self):
+        return [access.get_user().get_username() for access in self.__accesses.values()]
 
     def increment_product_id_counter(self):
         store_entry = StoreModel.get_by_id(self.__store_name)

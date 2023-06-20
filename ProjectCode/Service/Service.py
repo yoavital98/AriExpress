@@ -3,13 +3,15 @@ import logging
 import os
 import inspect
 import pickle
+
+import peewee
 from peewee import *
 
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
-
+from ProjectCode.DAL.database_conf import DatabaseConf
 
 # ------------------------------------ loadFileInit ------------------------------------ #
 @staticmethod
@@ -52,6 +54,7 @@ def loadConfigInit(load_file):
     return config_data
 
 # ------------------------------------------------------------------------------------- #
+
 
 class Service:
     _instance = None

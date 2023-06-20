@@ -1,3 +1,5 @@
+from peewee import fn
+
 from ProjectCode.DAL.BidModel import BidModel
 from ProjectCode.Domain.MarketObjects.Bid import Bid
 from ProjectCode.Domain.Repository.Repository import Repository
@@ -127,3 +129,9 @@ class BidsRepository(Repository):
         bid_model = self.model.get_by_id(bid_id)
         bid_model.offer = alternate_offer
         bid_model.save()
+
+    def get_highest_id(self):
+        highest_id = self.model.select(fn.Max(self.model.bid_id)).scalar()
+        if highest_id is None:
+            return 0
+        return highest_id
