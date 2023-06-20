@@ -235,13 +235,13 @@ class StoreFacade:
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
-            if not self.members.isBanned(user_name):
+            # if not self.members.isBanned(user_name):
                 if self.online_members.keys().__contains__(str(user_name)):
                     return self.members.get(user_name)
                 else:
                     raise Exception("user is not logged in")
-            else:
-                raise Exception("this member is banned")
+            # else:
+            #     raise Exception("this member is banned")
         else:
             if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(str(user_name))
@@ -283,7 +283,7 @@ class StoreFacade:
                 return self.logInAsAdmin(username, password)
             # check if the member is an actual user
             if self.members.keys().__contains__(username):
-                if not self.members.isBanned(username):
+                #if not self.members.isBanned(username):
                     if not self.online_members.__contains__(username):
                         existing_member: Member = self.members[username]
                         if password_validator.ConfirmPassword(password, existing_member.get_password()):
@@ -297,8 +297,8 @@ class StoreFacade:
                             raise Exception("username or password does not match")
                     else:
                         raise Exception("user is already logged in")
-                else:
-                    raise Exception("this member is banned")
+                # else:
+                #     raise Exception("this member is banned")
             else:
                 raise Exception("username or password does not match")
 
@@ -355,6 +355,7 @@ class StoreFacade:
             if store is None:
                 raise Exception("Store doesnt exists")
             with self.lock_for_adding_and_purchasing:
+                print("id:"+str(product_id)+"  quantity:"+str(quantity))
                 product = store.checkProductAvailability(product_id, quantity)
             if product is not None:
                 filled_basket = user.add_to_cart(username, store, product_id, product, quantity)

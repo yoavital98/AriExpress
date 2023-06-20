@@ -57,6 +57,7 @@ urlpatterns = [
     path(r'checkout', views.checkout, name='checkout'),
     path(r'checkout_bid', views.checkout_bid, name='checkout_bid'),
     path(r'searchpage/', views.searchpage, name='searchpage'),
+    path(r'filter_search', views.filtersearchpage, name='filtersearchpage'),
     path(r'userPurchaseHistory/', views.userPurchaseHistory, name='userPurchaseHistory'),
     
     

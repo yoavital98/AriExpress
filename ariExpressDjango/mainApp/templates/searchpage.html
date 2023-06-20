@@ -1,41 +1,94 @@
 {% extends 'base.html' %}
 {% block content %}
-
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+</head>
 {% if searched %}
 <br><br>
-<div class="text-center">
-    <h1>Results for "{{ searched }}"</h1>
-</div>
-<br><br>
-<div class = "container mt-4 mb-4">
-    <div class="col">
-        <div class="row">   
-            {% for storename, products in products.items %}
-                {% for product in products%}
-                <div class="card product-card" >
-                    <div class="product-img">
-                        <img class="card-img-top img-responsive" src="https://www.bevi.com/static/files/0/ecommerce-default-product.png" alt="https://www.bevi.com/static/files/0/ecommerce-default-product.png" >
-                    </div>
-                    <div class="card-body" style="padding-top:90%;">
-                        <div class="title-product">
-                        <h3>{{ product.name }}</h3>
+<body>
+    <div class="text-center">
+        <h1>Results for "{{ searched }}"</h1>
+        <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#filterModal{{ searched }}">
+            filter
+        </button>
+    </div>
+    <br><br>
+    <div class = "container mt-4 mb-4">
+        <div class="col">
+            <div class="row">   
+                {% for storename, products in products.items %}
+                    {% for product in products%}
+                    <div class="card product-card" >
+                        <div class="product-img">
+                            <img class="card-img-top img-responsive" src="https://www.bevi.com/static/files/0/ecommerce-default-product.png" alt="https://www.bevi.com/static/files/0/ecommerce-default-product.png" >
                         </div>
-                        <div class="description-prod">
-                            <p class="prod-categories">Categories: {{ product.categories }}</p>
-                            <p class="prod-storename">Store name: {{ storename }}</p>
+                        <div class="card-body" style="padding-top:90%;">
+                            <div class="title-product">
+                            <h3>{{ product.name }}</h3>
+                            </div>
+                            <div class="description-prod">
+                                <p class="prod-categories">Categories: {{ product.categories }}</p>
+                                <p class="prod-storename">Store name: {{ storename }}</p>
+                            </div>
                         </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="wcf-left" style="float:left;"><span class="product-price" style="font-size:20px; font-weight:bold;">${{product.price}}</span></div>
+                            <div class="wcf-right" style="float:right;"><button class="buy-btn btn-action" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}"><i class="fa-solid fa-basket-shopping"></i></button></div>
+                        </div>
+                        {% include 'products/addToCart.html' with storename=storename product=product %}
                     </div>
-                    <div class="card-footer bg-transparent">
-                        <div class="wcf-left" style="float:left;"><span class="product-price" style="font-size:20px; font-weight:bold;">${{product.price}}</span></div>
-                        <div class="wcf-right" style="float:right;"><button class="buy-btn btn-action" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}"><i class="fa-solid fa-basket-shopping"></i></button></div>
-                    </div>
-                    {% include 'products/addToCart.html' with storename=storename product=product %}
-                </div>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            </div>
         </div>
     </div>
-</div>
+    <div class="modal fade" id="filterModal{{ searched }}" tabindex="-1" role="dialog" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">&nbsp; filter products </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method ="POST" action="/filter_search" autocomplete="off" enctype="multipart/form-data" id="filterSearchForm"> 
+                        {% csrf_token %}
+                        <label for="amount">Price range:</label>
+                        <br>
+                        <input type="hidden" value="{{ searched }}" name="searched">
+                        <label for="min_price" class="form-label">Minimum price:</label>
+                        <input type = "number" class = "form-control" id = "min_price" name = "min_price" maxlength="9" placeholder="0" min="0" max="5000" value="0" oninput="checkSmallerThanMax()">
+                        <label for="max_price" class="form-label">Maximum price:</label>
+                        <input type = "number" class = "form-control" id = "max_price" name = "max_price" maxlength="9" placeholder="5000" min="0" max="5000" value="5000" oninput="checkLargerThanMin()" >
+                        <script>
+                            function checkSmallerThanMax() {
+                                var min_price = document.getElementById("min_price").value;
+                                var max_price = document.getElementById("max_price").value;
+                                if (min_price > max_price) {
+                                    document.getElementById("min_price").value = max_price;
+                                }
+                            }
+                            function checkLargerThanMin() {
+                                var min_price = document.getElementById("min_price").value;
+                                var max_price = document.getElementById("max_price").value;
+                                if (max_price < min_price) {
+                                    document.getElementById("max_price").value = min_price;
+                                }
+                            }
+                        </script>
+                        <br>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button class="btn text-light" type="submit" id="submit" style="background-color:#0074fe;" onclick="filtersearchpage()" >Apply filter &nbsp;&nbsp;</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
 {% else %}
 <h1>Hey! You Forgot Say What You're Looking For...</h1>
 {% endif %}
@@ -105,5 +158,6 @@
       }
 
 </style>
+
 
 {% endblock %}

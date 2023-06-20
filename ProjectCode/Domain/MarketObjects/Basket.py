@@ -18,7 +18,7 @@ class Basket:
         self.username = username
         self.store: Store = store
         self.products = ProductBasketRepository(username, store.get_store_name())  # product id : int -> (product: Product, quantity: int, price: double)
-#        self.bids = TypedDict(int, Bid)  # Bid id -> Bid
+        # self.bids = TypedDict(int, Bid)  # Bid id -> Bid
         self.bids = BidsRepository()
         # REPOSITORY FIELD --- TO BE REPLACED
         #self.products_test = ProductBasketRepository(username, store.get_store_name())
@@ -27,6 +27,7 @@ class Basket:
         if quantity <= 0:
             raise Exception("quantity cannot be set to 0 or negative number")
         if not self.products.keys().__contains__(product_id):
+            print("before check validity - basket")
             if not self.store.checkBasketValidity(self.products, product, quantity, self.username):
                 raise Exception("product cannot be added to basket due to policy restrictions")
             product_tup = self.store.calculateProductPriceAfterDiscount(product, self.products, quantity)

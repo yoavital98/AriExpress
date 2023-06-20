@@ -1115,7 +1115,7 @@ def cart(request):
                     #     product['product'] = json.loads(product['product'])
                     total_price = calculate_total_price(basket_products)
                     products[basket] = {'items': basket_products, 'total_price': total_price}
-
+                    
             return render(request, 'cart.html', {'baskets': baskets, 'products': products})
         else:
             messages.error(request, "Error loading cart - " + str(res.getReturnValue()))
@@ -1377,7 +1377,6 @@ def searchpage(request):
             for storeName, json_product_list in res_products.items():
                 product_list =[]
                 for product in json_product_list:
-                    product = json.loads(product)
                     product_list.append(product)
                 products[storeName] = product_list
 
@@ -1387,6 +1386,31 @@ def searchpage(request):
             return redirect('mainApp:mainpage')
     else:
         return redirect('mainApp:mainpage')
+    
+def filtersearchpage(request):
+    if request.method == "POST":
+        service = Service()
+        searched = request.POST['searched']
+        res = service.productSearchByName(searched, request.user.username)
+        if res.getStatus():
+            products= {}
+            res_products = res.getReturnValue()
+            min_price = request.POST['min_price']
+            max_price = request.POST['max_price']
+            for storeName, json_product_list in res_products.items():
+                product_list =[]
+                for product in json_product_list:
+                    if product['price'] >= int(min_price) and product['price'] <= int(max_price):
+                        product_list.append(product)
+                products[storeName] = product_list
+
+            return render(request, 'searchpage.html', {'searched': searched, 'products': products})
+        else:
+            messages.error(request, "Error searching for products - " + str(res.getReturnValue()))
+            return redirect('mainApp:mainpage')
+    else:
+        return redirect('mainApp:mainpage')
+
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------#
