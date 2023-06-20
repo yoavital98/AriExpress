@@ -280,6 +280,10 @@ class Test_Use_Case_2_2(TestCase):
         self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 3)  # Cabbage, Cauliflower, Carrot
         with self.assertRaises(Exception):
             x = res_product.getReturnValue()["Robin&Daughters"]  # None in Ca
+        res_product = self.service.productSearchByName("Ch", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 1)  # Cherry
+        self.assertTrue(res_product.getReturnValue()["Robin&Daughters"].__len__() == 1)  # Chilli
+
 
     # Use Case 2.2.2.b
     def test_guest_product_search_by_category_success(self):
@@ -1656,60 +1660,240 @@ class Test_Use_Case_2_4_Management(TestCase):
     # =================================================================================================================
     # Use Case 4.7.a
     def test_addPermissionToShopManager_Success(self):
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_D", "passwordDDD")
+        SonD_permissions = self.service.getPermissions("Feliks&Sons", "Son_A", "Son_D")
+        self.assertFalse(SonD_permissions.__contains__("ProductChange"))
+        with self.assertRaises(Exception):
+            self.service.editProductOfStore("Son_D", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
+        self.service.addPermission("Feliks&Sons", "Son_A", "Son_D", "ProductChange")
+        SonD_permissions = self.service.getPermissions("Feliks&Sons", "Son_A", "Son_D")
+        self.assertTrue(SonD_permissions.__contains__("ProductChange"))
+        self.service.editProductOfStore("Son_D", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
+
+    # Use Case 4.7.b
+    def test_removePermissionToShopManager_success(self):
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_D", "passwordDDD")
+        SonD_permissions = self.service.getPermissions("Feliks&Sons", "Son_A", "Son_D")
+        self.assertFalse(SonD_permissions.__contains__("ProductChange"))
+        self.service.addPermission("Feliks&Sons", "Son_A", "Son_D", "ProductChange")
+        SonD_permissions = self.service.getPermissions("Feliks&Sons", "Son_A", "Son_D")
+        self.assertTrue(SonD_permissions.__contains__("ProductChange"))
+        self.service.removePermissions("Feliks&Sons", "Son_A", "Son_D", "ProductChange")
+        SonD_permissions = self.service.getPermissions("Feliks&Sons", "Son_A", "Son_D")
+        self.assertFalse(SonD_permissions.__contains__("ProductChange"))
+        with self.assertRaises(Exception):
+            self.service.editProductOfStore("Son_D", "Feliks&Sons", 10, price=10, quantity=10, categories="veggies")
+
+    # =================================================================================================================
+    # Use Case 4.8.a
+    def test_removeShopManagerByHisNomineeOwner_Success(self):
         self.service.logIn("Feliks", "password333")
         self.service.logIn("Son_A", "passwordAAA")
         self.service.logIn("Son_B", "passwordBBB")
         self.service.logIn("Son_C", "passwordCCC")
         self.service.logIn("Son_D", "passwordDDD")
-        SonD_permissions = self.service.getPermissions("Feliks&Sons", "Son_A", "Son_C")
-        self.service.addPermission("Feliks&Sons", "Son_A", "Son_D", )
-
-    # Use Case 4.7.b
-    def test_removePermissionToShopManager_success(self):
-        pass
-
-    # =================================================================================================================
-    # Use Case 4.8.a
-    def test_removeShopManagerByHisNomineeOwner_Success(self):
-        pass
+        self.service.logIn("Son_E", "passwordEEE")
+        self.service.nominateStoreManager("SonA", "SonE", "Feliks&Sons")
+        sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        self.service.removeAccess("Son_A", "Son_E", "Feliks&Sons")
+        sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons"))
+        FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
+        self.assertFalse(FeliksSons_roles.__contains__('Son_E'))
+        self.assertEqual(sona_notification_count_after, sona_notification_count)
+        self.assertEqual(sonb_notification_count_after, sonb_notification_count)
+        self.assertEqual(sonc_notification_count_after, sonc_notification_count)
+        self.assertEqual(sond_notification_count_after, sond_notification_count)
+        self.assertEqual(sone_notification_count_after, sone_notification_count + 1)
+        self.assertEqual(feliks_notification_count_after, feliks_notification_count)
 
     # Use Case 4.8.b
     def test_removeShopManagerByFounder_Success(self):
-        pass
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.logIn("Son_E", "passwordEEE")
+        self.service.nominateStoreManager("SonA", "SonE", "Feliks&Sons")
+        sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        self.service.removeAccess("Feliks", "Son_E", "Feliks&Sons")
+        sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        sone_notification_count_after = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        self.assertTrue("Son_E" not in self.service.getAllStaffMembersNames("Feliks&Sons"))
+        FeliksSons_roles = ast.literal_eval(self.service.getStoreAllInfo("Feliks&Sons").getReturnValue()["accesses"])
+        self.assertFalse(FeliksSons_roles.__contains__('Son_E'))
+        self.assertEqual(sona_notification_count_after, sona_notification_count)
+        self.assertEqual(sonb_notification_count_after, sonb_notification_count)
+        self.assertEqual(sonc_notification_count_after, sonc_notification_count)
+        self.assertEqual(sond_notification_count_after, sond_notification_count)
+        self.assertEqual(sone_notification_count_after, sone_notification_count + 1)
+        self.assertEqual(feliks_notification_count_after, feliks_notification_count)
 
     # =================================================================================================================
     # Use Case 4.9
     def test_closeStore_success(self):
         # also to check users can't see items from there after close
         # and that notifications were sent to all staff
-        pass
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        res_product = self.service.productSearchByName("Ca", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 3)  # Cabbage, Cauliflower, Carrot
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        with self.assertRaises(Exception):
+            self.service.closeStore("Son_A", "Feliks&Sons")
+        self.service.closeStore("Feliks", "Feliks&Sons")
+        sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after, sona_notification_count + 1)
+        self.assertEqual(sonb_notification_count_after, sonb_notification_count + 1)
+        self.assertEqual(sonc_notification_count_after, sonc_notification_count + 1)
+        self.assertEqual(sond_notification_count_after, sond_notification_count + 1)
+        self.assertEqual(feliks_notification_count_after, feliks_notification_count + 1)
+        with self.assertRaises(Exception):
+            self.service.getProductsByStore("Feliks&Sons", guest0_entrance_id)
+        products_with_ca = ast.literal_eval(self.service.productSearchByName("Ca", guest0_entrance_id)["baskets"])
+        self.assertTrue(products_with_ca == {})
+
 
     # Use Case 4.10
     def test_reopenStore_success(self):
-        pass
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        res_product = self.service.productSearchByName("Ca", guest0_entrance_id)
+        self.assertTrue(res_product.getReturnValue()["Feliks&Sons"].__len__() == 3)  # Cabbage, Cauliflower, Carrot
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
+        self.service.closeStore("Feliks", "Feliks&Sons")
+        sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        with self.assertRaises(Exception):
+            self.service.openStore("Son_A", "Feliks&Sons")
+        self.service.openStore("Feliks", "Feliks&Sons")
+        sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notification_count_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notification_count_after = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notification_count_after = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
+        feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        self.assertEqual(sona_notification_count_after, sona_notification_count + 1)
+        self.assertEqual(sonb_notification_count_after, sonb_notification_count + 1)
+        self.assertEqual(sonc_notification_count_after, sonc_notification_count + 1)
+        self.assertEqual(sond_notification_count_after, sond_notification_count + 1)
+        self.assertEqual(feliks_notification_count_after, feliks_notification_count + 1)
+        self.service.getProductsByStore("Feliks&Sons", guest0_entrance_id)
+        products_with_ca = ast.literal_eval(self.service.productSearchByName("Ca", guest0_entrance_id)["baskets"])
+        self.assertTrue(products_with_ca.__len__() == 3)
 
     # Use Case 4.11
     def test_requestStoreStaffInfo_success(self):
-        pass
+        self.service.logIn("Feliks", "password333")
+        accesses_list = ast.literal_eval(self.service.getStaffInfo("Feliks", "Feliks&Sons").getReturnValue())
+        self.assertTrue(accesses_list.__len__() == 5)
+        access_SonD_names = self.service.getPermissions("Feliks&Sons", "Feliks", "Son_D").getReturnValue().keys()
+        self.assertTrue(access_SonD_names.__len__() == 2)
 
     # Use Case 4.13
     def test_requestStorePurchaseHistory_success(self):
-        pass
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        guest1_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 3, 5)
+        self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        self.service.purchaseCart(guest1_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        PurchaseHistory_FeliksSons = ast.literal_eval(self.service.getStorePurchaseHistory("Feliks", "Feliks&Sons").getReturnValue())
+        self.assertTrue(PurchaseHistory_FeliksSons.__len__() == 2)
+        guest0_transaction = PurchaseHistory_FeliksSons[0]
+        self.assertTrue(guest0_transaction['username'] == guest0_entrance_id)
+        self.assertTrue(guest0_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest0_transaction['products'][0][1] == 'Cauliflower_K')
+        self.assertTrue(guest0_transaction['products'][0][2] == 5)
+        self.assertTrue(guest0_transaction['overall_price'] == 8*5)
+        guest1_transaction = PurchaseHistory_FeliksSons[1]
+        self.assertTrue(guest1_transaction['username'] == guest1_entrance_id)
+        self.assertTrue(guest1_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest1_transaction['products'][0][1] == 'Cabbage_K')
+        self.assertTrue(guest1_transaction['products'][0][2] == 5)
+        self.assertTrue(guest1_transaction['products'][1][1] == 'Broccoli_K')
+        self.assertTrue(guest1_transaction['products'][1][2] == 5)
+        self.assertTrue(guest1_transaction['overall_price'] == 8 * 5 + 8 * 5)
 
-
-class Test_Use_Case_2_5_nominations(TestCase):
-    def setUp(self):
-        self.service = Service(config_file=default_config, load_file=stores_load, send_notification_call=true_lambda)
-    def tearDown(self):
-        # Reset the singleton instance of Service
-        Service._instance = None
-    # Use Case 5
-    def test_nominatedPreformingGivenAction_Success(self):
-        pass
-
-    # Use Case 5.1
-    def test_nominatedPreformingUnGivenAction_Fail(self):
-        pass
+    # =================================================================================================================
+    # Use Case 5.13
+    def test_requestStorePurchaseHistory_success(self):
+        res = self.service.loginAsGuest()
+        guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        res = self.service.loginAsGuest()
+        self.assertTrue(res.getStatus())
+        guest1_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 2, 5)
+        self.service.addToBasket(guest1_entrance_id, "Feliks&Sons", 3, 5)
+        self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        self.service.purchaseCart(guest1_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
+                                  "some_address", "be'er sheva", "Israel", "1234567")
+        PurchaseHistory_FeliksSons = ast.literal_eval(
+            self.service.getStorePurchaseHistory("Son_A", "Feliks&Sons").getReturnValue())
+        self.assertTrue(PurchaseHistory_FeliksSons.__len__() == 2)
+        guest0_transaction = PurchaseHistory_FeliksSons[0]
+        self.assertTrue(guest0_transaction['username'] == guest0_entrance_id)
+        self.assertTrue(guest0_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest0_transaction['products'][0][1] == 'Cauliflower_K')
+        self.assertTrue(guest0_transaction['products'][0][2] == 5)
+        self.assertTrue(guest0_transaction['overall_price'] == 8 * 5)
+        guest1_transaction = PurchaseHistory_FeliksSons[1]
+        self.assertTrue(guest1_transaction['username'] == guest1_entrance_id)
+        self.assertTrue(guest1_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest1_transaction['products'][0][1] == 'Cabbage_K')
+        self.assertTrue(guest1_transaction['products'][0][2] == 5)
+        self.assertTrue(guest1_transaction['products'][1][1] == 'Broccoli_K')
+        self.assertTrue(guest1_transaction['products'][1][2] == 5)
+        self.assertTrue(guest1_transaction['overall_price'] == 8 * 5 + 8 * 5)
 
 
 class Test_Use_Case_2_6_transactions(TestCase):

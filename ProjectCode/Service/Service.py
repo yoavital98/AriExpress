@@ -617,7 +617,7 @@ class Service:
         try:
             permissions = self.store_facade.getPermissions(storename, requesterID, nominatedID)
             logging.debug( f"fetching all the store's permissions. By username: {requesterID}. nominated_username: {nominatedID}.")
-            return Response(json.dumps(permissions), True)
+            return Response(permissions, True)
         except Exception as e:
             logging.error(f"getPermissions Error: {str(e)}.")
             return Response(e, False)

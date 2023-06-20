@@ -49,11 +49,11 @@
 },{
   "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Soy_Sauce", "30", "15", "sauces"]}
 },{
-  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "chilli", "30", "2", "seasoning"]}
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Chilli", "30", "2", "seasoning"]}
 },{
-  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "salt", "30", "2", "seasoning"]}
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Salt", "30", "2", "seasoning"]}
 },{
-  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "paprika", "30", "2", "seasoning"]}
+  "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "Paprika", "30", "2", "seasoning"]}
 },{
   "register": {"args": ["Son_A", "passwordAAA", "sona@gmail.com"]}
 },{
