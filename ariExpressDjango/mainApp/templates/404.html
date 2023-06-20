@@ -1,11 +1,9 @@
-{% extends 'base.html' %}
 
-{% block title %}Page Not Found{% endblock %}
 
 {% block content %}
   <div class="container">
     <h1>404 - Page Not Found</h1>
     <p>Database server is down.</p>
-    <p>Please check the URL or go back to the <a href="{% url 'homepage' %}">homepage</a>.</p>
+    <p>Please check the URL or go back to the <a href="{% url 'mainApp:mainpage' %}">homepage</a>.</p>
   </div>
 {% endblock %}
