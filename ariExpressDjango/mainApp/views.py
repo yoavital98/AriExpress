@@ -756,7 +756,7 @@ def nominateUser(request, storename):
                     messages.success(request, ("A new user has been nominated to be Manager."))
                     return redirect('mainApp:mystores')
                 else:
-                    messages.success(request, ("Error nominating a user to be Manager"))
+                    messages.success(request, (f"Error {res.getReturnValue()}"))
                     return redirect('mainApp:mystores')
             else:
                 return render(request, 'nominateUser.html',
@@ -835,11 +835,12 @@ def viewDiscounts(request, storename):
 
 
 def viewPurchasePolicies(request, storename):
-    return render(request, 'viewPurchasePolicies.html', {'storename': storename})
+    # return render(request, 'viewPurchasePolicies.html', {'storename': storename})
 
     service = Service()
     permissionName = 'Policies'
     username = request.user.username
+    policies = {}
     if permissionCheck(username, storename, permissionName):
         actionRes = service.getAllPurchasePolicies(storename)
         if actionRes.getStatus():
