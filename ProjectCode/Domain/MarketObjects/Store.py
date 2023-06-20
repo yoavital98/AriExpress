@@ -16,6 +16,7 @@ import random
 
 from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
 from ProjectCode.Domain.Repository.BidsRequestRepository import BidsRequestRepository
+from ProjectCode.Domain.Repository.NominationAgreementRepository import NominationAgreementRepository
 # ----- REPOSITORIES ----- #
 from ProjectCode.Domain.Repository.ProductRepository import ProductRepository
 from ProjectCode.Domain.Repository.AccessRepository import AccessRepository
@@ -57,6 +58,7 @@ class Store:
         self.__bids_requests = BidsRequestRepository()
         self.__discount_policy = DiscountPolicy(store_name)
         self.__purchase_policy = PurchasePolicies(store_name)
+        self.__nomination_requests = NominationAgreementRepository(store_name)
 
         #REPOSITORY FIELDS --- TO BE REPLACED
         # self.accesses_test = AccessRepository(store_name=store_name)
@@ -101,14 +103,23 @@ class Store:
             raise Exception("The member doesn't have the access for that store")
         if self.__accesses[nominated_username] is not None and self.__accesses[nominated_username].hasRole(role):
             raise Exception("The member already has that role")
+        if requester_access.hasRole("Manager") and role == "Owner":
+            raise Exception("Managers can't nominate owners")
         if requester_access.canModifyPermissions() and requester_username == nominated_access.get_nominated_by_username():
             nominated_access.setAccess(role)
-            requester_access.addNominatedUsername(nominated_username, nominated_access)
-            self.__accesses[nominated_username] = nominated_access
-            self.__accesses[requester_username] = requester_access #update
-            return nominated_access
+            if requester_access.hasRole("Owner") and role == "Owner":
+                return self.__handleNominationByOwner(requester_username, nominated_username, nominated_access)
+            else:
+                #check if someone else wants to nominate the same user
+                requester_access.addNominatedUsername(nominated_username, nominated_access)
+                self.__accesses[nominated_username] = nominated_access
+                self.__accesses[requester_username] = requester_access #update
+                if role == "Owner":
+                    self.__addNewOwnerToNominationRequests(nominated_username)
+                return nominated_access
         else:
             raise Exception("Member doesn't have the permission in this store")
+
 
 
     def removeAccess(self,to_be_removed_username, requester_username):
@@ -132,6 +143,7 @@ class Store:
         while len(accesses_to_remove) > 0:
             cur_access = accesses_to_remove[0]
             self.__handleBidApprovalBeforeRemovingAccess(cur_access.get_user().get_username())
+            self.__handleNominationRemoval(cur_access.get_user().get_username())
             self.__accesses.remove(cur_access.get_user().get_username())
             usernames_to_remove.extend(cur_access.get_nominations())
             accesses_to_remove.remove(cur_access)
@@ -144,6 +156,79 @@ class Store:
         if bid_request_list is not None:
             for bid in bid_request_list:
                 self.approveBid(to_be_removed_username, bid.get_id())
+
+    #-------------Nomination agreement----------------#
+    def __addNewOwnerToNominationRequests(self, new_owner_username):
+        accesses_to_nominate = self.__nomination_requests.get()
+        for access in accesses_to_nominate:
+            self.__nomination_requests[new_owner_username] = access
+
+
+    def __handleNominationRemoval(self, to_be_removed_username):
+        #delete all nomination that requested by the user
+        for access in self.__nomination_requests.values():
+            if access.get_nominated_by_username() == to_be_removed_username:
+                self.__nomination_requests.remove(to_be_removed_username)
+        #delete all nominations that waits for approval by the user
+        for access in self.__nomination_requests.get(to_be_removed_username):
+            self.__nomination_requests.remove_by_username_to_approve(to_be_removed_username,access.get_user().get_username())
+            self.__checkIfNominationApproved(access.get_user().get_username(), access)
+
+
+
+    def __handleNominationByOwner(self, requester_username, nominated_username, nominated_access):
+        if len(self.__nomination_requests.get_by_nominee(nominated_username)) > 0:
+            self.approveNomination(requester_username, nominated_username)
+            return True
+        for access in self.__accesses.values():
+            if (access.hasRole("Owner") or access.hasRole("Founder"))  and access.get_user().get_username() != requester_username:
+                self.__nomination_requests[access.get_user().get_username()] = nominated_access
+        return True
+
+    def __checkIfNominationApproved(self, nominated_username, nominated_access):
+        left_to_approve_list = self.__nomination_requests.get_by_nominee(nominated_username)
+        if len(left_to_approve_list) == 0:
+            requester_username = nominated_access.get_nominated_by_username()
+            requester_access = self.__accesses[requester_username]
+            requester_access.addNominatedUsername(nominated_username, nominated_access)
+            self.__accesses[nominated_username] = nominated_access
+            self.__accesses[requester_username] = requester_access  # update
+
+
+    def approveNomination(self, requester_username, nominated_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        if requester_access is None:
+            raise Exception("No such access exists")
+        if not ( requester_access.hasRole("Owner") or requester_access.hasRole("Founder") ):
+            raise Exception("User doesn't have the permission to approve this nomination")
+        nomination_request = self.__nomination_requests.get(requester_username)
+        for access in nomination_request:
+            if access.get_user().get_username() == nominated_username:
+                self.__nomination_requests.remove_by_username_to_approve(requester_username, nominated_username)
+                self.__checkIfNominationApproved(nominated_username, access)
+        return self.getAllNominationRequests(requester_username)
+
+    def rejectNomination(self, requester_username, nominated_username):
+        requester_access: Access = self.__accesses.get(requester_username)
+        if requester_access is None:
+            raise Exception("No such access exists")
+        if not ( requester_access.hasRole("Owner") or requester_access.hasRole("Founder") ):
+            raise Exception("User doesn't have the permission to reject this nomination")
+        self.__nomination_requests.remove_nomination(nominated_username)
+        return self.getAllNominationRequests(requester_username)
+
+    def getAllNominationRequests(self, username):
+        nomination_requests_accesses = self.__nomination_requests.get(username)
+        if nomination_requests_accesses is None:
+            return {}
+        nomination_dict = {}
+        dict_count = 0
+        for access in nomination_requests_accesses:
+            nomination_dict[dict_count] = {"nominated_username": access.get_user().get_username(),
+                                           "nominated_by": access.get_nominated_by_username(),
+                                           "usernames_left_to_approve": self.__nomination_requests.get_by_nominee(access.get_user().get_username())}
+            dict_count += 1
+        return nomination_dict
 
     def modifyPermission(self, requester_username, nominated_username, permission, op="ADD"):
         requester_access: Access = self.__accesses.get(requester_username)
@@ -409,6 +494,9 @@ class Store:
             raise Exception("No such access exists")
         cur_access.canManagePolicies()
         self.__purchase_policy.removePurchasePolicy(policy_id)
+
+    def getAllPurchasePolicies(self):
+        return self.__purchase_policy.getAllPurchasePolicies()
 
     def getPolicy(self, policy_id):
         return self.__purchase_policy.getPurchasePolicy(policy_id)

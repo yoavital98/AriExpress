@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    user = authenticate(request, username='aaa', password='asdf1233')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -737,7 +737,7 @@ def nominateUser(request, storename):
     permissionName = 'ModifyPermissions'
 
     if permissionCheck(username, storename, permissionName):
-        if request.method == 'POST':
+        if 'nominateUser' in request.POST:
             requesterUsername = request.user.username
             toBeNominatedUsername = request.POST.get('inputNominatedUsername')
             selected = request.POST.get('nominateSelect')
@@ -758,13 +758,33 @@ def nominateUser(request, storename):
                 else:
                     messages.success(request, (f"Error {res.getReturnValue()}"))
                     return redirect('mainApp:mystores')
+            # else:
+            #     return render(request, 'nominateUser.html',
+            #                   {'storename': storename})  # didn't nominate yet, just load the page
+
+
+        if 'approveNomination' in request.POST:
+            toBeNominatedUsername = request.POST.get('toBeNominated')
+            actionRes = service.approveStoreOwnerNomination(username, toBeNominatedUsername, storename)
+            if actionRes.getStatus():
+                messages.success(request, (f"{username} has approved {toBeNominatedUsername}"))
             else:
-                return render(request, 'nominateUser.html',
-                              {'storename': storename})  # didn't nominate yet, just load the page
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
+        if 'rejectNomination' in request.POST:
+            toBeNominatedUsername = request.POST.get('toBeNominated')
+            actionRes = service.rejectStoreOwnerNomination(username, toBeNominatedUsername, storename)
+            if actionRes.getStatus():
+                messages.success(request, (f"{username} has rejected {toBeNominatedUsername}"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
-        else:
-            return render(request, 'nominateUser.html', {'storename': storename})
+        nominees = dict
+        actionRes = service.getAllNominationRequests(storename, username)
+        if actionRes.getStatus():
+            nominees = ast.literal_eval(str(actionRes.getReturnValue()))
+
+        return render(request, 'nominateUser.html', {'storename': storename, 'nominees': nominees})
 
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))

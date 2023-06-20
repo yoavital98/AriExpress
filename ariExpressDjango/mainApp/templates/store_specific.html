@@ -138,7 +138,13 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
       {% if "ModifyPermissions" in permissions %}
       <form method="post" action="{% url 'mainApp:nominateUser' storename %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-primary me-2">Nominate</button>
+        <button type="submit" class="btn btn-primary me-2">Nominations</button>
+      </form>
+      {% endif %}
+      {% if "StaffInfo" in permissions %}
+      <form method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary me-2">View Store Staff</button>
       </form>
       {% endif %}
       {% if "StatusChange" in permissions %}
@@ -167,12 +173,6 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
       <form method="post" action="{% url 'mainApp:viewDiscounts' storename %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary me-2">View discounts</button>
-      </form>
-      {% endif %}
-      {% if "StaffInfo" in permissions %}
-      <form method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary me-2">View Store Staff</button>
       </form>
       {% endif %}
       {% if "Policies" in permissions %}
