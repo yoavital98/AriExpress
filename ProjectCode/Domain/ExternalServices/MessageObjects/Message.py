@@ -8,7 +8,7 @@ class Message:
         self._receiver_id = receiver_id
         self._subject = subject
         self._content = content
-        self._file = file
+        self._file = file #currently not persistance
         self._date = creation_date
         self._read = False
 

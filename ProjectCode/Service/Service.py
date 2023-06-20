@@ -3,6 +3,7 @@ import logging
 import os
 import inspect
 import pickle
+from peewee import *
 
 
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
@@ -66,6 +67,7 @@ class Service:
             # TODO check if all functions (new ones) got logging messages
             logging.basicConfig(filename='logger.log', encoding='utf-8', level=logging.DEBUG,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            logging.getLogger('peewee').setLevel(logging.WARNING)
             # load info
             if load_file is not None:
                 loadFileInit(load_file)
@@ -595,6 +597,37 @@ class Service:
             logging.error(f"nominateStoreOwner Error: {str(e)}. By username: '{username}'")
             return Response(e, False)
 
+    def approveStoreOwnerNomination(self, username, nominated_username, store_name):
+        try:
+            left_requestes = self.store_facade.approveStoreOwnerNomination(username, nominated_username, store_name)
+            logging.info(
+                "Store owner has been approved successfully. By username: " + username + ". nominated_username: " + nominated_username + ". store_name: " + store_name + ".")
+            return Response(left_requestes, True)
+        except Exception as e:
+            logging.error(f"approveStoreOwnerNomination Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
+    def rejectStoreOwnerNomination(self, username, nominated_username, store_name):
+        try:
+            left_requestes = self.store_facade.rejectStoreOwnerNomination(username, nominated_username, store_name)
+            logging.info(
+                "Store owner has been rejected successfully. By username: " + username + ". nominated_username: " + nominated_username + ". store_name: " + store_name + ".")
+            return Response(left_requestes, True)
+        except Exception as e:
+            logging.error(f"rejectStoreOwnerNomination Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
+
+    def getAllNominationRequests(self, store_name, username):
+        try:
+            requests = self.store_facade.getAllNominationRequests(store_name, username)
+            logging.info(
+                "Store owner has been approved successfully. By username: " + username + ". store_name: " + store_name + ".")
+            return Response(requests, True)
+        except Exception as e:
+            logging.error(f"getAllNominationRequests Error: {str(e)}. By username: '{username}'")
+            return Response(e, False)
+
     def nominateStoreManager(self, username, nominated_username, store_name):  # TODO
         try:
             new_access = self.store_facade.nominateStoreManager(username, nominated_username, store_name)
@@ -669,6 +702,16 @@ class Service:
             logging.error(f"addDiscount Error: {str(e)}")
             return Response(e, False)
 
+    def removeDiscount(self, storename, username, discount_id):
+        try:
+            discount = self.store_facade.removeDiscount(storename, username, discount_id)
+            logging.debug(
+                f"removing discount of id " + discount_id + ".")
+            return Response(discount, True)
+        except Exception as e:
+            logging.error(f"removeDiscount Error: {str(e)}")
+            return Response(e, False)
+
     def getDiscount(self, storename, discount_id):
         try:
             discount = self.store_facade.getDiscount(storename, discount_id)
@@ -692,11 +735,34 @@ class Service:
     def addPurchasePolicy(self, storename, username, purchase_policy, rule, level, level_name):
         try:
             policy = self.store_facade.addPurchasePolicy(storename, username, purchase_policy, rule, level, level_name)
+            logging.info(
+                f"Purchase Policy has been added successfully. By username: {username}, storename: {storename}.")
             return Response(policy, True)
         except Exception as e:
             logging.error(f"addPurchasePolicy Error: {str(e)}")
             return Response(e, False)
 
+    def removePurchasePolicy(self, storename, username, purchase_policy_id):
+        try:
+            policy = self.store_facade.removePurchasePolicy(storename, username, purchase_policy_id)
+            logging.info(
+                f"Purchase Policy has been removed successfully. By username: {username}, storename: {storename}.")
+            return Response(policy, True)
+        except Exception as e:
+            logging.error(f"removePurchasePolicy Error: {str(e)}")
+            return Response(e, False)
+
+    def getAllPurchasePolicies(self, storename):
+        try:
+            policies = self.store_facade.getAllPurchasePolicies(storename)
+            print(policies)
+            policies_json = {}
+            for policy in policies:
+                policies_json[policy.get_policy_id()] = policy.toJson()
+            return Response(json.dumps(policies_json), True)
+        except Exception as e:
+            logging.error(f"getAllPurchasePolicies Error: {str(e)}")
+            return Response(e, False)
 
     def openStore(self, username, storename):
         try:
@@ -738,7 +804,10 @@ class Service:
             users = self.store_facade.getAllOnlineMembers(requesterID)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
-            return Response(json.dumps(users), True)
+            onlineUsers = {}
+            for user in users:
+                onlineUsers[user.get_username()] = user.toJson()
+            return Response(json.dumps(onlineUsers), True)
         except Exception as e:
             logging.error(f"getAllOnlineMembers Error: {str(e)}.")
             return Response(e, False)
@@ -746,6 +815,10 @@ class Service:
     def getAllOfflineMembers(self, requesterID):
         try:
             users = self.store_facade.getAllOfflineMembers(requesterID)
+            offline = {}
+            for user in users:
+                offline[user.get_username()] = user.toJson()
+            return Response(json.dumps(offline), True)
             logging.debug(
                 f"fetching all the online members. By username: " + requesterID + ".")
             return Response(json.dumps(users), True)

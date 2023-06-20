@@ -24,6 +24,14 @@ class PurchasePolicies:
         return policy
 
 
+    def removePurchasePolicy(self, policy_id):
+        if self.policies[policy_id] is None:
+            raise Exception("No such policy exists")
+        self.policies.remove(policy_id)
+
+    def getAllPurchasePolicies(self):
+        return self.policies.values()
+
     def checkAllPolicies(self, product, basket, total_price, user=None):
         for policy in self.policies.values():
             if not policy.calculate(product, basket, total_price, user):

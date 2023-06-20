@@ -3,7 +3,7 @@ from datetime import datetime
 
 import peewee
 from peewee import SqliteDatabase, MySQLDatabase, PostgresqlDatabase
-#import psycopg2
+# import psycopg2
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
@@ -13,6 +13,9 @@ from ProjectCode.DAL.BidsRequestModel import BidsRequestModel
 from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.MemberModel import MemberModel
+from ProjectCode.DAL.MessageModel import MessageModel
+from ProjectCode.DAL.NominationAgreementModel import NominationAgreementModel
+from ProjectCode.DAL.NotificationModel import NotificationModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
 from ProjectCode.DAL.ProductStoreTransactionModel import ProductStoreTransactionModel
@@ -96,16 +99,17 @@ class StoreFacade:
                         PurchasePolicyModel,
                         UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
                         StoreTransactionModel,
-                        ProductStoreTransactionModel])
+                        ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
         self.db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
               ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
               StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-              ProductStoreTransactionModel])
+              ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
         self.members = MemberRepository()  # dict of members
+        self.members.logInReset()
         self.onlineGuests = GuestRepository()  # dict of users
         self.stores = StoreRepository()  # dict of stores
         self.online_members = MemberRepository(online=True)  # dict from username to online members
@@ -124,12 +128,11 @@ class StoreFacade:
         self.loadData()
 
         # handshake with supply service and payment service
-        # self.supply_service = SupplyService(config["SupplyService"])
-        # self.payment_service = PaymentService(config["PaymentService"])
+        self.supply_service = SupplyService(config["SupplyService"])
+        self.payment_service = PaymentService(config["PaymentService"])
         # self.supply_service.perform_handshake()
         # self.payment_service.perform_handshake()
-        self.supply_service = None
-        self.payment_service = None
+
 
 
         # database config init
@@ -155,6 +158,7 @@ class StoreFacade:
         for name, pwd in admins.items():
             new_admin: Admin = Admin(name, pwd, "admin@admin.com")
             self.admins[name] = new_admin
+            # print(name, pwd)
 
 
     # ------  users  ------ #
@@ -231,10 +235,13 @@ class StoreFacade:
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
-            if self.online_members.keys().__contains__(str(user_name)):
-                return self.members.get(user_name)
+            if not self.members.isBanned(user_name):
+                if self.online_members.keys().__contains__(str(user_name)):
+                    return self.members.get(user_name)
+                else:
+                    raise Exception("user is not logged in")
             else:
-                raise Exception("user is not logged in")
+                raise Exception("this member is banned")
         else:
             if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(str(user_name))
@@ -276,19 +283,22 @@ class StoreFacade:
                 return self.logInAsAdmin(username, password)
             # check if the member is an actual user
             if self.members.keys().__contains__(username):
-                if not self.online_members.__contains__(username):
-                    existing_member: Member = self.members[username]
-                    if password_validator.ConfirmPassword(password, existing_member.get_password()):
-                        existing_member.logInAsMember()
-                        existing_member.setEntranceId(str(self.nextEntranceID))
-                        self.nextEntranceID += 1
-                        self.online_members[username] = existing_member  # indicates that the user is logged in
-                        return existing_member
-                        # return DataMember(existing_member)
+                if not self.members.isBanned(username):
+                    if not self.online_members.__contains__(username):
+                        existing_member: Member = self.members[username]
+                        if password_validator.ConfirmPassword(password, existing_member.get_password()):
+                            existing_member.logInAsMember()
+                            existing_member.setEntranceId(str(self.nextEntranceID))
+                            self.nextEntranceID += 1
+                            self.online_members[username] = existing_member  # indicates that the user is logged in
+                            return existing_member
+                            # return DataMember(existing_member)
+                        else:
+                            raise Exception("username or password does not match")
                     else:
-                        raise Exception("username or password does not match")
+                        raise Exception("user is already logged in")
                 else:
-                    raise Exception("user is already logged in")
+                    raise Exception("this member is banned")
             else:
                 raise Exception("username or password does not match")
 
@@ -535,7 +545,7 @@ class StoreFacade:
 
     def addNewProductToStore(self, username, store_name, name, quantity, price, categories):
         with self.db.atomic():
-            member: Member = self.getOnlineMemberOnly(username)
+            member: Member = self.getUserOrMember(username)
             cur_store: Store = self.stores.get(store_name)
             if cur_store is None:
                 raise Exception("No such store exists")
@@ -592,6 +602,24 @@ class StoreFacade:
             # return DataAccess(nominated_modified_access)
             return nominated_modified_access
 
+    def approveStoreOwnerNomination(self, requester_username, nominated_username,  store_name):
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            return cur_store.approveNomination(requester_username, nominated_username)
+
+    def rejectStoreOwnerNomination(self, requester_username, nominated_username, store_name):
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            return cur_store.rejectNomination(requester_username, nominated_username)
+
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         with self.db.atomic():
             cur_store: Store = self.stores[store_name]
@@ -603,6 +631,15 @@ class StoreFacade:
             nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                             "Manager")
             return nominated_modified_access
+
+    def getAllNominationRequests(self, store_name, username):
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            return cur_store.getAllNominationRequests(username)
 
     def removeAccess(self, requester_username, to_remove_username, store_name):
         with self.db.atomic():
@@ -666,6 +703,16 @@ class StoreFacade:
                                                  rule=rule, discounts=discounts)
             return new_discount
 
+    def removeDiscount(self, storename, username, discount_id):
+        with self.db.atomic():
+            cur_store: Store = self.stores.get(storename)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User isn't logged in")
+            cur_store.removeDiscount(username, discount_id)
+            return True
+
     def getDiscount(self, storename, discount_id):
         cur_store: Store = self.stores.get(storename)
         if cur_store is None:
@@ -688,6 +735,22 @@ class StoreFacade:
                 raise Exception("User isn't logged in")
             new_policy = cur_store.addPurchasePolicy(username, purchase_policy, rule, level=level, level_name=level_name)
             return new_policy
+
+    def removePurchasePolicy(self, storename, username, policy_id):
+        with self.db.atomic():
+            cur_store: Store = self.stores.get(storename)
+            if cur_store is None:
+                raise Exception("No such store exists")
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User isn't logged in")
+            cur_store.removePurchasePolicy(username, policy_id)
+            return True
+
+    def getAllPurchasePolicies(self, storename):
+        cur_store: Store = self.stores.get(storename)
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getAllPurchasePolicies()
 
     def getPurchasePolicy(self, storename, policy_id):
         cur_store: Store = self.stores.get(storename)

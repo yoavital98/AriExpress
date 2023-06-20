@@ -248,7 +248,7 @@ def viewAllStores(request):
 def store_specific(request, storename):
     service = Service()
     username = request.user.username
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.session['guest'] == 0:
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else:
@@ -301,6 +301,24 @@ def store_specific(request, storename):
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
 
+    if 'placeBid' in request.POST:
+        product_id = request.POST.get('product_id')
+        bidAmount = request.POST.get('bidAmount')
+        quantity = request.POST.get('quantity')
+        try:
+            bidAmount = int(bidAmount)
+        except Exception as e:
+            messages.success(request, (f"Error: bid should be a number."))
+            return redirect('mainApp:store_specific', storename=storename)
+        actionRes = service.placeBid(request.user.username, storename, bidAmount, product_id, quantity)
+        if actionRes.getStatus():
+            messages.success(request, ("Bid placed successfully."))
+            return redirect('mainApp:store_specific', storename=storename)
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:mystores')
+
+        
     else:
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
@@ -408,10 +426,11 @@ def addNewDiscount(request, storename):  # Discounts
                 pass
 
             if discountTypeInt == 4:
-                pass
+                return addNewDiscountSpecial(request, storename, "Max")
 
             if discountTypeInt == 5:
-                pass
+                return addNewDiscountSpecial(request, storename, "Add")
+
 
         if 'conditionedAddRule' in request.POST:
             # Retrieve the submitted discountRulesData
@@ -440,6 +459,125 @@ def addNewDiscount(request, storename):  # Discounts
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         return redirect('mainApp:store_specific', storename=storename)
+
+
+def addNewDiscountSpecial(request, storename, discount_type):
+    username = request.user.username
+    permissionName = 'Discounts'
+    if permissionCheck(username, storename, permissionName):
+        service = Service()
+        discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
+        discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
+        percent = 50 if request.POST.get('discountAmountRange') == None else int(
+            request.POST.get('discountAmountRange'))
+        levelTypeInt = None if request.POST.get('levelType') == None else int(request.POST.get('levelType'))
+        levelType = None if levelTypeInt == None else getDiscountLevelType(levelTypeInt)
+        levelName = "" if request.POST.get('levelName') == None else request.POST.get('levelName')
+
+        if 'addDiscount' in request.POST:
+            if discountTypeInt == 1:
+                newdiscount = {"discount_type": "Simple", "percent": percent, "level": levelType, "level_name": levelName}
+                if 'discountsData' not in request.session:
+                    request.session['discountsData'] = {}
+                    request.session['discountCounterSpecial'] = 1
+                counter = request.session['discountCounterSpecial']
+                request.session['discountsData'][counter] = newdiscount
+                request.session['discountCounterSpecial'] = int(request.session['discountCounterSpecial']) + 1
+                print(f"discounts: {request.session['discountsData']}")
+                print(f"counter: {request.session['discountCounterSpecial']}")
+                messages.success(request, (f"Discount has been added to the \"{discount_type}\" list"))
+
+            if discountTypeInt == 2:
+                discountRulesData = request.session['discountRulesDataSpecial']
+                fixedRulesData = fixDiscountRulesData(discountRulesData)
+                newdiscount = {"discount_type": "Conditioned", "percent": percent, "level": levelType, "level_name": levelName, "rule": fixedRulesData}
+                if 'discountsData' not in request.session:
+                    request.session['discountsData'] = {}
+                    request.session['discountCounterSpecial'] = 1
+                counter = request.session['discountCounterSpecial']
+                request.session['discountsData'][counter] = newdiscount
+                request.session['discountCounterSpecial'] = int(request.session['discountCounterSpecial']) + 1
+                print(f"discounts: {request.session['discountsData']}")
+                print(f"counter: {request.session['discountCounterSpecial']}")
+                messages.success(request, (f"Discount has been added to the \"{discount_type}\" list"))
+
+            # if discountTypeInt == 3:
+            #     pass
+
+            # if discountTypeInt == 4:
+            #     return addNewDiscountSpecial(request, storename, "Max")
+
+            # if discountTypeInt == 5:
+            #     return addNewDiscountSpecial(request, storename, "Add")
+
+
+        if 'conditionedAddRule' in request.POST:
+            # Retrieve the submitted discountRulesDataSpecial
+            discountRulesDataSpecial = request.POST.get('discountRulesDataSpecial')
+            ruleData = json.loads(discountRulesDataSpecial)
+
+            if 'discountRulesDataSpecial' not in request.session:
+                request.session['discountRulesDataSpecial'] = {}
+                request.session['discountRuleCounterSpecial'] = 0
+
+            # Check if ruleData is not already in the session
+            if ruleData not in dict(request.session['discountRulesDataSpecial']).values():
+                counter = request.session['discountRuleCounterSpecial']
+                ruleDict = request.session['discountRulesDataSpecial']
+                ruleDict[counter] = ruleData
+                request.session['discountRuleCounterSpecial'] += 1
+
+        if 'clearAllRules' in request.POST:
+            if 'discountRulesDataSpecial' in request.session:
+                del request.session['discountRulesDataSpecial']
+            request.session['discountRuleCounterSpecial'] = 0
+
+        if 'sendDiscount' in request.POST:
+            discounts = request.session['discountsData']
+            discounts = fixDiscountSpecial(discounts)
+            print(f"final dict: {discounts}")
+            print(f"type: {discount_type}")
+            actionRes = service.addDiscount(storename, username, discount_type, discounts=discounts)
+            if actionRes.getStatus():
+                messages.success(request, ("Discount has been added"))
+                if 'discountRulesDataSpecial' in request.session:
+                    del request.session['discountRulesDataSpecial']
+                if 'discountsData' in request.session:
+                    del request.session['discountsData']
+                if 'discountRuleCounterSpecial' in request.session:
+                    del request.session['discountRuleCounterSpecial']
+                if 'discountCounterSpecial' in request.session:
+                    del request.session['discountCounterSpecial']
+                return redirect('mainApp:store_specific', storename=storename)
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+        if 'resetInfo' in request.POST:
+            if 'discountRulesDataSpecial' in request.session:
+                del request.session['discountRulesDataSpecial']
+            if 'discountsData' in request.session:
+                del request.session['discountsData']
+            if 'discountRuleCounterSpecial' in request.session:
+                del request.session['discountRuleCounterSpecial']
+            if 'discountCounterSpecial' in request.session:
+                del request.session['discountCounterSpecial']
+                
+
+        # init discounts data
+
+        if 'discountsData' not in request.session:
+            request.session['discountsData'] = {}
+            request.session['discountRuleCounterSpecial'] = 0
+            request.session['discountCounterSpecial'] = 1
+            request.session['discountRulesDataSpecial'] = {}
+            
+        return render(request, 'addNewDiscountSpecial.html', {'storename': storename, 'discount_type': discount_type})
+
+    else:
+        messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        return redirect('mainApp:store_specific', storename=storename)
+
+
 
 
 def addNewPurchasePolicy(request, storename):  # Policies
@@ -599,7 +737,7 @@ def nominateUser(request, storename):
     permissionName = 'ModifyPermissions'
 
     if permissionCheck(username, storename, permissionName):
-        if request.method == 'POST':
+        if 'nominateUser' in request.POST:
             requesterUsername = request.user.username
             toBeNominatedUsername = request.POST.get('inputNominatedUsername')
             selected = request.POST.get('nominateSelect')
@@ -618,15 +756,35 @@ def nominateUser(request, storename):
                     messages.success(request, ("A new user has been nominated to be Manager."))
                     return redirect('mainApp:mystores')
                 else:
-                    messages.success(request, ("Error nominating a user to be Manager"))
+                    messages.success(request, (f"Error {res.getReturnValue()}"))
                     return redirect('mainApp:mystores')
+            # else:
+            #     return render(request, 'nominateUser.html',
+            #                   {'storename': storename})  # didn't nominate yet, just load the page
+
+
+        if 'approveNomination' in request.POST:
+            toBeNominatedUsername = request.POST.get('toBeNominated')
+            actionRes = service.approveStoreOwnerNomination(username, toBeNominatedUsername, storename)
+            if actionRes.getStatus():
+                messages.success(request, (f"{username} has approved {toBeNominatedUsername}"))
             else:
-                return render(request, 'nominateUser.html',
-                              {'storename': storename})  # didn't nominate yet, just load the page
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
+        if 'rejectNomination' in request.POST:
+            toBeNominatedUsername = request.POST.get('toBeNominated')
+            actionRes = service.rejectStoreOwnerNomination(username, toBeNominatedUsername, storename)
+            if actionRes.getStatus():
+                messages.success(request, (f"{username} has rejected {toBeNominatedUsername}"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
-        else:
-            return render(request, 'nominateUser.html', {'storename': storename})
+        nominees = dict
+        actionRes = service.getAllNominationRequests(storename, username)
+        if actionRes.getStatus():
+            nominees = ast.literal_eval(str(actionRes.getReturnValue()))
+
+        return render(request, 'nominateUser.html', {'storename': storename, 'nominees': nominees})
 
     else:
         messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
@@ -673,6 +831,16 @@ def viewDiscounts(request, storename):
     permissionName = 'Discounts'
     username = request.user.username
     if permissionCheck(username, storename, permissionName):
+        if 'removeDiscount' in request.POST:
+            discount_id = request.POST.get('discount_id')
+            actionRes = service.removeDiscount(storename, username, discount_id)
+            if actionRes.getStatus():
+                messages.success(request, (f"Discount {discount_id} has been removed."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+
+
+
         actionRes = service.getAllDiscounts(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
@@ -686,18 +854,100 @@ def viewDiscounts(request, storename):
     return redirect('mainApp:store_specific', storename=storename)
 
 
+def viewPurchasePolicies(request, storename):
+    # return render(request, 'viewPurchasePolicies.html', {'storename': storename})
+
+    service = Service()
+    permissionName = 'Policies'
+    username = request.user.username
+    policies = {}
+    if permissionCheck(username, storename, permissionName):
+
+        if 'removePolicy' in request.POST:
+            policy_id = request.POST.get('policy_id')
+            actionRes = service.removePurchasePolicy(storename, username, policy_id)
+            if actionRes.getStatus():
+                messages.success(request, (f"Policy #{policy_id} has been removed."))
+
+
+        actionRes = service.getAllPurchasePolicies(storename)
+        if actionRes.getStatus():
+            removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
+            # print(removeNulls)
+            policies = ast.literal_eval(str(removeNulls))
+            # print(policies)
+            return render(request, 'viewPurchasePolicies.html', {'storename': storename, 'policies': policies})
+        else:
+            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            return redirect('mainApp:store_specific', storename=storename)
+    messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+    return redirect('mainApp:store_specific', storename=storename)
+
+
 def adminPage(request):
-    if request.user.is_superuser:
-        return render(request, 'adminPage.html', {})
+    service = Service()
+    username = request.user.username
+    actionRes = service.checkIfAdmin(username)
+    if actionRes.getStatus():
+        allusers = {}
+        onlinemembers = {}
+        offlinemembers = {}
+        storesInfoDict = {}
+        data_type = 0
+        historyInfo = None
+        resOnline = service.getAllOnlineMembers(request.user.username)
+        resOffline = service.getAllOfflineMembers(request.user.username)
+        if resOnline.getStatus() and resOffline.getStatus():
+            onlinemembers = resOnline.getReturnValue()  # returns a list
+            offlinemembers = resOffline.getReturnValue()  # returns a list
+            onlinemembers = ast.literal_eval(str(onlinemembers))
+            offlinemembers = ast.literal_eval(str(offlinemembers))
+            allusers = {}
+            for key, value in onlinemembers.items():
+                allusers[key] = value
+            for key, value in offlinemembers.items():
+                allusers[key] = value
+        storesInfo = service.getStoresBasicInfo()
+        if storesInfo.getStatus():
+            string_data = storesInfo.getReturnValue()
+            storesInfoDict = ast.literal_eval(str(string_data))
+
+        if 'transactionHistory' in request.POST:
+            userOrStore = request.POST.get('userStoreSelect')
+            if userOrStore == "1":
+                user = request.POST.get('selectUser')
+                print(user)
+                actionRes = service.getMemberPurchaseHistory(username, user)
+                if actionRes.getStatus():
+                    historyInfo = actionRes.getReturnValue()
+                    historyInfo = ast.literal_eval(str(historyInfo))
+                    data_type = 1
+
+            else:
+                store = request.POST.get('selectStore')
+                print(store)
+                actionRes = service.getStorePurchaseHistory(username, store)
+                if actionRes.getStatus():
+                    historyInfo = actionRes.getReturnValue()
+                    historyInfo = ast.literal_eval(str(historyInfo))
+                    data_type = 2
+                    for trans in historyInfo:
+                        trans['products'] = eval(trans['products'])
+                        # print(trans['products'])
+                        # print(type(trans['products']))
+
+        return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo, 'data_type': data_type})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
         return redirect('mainApp:mainpage')
 
 
 def viewOnlineUsers(request):
+    service = Service()
+    username = request.user.username
+    actionRes = service.checkIfAdmin(username)
     if request.method == 'POST':
         if request.user.is_superuser:
-            service = Service()
             resOnline = service.getAllOnlineMembers(request.user.username)
             resOffline = service.getAllOfflineMembers(request.user.username)
             if resOnline.getStatus() and resOffline.getStatus():
@@ -1149,10 +1399,8 @@ def getDiscountType(discount):
     if discount == 1: return "Simple"
     if discount == 2: return "Conditioned"
     if discount == 3: return "Coupon"
-    if discount == 4:
-        return "Max"
-    else:
-        return "Add"
+    if discount == 4: return "Max"
+    else: return "Add"
 
 
 def getPurchasePolicyType(policy):
@@ -1193,6 +1441,13 @@ def getlevelName(level, name):
         return ""
     else:
         return name
+
+def fixDiscountSpecial(discounts):
+    new_dict = {}
+    for key, value in discounts.items():
+        new_key = str(key)
+        new_dict[new_key] = value
+    return new_dict
 
 
 def fixDiscountRulesData(rulesData):

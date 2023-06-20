@@ -63,6 +63,11 @@ class DiscountPolicy:
         discount = self.discounts[self.get_discount_id()]
         return discount
 
+    def removeDiscount(self, discount_id):
+        if self.discounts[discount_id] is None:
+            raise Exception("No such discount exists")
+        self.discounts.remove(discount_id)
+
     def calculateDiscountForProduct(self, product, basket, total_price):
         total_percent = 0
         for discount in self.discounts.values():

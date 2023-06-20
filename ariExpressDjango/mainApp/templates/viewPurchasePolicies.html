@@ -19,31 +19,30 @@
 
 
 <body>
-  <h1>Discounts</h1>
   <table class="table table-hover">
     <thead>
         <tr>
             <th>ID</th>            
-            <th>Discounts</th>
+            <th>Policy</th>
             <th class="action-column">Actions</th>
         </tr>
     </thead>
     <tbody>
-        {% for key, value in discounts.items %}
+        {% for key, value in policies.items %}
         <tr>
             <td>{{ key }}</td>
             <td>{{ value }}</td>
             <td>
-              <form method="post" action="{% url 'mainApp:viewDiscounts' storename %}">
+              <form method="post" action="{% url 'mainApp:viewPurchasePolicies' storename %}">
                 {% csrf_token %}
-                <input type="hidden" name="discount_id" value="{{ key }}">
-                <button type="submit" class="btn btn-outline-dark" name="removeDiscount">Remove</button>
+                <input type="hidden" name="policy_id" value="{{ key }}">
+                <button type="submit" class="btn btn-outline-dark" name="removePolicy">Remove</button>
               </form>
             </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="6">No discounts in this store yet.</td>
+          <td colspan="6">No policies in this store yet.</td>
         </tr>
         {% endfor %}
     </tbody>

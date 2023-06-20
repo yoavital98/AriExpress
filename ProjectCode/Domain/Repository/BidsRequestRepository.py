@@ -9,10 +9,7 @@ class BidsRequestRepository(Repository):
         self.model = BidsRequestModel
 
     def __getitem__(self, user_name):
-        try:
-            return self.get(user_name)
-        except Exception as e:
-            raise Exception("BidsRequestRepository: __getitem__ failed: " + str(e))
+        return self.get(user_name)
 
     def __setitem__(self, key, value):  # key is meaningless
         try:
@@ -33,14 +30,18 @@ class BidsRequestRepository(Repository):
             return False
 
     def get(self, pk=None):
-        if pk is not None:
-            bid_request_models = self.model.select().where(self.model.wait_for_approve_user_name == pk)
-            if bid_request_models:
-                return [self._map_bid_request_model_to_bid(bid_request_model) for bid_request_model in
-                        bid_request_models]
-        else:
-            bid_request_models = self.model.select()
-            return [self._map_bid_request_model_to_bid(bid_request_model) for bid_request_model in bid_request_models]
+        try:
+            if pk is not None:
+                bid_request_models = self.model.select().where(self.model.wait_for_approve_user_name == pk)
+                if bid_request_models:
+                    return [self._map_bid_request_model_to_bid(bid_request_model) for bid_request_model in
+                            bid_request_models]
+                return []
+            else:
+                bid_request_models = self.model.select()
+                return [self._map_bid_request_model_to_bid(bid_request_model) for bid_request_model in bid_request_models]
+        except Exception as e:
+            return []
 
     def add(self, key, bid: Bid):
         bid_model = BidModel.get_or_none(BidModel.bid_id == bid.bid_id)
