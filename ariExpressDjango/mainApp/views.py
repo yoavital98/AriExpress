@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    user = authenticate(request, username='aaa', password='asdf1233')
-    loginFunc(request, user)
-    request.session['guest'] = 0
+    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    # user = authenticate(request, username='aaa', password='asdf1233')
+    # loginFunc(request, user)
+    # request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -101,6 +101,9 @@ def login(request):
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
                 else:
+                    if Service().checkIfBanned(username).getReturnValue() == True:
+                        messages.success(request, (f"Error: {username} is banned!"))
+                        return redirect('mainApp:mainpage')
                     check = guestToUser(request, username, password)
                     if check:
                         request.session['guest'] = 0
@@ -211,24 +214,66 @@ def mystores(request):
 def viewStoreStaff(request, storename):
     username = request.user.username
     service = Service()
-    if 'removeAccessButton' in request.POST:
-        requester_id = username
-        to_remove_id = request.POST.get('to_remove_id')
-        actionRes = service.removeAccess(requester_id, to_remove_id, storename)
-        if actionRes.getStatus():
-            messages.success(request, (f"{requester_id} has removed {to_remove_id} accesses"))
-            return redirect('mainApp:viewStoreStaff', storename=storename)
-        else:
-            messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
-            return redirect('mainApp:viewStoreStaff', storename=storename)
-    else:  # just render page
-        permissionName = 'StaffInfo'
+
+    if 'removePermissionButton' in request.POST:
+        permissionName = 'ModifyPermissions'
         if permissionCheck(username, storename, permissionName):
-            actionRes = service.getStoreProductsInfo(storename)
+            removePerm = request.POST.get('selectRemovePermission')
+            nominated = request.POST.get('nominated')
+            actionRes = service.removePermissions(storename, username, nominated, removePerm)
             if actionRes.getStatus():
-                staff = actionRes.getReturnValue()['accesses']
-                staff = ast.literal_eval(str(staff))
-            return render(request, 'viewStoreStaff.html', {'storename': storename, 'staff': staff})
+                messages.success(request, (f"\"{removePerm}\" has been removed to {nominated} permissions"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+        
+    if 'addPermissionButton' in request.POST:
+        permissionName = 'ModifyPermissions'
+        if permissionCheck(username, storename, permissionName):
+            addPerm = request.POST.get('selectAddPermission')
+            nominated = request.POST.get('nominated')
+            actionRes = service.addPermission(storename, username, nominated, addPerm)
+            if actionRes.getStatus():
+                messages.success(request, (f"\"{addPerm}\" has been added to {nominated} permissions"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+
+    if 'removeAccessButton' in request.POST:
+        permissionName = 'ModifyPermissions'
+        if permissionCheck(username, storename, permissionName):
+            userToRemove = request.POST.get('to_remove_id')
+            actionRes = service.removeAccess(username, userToRemove, storename)
+            if actionRes.getStatus():
+                messages.success(request, (f"{userToRemove}'s access has been removed."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+
+
+    permissionName = 'StaffInfo'
+    if permissionCheck(username, storename, permissionName):
+        allPermissions = {"ProductChange": True, "Bid":True,
+                                "ModifyPermissions": True, "Auction": True,
+                                "Lottery": True, "StatusChange": True, "StaffInfo": True,
+                                "Policies":  True, "Discounts": True}
+        actionRes = service.getStoreProductsInfo(storename)
+        if actionRes.getStatus():
+            staff = actionRes.getReturnValue()['accesses']
+            staff = ast.literal_eval(str(staff))
+            print(staff)
+            print(f"staff {staff.keys()}")
+            for user in staff.keys():
+                actionRes2 = service.getPermissionsAsJson(storename, user)
+                if actionRes2.getStatus():
+                    permission = ast.literal_eval(str(actionRes2.getReturnValue()))
+                    print(user, permission)
+                    staff[user]["permissions"] = permission
+
+            return render(request, 'viewStoreStaff.html', {'storename': storename, 'staff': staff, 'allPermissions': allPermissions})
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
             return redirect('mainApp:store_specific', storename=storename)
@@ -936,6 +981,22 @@ def adminPage(request):
                         # print(trans['products'])
                         # print(type(trans['products']))
 
+        if 'banUser' in request.POST:
+            userToBan = request.POST.get('selectUser')
+            actionRes = service.removePermissionFreeMember(username, userToBan)
+            if actionRes.getStatus():
+                messages.success(request, (f"{userToBan} has been banned."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}."))
+
+        if 'unbanUser' in request.POST:
+            userToUnban = request.POST.get('selectUser')
+            actionRes = service.returnPermissionFreeMember(username, userToUnban)
+            if actionRes.getStatus():
+                messages.success(request, (f"{userToBan} has been unbanned."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}."))
+
         return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo, 'data_type': data_type})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
@@ -1562,7 +1623,6 @@ def guestToUser(request, username, password):
             return username
             # ret = ast.literal_eval(str(actionRes.getReturnValue()))
             # return ret['entrance_id']
-
     return False
 
 

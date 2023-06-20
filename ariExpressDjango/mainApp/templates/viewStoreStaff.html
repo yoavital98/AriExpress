@@ -10,18 +10,23 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/a46df6f46f.js" crossorigin="anonymous"></script>
+    <style>
+      .action-column {
+          width: 25%;
+      }
+    </style>
 </head>
 
 
 <body>
-  <h1>User Roles</h1>
-
+  <h1>Store Staff</h1>
   <table class="table table-hover">
       <thead>
           <tr>
               <th>Username</th>
               <th>Role</th>
               <th>Nominated By</th>
+              <th>Permissions</th>
               <th>Actions</th>
           </tr>
       </thead>
@@ -31,12 +36,38 @@
               <td>{{ item.user.username }}</td>
               <td>{{ item.role }}</td>
               <td>{{ item.nominated_by_username }}</td>
+              <td>{{ item.permissions }}</td>
               <td>
                 <form method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
                   {% csrf_token %}
                   <input type="hidden" name="to_remove_id" value="{{ item.user.username }}">
                   <button type="submit" class="btn btn-outline-dark" name="removeAccessButton">Remove Access</button>
                 </form>
+                <form class="d-flex" method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="nominated" value="{{ item.user.username }}">
+                  <select class="form-select" aria-label="Default select example" name="selectAddPermission" id="selectAddPermission">
+                    {% for perm in allPermissions %}
+                      {% if perm not in item.permissions %}
+                        <option value="{{perm}}">{{perm}}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-outline-dark" name="addPermissionButton">Add Permission</button>
+                </form>
+                <form class="d-flex" method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="nominated" value="{{ item.user.username }}">
+                  <select class="form-select" aria-label="Default select example" name="selectRemovePermission" id="selectRemovePermission">
+                    {% for perm in allPermissions %}
+                      {% if perm in item.permissions %}
+                        <option value="{{perm}}">{{perm}}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-outline-dark" name="removePermissionButton">Remove Permission</button>
+                </form>
+
               </td>
           </tr>
           {% endfor %}

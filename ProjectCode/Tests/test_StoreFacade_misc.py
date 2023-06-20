@@ -588,6 +588,14 @@ class TestStoreFacade(TestCase):
         self.assertTrue(len(self.my_store.getProducts("Feliks").values()) == 1)
 
     # addPermissions
+
+    def test_modifyPermissions(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks", "Amiel", "AriExpress")
+        self.store_facade.removePermissions( "AriExpress", "Feliks", "Amiel", "Bid")
+        self.store_facade.removePermissions( "AriExpress", "Feliks", "Amiel", "ProductChange")
+        self.assertTrue(self.my_store.get_accesses().get("Amiel").hasRole("Owner"))
+
     def test_Owner_success(self):
         member_to_nominate: Member = self.store_facade.members.get("Amiel")
         # before
@@ -1832,6 +1840,19 @@ class TestStoreFacade(TestCase):
         policy = self.my_store.addPurchasePolicy("Feliks", "PurchasePolicy", rule, level="Product", level_name=oreo.get_product_id())
         #with self.assertRaises(Exception):
         self.store_facade.addToBasket("Feliks", "AriExpress", oreo.get_product_id(), 8)
+
+    def test_addToBasketFromTwoStores_success(self):
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.createStore("Feliks", "SomeStore")
+        self.store_facade.addNewProductToStore("Feliks", "SomeStore", "Oreo", 10, 10, "Milk")
+        self.store_facade.addNewProductToStore("Feliks", "AriExpress", "Cariot", 10, 10, "Korn")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.addToBasket("Amiel", "SomeStore", 1, 8)
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 8)
+        basket1 = self.store_facade.getBasket("Amiel", "SomeStore").toJson()
+        basket2 = self.store_facade.getBasket("Amiel", "AriExpress").toJson()
+        print("wazaaap")
+
 
     def test_DayOfTheWeekPurchasePolicy_fail(self):
         self.store_facade.logInAsMember("Feliks", "password456")

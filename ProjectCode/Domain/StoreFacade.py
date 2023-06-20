@@ -3,7 +3,7 @@ from datetime import datetime
 
 import peewee
 from peewee import SqliteDatabase, MySQLDatabase, PostgresqlDatabase
-# import psycopg2
+import psycopg2
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel
@@ -207,7 +207,8 @@ class StoreFacade:
     # will be called when a member wants to log out, and gets a Guest status again.
     def returnToGuest(self, entrance_id):
         guest: Guest = Guest(entrance_id)
-        self.onlineGuests[entrance_id] = guest
+        if self.onlineGuests.get(entrance_id) is None:
+            self.onlineGuests[entrance_id] = guest
         return guest
 
     # only guests
@@ -247,6 +248,13 @@ class StoreFacade:
                 return self.onlineGuests.get(str(user_name))
             else:
                 raise Exception("user is not guest nor a member")
+
+    def checkIfBanned(self, username):
+        if self.members.keys().__contains__(str(username)):
+            return self.members.isBanned(username)
+        else:
+            raise Exception("Member doesn't exists.")
+
 
     # gets an online member.
     def getOnlineMemberOnly(self, user_name):
@@ -314,7 +322,7 @@ class StoreFacade:
                 return guest
             if self.members.keys().__contains__(username):
                 existing_member: Member = self.members[username]
-                del self.online_members[username]  # deletes the user from the online users
+                self.online_members.remove(username)  # deletes the user from the online users
                 guest: Guest = self.returnToGuest(str(existing_member.get_entrance_id()))  # returns as a guest
                 return guest
             else:
@@ -508,7 +516,7 @@ class StoreFacade:
     def productFilterByFeatures(self, featuresDict, username):
         search_results = TypedDict(str, list)
         for cur_store in self.stores.values():
-            product_list = cur_store.filterProductByFeatures(featuresDict, username)
+            product_list = cur_store.searchProductByFeatures(featuresDict)
             if len(product_list) > 0:
                 json_product_list = [prod.toJson() for prod in product_list]
                 search_results[cur_store.get_store_name()] = json_product_list
@@ -684,8 +692,8 @@ class StoreFacade:
 
     def getPermissionsAsJson(self, store_name, requester_username):
         cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
+        # if not self.checkIfUserIsLoggedIn(requester_username):
+        #     raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
         permissions: dict = cur_store.getPermissionsAsJson(requester_username)
@@ -956,11 +964,11 @@ class StoreFacade:
         with self.db.atomic():
             if self.admins.keys().__contains__(requesterID):
                 if self.members.keys().__contains__(memberName):
-                    if self.accesses.keys().__contains__(memberName):
-                        self.members[memberName].logOut()
-                        self.messageAsAdminToUser(self, requesterID, memberName, "BAN",
-                                                  "You have been banned from the system")  # TOdo : add message to login screen or something
-                        banned_member = self.members.pop(memberName)
+                    if not self.accesses.keys().__contains__(memberName):
+                        self.logOut(memberName)
+                        self.sendNotificationToUser(memberName, "BAN", "You have been banned from the system", datetime.now())  # TOdo : add message to login screen or something
+                        self.online_members.remove(memberName)
+                        banned_member = self.members.get(memberName)
                         self.banned_members[memberName] = banned_member
                         return banned_member
                     else:
@@ -973,8 +981,8 @@ class StoreFacade:
     def returnPermissionFreeMember(self, requesterID, memberName):
         if self.admins.keys().__contains__(requesterID):
             if self.banned_members.keys().__contains__(memberName):
-                self.messageAsAdminToUser(self, requesterID, memberName, "UNBAN", "Your ban has been lifted")
-                returned_member = self.banned_members.pop(memberName)
+                self.sendNotificationToUser(memberName, "UNBAN", "Your ban has been lifted", datetime.now())
+                returned_member = self.banned_members.remove(memberName)
                 self.members[memberName] = returned_member
                 return returned_member
             else:
@@ -985,13 +993,19 @@ class StoreFacade:
     def django_getAllStaffMembersNames(self, storename):
         return self.stores[storename].getAllStaffMembersNames()
 
+    def getAllStaffMembersNames(self, store_name, username):
+        cur_store: Store = self.stores[store_name]
+        if cur_store is None:
+            raise Exception("No such store exists")
+        return cur_store.getAllStaffMembersNames(username)
+
     def getMemberInfo(self, requesterID, user_name):
         transaction_history = TransactionHistory()
         if not self.admins.keys().__contains__(requesterID):
             raise Exception("only admin can get member info")
         if not self.members.keys().__contains__(user_name):
             raise Exception("no such member exists")
-        purchase_history = transaction_history.get_user_Transactions(user_name)
+        purchase_history = transaction_history.get_User_Transactions(user_name)
         return self.members[user_name], purchase_history
 
     def getUserStores(self, username):

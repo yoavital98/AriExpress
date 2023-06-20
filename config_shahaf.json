@@ -1,0 +1,8 @@
+{
+  "PaymentService": "https://external-systems.000webhostapp.com/",
+  "SupplyService": "https://external-systems.000webhostapp.com/",
+  "Database": "",
+  "Admins": {
+    "U1": "12341234"
+  }
+}

@@ -200,7 +200,7 @@ class Cart:
                                                             stores_products_dict, overall_price)
                 message = "Thank you for buying in AriExpress! Your transaction id is: " + str(transaction_id) + " and your supply id is: " + str(supply_id)+ "\n" + "Your purchase reports are: \n"
                 purchaseReportsString = '\n'.join([str(rep) for rep in purchase_reports_json])
-                MessageController().send_message("AriExpress", self.username, buyer_message_header,message+purchaseReportsString, datetime.now())
+                MessageController().send_notification(user_name, buyer_message_header,message+purchaseReportsString, datetime.now())
             self.clearCartFromProducts()  # clearing all the products from all the baskets
             self.clearCart()  # if there are empty baskets from bids and products - remove them
             return {

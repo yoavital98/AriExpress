@@ -51,6 +51,9 @@
     </select>
   
     <button type="submit" class="btn btn-primary" name="transactionHistory">View Transaction History</button>
+    <button type="submit" class="btn btn-primary" name="banUser" id="banUser" style="display: none;">Ban user</button>
+    <button type="submit" class="btn btn-primary" name="unbanUser" id="unbanUser" style="display: none;">Unban user</button>
+
   </form>
   <button type="submit" class="btn btn-primary" name="onlineUsers" onclick="showOnlineUsers()">View Online Users</button>
 
@@ -171,15 +174,22 @@
     function updateSelect() {
       const selectElement = document.getElementById('userStoreSelect');
       const selectedValue = selectElement.value;
+      const banUser = document.getElementById('banUser');
+      const unbanUser = document.getElementById('unbanUser');
 
       const storeSelect = document.getElementById('selectStore');
       const userSelect = document.getElementById('selectUser');
       if(selectedValue == "1"){
         storeSelect.style.display = 'none';
         userSelect.style.display = 'block';
+        banUser.style.display = 'block';
+        unbanUser.style.display = 'block';
+
       } else {
-      storeSelect.style.display = 'block';
-      userSelect.style.display = 'none';
+        storeSelect.style.display = 'block';
+        userSelect.style.display = 'none';
+        banUser.style.display = 'none';
+        unbanUser.style.display = 'none';
       }
     }
     function showOnlineUsers() {
