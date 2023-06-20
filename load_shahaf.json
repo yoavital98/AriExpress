@@ -1,0 +1,29 @@
+[
+  {
+    "register": {"args": ["U2", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["U3", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["U4", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["U5", "asdf1233", "a@a.com"]}
+  },
+  {
+    "register": {"args": ["bbb", "asdf1233", "a@a.com"]}
+  },
+  {
+    "logIn": {"args": ["U2", "asdf1233"]}
+  },
+  {
+    "createStore": {"args": ["U2", "S"]}
+  },
+  {
+    "addNewProductToStore": {"args": ["U2", "S", "Apple", "10", "20", "fruit"]}
+  },
+  {
+    "logOut": {"args": ["U2"]}
+  }
+]

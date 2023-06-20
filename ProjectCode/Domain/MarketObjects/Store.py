@@ -241,8 +241,9 @@ class Store:
             else:
                 nominated_access.get_access_state().removePermission(permission)
             self.__accesses[nominated_username] = nominated_access
+            
 
-        return nominated_access
+        return self.__accesses[nominated_username]
 
     def checkIfInNominationChain(self,requester_username, nominated_username): # Feliks -> SonA -> SonB -> SonC
         requester_access: Access = self.__accesses.get(requester_username)

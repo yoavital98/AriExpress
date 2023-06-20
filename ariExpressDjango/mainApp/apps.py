@@ -9,6 +9,9 @@ class MainappConfig(AppConfig):
     def ready(self):
         if 'runserver' not in sys.argv:
             return True
+        # config = "../config_shahaf.json"
+        # load_file = "../load_shahaf.json"
+        # ---------------------------------
         config = "../default_config.json"
         load_file = "../load.json"
         # load_file = "../load_ban.json"
