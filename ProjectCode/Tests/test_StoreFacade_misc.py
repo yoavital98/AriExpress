@@ -1030,6 +1030,25 @@ class TestStoreFacade(TestCase):
         self.assertTrue(product.price == 1000)
         self.assertTrue(product_in_basket.price == 1000)
 
+    def test_addToBasketInTwoStoresAndEdit_success(self):
+        amiel: Member = self.store_facade.members.get("Amiel")
+        self.store_facade.logInAsMember("YuvalMelamed", "PussyDestroyer69")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.logInAsMember("Amiel", "password789")
+        self.store_facade.createStore("YuvalMelamed","yuval_store")
+        oreo: Product = self.store_facade.addNewProductToStore("YuvalMelamed","yuval_store","oreo", 20, 1, "cookies")
+        self.store_facade.addToBasket("Amiel", "AriExpress", 1, 5)
+        self.store_facade.editBasketQuantity("Amiel", self.my_store.get_store_name(), 1, 8)
+        self.store_facade.addToBasket("Amiel", "yuval_store", 1, 5)
+        self.store_facade.editBasketQuantity("Amiel", "yuval_store", 1, 15)
+        basket: Basket = amiel.cart.baskets.get("AriExpress")
+        basket2: Basket = amiel.cart.baskets.get("yuval_store")
+        product_from_feliks = basket.products.get(1)
+        product_from_yuval = basket.products.get(1)
+        print("hi")
+
+
+
     # getAllBidsFromUser TODO:BIDS
     def test_getAllBidsFromUser_success(self):
         pass
