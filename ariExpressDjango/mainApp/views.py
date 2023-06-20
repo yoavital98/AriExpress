@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "aaa", "asdf1233")
-    # user = authenticate(request, username='aaa', password='asdf1233')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -862,11 +862,20 @@ def viewPurchasePolicies(request, storename):
     username = request.user.username
     policies = {}
     if permissionCheck(username, storename, permissionName):
+
+        if 'removePolicy' in request.POST:
+            policy_id = request.POST.get('policy_id')
+            actionRes = service.removePurchasePolicy(storename, username, policy_id)
+            if actionRes.getStatus():
+                messages.success(request, (f"Policy #{policy_id} has been removed."))
+
+
         actionRes = service.getAllPurchasePolicies(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
             # print(removeNulls)
             policies = ast.literal_eval(str(removeNulls))
+            # print(policies)
             return render(request, 'viewPurchasePolicies.html', {'storename': storename, 'policies': policies})
         else:
             messages.success(request, (f"Error: {actionRes.getReturnValue()}"))

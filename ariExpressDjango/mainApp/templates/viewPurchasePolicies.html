@@ -19,8 +19,8 @@
         <h3>{{ key }} : {{ value }}</h3>
       <form method="post" action="{% url 'mainApp:viewPurchasePolicies' storename %}">
         {% csrf_token %}
-        <input type="hidden" name="discount_id" value="{{ key }}">
-        <button type="submit" class="btn btn-outline-dark" name="removeDiscount">Remove</button>
+        <input type="hidden" name="policy_id" value="{{ key }}">
+        <button type="submit" class="btn btn-outline-dark" name="removePolicy">Remove</button>
       </form>
     {% empty %}
     <h3>No policies in this store.</h3>
