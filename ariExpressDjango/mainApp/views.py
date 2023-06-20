@@ -969,6 +969,22 @@ def adminPage(request):
                         # print(trans['products'])
                         # print(type(trans['products']))
 
+        if 'banUser' in request.POST:
+            userToBan = request.POST.get('selectUser')
+            actionRes = service.removePermissionFreeMember(username, userToBan)
+            if actionRes.getStatus():
+                messages.success(request, (f"{userToBan} has been banned."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}."))
+
+        if 'unbanUser' in request.POST:
+            userToUnban = request.POST.get('selectUser')
+            actionRes = service.returnPermissionFreeMember(username, userToUnban)
+            if actionRes.getStatus():
+                messages.success(request, (f"{userToBan} has been unbanned."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}."))
+
         return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo, 'data_type': data_type})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
