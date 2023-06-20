@@ -20,8 +20,12 @@
 </div>
 {% endblock modal-body %}
 
+{% block close %}
+{% endblock close %}
+
 <!--Modal footer-->
 {% block modal-footer %}
+<button type="button" class="btn btn-secondary btn-sm btn-modal" data-bs-dismiss="modal"> Close </button>
 <a href="/delete_message/{{ usermessage.id }}" class="btn btn-outline-danger btn-sm btn-modal"> Delete</a>
 {% endblock modal-footer %}
 
