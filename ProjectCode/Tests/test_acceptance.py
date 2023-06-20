@@ -2010,8 +2010,7 @@ class Test_Use_Case_2_6_transactions(TestCase):
         self.service.removePermissionFreeMember("admin", "Amiel")
         online_member_dict = ast.literal_eval(self.service.getAllOnlineMembers("admin").getReturnValue())
         self.assertFalse(self.service.getAllOnlineMembers("admin").getReturnValue().__contains__("Amiel"))
-        with self.assertRaises(Exception):
-            self.service.logIn("Amiel", "password111")
+        self.assertFalse(self.service.logIn("Amiel", "password111").getStatus())
         self.service.returnPermissionFreeMember("admin", "Amiel")
         self.service.logIn("Amiel", "password111")
         self.assertTrue(self.service.getAllOnlineMembers("admin").getReturnValue().__contains__("Amiel"))
@@ -2035,19 +2034,25 @@ class Test_Use_Case_2_6_transactions(TestCase):
             self.service.getStorePurchaseHistory("admin", "Feliks&Sons").getReturnValue())
         self.assertTrue(PurchaseHistory_FeliksSons.__len__() == 2)
         guest0_transaction = PurchaseHistory_FeliksSons[0]
-        self.assertTrue(guest0_transaction['username'] == guest0_entrance_id)
-        self.assertTrue(guest0_transaction['storename'] == "Feliks&Sons")
-        self.assertTrue(guest0_transaction['products'][0][1] == 'Cauliflower_K')
-        self.assertTrue(guest0_transaction['products'][0][2] == 5)
-        self.assertTrue(guest0_transaction['overall_price'] == 8 * 5)
         guest1_transaction = PurchaseHistory_FeliksSons[1]
-        self.assertTrue(guest1_transaction['username'] == guest1_entrance_id)
+        if guest0_transaction['username'] != str(guest0_entrance_id):
+            guest0_transaction = PurchaseHistory_FeliksSons[1]
+            guest1_transaction = PurchaseHistory_FeliksSons[0]
+        guest0_products = ast.literal_eval(guest0_transaction['products'])
+        guest1_products = ast.literal_eval(guest1_transaction['products'])
+
+        self.assertTrue(guest0_transaction['username'] == str(guest0_entrance_id))
+        self.assertTrue(guest0_transaction['storename'] == "Feliks&Sons")
+        self.assertTrue(guest0_products[0][1] == 'Cauliflower_K')
+        self.assertTrue(guest0_products[0][2] == 5)
+        self.assertTrue(guest0_transaction['overall_price'] == 40)
+        self.assertTrue(guest1_transaction['username'] == str(guest1_entrance_id))
         self.assertTrue(guest1_transaction['storename'] == "Feliks&Sons")
-        self.assertTrue(guest1_transaction['products'][0][1] == 'Cabbage_K')
-        self.assertTrue(guest1_transaction['products'][0][2] == 5)
-        self.assertTrue(guest1_transaction['products'][1][1] == 'Broccoli_K')
-        self.assertTrue(guest1_transaction['products'][1][2] == 5)
-        self.assertTrue(guest1_transaction['overall_price'] == 8 * 5 + 8 * 5)
+        self.assertTrue(guest1_products[0][1] == 'Cabbage_K')
+        self.assertTrue(guest1_products[0][2] == 5)
+        self.assertTrue(guest1_products[1][1] == 'Broccoli_K')
+        self.assertTrue(guest1_products[1][2] == 5)
+        self.assertTrue(guest1_transaction['overall_price'] == 80)
 
     def test_UserPurchaseHistoryAdmin_success(self):
         self.service.logIn("admin", "12341234")
@@ -2058,22 +2063,17 @@ class Test_Use_Case_2_6_transactions(TestCase):
         self.service.purchaseCart("Amiel", "4580020345672134", "12/26", "Amiel saad", "555", "123456789",
                                   "some_address", "be'er sheva", "Israel", "1234567")
         PurchaseHistory_Amiel = ast.literal_eval(
-            self.service.getMemberPurchaseHistory("Admin", "Amiel").getReturnValue())
-        self.assertTrue(PurchaseHistory_Amiel.__len__() == 2)
-        FStore_transaction = PurchaseHistory_Amiel[0]
-        self.assertTrue(FStore_transaction['username'] == "Amiel")
-        self.assertTrue(FStore_transaction['storename'] == "Feliks&Sons")
-        self.assertTrue(FStore_transaction['products'][0][1] == 'Cauliflower_K')
-        self.assertTrue(FStore_transaction['products'][0][2] == 5)
-        self.assertTrue(FStore_transaction['overall_price'] == 8 * 5)
-        RStore_transaction = PurchaseHistory_Amiel[1]
-        self.assertTrue(RStore_transaction['username'] == "Amiel")
-        self.assertTrue(RStore_transaction['storename'] == "Robin&Daughters")
-        self.assertTrue(RStore_transaction['products'][0][1] == 'BBQ_Sauce')
-        self.assertTrue(RStore_transaction['products'][0][2] == 5)
-        self.assertTrue(RStore_transaction['products'][1][1] == 'Ketchup')
-        self.assertTrue(RStore_transaction['products'][1][2] == 5)
-        self.assertTrue(RStore_transaction['overall_price'] == 15 * 5 + 15 * 5)
+            self.service.getMemberPurchaseHistory("admin", "Amiel").getReturnValue())
+        self.assertTrue(PurchaseHistory_Amiel.__len__() == 1)
+        transaction = next(iter(PurchaseHistory_Amiel.values()))
+        FStore_transaction = transaction['products']["Feliks&Sons"]
+        RStore_transaction = transaction['products']["Robin&Daughters"]
+        self.assertTrue(FStore_transaction[0][1] == 'Cauliflower_K')
+        self.assertTrue(FStore_transaction[0][2] == 5)
+        self.assertTrue(RStore_transaction[0][1] == 'Ketchup')
+        self.assertTrue(RStore_transaction[0][2] == 5)
+        self.assertTrue(RStore_transaction[1][1] == 'Mustard')
+        self.assertTrue(RStore_transaction[1][2] == 5)
 
     # Use Case 2.6.6
     def test_AdminGetInfoMembersOnOff_success(self):
