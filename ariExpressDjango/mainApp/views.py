@@ -69,6 +69,7 @@ def mainpage(request):
         user = User.objects.create_user(username='ariExpress', password='ariExpress')
         user.save()
     # --------------------------------------------------------------------------------------------------
+    ping(request)
     createGuestIfNeeded(request)
     return render(request, 'mainpage.html')
 
@@ -87,6 +88,7 @@ def login(request):
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
+                ping(request)
                 if Service().checkIfAdmin(username).getStatus():
                     actionRes = Service().logIn(username, password)
                     if actionRes.getStatus():
@@ -101,6 +103,7 @@ def login(request):
                         messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
                         return redirect('mainApp:login')
                 else:
+                    ping(request)
                     if Service().checkIfBanned(username).getReturnValue() == True:
                         messages.success(request, (f"Error: {username} is banned!"))
                         return redirect('mainApp:mainpage')
@@ -154,6 +157,7 @@ def registerPage(request):
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password1']
                 email = form.cleaned_data['email']
+                ping(request)
                 res = service.register(username, password, email)
                 if res.getStatus():
                     form.save()
@@ -203,6 +207,7 @@ def logout(request):
 def mystores(request):
     if request.user.is_authenticated:
         service = Service()
+        ping(request)
         storesInfo = service.getUserStores(request.user.username)
         string_data = storesInfo.getReturnValue()
         storesInfoDict = ast.literal_eval(str(string_data))
@@ -217,9 +222,11 @@ def viewStoreStaff(request, storename):
 
     if 'removePermissionButton' in request.POST:
         permissionName = 'ModifyPermissions'
+        ping(request)
         if permissionCheck(username, storename, permissionName):
             removePerm = request.POST.get('selectRemovePermission')
             nominated = request.POST.get('nominated')
+            ping(request)
             actionRes = service.removePermissions(storename, username, nominated, removePerm)
             if actionRes.getStatus():
                 messages.success(request, (f"\"{removePerm}\" has been removed to {nominated} permissions"))
@@ -230,9 +237,11 @@ def viewStoreStaff(request, storename):
         
     if 'addPermissionButton' in request.POST:
         permissionName = 'ModifyPermissions'
+        ping(request)
         if permissionCheck(username, storename, permissionName):
             addPerm = request.POST.get('selectAddPermission')
             nominated = request.POST.get('nominated')
+            ping(request)
             actionRes = service.addPermission(storename, username, nominated, addPerm)
             if actionRes.getStatus():
                 messages.success(request, (f"\"{addPerm}\" has been added to {nominated} permissions"))
@@ -243,8 +252,10 @@ def viewStoreStaff(request, storename):
 
     if 'removeAccessButton' in request.POST:
         permissionName = 'ModifyPermissions'
+        ping(request)
         if permissionCheck(username, storename, permissionName):
             userToRemove = request.POST.get('to_remove_id')
+            ping(request)
             actionRes = service.removeAccess(username, userToRemove, storename)
             if actionRes.getStatus():
                 messages.success(request, (f"{userToRemove}'s access has been removed."))
@@ -255,11 +266,13 @@ def viewStoreStaff(request, storename):
 
 
     permissionName = 'StaffInfo'
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         allPermissions = {"ProductChange": True, "Bid":True,
                                 "ModifyPermissions": True, "Auction": True,
                                 "Lottery": True, "StatusChange": True, "StaffInfo": True,
                                 "Policies":  True, "Discounts": True}
+        ping(request)
         actionRes = service.getStoreProductsInfo(storename)
         if actionRes.getStatus():
             staff = actionRes.getReturnValue()['accesses']
@@ -267,6 +280,7 @@ def viewStoreStaff(request, storename):
             print(staff)
             print(f"staff {staff.keys()}")
             for user in staff.keys():
+                ping(request)
                 actionRes2 = service.getPermissionsAsJson(storename, user)
                 if actionRes2.getStatus():
                     permission = ast.literal_eval(str(actionRes2.getReturnValue()))
@@ -284,6 +298,7 @@ def viewStoreStaff(request, storename):
 
 def viewAllStores(request):
     service = Service()
+    ping(request)
     storesInfo = service.getStoresBasicInfo()
     string_data = storesInfo.getReturnValue()
     storesInfoDict = ast.literal_eval(str(string_data))
@@ -294,6 +309,7 @@ def store_specific(request, storename):
     service = Service()
     username = request.user.username
     if request.user.is_authenticated and request.session['guest'] == 0:
+        ping(request)
         permissions = service.getPermissionsAsJson(storename, username).getReturnValue()
         permissions = ast.literal_eval(str(permissions))
     else:
@@ -305,7 +321,9 @@ def store_specific(request, storename):
 
     if 'openStore' in request.POST:
         permissionName = 'StatusChange'
+        ping(request)
         if permissionCheck(username, storename, permissionName):
+            ping(request)
             actionRes = service.openStore(request.user.username, storename)
             if actionRes.getStatus():
                 messages.success(request, ("Store is now open."))
@@ -319,7 +337,9 @@ def store_specific(request, storename):
 
     if 'closeStore' in request.POST:
         permissionName = 'StatusChange'
+        ping(request)
         if permissionCheck(username, storename, permissionName):
+            ping(request)
             actionRes = service.closeStore(request.user.username, storename)
             if actionRes.getStatus():
                 messages.success(request, ("Store is now closed."))
@@ -333,8 +353,10 @@ def store_specific(request, storename):
 
     if 'removeProduct' in request.POST:
         permissionName = 'ProductChange'
+        ping(request)
         if permissionCheck(username, storename, permissionName):
             product_id = request.POST.get('product_id')
+            ping(request)
             actionRes = service.removeProductFromStore(request.user.username, storename, product_id)
             if actionRes.getStatus():
                 messages.success(request, ("Product has been removed"))
@@ -355,6 +377,7 @@ def store_specific(request, storename):
         except Exception as e:
             messages.success(request, (f"Error: bid should be a number."))
             return redirect('mainApp:store_specific', storename=storename)
+        ping(request)
         actionRes = service.placeBid(request.user.username, storename, bidAmount, product_id, quantity)
         if actionRes.getStatus():
             messages.success(request, ("Bid placed successfully."))
@@ -365,6 +388,7 @@ def store_specific(request, storename):
 
         
     else:
+        ping(request)
         products = service.getStoreProductsInfo(storename).getReturnValue()
         # context = request.POST.get('data')
         context = ast.literal_eval(str(products))
@@ -408,6 +432,7 @@ def store_specific(request, storename):
 def editProduct(request, storename):
     permissionName = 'ProductChange'
     username = request.user.username
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         product_id = request.POST.get('product_id')
         product_name = request.POST.get('product_name')
@@ -417,6 +442,7 @@ def editProduct(request, storename):
 
         if 'editButton' in request.POST:
             service = Service()
+            ping(request)
             actionRes = service.editProductOfStore(request.user.username, storename, product_id, name=product_name,
                                                    quantity=product_quantity, price=product_price,
                                                    categories=product_categories)
@@ -437,6 +463,7 @@ def editProduct(request, storename):
 def addNewDiscount(request, storename):  # Discounts
     username = request.user.username
     permissionName = 'Discounts'
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
         discountType = None if discountTypeInt == None else getDiscountType(discountTypeInt)
@@ -449,6 +476,7 @@ def addNewDiscount(request, storename):  # Discounts
         if 'submitDiscount' in request.POST:
             service = Service()
             if discountTypeInt == 1:
+                ping(request)
                 actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName)
                 if actionRes.getStatus():
                     messages.success(request, ("Discount has been added"))
@@ -458,6 +486,7 @@ def addNewDiscount(request, storename):  # Discounts
             if discountTypeInt == 2:
                 discountRulesData = request.session['discountRulesData']
                 fixedRulesData = fixDiscountRulesData(discountRulesData)
+                ping(request)
                 actionRes = service.addDiscount(storename, username, discountType, percent, levelType, levelName,
                                                 fixedRulesData)
                 if actionRes.getStatus():
@@ -509,6 +538,7 @@ def addNewDiscount(request, storename):  # Discounts
 def addNewDiscountSpecial(request, storename, discount_type):
     username = request.user.username
     permissionName = 'Discounts'
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         service = Service()
         discountTypeInt = None if request.POST.get('discountType') == None else int(request.POST.get('discountType'))
@@ -582,6 +612,7 @@ def addNewDiscountSpecial(request, storename, discount_type):
             discounts = fixDiscountSpecial(discounts)
             print(f"final dict: {discounts}")
             print(f"type: {discount_type}")
+            ping(request)
             actionRes = service.addDiscount(storename, username, discount_type, discounts=discounts)
             if actionRes.getStatus():
                 messages.success(request, ("Discount has been added"))
@@ -628,6 +659,7 @@ def addNewDiscountSpecial(request, storename, discount_type):
 def addNewPurchasePolicy(request, storename):  # Policies
     username = request.user.username
     permissionName = 'Policies'
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         purchase_policy_int = None if request.POST.get('purchase_policy') == None else int(
             request.POST.get('purchase_policy'))
@@ -643,6 +675,7 @@ def addNewPurchasePolicy(request, storename):  # Policies
                 # print(f"policyRulesData: {policyRulesData}")
                 rule = fixDiscountRulesData(policyRulesData)  # TODO: check if works
                 # print(f"storename: {storename}\n username: {username}\n, purchase_policy: {purchase_policy}\n, rule: {rule}\n, levelType: {levelType}\n, levelName: {levelName}")
+                ping(request)
                 actionRes = service.addPurchasePolicy(storename, username, purchase_policy, rule, levelType, levelName)
                 if actionRes.getStatus():
                     messages.success(request, ("Policy has been added"))
@@ -691,10 +724,12 @@ def addNewPurchasePolicy(request, storename):  # Policies
 def viewBids(request, storename):
     permissionName = 'Bid'
     username = request.user.username
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         service = Service()
         if 'approveBid' in request.POST:
             bid_id = int(request.POST.get('bid_id'))
+            ping(request)
             actionRes = service.approveBid(request.user.username, storename, bid_id)
             if not actionRes.getStatus():
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
@@ -704,6 +739,7 @@ def viewBids(request, storename):
 
         if 'rejectBid' in request.POST:
             bid_id = int(request.POST.get('bid_id'))
+            ping(request)
             actionRes = service.rejectBid(request.user.username, storename, bid_id)
             if not actionRes.getStatus():
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
@@ -714,6 +750,7 @@ def viewBids(request, storename):
         if 'offerBidPrice' in request.POST:
             bid_id = int(request.POST.get('bid_id'))
             offerNumber = int(request.POST.get('offerNumber'))
+            ping(request)
             actionRes = service.sendAlternativeOffer(request.user.username, storename, bid_id, offerNumber)
             if not actionRes.getStatus():
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
@@ -722,11 +759,13 @@ def viewBids(request, storename):
                 messages.success(request, (f"Offer for bid {bid_id} sent successfully"))
 
         bids = {}
+        ping(request)
         actionRes = service.getAllBidsFromStore(storename)
         if actionRes.getStatus():
             bids : dict = ast.literal_eval(str(actionRes.getReturnValue()))
             for id, bid in bids.items():
                 id = int(id)
+                ping(request)
                 staff = service.getStaffPendingForBid(storename, id)
                 # print(f"status {staff.getStatus()}")
                 # print(f"value {staff.getReturnValue()}")
@@ -753,6 +792,7 @@ def userBids(request):
             messages.success(request, (f"Bid {bid_id} was approved"))
 
     bids = {}
+    ping(request)
     actionRes = service.getAllBidsFromUser(username)
     if actionRes.getStatus():
         bids : dict = ast.literal_eval(str(actionRes.getReturnValue()))
@@ -764,6 +804,7 @@ def createStore(request):
     if request.method == 'POST' and request.user.is_authenticated:
         newStoreName = request.POST.get('storeName')
         service = Service()
+        ping(request)
         res = service.createStore(request.user.username, newStoreName)
         if res.getStatus():
             messages.success(request, ("A new store has been created successfully"))
@@ -780,7 +821,7 @@ def nominateUser(request, storename):
     service = Service()
     username = request.user.username
     permissionName = 'ModifyPermissions'
-
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         if 'nominateUser' in request.POST:
             requesterUsername = request.user.username
@@ -788,6 +829,7 @@ def nominateUser(request, storename):
             selected = request.POST.get('nominateSelect')
             store_name = request.POST.get('storename')
             if selected == '1':
+                ping(request)
                 res = service.nominateStoreOwner(requesterUsername, toBeNominatedUsername, store_name)
                 if res.getStatus():
                     messages.success(request, ("A new user has been nominated to be Owner."))
@@ -796,6 +838,7 @@ def nominateUser(request, storename):
                     messages.success(request, (f"Error: {res.getReturnValue()}"))
                     return redirect('mainApp:mystores')
             elif selected == '2':
+                ping(request)
                 res = service.nominateStoreManager(requesterUsername, toBeNominatedUsername, store_name)
                 if res.getStatus():
                     messages.success(request, ("A new user has been nominated to be Manager."))
@@ -810,6 +853,7 @@ def nominateUser(request, storename):
 
         if 'approveNomination' in request.POST:
             toBeNominatedUsername = request.POST.get('toBeNominated')
+            ping(request)
             actionRes = service.approveStoreOwnerNomination(username, toBeNominatedUsername, storename)
             if actionRes.getStatus():
                 messages.success(request, (f"{username} has approved {toBeNominatedUsername}"))
@@ -818,6 +862,7 @@ def nominateUser(request, storename):
 
         if 'rejectNomination' in request.POST:
             toBeNominatedUsername = request.POST.get('toBeNominated')
+            ping(request)
             actionRes = service.rejectStoreOwnerNomination(username, toBeNominatedUsername, storename)
             if actionRes.getStatus():
                 messages.success(request, (f"{username} has rejected {toBeNominatedUsername}"))
@@ -825,6 +870,7 @@ def nominateUser(request, storename):
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
         nominees = dict
+        ping(request)
         actionRes = service.getAllNominationRequests(storename, username)
         if actionRes.getStatus():
             nominees = ast.literal_eval(str(actionRes.getReturnValue()))
@@ -841,6 +887,7 @@ def nominateUser(request, storename):
 def addNewProduct(request, storename):
     permissionName = 'ProductChange'
     username = request.user.username
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         if "openAddNewProduct" in request.POST:
             return render(request, 'addNewProduct.html', {'storename': storename})
@@ -853,6 +900,7 @@ def addNewProduct(request, storename):
                 price = form.cleaned_data['productPrice']
                 quantity = form.cleaned_data['productQuantity']
                 service = Service()
+                ping(request)
                 actionRes = service.addNewProductToStore(request.user.username, storename, productname,
                                                          quantity, price, category)
 
@@ -875,9 +923,11 @@ def viewDiscounts(request, storename):
     service = Service()
     permissionName = 'Discounts'
     username = request.user.username
+    ping(request)
     if permissionCheck(username, storename, permissionName):
         if 'removeDiscount' in request.POST:
             discount_id = request.POST.get('discount_id')
+            ping(request)
             actionRes = service.removeDiscount(storename, username, discount_id)
             if actionRes.getStatus():
                 messages.success(request, (f"Discount {discount_id} has been removed."))
@@ -885,7 +935,7 @@ def viewDiscounts(request, storename):
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
 
-
+        ping(request)
         actionRes = service.getAllDiscounts(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
@@ -906,15 +956,17 @@ def viewPurchasePolicies(request, storename):
     permissionName = 'Policies'
     username = request.user.username
     policies = {}
+    ping(request)
     if permissionCheck(username, storename, permissionName):
 
         if 'removePolicy' in request.POST:
             policy_id = request.POST.get('policy_id')
+            ping(request)
             actionRes = service.removePurchasePolicy(storename, username, policy_id)
             if actionRes.getStatus():
                 messages.success(request, (f"Policy #{policy_id} has been removed."))
 
-
+        ping(request)
         actionRes = service.getAllPurchasePolicies(storename)
         if actionRes.getStatus():
             removeNulls = actionRes.getReturnValue().replace("null", "\"\"")
@@ -932,6 +984,7 @@ def viewPurchasePolicies(request, storename):
 def adminPage(request):
     service = Service()
     username = request.user.username
+    ping(request)
     actionRes = service.checkIfAdmin(username)
     if actionRes.getStatus():
         allusers = {}
@@ -940,7 +993,9 @@ def adminPage(request):
         storesInfoDict = {}
         data_type = 0
         historyInfo = None
+        ping(request)
         resOnline = service.getAllOnlineMembers(request.user.username)
+        ping(request)
         resOffline = service.getAllOfflineMembers(request.user.username)
         if resOnline.getStatus() and resOffline.getStatus():
             onlinemembers = resOnline.getReturnValue()  # returns a list
@@ -952,6 +1007,7 @@ def adminPage(request):
                 allusers[key] = value
             for key, value in offlinemembers.items():
                 allusers[key] = value
+        ping(request)
         storesInfo = service.getStoresBasicInfo()
         if storesInfo.getStatus():
             string_data = storesInfo.getReturnValue()
@@ -962,6 +1018,7 @@ def adminPage(request):
             if userOrStore == "1":
                 user = request.POST.get('selectUser')
                 print(user)
+                ping(request)
                 actionRes = service.getMemberPurchaseHistory(username, user)
                 if actionRes.getStatus():
                     historyInfo = actionRes.getReturnValue()
@@ -971,6 +1028,7 @@ def adminPage(request):
             else:
                 store = request.POST.get('selectStore')
                 print(store)
+                ping(request)
                 actionRes = service.getStorePurchaseHistory(username, store)
                 if actionRes.getStatus():
                     historyInfo = actionRes.getReturnValue()
@@ -983,6 +1041,7 @@ def adminPage(request):
 
         if 'banUser' in request.POST:
             userToBan = request.POST.get('selectUser')
+            ping(request)
             actionRes = service.removePermissionFreeMember(username, userToBan)
             if actionRes.getStatus():
                 messages.success(request, (f"{userToBan} has been banned."))
@@ -991,6 +1050,7 @@ def adminPage(request):
 
         if 'unbanUser' in request.POST:
             userToUnban = request.POST.get('selectUser')
+            ping(request)
             actionRes = service.returnPermissionFreeMember(username, userToUnban)
             if actionRes.getStatus():
                 messages.success(request, (f"{userToBan} has been unbanned."))
@@ -1006,10 +1066,13 @@ def adminPage(request):
 def viewOnlineUsers(request):
     service = Service()
     username = request.user.username
+    ping(request)
     actionRes = service.checkIfAdmin(username)
     if request.method == 'POST':
         if request.user.is_superuser:
+            ping(request)
             resOnline = service.getAllOnlineMembers(request.user.username)
+            ping(request)
             resOffline = service.getAllOfflineMembers(request.user.username)
             if resOnline.getStatus() and resOffline.getStatus():
                 onlinemembers = resOnline.getReturnValue()  # returns a list
@@ -1036,8 +1099,10 @@ def homepage_guest(request):
 def inbox(request):
     if request.user.is_authenticated:
         service = Service()
+        ping(request)
         all_user_messages = service.getAllMessagesReceived(request.user.username)
         if all_user_messages.getStatus():
+            ping(request)
             all_user_notifications = service.getAllNotifications(request.user.username)
             if all_user_notifications.getStatus():
                 all_user_messages = all_user_messages.getReturnValue()
@@ -1064,6 +1129,7 @@ def send_message(request):
         form = UserMessageform(request.POST, request.FILES)
         if form.is_valid():
             receiver_username = form.cleaned_data['receiver']
+            ping(request)
             res = service.checkUsernameExistence(receiver_username)
             if res.getStatus():
                 subject = form.cleaned_data['subject']
@@ -1071,6 +1137,7 @@ def send_message(request):
                 creation_date = datetime.now()
                 file = form.cleaned_data['file']
                 print(file)
+                ping(request)
                 message_res = service.sendMessageUsers(request.user.username, receiver_username, subject, content, creation_date,file)
                 if message_res.getStatus():
 
@@ -1093,6 +1160,7 @@ def send_message(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_message(request, usermessage_id):
     service = Service()
+    ping(request)
     res = service.deleteMessage(request.user.username, usermessage_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')
@@ -1107,7 +1175,7 @@ def delete_message(request, usermessage_id):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_as_read(request, usermessage_id):
     service = Service()
-
+    ping(request)
     res = service.readMessage(request.user.username, usermessage_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=usermessage_id, recipient=request.user, type='message')[0]
@@ -1122,6 +1190,7 @@ def mark_as_read(request, usermessage_id):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def mark_notification_as_read(request, notification_id):
     service = Service()
+    ping(request)
     res = service.readNotification(request.user.username, notification_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=notification_id, recipient=request.user, type='notification')[0]
@@ -1135,6 +1204,7 @@ def mark_notification_as_read(request, notification_id):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_notification(request, notification_id):
     service = Service()
+    ping(request)
     res = service.deleteNotification(request.user.username, notification_id)
     if res.getStatus():
         notification = Notification.objects.filter(message_id=notification_id, recipient=request.user, type='notification')
@@ -1149,6 +1219,7 @@ def check_username(request):
     if request.method == 'POST':
         username = request.POST.get('username', None)
         service = Service()
+        ping(request)
         res = service.checkUsernameExistence(username)
         if res.getStatus():
             return JsonResponse({'status': True})
@@ -1160,6 +1231,7 @@ def check_username(request):
 def cart(request):
     if request.user.is_authenticated:
         service = Service()
+        ping(request)
         res = service.getCart(request.user.username)
         if res.getStatus():
             cart = res.getReturnValue()
@@ -1167,6 +1239,7 @@ def cart(request):
             baskets = ast.literal_eval(str(baskets))
             products = dict()
             for basket in baskets:
+                ping(request)
                 basket_res = service.getBasket(request.user.username, basket)
                 if basket_res.getStatus() == True:
                     basket_res = basket_res.getReturnValue()
@@ -1202,6 +1275,7 @@ def remove_basket_product(request):
             if form.is_valid():
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
+                ping(request)
                 res = service.removeFromBasket(request.user.username, store, product_id)
                 if res.getStatus():
                     messages.success(request, "Product removed from cart successfully")
@@ -1231,6 +1305,7 @@ def edit_basket_product(request):
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
                 quantity = form.cleaned_data['quantity']
+                ping(request)
                 res = service.editBasketQuantity(request.user.username, store, product_id, quantity)
                 if res.getStatus():
                     messages.success(request, "quantity edited successfully")
@@ -1254,6 +1329,7 @@ def edit_basket_product(request):
 def checkoutpage_bids(request):
     if request.user.is_authenticated:
         service = Service()
+        ping(request)
         actionRes = service.getAllBidsFromUser(request.user.username)
         if actionRes.getStatus():
             username = request.user.username
@@ -1265,6 +1341,7 @@ def checkoutpage_bids(request):
             # print(f"allbidstype {type(allbids)}")
             # print(request.POST.get('bid_id'))
             print(f"bid {bid}")
+            ping(request)
             product = service.getProduct(bid["storename"], bid["product_id"], username).getReturnValue()
             product = ast.literal_eval(str(product))
             print(f"product {product}")
@@ -1284,6 +1361,7 @@ def checkoutpage_bids(request):
 def checkoutpage(request):
     if request.user.is_authenticated:
         service = Service()
+        ping(request)
         res = service.getCart(request.user.username)
         if res.getStatus():
             cart = res.getReturnValue()
@@ -1293,6 +1371,7 @@ def checkoutpage(request):
             total_cart_price = 0
             quantity = 0
             for basket in baskets:
+                ping(request)
                 basket_res = service.getBasket(request.user.username, basket)
                 if basket_res.getStatus() == True:
                     basket_res = basket_res.getReturnValue()
@@ -1322,6 +1401,7 @@ def checkout(request):
             service = Service()
             form = CheckoutForm(request.POST)
             if form.is_valid():
+                ping(request)
                 res = service.purchaseCart(request.user.username, int(form.cleaned_data['cc_number']),
                                            form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],
                                            int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']),
@@ -1355,6 +1435,7 @@ def checkout_bid(request):
             if form.is_valid():
                 bid_id = request.POST.get('bid_id')
                 storename = request.POST.get('storename')
+                ping(request)
                 res = service.purchaseConfirmedBid(bid_id, storename, request.user.username, int(form.cleaned_data['cc_number']),
                                            form.cleaned_data['cc_expiration'], form.cleaned_data['cc_name'],
                                            int(form.cleaned_data['cc_cvv']), int(form.cleaned_data['cc_id']),
@@ -1388,6 +1469,7 @@ def add_product_to_cart(request):
                 store = form.cleaned_data['store_name']
                 product_id = form.cleaned_data['product_id']
                 quantity = form.cleaned_data['quantity']
+                ping(request)
                 res = service.addToBasket(request.user.username, store, product_id, quantity)
                 if res.getStatus():
                     messages.success(request, "Product added successfully")
@@ -1411,6 +1493,7 @@ def add_product_to_cart(request):
 def userPurchaseHistory(request):
     if request.user.is_authenticated:
         service = Service()
+        ping(request)
         purchasehistory = service.getMemberPurchaseHistory(request.user.username,request.user.username)
         if purchasehistory.getStatus():
             purchasehistory = purchasehistory.getReturnValue()
@@ -1431,6 +1514,7 @@ def searchpage(request):
     if request.method == "POST":
         service = Service()
         searched = request.POST['searched']
+        ping(request)
         res = service.productSearchByName(searched, request.user.username)
         if res.getStatus():
             products= {}
@@ -1559,6 +1643,7 @@ def createGuestIfNeeded(request):
     # 2. login to that user
     else:
         service = Service()
+        ping(request)
         actionRes = service.loginAsGuest()
 
         if actionRes.getStatus():
@@ -1588,6 +1673,7 @@ def guestToUser(request, username, password):
     if request.user.is_authenticated and request.session['guest']:
         service = Service()
         guestnumber = get_number_at_end(guestusername)
+        ping(request)
         actionRes = service.logInFromGuestToMember(guestnumber, username, password)  # 1.
         if actionRes.getStatus():
             logoutFunc(request)  # 2.
@@ -1610,5 +1696,14 @@ def get_number_at_end(string):
         else:
             break
     return int(number)
+
+#---------------------------------------------------------------------------------------------------------------------------------------#
+
+def custom_404_view(request):
+    return render(request, '404.html', status=404)
+
+def ping(request):
+    if not Service().ping():
+        return custom_404_view(request)
 
 #---------------------------------------------------------------------------------------------------------------------------------------#
