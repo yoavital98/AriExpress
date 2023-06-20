@@ -197,46 +197,46 @@ class Test_Use_Cases_2_1(TestCase):
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         robin_product_2_quantity = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()["quantity"]
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 2, 5)
-        self.assertTrue(
-            self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["quantity"] == 5)
-        self.assertTrue(
-            self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"][0]["products"][0]["id"] == 2)
+        guest0_cart = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
+        guest0_products_Robin = ast.literal_eval(guest0_cart["Robin&Daughters"]["products"])
+        self.assertTrue(guest0_products_Robin["2"]["product"]['name'] == "Ketchup")
+        self.assertTrue(guest0_products_Robin["2"]["quantity"] == 5)
+        self.assertTrue(guest0_products_Robin["2"]["price"] == 15)
         self.service.leaveAsGuest(guest0_entrance_id)
-        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"] == {})
-        robin_product_2_quantity_after = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()[
-            "quantity"]
+        self.assertFalse(self.service.getCart(guest0_entrance_id).getStatus())
+        robin_product_2_quantity_after = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()["quantity"]
         self.assertTrue(robin_product_2_quantity_after == robin_product_2_quantity)
 
     # Use Case 2.1.3
     def test_registration_to_the_system_success(self):
-        with self.assertRaises(Exception):
-            res = self.service.logIn("username22", "password1")
+        self.assertFalse(self.service.logIn("username22", "password1").getStatus())
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        self.assertTrue(self.service.getMemberInfo("admin", "username22")["name"] == "username22")
+        member_info = ast.literal_eval(ast.literal_eval(self.service.getMemberInfo("admin", "username22").getReturnValue())["member"])
+        self.assertTrue(member_info["username"] == "username22")
+        self.assertTrue(member_info["email"] == "email")
+        self.assertTrue(member_info["cart"]["baskets"] == '{}')
         res = self.service.logIn("username22", "password1")
         self.assertTrue(res.getStatus())
 
     def test_registration_to_the_system_failure(self):
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        with self.assertRaises(Exception):
-            self.service.register("username22", "password1", "email")
+        self.assertFalse(self.service.register("username22", "password1", "email").getStatus())
 
     # Use Case 2.1.4
 
     def test_login_to_the_system_success(self):
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        member_res = self.service.logIn("username22", "password1")
-        self.assertTrue(ast.literal_eval(member_res.getReturnValue())['name'] == 'username22')
-        self.assertTrue(ast.literal_eval(member_res.getReturnValue())['email'] == 'email')
+        member_res = self.service.logIn("username22", "password1").getReturnValue()
+        self.assertTrue(member_res['username'] == 'username22')
+        self.assertTrue(member_res['email'] == 'email')
 
     def test_logging_in_the_system_failure(self):
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
-        with self.assertRaises(Exception):
-            self.service.logIn("username22", "password2")
+        self.assertFalse(self.service.logIn("username22", "password2").getStatus())
 
 
 """ ---------------------- (2.2) User Purchase tests ---------------------- """
@@ -252,29 +252,37 @@ class Test_Use_Case_2_2(TestCase):
     def test_guest_information_fetching_success(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
-        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        stores_info = ast.literal_eval(self.service.getStoresBasicInfo().getReturnValue())
+        store_count = stores_info.__len__()
         self.assertTrue(store_count == 2)
-        feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
-        self.assertTrue(feliks_products == 12)
-        product1 = self.service.getProduct("Feliks&Sons", 1, guest0_entrance_id)
-        self.assertTrue(product1.getReturnValue()["name"] == "Cabbage_K")
+        feliks_products = ast.literal_eval(self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"])
+        self.assertTrue(feliks_products.__len__() == 12)
+        product1 = self.service.getProduct("Feliks&Sons", 1, guest0_entrance_id).getReturnValue()
+        self.assertTrue(product1["name"] == "Cauliflower_K")
+        self.assertTrue(product1["quantity"] == 30)
+        self.assertTrue(product1["price"] == 8)
+        self.assertTrue(product1["categories"] == "Vegetables")
+        product9 = self.service.getProduct("Feliks&Sons", 9, guest0_entrance_id).getReturnValue()
+        self.assertTrue(product9["name"] == "Mango_K")
+        self.assertTrue(product9["quantity"] == 30)
+        self.assertTrue(product9["price"] == 20)
+        self.assertTrue(product9["categories"] == "Fruits")
 
     def test_guest_information_fetching_noSuchStore_failure(self):
-        res = self.service.loginAsGuest()
-        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        stores_info = ast.literal_eval(self.service.getStoresBasicInfo().getReturnValue())
+        store_count = stores_info.__len__()
         self.assertTrue(store_count == 2)
-        with self.assertRaises(Exception):
-            self.service.getStoreProductsInfo("Ari&Bears")
+        self.assertFalse(self.service.getStoreProductsInfo("Ari&Bears").getStatus())
 
     def test_guest_information_fetching_noSuchProduct_failure(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
-        store_count = self.service.getStoresBasicInfo().getReturnValue().__len__()
+        stores_info = ast.literal_eval(self.service.getStoresBasicInfo().getReturnValue())
+        store_count = stores_info.__len__()
         self.assertTrue(store_count == 2)
-        feliks_products = self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"].__len__()
+        feliks_products = ast.literal_eval(self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"])
         self.assertTrue(feliks_products == 12)
-        with self.assertRaises(Exception):
-            self.service.getProduct("Feliks&Sons", 15, guest0_entrance_id)
+        self.assertFalse(self.service.getProduct("Feliks&Sons", 15, guest0_entrance_id))
 
     # Use Case 2.2.2.a
 

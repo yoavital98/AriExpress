@@ -248,6 +248,7 @@ class StoreFacade:
             else:
                 raise Exception("user is not guest nor a member")
 
+
     # gets an online member.
     def getOnlineMemberOnly(self, user_name):
         if self.online_members.keys().__contains__(user_name):

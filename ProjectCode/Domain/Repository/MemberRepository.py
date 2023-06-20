@@ -173,6 +173,6 @@ class MemberRepository(Repository):
             # for felix
 
     def isBanned(self, user_name):
-        entry = self.model.select().where(self.model.user_name == user_name)
+        entry = self.model.get(self.model.user_name == user_name)
         return entry.banned
 
