@@ -120,7 +120,7 @@ class MainappConfig(AppConfig):
         # users = User.objects.all()
         # for i in range(1, len(users)):
         #     User.objects.all()[i].delete()
-    def loadAdmins(self, admins):
+    def loadAdmins(self, config):
         from django.contrib.auth.models import User
         with open(config, 'r') as f:
             config_data : dict = json.load(f)
