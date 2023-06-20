@@ -244,7 +244,7 @@ class Cart:
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, user_name, single_product_dict, bid.get_offer())
                 transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,  single_product_dict, bid.get_offer())
                 message_controller.send_notification(user_name, message_header, single_product_dict,datetime.now())
-                for staff_member in store.getAllStaffMembersNames():
+                for staff_member in store.getAllStaffMembers():
                     message_controller.send_notification(staff_member, message_header, single_product_dict, datetime.now())
                 self.clearBidFromBasket(store_name, bid_id)
                 return {
