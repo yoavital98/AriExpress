@@ -9,12 +9,16 @@ In order to run the server, we need to have two configuration files: Load file (
     {
       "PaymentService": "https://external-systems.000webhostapp.com/",
       "SupplyService": "https://external-systems.000webhostapp.com/",
-      "Database": "",
+      "dbuser": "postgres",
+      "dbpassword": "lilythecat",
+      "dbhost": "database-1.ckwkbfc5249a.eu-north-1.rds.amazonaws.com",
+      "dbport": "5432",
       "Admins": {
         "admin": "12341234",
         "admin2": "12341234"
       }
     }
+
 
     ```
 
