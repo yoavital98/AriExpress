@@ -11,8 +11,8 @@ class MainappConfig(AppConfig):
             return True
         # load_file = "../load.json"
         config = "../default_config.json"
-        # load_file = "../load_purchaseCart.json"
-        load_file = "../load_withDiscounts.json"
+        load_file = "../load_purchaseCart.json"
+        # load_file = "../load_withDiscounts.json"
         # load_file = "../load_bids.json"
         # load_file = "../load_registration.json"
         
@@ -25,7 +25,8 @@ class MainappConfig(AppConfig):
         # print(f"members loads: {json.loads(members.getReturnValue())}")
         # print(f"members loads: {type(json.loads(members.getReturnValue()))}")
         self.loadUsers(json.loads(members.getReturnValue()))
-        self.loadAdmins(json.loads(members.getReturnValue()))
+        self.loadAdmins(config)
+
         # service = Service()
 
         # service.register("aaa", "asdf1233", "a@a.com") # for debug only
@@ -121,17 +122,15 @@ class MainappConfig(AppConfig):
         #     User.objects.all()[i].delete()
     def loadAdmins(self, admins):
         from django.contrib.auth.models import User
-        # with open(config, 'r') as f:
-        #     config_data : dict = json.load(f)
-        # admins : dict = config_data["Admins"]
+        with open(config, 'r') as f:
+            config_data : dict = json.load(f)
+        admins : dict = config_data["Admins"]
         # print(admins)
         # print(type(admins))
-        for admin in admins:
-            # print(admin)
-            username = admin["username"]
-            pwd = admin["password"]
-            if not User.objects.filter(username=username).exists():
-                user = User.objects.create_user(username=username, password=pwd)
+        for name, pwd in admins.items():
+            # print(name, pwd)
+            if not User.objects.filter(username=name).exists():
+                user = User.objects.create_user(username=name, password=pwd)
                 user.save()
 
     def loadUsers(self, memberlist):

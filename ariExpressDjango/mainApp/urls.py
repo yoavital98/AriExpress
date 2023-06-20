@@ -38,7 +38,7 @@ urlpatterns = [
 
     path(r'nominate/<str:storename>/', views.nominateUser, name='nominateUser'),
     path(r'adminPage/', views.adminPage, name='adminPage'),
-    path(r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
+    # path(r'adminPage/OnlineUsers', views.viewOnlineUsers, name='viewOnlineUsers'),
     # path to send the message
     path(r'send_message', views.send_message, name='send_message'),
     path(r'check_username/', views.check_username, name='check_username'),
