@@ -53,7 +53,7 @@
                       {% endif %}
                     {% endfor %}
                   </select>
-                  <button type="submit" class="btn btn-outline-dark" name="addAccessButton">Add Permission</button>
+                  <button type="submit" class="btn btn-outline-dark" name="addPermissionButton">Add Permission</button>
                 </form>
                 <form class="d-flex" method="post" action="{% url 'mainApp:viewStoreStaff' storename %}">
                   {% csrf_token %}
@@ -65,7 +65,7 @@
                       {% endif %}
                     {% endfor %}
                   </select>
-                  <button type="submit" class="btn btn-outline-dark" name="removeAccessButton">Remove Permission</button>
+                  <button type="submit" class="btn btn-outline-dark" name="removePermissionButton">Remove Permission</button>
                 </form>
 
               </td>

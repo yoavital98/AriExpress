@@ -3,7 +3,7 @@ from datetime import datetime
 
 import peewee
 from peewee import SqliteDatabase, MySQLDatabase, PostgresqlDatabase
-# import psycopg2
+import psycopg2
 from ProjectCode.DAL.AccessModel import AccessModel
 from ProjectCode.DAL.AccessStateModel import AccessStateModel
 from ProjectCode.DAL.AdminModel import AdminModel

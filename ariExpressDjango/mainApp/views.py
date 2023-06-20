@@ -215,7 +215,7 @@ def viewStoreStaff(request, storename):
     username = request.user.username
     service = Service()
 
-    if 'removeAccessButton' in request.POST:
+    if 'removePermissionButton' in request.POST:
         permissionName = 'ModifyPermissions'
         if permissionCheck(username, storename, permissionName):
             removePerm = request.POST.get('selectRemovePermission')
@@ -228,7 +228,7 @@ def viewStoreStaff(request, storename):
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
         
-    if 'addAccessButton' in request.POST:
+    if 'addPermissionButton' in request.POST:
         permissionName = 'ModifyPermissions'
         if permissionCheck(username, storename, permissionName):
             addPerm = request.POST.get('selectAddPermission')
@@ -236,6 +236,18 @@ def viewStoreStaff(request, storename):
             actionRes = service.addPermission(storename, username, nominated, addPerm)
             if actionRes.getStatus():
                 messages.success(request, (f"\"{addPerm}\" has been added to {nominated} permissions"))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+        else:
+            messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
+
+    if 'removeAccessButton' in request.POST:
+        permissionName = 'ModifyPermissions'
+        if permissionCheck(username, storename, permissionName):
+            userToRemove = request.POST.get('to_remove_id')
+            actionRes = service.removeAccess(username, userToRemove, storename)
+            if actionRes.getStatus():
+                messages.success(request, (f"{userToRemove}'s access has been removed."))
             else:
                 messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
         else:
