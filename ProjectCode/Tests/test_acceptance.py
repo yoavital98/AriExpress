@@ -166,7 +166,11 @@ class Test_Use_Cases_2_1(TestCase):
         self.service.addToBasket(guest1_entrance_id, "Robin&Daughters", 2, 5)
         basket = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
         basket1 = ast.literal_eval(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"])
-
+        guest0_cart = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
+        guest0_products_Robin = ast.literal_eval(guest0_cart["Robin&Daughters"]["products"])
+        guest0_products_Feliks = ast.literal_eval(guest0_cart["Feliks&Sons"]["products"])
+        guest1_cart = ast.literal_eval(self.service.getCart(guest1_entrance_id).getReturnValue()["baskets"])
+        guest1_products_Robin = ast.literal_eval(guest1_cart["Robin&Daughters"]["products"])
         self.assertTrue(ast.literal_eval(
             ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])["Feliks&Sons"][
                 "products"])["1"]["quantity"] == 8)
@@ -365,7 +369,7 @@ class Test_Use_Case_2_2(TestCase):
         self.assertTrue(guest0_cart.keys().__contains__("Robin&Daughters"))
 
     # Use Case 2.2.4.b
-    def test_guest_editBasket_success(self):  # TODO fix
+    def test_guest_editBasket_success(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
