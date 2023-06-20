@@ -59,6 +59,20 @@ class TestStoreFacade(TestCase):
         self.store_facade.nominateStoreOwner("Feliks", "YuvalMelamed","AriExpress")
         self.store_facade.removeAccess("Feliks","Amiel","AriExpress")
 
+    def test_nominationAgreements_success(self):
+        self.store_facade.register("Sup", "password789", "ari@gmail.com")
+        self.store_facade.logInAsMember("Feliks", "password456")
+        self.store_facade.nominateStoreOwner("Feliks","Amiel","AriExpress")
+        self.store_facade.nominateStoreOwner("Feliks","Sup","AriExpress")
+        self.store_facade.logInAsMember("Amiel","password789")
+        self.store_facade.logInAsMember("Sup","password789")
+        self.store_facade.nominateStoreOwner("Amiel", "YuvalMelamed","AriExpress")
+        request = self.store_facade.rejectStoreOwnerNomination("Feliks","YuvalMelamed","AriExpress")
+        print("hi")
+        # self.store_facade.approveStoreOwnerNomination("Sup","YuvalMelamed","AriExpress")
+
+
+
     def test_simple_dis(self):
         self.store_facade.logInAsMember("Feliks", "password456")
         oreo = self.store_facade.addNewProductToStore("Feliks", "AriExpress", "oreo", 10, 500, "Milk")

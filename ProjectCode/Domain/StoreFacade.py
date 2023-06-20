@@ -14,6 +14,7 @@ from ProjectCode.DAL.DiscountModel import DiscountModel
 from ProjectCode.DAL.GuestModel import GuestModel
 from ProjectCode.DAL.MemberModel import MemberModel
 from ProjectCode.DAL.MessageModel import MessageModel
+from ProjectCode.DAL.NominationAgreementModel import NominationAgreementModel
 from ProjectCode.DAL.NotificationModel import NotificationModel
 from ProjectCode.DAL.ProductBasketModel import ProductBasketModel
 from ProjectCode.DAL.ProductModel import ProductModel
@@ -98,12 +99,12 @@ class StoreFacade:
                         PurchasePolicyModel,
                         UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
                         StoreTransactionModel,
-                        ProductStoreTransactionModel, MessageModel, NotificationModel])
+                        ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
         self.db.create_tables(
              [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
               ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
               StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-              ProductStoreTransactionModel, MessageModel, NotificationModel])
+              ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
@@ -594,6 +595,24 @@ class StoreFacade:
             # return DataAccess(nominated_modified_access)
             return nominated_modified_access
 
+    def approveStoreOwnerNomination(self, requester_username, nominated_username,  store_name):
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            return cur_store.approveNomination(requester_username, nominated_username)
+
+    def rejectStoreOwnerNomination(self, requester_username, nominated_username, store_name):
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(requester_username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            return cur_store.rejectNomination(requester_username, nominated_username)
+
     def nominateStoreManager(self, requester_username, nominated_username, store_name):
         with self.db.atomic():
             cur_store: Store = self.stores[store_name]
@@ -605,6 +624,15 @@ class StoreFacade:
             nominated_modified_access = cur_store.setAccess(nominated_access, requester_username, nominated_username,
                                                             "Manager")
             return nominated_modified_access
+
+    def getAllNominationRequests(self, store_name, username):
+        with self.db.atomic():
+            if not self.checkIfUserIsLoggedIn(username):
+                raise Exception("User is not logged in")
+            cur_store: Store = self.stores[store_name]
+            if cur_store is None:
+                raise Exception("No such store exists")
+            return cur_store.getAllNominationRequests(username)
 
     def removeAccess(self, requester_username, to_remove_username, store_name):
         with self.db.atomic():
