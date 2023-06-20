@@ -54,43 +54,8 @@
   </form>
   <button type="submit" class="btn btn-primary" name="onlineUsers" onclick="showOnlineUsers()">View Online Users</button>
 
-  <script>
-    function updateSelect() {
-      const selectElement = document.getElementById('userStoreSelect');
-      const selectedValue = selectElement.value;
-
-      const storeSelect = document.getElementById('selectStore');
-      const userSelect = document.getElementById('selectUser');
-      if(selectedValue == "1"){
-        storeSelect.style.display = 'none';
-        userSelect.style.display = 'block';
-      } else {
-      storeSelect.style.display = 'block';
-      userSelect.style.display = 'none';
-      }
-    }
-    function showOnlineUsers() {
-      const usersDiv = document.getElementById('users');
-      const transDiv = document.getElementById('transactions');
-      const historyDiv = document.getElementById('history');
-      usersDiv.style.display = 'block';
-      transDiv.style.display = 'none';
-      historyDiv.style.display = 'none';
-    }
-    function showTransactions() {
-      const usersDiv = document.getElementById('users');
-      const transDiv = document.getElementById('transactions');
-      usersDiv.style.display = 'none';
-      transDiv.style.display = 'block';
-    }
-    // const adminForm = document.getElementById('adminForm');
-    // const actionUrl = "{% url 'mainApp:adminPage' %}?userStoreSelect=" + selectedValue;
-    // adminForm.action = actionUrl;
-  </script>
-  
-  
-  <div id="history">
-    {% if historyInfo %}
+  <div id="historyUsers">
+    {% if data_type == 1 %}
     <div class="row justify-content-lg-center">
       <div class="col-lg-9">
           <ul>
@@ -130,10 +95,51 @@
         </div>
       </div>
       </button>
-    {% else %}
-        <p style="text-align:center; font-size:150%;">you have no purchase history</p>
     {% endif %}
       </div> 
+
+  <div id="historyStores">
+    {% if data_type == 2 %}
+    <div class="row justify-content-lg-center">
+      <div class="col-lg-9">
+        {% for trans in historyInfo%}
+          <ul>
+              <li style=" list-style-type: none;">
+                  <h2 ><i class="fa-solid fa-bag-shopping"></i> Purchase {{ trans.transaction_id }} (placed at {{ trans.date }})</h2>
+                  <table class="table table-hover">
+                    <thead>
+                      <tr class="table-primary">
+                          <th style="width: 30%;">Name</th>
+                          <th style="width: 20%;">Quantity</th>
+                          <th style="width: 20%;">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {{trans.products.1}}
+                        {% for product in trans.products %}
+                      <tr>
+                          <td>{{ product.1 }}</td>
+                          <td>{{ product.2 }}</td>
+                          <td>{{ product.3 }}</td>
+                      </tr> 
+                        {% endfor %}  
+                    </tbody>
+                  </table>
+                  <p style=" font-size:120%; color:#FF9800">
+                    <b>Total Price: {{ trans.overall_price }}</b>
+                  </p> 
+              </li>
+              <br><br>
+              {% empty %}
+              <li>No baskets available.</li>
+          </ul>
+        {% endfor %}
+        </div>
+      </div>
+      </button>
+    {% endif %}
+      </div> 
+
   <div id="users" style="display: none;">
   {% if onlinemembers or offlinemembers %}
     <br><br>
@@ -160,22 +166,54 @@
     </ul>
   {% endif %}
 </div>  
-<div id="transactions" style="display: none;">
-  {% if transactions %}
-    <br><br>
-    <h2>Transactions</h2>
-    <ul>
-      {% for transaction in transactions %}
-      
-      <p>{{ transaction }}</p>
-              
-      {% empty %}
-      <li>No Transactions found.</li>
-      {% endfor %}
-    </ul>
 
-  {% endif %}
-  </div>
+  <script>
+    function updateSelect() {
+      const selectElement = document.getElementById('userStoreSelect');
+      const selectedValue = selectElement.value;
+
+      const storeSelect = document.getElementById('selectStore');
+      const userSelect = document.getElementById('selectUser');
+      if(selectedValue == "1"){
+        storeSelect.style.display = 'none';
+        userSelect.style.display = 'block';
+      } else {
+      storeSelect.style.display = 'block';
+      userSelect.style.display = 'none';
+      }
+    }
+    function showOnlineUsers() {
+      const usersDiv = document.getElementById('users');
+      const transDiv = document.getElementById('transactions');
+      const historyUsersDiv = document.getElementById('historyUsers');
+      const historyStoressDiv = document.getElementById('historyStores');
+
+      usersDiv.style.display = 'block';
+      transDiv.style.display = 'none';
+      historyUsersDiv.style.display = 'none';
+      historyStoressDiv.style.display = 'none';
+    }
+    function showTransactions() {
+      // const usersDiv = document.getElementById('users');
+      // const transDiv = document.getElementById('transactions');
+      const historyUsersDiv = document.getElementById('historyUsers');
+      const historyStoressDiv = document.getElementById('historyStores');
+      const selectElement = document.getElementById('userStoreSelect');
+      const selectedValue = selectElement.value;
+
+      if(selectedValue == "1"){               //user
+        historyUsersDiv.style.display = 'block';
+        historyStoressDiv.style.display = 'none';
+      } else {                                //store
+        historyUsersDiv.style.display = 'none';
+        historyStoressDiv.style.display = 'block';
+      }
+      
+    }
+    // const adminForm = document.getElementById('adminForm');
+    // const actionUrl = "{% url 'mainApp:adminPage' %}?userStoreSelect=" + selectedValue;
+    // adminForm.action = actionUrl;
+  </script>
 </body>
 
 {% endblock %}

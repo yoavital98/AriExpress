@@ -756,7 +756,7 @@ def nominateUser(request, storename):
                     messages.success(request, ("A new user has been nominated to be Manager."))
                     return redirect('mainApp:mystores')
                 else:
-                    messages.success(request, ("Error nominating a user to be Manager"))
+                    messages.success(request, (f"Error {res.getReturnValue()}"))
                     return redirect('mainApp:mystores')
             # else:
             #     return render(request, 'nominateUser.html',
@@ -833,11 +833,11 @@ def viewDiscounts(request, storename):
     if permissionCheck(username, storename, permissionName):
         if 'removeDiscount' in request.POST:
             discount_id = request.POST.get('discount_id')
-            # actionRes = service.removeDiscount()
-            # if actionRes.getStatus():
-            #     messages.success(request, (f"Discount {discount_id} has been removed."))
-            # else:
-            #     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            actionRes = service.removeDiscount(storename, username, discount_id)
+            if actionRes.getStatus():
+                messages.success(request, (f"Discount {discount_id} has been removed."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
 
 
@@ -855,11 +855,12 @@ def viewDiscounts(request, storename):
 
 
 def viewPurchasePolicies(request, storename):
-    return render(request, 'viewPurchasePolicies.html', {'storename': storename})
+    # return render(request, 'viewPurchasePolicies.html', {'storename': storename})
 
     service = Service()
     permissionName = 'Policies'
     username = request.user.username
+    policies = {}
     if permissionCheck(username, storename, permissionName):
         actionRes = service.getAllPurchasePolicies(storename)
         if actionRes.getStatus():
@@ -883,6 +884,7 @@ def adminPage(request):
         onlinemembers = {}
         offlinemembers = {}
         storesInfoDict = {}
+        data_type = 0
         historyInfo = None
         resOnline = service.getAllOnlineMembers(request.user.username)
         resOffline = service.getAllOfflineMembers(request.user.username)
@@ -910,6 +912,7 @@ def adminPage(request):
                 if actionRes.getStatus():
                     historyInfo = actionRes.getReturnValue()
                     historyInfo = ast.literal_eval(str(historyInfo))
+                    data_type = 1
 
             else:
                 store = request.POST.get('selectStore')
@@ -918,9 +921,13 @@ def adminPage(request):
                 if actionRes.getStatus():
                     historyInfo = actionRes.getReturnValue()
                     historyInfo = ast.literal_eval(str(historyInfo))
+                    data_type = 2
+                    for trans in historyInfo:
+                        trans['products'] = eval(trans['products'])
+                        # print(trans['products'])
+                        # print(type(trans['products']))
 
-
-        return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo})
+        return render(request, 'adminPage.html', {'allusers': allusers, 'allstores': storesInfoDict, 'onlinemembers': onlinemembers, 'offlinemembers': offlinemembers, 'historyInfo': historyInfo, 'data_type': data_type})
     else:
         messages.success(request, ("Cannot access ADMIN area because you are not an admin."))
         return redirect('mainApp:mainpage')
