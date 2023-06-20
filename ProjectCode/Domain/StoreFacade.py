@@ -683,8 +683,8 @@ class StoreFacade:
 
     def getPermissionsAsJson(self, store_name, requester_username):
         cur_store: Store = self.stores[store_name]
-        if not self.checkIfUserIsLoggedIn(requester_username):
-            raise Exception("User is not logged in")
+        # if not self.checkIfUserIsLoggedIn(requester_username):
+        #     raise Exception("User is not logged in")
         if cur_store is None:
             raise Exception("No such store exists")
         permissions: dict = cur_store.getPermissionsAsJson(requester_username)
