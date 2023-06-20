@@ -235,10 +235,13 @@ class StoreFacade:
     # user_name could be an entranceID or username, depends on what it is it will return the correct User
     def getUserOrMember(self, user_name):  # TODO: change the if's because checking the keys somehow dosent work
         if self.members.keys().__contains__(str(user_name)):
-            if self.online_members.keys().__contains__(str(user_name)):
-                return self.members.get(user_name)
+            if not self.members.isBanned(user_name):
+                if self.online_members.keys().__contains__(str(user_name)):
+                    return self.members.get(user_name)
+                else:
+                    raise Exception("user is not logged in")
             else:
-                raise Exception("user is not logged in")
+                raise Exception("this member is banned")
         else:
             if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(str(user_name))
@@ -280,19 +283,22 @@ class StoreFacade:
                 return self.logInAsAdmin(username, password)
             # check if the member is an actual user
             if self.members.keys().__contains__(username):
-                if not self.online_members.__contains__(username):
-                    existing_member: Member = self.members[username]
-                    if password_validator.ConfirmPassword(password, existing_member.get_password()):
-                        existing_member.logInAsMember()
-                        existing_member.setEntranceId(str(self.nextEntranceID))
-                        self.nextEntranceID += 1
-                        self.online_members[username] = existing_member  # indicates that the user is logged in
-                        return existing_member
-                        # return DataMember(existing_member)
+                if not self.members.isBanned(username):
+                    if not self.online_members.__contains__(username):
+                        existing_member: Member = self.members[username]
+                        if password_validator.ConfirmPassword(password, existing_member.get_password()):
+                            existing_member.logInAsMember()
+                            existing_member.setEntranceId(str(self.nextEntranceID))
+                            self.nextEntranceID += 1
+                            self.online_members[username] = existing_member  # indicates that the user is logged in
+                            return existing_member
+                            # return DataMember(existing_member)
+                        else:
+                            raise Exception("username or password does not match")
                     else:
-                        raise Exception("username or password does not match")
+                        raise Exception("user is already logged in")
                 else:
-                    raise Exception("user is already logged in")
+                    raise Exception("this member is banned")
             else:
                 raise Exception("username or password does not match")
 
