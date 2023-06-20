@@ -5,9 +5,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from ariExpressDjango import settings
+from django.views.defaults import page_not_found
 
 
 app_name = "mainApp"
+handler404 = 'mainApp.views.custom_404_view'
+
 
 urlpatterns = [
     path(r'', views.mainpage, name="mainpage"),
@@ -58,6 +61,7 @@ urlpatterns = [
     path(r'checkout_bid', views.checkout_bid, name='checkout_bid'),
     path(r'searchpage/', views.searchpage, name='searchpage'),
     path(r'userPurchaseHistory/', views.userPurchaseHistory, name='userPurchaseHistory'),
+    path('404/', page_not_found),
     
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -79,3 +79,5 @@ To run the server, follow these steps (works on Linux and MacOS):
 
 - The configs are inserted in apps.py in the MainApp folder. Make sure to load the right JSON file.
 
+- When the remote DB disconnects, the user will receive a 404 page.
+
