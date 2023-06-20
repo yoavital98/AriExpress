@@ -32,6 +32,7 @@ class TestStoreFacade(TestCase):
         config = "../../default_config.json"
         with open(config, 'r') as f:
             config_data: dict = json.load(f)
+
         self.store_facade = StoreFacade(config_data, send_notification_call=send_notification_lambda)
 
         #self.store_facade = StoreFacadDe({})

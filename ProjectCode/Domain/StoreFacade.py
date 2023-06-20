@@ -47,6 +47,7 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
 from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
+from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
 from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
@@ -117,8 +118,10 @@ class StoreFacade:
         # Services
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
-        self.nextEntranceID = 0  # guest ID counter
-        self.bid_id_counter = 0  # bid counter
+        self.nextEntranceID = self.onlineGuests.get_highest_id()  # guest ID counter
+
+        temp_rep = BidsRepository()
+        self.bid_id_counter = temp_rep.get_highest_id()  # bid counter
 
 
         # Admin
@@ -433,7 +436,7 @@ class StoreFacade:
                 store: Store = self.stores[store_name]
                 store.requestBid(bid)
                 self.message_controller.send_notification(username, "Bid request was placed", "", datetime.now())
-                for staff_member in store.getAllStaffMembersNames():
+                for staff_member in store.getAllStaffMembers():
                     self.message_controller.send_notification(staff_member, "Bid request was placed", "", datetime.now())
                 return bid
         # return DataBid(bid)
@@ -1013,6 +1016,7 @@ class StoreFacade:
             if cur_store.get_accesses().get(username) is not None:
                 stores_list.append(cur_store)
         return stores_list
+
 
     # ==================  Messages  ==================#
 
