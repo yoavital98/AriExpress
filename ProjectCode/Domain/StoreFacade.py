@@ -427,17 +427,24 @@ class StoreFacade:
             store: Store = self.stores.get(store_name)
             if store is None:
                 raise Exception("Store doesnt exists")
+            print("ok2")
             with self.lock_for_adding_and_purchasing:
                 answer = store.checkProductAvailability(product_id, quantity)
             if answer is not None:
+                print("ok3")
                 bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
                 self.bid_id_counter += 1
+                print("ok4")
                 existing_member.addBidToBasket(bid, store)
+                print("ok5")
                 store: Store = self.stores[store_name]
+                print("ok6")
                 store.requestBid(bid)
+                print("ok7")
                 self.message_controller.send_notification(username, "Bid request was placed", "", datetime.now())
                 for staff_member in store.getAllStaffMembers():
                     self.message_controller.send_notification(staff_member, "Bid request was placed", "", datetime.now())
+                print("ok8")
                 return bid
         # return DataBid(bid)
 
