@@ -23,13 +23,8 @@
 						{% csrf_token %}
 					<input type="hidden" name="policyRulesData" value="{{ policyRulesData|safe }}">
 					<select class="form-select mb-3" aria-label="Default select example" name="purchase_policy">
-						<option selected disabled>Purchase Policy Type</option>
-						<option value="1" {% if purchase_policy == "PurchasePolicy" %} selected {% endif %}>PurchasePolicy</option>
-						<option value="2" {% if purchase_policy == "idk2" %} selected {% endif %}>idk2</option>
-						<option value="3" {% if purchase_policy == "idk3" %} selected {% endif %}>idk3</option>
-						<option value="4" {% if purchase_policy == "idk4" %} selected {% endif %}>idk4</option>
-						<option value="5" {% if purchase_policy == "idk5" %} selected {% endif %}>idk5</option>
-
+						<option disabled>Purchase Policy Type</option>
+						<option selected value="1" {% if purchase_policy == "PurchasePolicy" %} selected {% endif %}>PurchasePolicy</option>
 					</select>					
 
 					<select class="form-select mb-3" aria-label="Default select example" name="levelType" onchange="handleLevelChange(this)">
@@ -79,8 +74,11 @@
 				<div class="card-body">
 					<select class="form-select mb-3" aria-label="Default select example" name="ruleType">
 						<option selected disabled>Rule Type</option>
-						<option value="alcohol_restriction">Alcohol Restriction</option>
-						<option value="amount_of_product">amount_of_product</option>
+						<option value="basket_total_price">Basket total price</option>
+						<option value="day_of_the_week">Day of the week</option>
+						<option value="amount_of_product">Amount of product</option>
+						<option value="amount_of_category">Amount of category</option>
+						<option value="username_restrictions">Username restrictions</option>
 					</select>
 					<div class="form-floating mb-3">
 						<input type="text" class="form-control" id="floatingInput" name="ruleProductName">

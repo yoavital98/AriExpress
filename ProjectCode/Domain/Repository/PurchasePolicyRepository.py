@@ -66,7 +66,7 @@ class PurchasePolicyRepository(Repository):
         return policy
 
     def remove(self, pk):
-        policy_entry = self.model.get(PurchasePolicyModel.discount_id == pk)
+        policy_entry = self.model.get(PurchasePolicyModel.policy_id == pk)
         policy_entry.delete_instance()
         return True
 
