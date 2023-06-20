@@ -159,7 +159,7 @@ class Test_Use_Cases_2_1(TestCase):
         self.assertTrue(guest0_cart == {})
         self.assertTrue(guest1_cart == {})
         # (3)
-        # feliks_product_1_quantity = self.service.getProduct("Feliks&Sons", 1, "Feliks").getReturnValue()["quantity"]
+        feliks_product_1_quantity = self.service.getProduct("Feliks&Sons", 1, "Feliks").getReturnValue()["quantity"]
         print(self.service.getProduct("Robin&Daughters", 1, "Robin").getReturnValue()["name"])
         robin_product_1_quantity = self.service.getProduct("Robin&Daughters", 1, "Robin").getReturnValue()["quantity"]
         robin_product_2_quantity = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()["quantity"]
@@ -206,10 +206,13 @@ class Test_Use_Cases_2_1(TestCase):
 
     # Use Case 2.1.3
     def test_registration_to_the_system_success(self):
+        with self.assertRaises(Exception):
+            res = self.service.logIn("username22", "password1")
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
         self.assertTrue(self.service.getMemberInfo("admin", "username22")["name"] == "username22")
-
+        res = self.service.logIn("username22", "password1")
+        self.assertTrue(res.getStatus())
     def test_registration_to_the_system_failure(self):
         res = self.service.register("username22", "password1", "email")
         self.assertTrue(res.getStatus())
@@ -436,7 +439,7 @@ class Test_Use_Case_2_2(TestCase):
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
         with self.assertRaises(Exception):
-            self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/20", "Amiel Saad", "555", "123456789",
+            self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/20", "Amiel Saad", "986", "123456789",
                                       "be'er sheva", "beer sheva", "israel", "1234152")
         self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(0).get_quantity() == 30)
 
