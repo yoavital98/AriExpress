@@ -26,20 +26,18 @@ class RulePurchaseComp(LogicComp):
 
 
     def checkIfSatisfy(self, product, basket, total_price, user=None):
-        if user is None: #User policies
-            if self.rule_type == "amount_of_product":
-                return self.productAmount(basket)
-            elif self.rule_type == "basket_total_price":
-                return self.compareWithOperator(total_price)
-            elif self.rule_type == "day_of_the_week":
-                return self.dayOfTheWeek()
-            elif self.rule_type == "amount_of_category":
-                return self.amountOfCategory(basket)
-        elif basket is None or total_price is None: #Basket policies
-            if self.rule_type == "alcohol_restriction":
-                return True
-            elif self.rule_type == "username_restrictions":
-                return self.usernameRestriction(user)
+        if self.rule_type == "amount_of_product":
+            return self.productAmount(basket)
+        elif self.rule_type == "basket_total_price":
+            return self.compareWithOperator(total_price)
+        elif self.rule_type == "amount_of_category":
+            return self.amountOfCategory(basket)
+        elif self.rule_type == "alcohol_restriction":
+            return True
+        elif self.rule_type == "username_restrictions":
+            return self.usernameRestriction(user)
+        elif self.rule_type == "day_of_the_week":
+            return self.dayOfTheWeek()
         raise Exception("No such rule type exists")
 
 
