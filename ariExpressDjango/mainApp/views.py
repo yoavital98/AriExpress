@@ -228,6 +228,15 @@ def viewStoreStaff(request, storename):
             if actionRes.getStatus():
                 staff = actionRes.getReturnValue()['accesses']
                 staff = ast.literal_eval(str(staff))
+                for user in staff.keys():
+                    actionRes2 = service.getPermissionsAsJson(storename, username)
+                    if actionRes2.getStatus():
+                        permission = ast.literal_eval(str(actionRes2.getReturnValue()))
+                        staff[user]["permissions"] = permission
+
+
+
+            
             return render(request, 'viewStoreStaff.html', {'storename': storename, 'staff': staff})
         else:
             messages.success(request, (f"Error: {username} doesn't have {permissionName} permission"))
