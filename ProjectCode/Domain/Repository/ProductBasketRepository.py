@@ -47,7 +47,8 @@ class ProductBasketRepository(Repository):
         try:
             if pk is None:
                 products = []
-                query = self.model.select()
+                basket_entry = BasketModel.get(BasketModel.user_name == self.user_name, BasketModel.store == self.store_name)
+                query = self.model.select().where(self.model.basket == basket_entry)
                 for product_basket_entry in query:
                     product_basket = self.__createDomainObject(product_basket_entry)
                     products.append(product_basket)

@@ -53,20 +53,20 @@ class BasketRepository(Repository):
 
     def __createDomainObject(self, basket_entry):
         basket = Basket(basket_entry.user_name, Store(basket_entry.store.store_name))
-        for product_basket_entry in basket_entry.products:
-            product_entry = product_basket_entry.product_model
-            product = Product(
-                product_entry.product_id,
-                product_entry.name,
-                product_entry.quantity,
-                product_entry.price,
-                product_entry.categories
-            )
-            basket.products[product.product_id] = (
-                product,
-                product_basket_entry.quantity,
-                product_basket_entry.price
-            )
+        # for product_basket_entry in basket_entry.products:
+        #     product_entry = product_basket_entry.product_model
+        #     product = Product(
+        #         product_entry.product_id,
+        #         product_entry.name,
+        #         product_entry.quantity,
+        #         product_entry.price,
+        #         product_entry.categories
+        #     )
+        #     basket.products[product.product_id] = (
+        #         product,
+        #         product_basket_entry.quantity,
+        #         product_basket_entry.price
+        #     )
         return basket
 
     def add(self, key, basket: Basket):
