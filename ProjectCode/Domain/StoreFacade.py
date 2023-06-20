@@ -501,7 +501,7 @@ class StoreFacade:
     def productFilterByFeatures(self, featuresDict, username):
         search_results = TypedDict(str, list)
         for cur_store in self.stores.values():
-            product_list = cur_store.filterProductByFeatures(featuresDict, username)
+            product_list = cur_store.searchProductByFeatures(featuresDict)
             if len(product_list) > 0:
                 json_product_list = [prod.toJson() for prod in product_list]
                 search_results[cur_store.get_store_name()] = json_product_list
