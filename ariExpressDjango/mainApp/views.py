@@ -56,10 +56,10 @@ def mainpage(request):
     # ------------------------------------------------------------------------------
     # --------------------------TODO: DELETE THESE LINES----------------------------
     # from django.contrib.auth.models import User
-    # Service().logInFromGuestToMember(0, "admin", "12341234")
-    # user = authenticate(request, username='admin', password='12341234')
-    # loginFunc(request, user)
-    # request.session['guest'] = 0
+    Service().logInFromGuestToMember(0, "aaa", "asdf1233")
+    user = authenticate(request, username='aaa', password='asdf1233')
+    loginFunc(request, user)
+    request.session['guest'] = 0
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------
@@ -813,11 +813,11 @@ def viewDiscounts(request, storename):
     if permissionCheck(username, storename, permissionName):
         if 'removeDiscount' in request.POST:
             discount_id = request.POST.get('discount_id')
-            # actionRes = service.removeDiscount()
-            # if actionRes.getStatus():
-            #     messages.success(request, (f"Discount {discount_id} has been removed."))
-            # else:
-            #     messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
+            actionRes = service.removeDiscount(storename, username, discount_id)
+            if actionRes.getStatus():
+                messages.success(request, (f"Discount {discount_id} has been removed."))
+            else:
+                messages.success(request, (f"Error: {actionRes.getReturnValue()}"))
 
 
 
