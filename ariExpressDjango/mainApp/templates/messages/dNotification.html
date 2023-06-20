@@ -20,7 +20,11 @@
 </div>
 {% endblock modal-body %}
 
+{% block close %}
+{% endblock close %}
+
 <!--Modal footer-->
 {% block modal-footer %}
+<a href="{% url 'mainApp:inbox' %}" class="btn btn-outline-dark btn-sm "> close </a>
 <a href="/delete_notification/{{ notification.id }}" class="btn btn-outline-danger btn-sm btn-modal"> Delete</a>
 {% endblock modal-footer %}

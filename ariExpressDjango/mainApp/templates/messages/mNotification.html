@@ -27,11 +27,5 @@
 <!--Modal footer-->
 {% block modal-footer %}
 <a href="mark_notification_as_read/{{ notification.id }}" class="btn text-light btn-sm btn-modal" style="background-color: #0074fe;">Yes</a>
-<button type="button" class="btn btn-outline-dark btn-sm " id="closeAllModals" data-bs-dismiss="modal" aria-label="Close"> No </button>
-{% comment %} <script>
-    $('#closeAllModals').on('click', function() {
-        $(this).closest('.modal').modal('hide');
-    });
-</script> {% endcomment %}
-
+<a href="{% url 'mainApp:inbox' %}" class="btn btn-outline-dark btn-sm "> No </a>
 {% endblock modal-footer %}
