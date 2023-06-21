@@ -67,6 +67,8 @@
 },{
   "register": {"args": ["Son_F", "passwordFFF", "sonf@gmail.com"]}
 },{
+  "logIn": {"args": ["Son_A", "passwordAAA"]}
+},{
   "nominateStoreOwner": {"args": ["Feliks", "Son_A", "Feliks&Sons"]}
 },{
   "nominateStoreOwner": {"args": ["Feliks", "Son_B", "Feliks&Sons"]}

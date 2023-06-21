@@ -336,7 +336,7 @@ class Service:
             products = self.store_facade.productFilterByFeatures(featuresDict, username)
             logging.debug(
                 f"fetching all the products within the features '{str(featuresDict)}'. By username: {username}.")
-            return Response(JsonSerialize.toJsonAttributes(products), True)
+            return Response(json.dumps(products), True)
         except Exception as e:
             logging.error(f"productFilterByFeatures Error: {str(e)}. By username: '{username}'")
             return Response(e, False)

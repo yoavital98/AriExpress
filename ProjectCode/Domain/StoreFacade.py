@@ -427,7 +427,7 @@ class StoreFacade:
                 store: Store = self.stores[store_name]
                 store.requestBid(bid)
                 self.message_controller.send_notification(username, "Bid request was placed", "", datetime.now())
-                for staff_member in store.getAllStaffMembersNames():
+                for staff_member in store.getAllStaffMembers():
                     self.message_controller.send_notification(staff_member, "Bid request was placed", "", datetime.now())
                 return bid
         # return DataBid(bid)
