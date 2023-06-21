@@ -1,6 +1,6 @@
 from peewee import *
-# from playhouse.mysql_ext import *
-from playhouse.postgres_ext import *
+from playhouse.mysql_ext import *
+# from playhouse.postgres_ext import *
 
 from ProjectCode.DAL.StoreModel import StoreModel
 from ProjectCode.DAL.database_conf import DatabaseConf
