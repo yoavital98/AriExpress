@@ -28,6 +28,7 @@
       </thead>
       <tbody>
           {% for bid_id, bid in bids.items %}
+          {{bid}}
           <tr>
               <td>{{ bid_id }}</td>
               <td>{{ bid.username }}</td>

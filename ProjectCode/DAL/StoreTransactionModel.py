@@ -11,7 +11,7 @@ class StoreTransactionModel(Model):
         db_table = 'store_transaction'
 
 
-    transaction_id = IntegerField(primary_key=True)
+    transaction_id = IntegerField()
     supply_id = IntegerField()
     store_name = CharField()
     user_name = CharField(max_length=100)

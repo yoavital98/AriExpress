@@ -3,13 +3,15 @@ import logging
 import os
 import inspect
 import pickle
+
+import peewee
 from peewee import *
 
-
+from ProjectCode.DAL.database_conf import DatabaseConf
 from ProjectCode.Domain.Helpers.JsonSerialize import JsonSerialize
 from ProjectCode.Service.Response import Response
 from ProjectCode.Domain.StoreFacade import StoreFacade
-
+from ProjectCode.DAL.database_conf import DatabaseConf
 
 # ------------------------------------ loadFileInit ------------------------------------ #
 @staticmethod
@@ -42,8 +44,8 @@ def loadConfigInit(load_file):
         raise Exception("PaymentService doesn't exist in load config")
     if 'SupplyService' not in config_data.keys() or config_data["SupplyService"] == "":
         raise Exception("SupplyService doesn't exist in load config")
-    if 'Database' not in config_data.keys():
-        raise Exception("Database doesn't exist in load config")
+    # if 'Database' not in config_data.keys():
+    #     raise Exception("Database doesn't exist in load config")
     if 'Admins' not in config_data.keys() or config_data["Admins"] == "":
         raise Exception("Admins doesn't exist in load config")
     admins : dict = config_data["Admins"]
@@ -52,6 +54,7 @@ def loadConfigInit(load_file):
     return config_data
 
 # ------------------------------------------------------------------------------------- #
+
 
 class Service:
     _instance = None
@@ -989,3 +992,12 @@ class Service:
         except Exception as e:
             logging.error(f"checkIfBanned Error: {str(e)}.")
             return Response(e, False)
+        
+    def ping(self):
+        try:
+            db = DatabaseConf.database
+            if db.is_closed():
+                db.connect()
+            return True
+        except peewee.OperationalError:
+            return False

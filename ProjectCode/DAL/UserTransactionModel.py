@@ -9,7 +9,7 @@ class UserTransactionModel(Model):
         database = DatabaseConf.database
         db_table = 'user_transaction'
 
-    transaction_id = IntegerField(primary_key=True)
+    transaction_id = IntegerField()
     supply_id = IntegerField()
     username = CharField(max_length=100)
     overall_price = DoubleField()

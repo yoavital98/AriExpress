@@ -103,7 +103,7 @@ button.addtocart-btn:hover , button.addtocart-btn:active{
                       <button class="btn btn-outline-dark" name="addToCart" data-bs-toggle="modal" data-bs-target="#addToCartModal{{storename}}{{product.product_id}}"  data-storename="{{ storename }}" data-product="{{ product }}">Add to cart</button>
                       {% include 'products/addToCart.html' with storename=storename product=product %}
                       </div>
-                      {% if "Bid" in permissions %}
+                      {% if request.session.guest is 0 %}
                       <div class="btn-group-sm" role="group" aria-label="Basic example">
                         <form method="post" action="" class="d-flex">
                           {% csrf_token %}

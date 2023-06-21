@@ -47,6 +47,7 @@ from ProjectCode.Domain.MarketObjects.UserObjects.Member import Member
 import threading
 
 from ProjectCode.Domain.Repository.AdminRepository import AdminRepository
+from ProjectCode.Domain.Repository.BidsRepository import BidsRepository
 from ProjectCode.Domain.Repository.GuestRepository import GuestRepository
 from ProjectCode.Domain.Repository.MemberRepository import MemberRepository
 from ProjectCode.Domain.Repository.StoreRepository import StoreRepository
@@ -94,17 +95,17 @@ class StoreFacade:
         # for m in model_list:
         #    m.delete().execute()
 
-        self.db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-                         ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel,
-                        PurchasePolicyModel,
-                        UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
-                        StoreTransactionModel,
-                        ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
-        self.db.create_tables(
-             [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
-              ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
-              StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
-              ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
+        # self.db.drop_tables([SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #                  ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel,
+        #                 PurchasePolicyModel,
+        #                 UserTransactionModel, StoreOfUserTransactionModel, ProductUserTransactionModel,
+        #                 StoreTransactionModel,
+        #                 ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
+        # self.db.create_tables(
+        #      [SystemModel, ProductModel, StoreModel, AccessModel, AccessStateModel, MemberModel, BasketModel,
+        #       ProductBasketModel, DiscountModel, AdminModel, GuestModel, BidModel, BidsRequestModel, PurchasePolicyModel, UserTransactionModel,
+        #       StoreOfUserTransactionModel, ProductUserTransactionModel, StoreTransactionModel,
+        #       ProductStoreTransactionModel, MessageModel, NotificationModel, NominationAgreementModel])
 
         self.lock_for_adding_and_purchasing = threading.Lock()  # lock for purchase
         self.admins = AdminRepository() # dict of admins
@@ -117,8 +118,10 @@ class StoreFacade:
         # Services
         # Data
         self.accesses = TypedDict(str, Access)  # optional TODO check key type
-        self.nextEntranceID = 0  # guest ID counter
-        self.bid_id_counter = 0  # bid counter
+        self.nextEntranceID = self.onlineGuests.get_highest_id()  # guest ID counter
+
+        temp_rep = BidsRepository()
+        self.bid_id_counter = temp_rep.get_highest_id()  # bid counter
 
 
         # Admin
@@ -425,17 +428,24 @@ class StoreFacade:
             store: Store = self.stores.get(store_name)
             if store is None:
                 raise Exception("Store doesnt exists")
+            print("ok2")
             with self.lock_for_adding_and_purchasing:
                 answer = store.checkProductAvailability(product_id, quantity)
             if answer is not None:
+                print("ok3")
                 bid: Bid = Bid(self.bid_id_counter, username, store_name, offer, product_id, quantity)
                 self.bid_id_counter += 1
+                print("ok4")
                 existing_member.addBidToBasket(bid, store)
+                print("ok5")
                 store: Store = self.stores[store_name]
+                print("ok6")
                 store.requestBid(bid)
+                print("ok7")
                 self.message_controller.send_notification(username, "Bid request was placed", "", datetime.now())
-                for staff_member in store.getAllStaffMembersNames():
+                for staff_member in store.getAllStaffMembers():
                     self.message_controller.send_notification(staff_member, "Bid request was placed", "", datetime.now())
+                print("ok8")
                 return bid
         # return DataBid(bid)
 
@@ -1014,6 +1024,7 @@ class StoreFacade:
             if cur_store.get_accesses().get(username) is not None:
                 stores_list.append(cur_store)
         return stores_list
+
 
     # ==================  Messages  ==================#
 
