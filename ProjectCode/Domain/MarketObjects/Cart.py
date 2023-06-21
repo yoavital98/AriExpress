@@ -234,7 +234,11 @@ class Cart:
                 basket: Basket = self.baskets.get(store_name)
                 store: Store = basket.get_Store()
                 product: Product = store.getProductById(bid.get_product_id(), "")
-                single_product_dict = {store_name: product}
+                prod_list = [product]
+                single_product_dict = {store_name: prod_list}
+                # set of tuples (product_id, product_name, quantity, price))
+                single_product_dict_for_store = [(product.get_product_id(), product.get_name(), bid.get_quantity(),product.get_price())]
+                single_product_dict = {store_name: single_product_dict_for_store}
                 transaction_id = payment_service.pay(card_number, exp_month, exp_year, card_user_full_name, ccv,
                                                      card_holder_id)
                 supply_id = supply_service.dispatch_supply(card_user_full_name, address, city, country, zipcode)
@@ -242,7 +246,7 @@ class Cart:
                 message_header = "Bid Purchase Received. Transaction_ID: " + str(transaction_id) + " Supply_ID: " + str(
                     supply_id)
                 transaction_history.addNewUserTransaction(transaction_id, supply_id, user_name, single_product_dict, bid.get_offer())
-                transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,  single_product_dict, bid.get_offer())
+                transaction_history.addNewStoreTransaction(transaction_id, supply_id, user_name, store_name,  single_product_dict_for_store, bid.get_offer())
                 message_controller.send_notification(user_name, message_header, single_product_dict,datetime.now())
                 for staff_member in store.getAllStaffMembers():
                     message_controller.send_notification(staff_member, message_header, single_product_dict, datetime.now())

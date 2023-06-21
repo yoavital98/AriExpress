@@ -520,10 +520,9 @@ class Store:
         for access in self.__accesses.values():
             if access.canManageBids():
                 username = access.get_user().get_username()
-                if self.__bids_requests.get(username) is None:
-                    self.__bids_requests[username] = bid
-                    bid.increment_left_to_approve()
-                    self.__bids.increment_left_to_approve(bid.bid_id)
+                self.__bids_requests[username] = bid
+                bid.increment_left_to_approve()
+                self.__bids.increment_left_to_approve(bid.bid_id)
 
 
     def approveBid(self, username, bid_id):
