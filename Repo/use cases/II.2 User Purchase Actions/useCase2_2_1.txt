@@ -1,0 +1,20 @@
+title 2.2.1: information fetching
+
+actor Guest1
+participant Service
+participant StoreFacade
+participant User1
+
+note over Guest1: Guest can see details about stores and products
+Guest1->Service:loginAsGuest()
+Guest1->Service:getStoresBasicInfo()
+Service->StoreFacade:getStores()
+StoreFacade->StoreModel:getStores()
+StoreModel->StoreFacade:store
+StoreFacade->Service: store
+Service->Guest1: store_res
+note over Guest1: now he can choose a specific store and see its products
+Guest1->Service:getStoreProductsInfo("Feliks&Sons")
+Service->StoreFacade:getStores()[storename]
+StoreFacade->Service: products
+Service->Guest1: products_res

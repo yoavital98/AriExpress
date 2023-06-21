@@ -1,0 +1,26 @@
+title Admin requests Infromation about offline and online members
+
+
+
+actor amiel
+actor Admin
+
+
+
+participant Service
+participant StoreFacade
+
+
+Admin->Service: logIn("admin", "12341234")
+amiel->Service: logIn("Amiel", "password111")
+Admin->Service: getAllOnlineMembers("admin")
+
+note over Admin: wants to get all the online members
+Service->StoreFacade: getAllOnlineMembers("admin")
+StoreFacade->StoreFacade:if self.admins.__contains__(user_name):
+StoreFacade->StoreFacade: create List()
+loop for member in online_members
+StoreFacade->StoreFacade:member_list.append(member) to list
+end
+StoreFacade-->Service: return member_list
+Service-->Admin: response

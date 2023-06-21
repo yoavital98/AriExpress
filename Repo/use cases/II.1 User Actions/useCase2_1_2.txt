@@ -1,0 +1,38 @@
+title 2.2: Guest can leave the system
+
+actor Guest1
+participant Service
+participant StoreFacade
+participant User1
+participant User2
+
+note over Guest1: Guest logs out the system. \nAs he leaves, he loses his cart record
+Guest1->Service:logInAsGuest()
+Guest1->Service:addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+Service->StoreFacade:User1 = getUser(guest1_ID)
+StoreFacade->User1:getCart(guest1_ID)
+User1->Cart1:getCart()
+User1->StoreFacade:Cart
+StoreFacade->Service:Cart
+
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Cart1->StoreFacade: success_res
+StoreFacade->Service: success_res
+Service->Guest1: success_msg and real time notification
+
+Guest1->Service:logOutAsGuest()
+note over Guest1: In the new login, he will get a new\ncart without his previous produtcts
+Guest1->Service:logInAsGuest()
+Guest1->Service:addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+Service->StoreFacade:User2 = getUser(guest1_ALT_ID)
+StoreFacade->User2:getCart(guest1_ALT_ID)
+User2->Cart2:getCart()
+User2->StoreFacade:Cart
+StoreFacade->Service:Cart
+
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart2:add_Product(username, store, productID, product, quantity)
+Cart2->StoreFacade: success_res
+StoreFacade->Service: success_res
+Service->Guest1: success_msg and real time notification

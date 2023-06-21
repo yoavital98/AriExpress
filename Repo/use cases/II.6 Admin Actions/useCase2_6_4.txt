@@ -1,0 +1,30 @@
+title Admin requests Purchase history of Store
+
+
+
+actor guest
+actor Admin
+
+
+
+
+
+participant Service
+participant StoreFacade
+
+
+Admin->Service: logIn("admin", "12341234")
+guest->Service: loginAsGuest()
+guest->Service: addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+guest->Service: addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 5) 
+guest->Service: addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 5) 
+guest->Service:purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789", "some_address", "be'er sheva", "Israel", "1234567") 
+Service->StoreFacade: purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789", "some_address", "be'er sheva", "Israel", "1234567") 
+StoreFacade -->Service : res
+Service -->guest : res
+note over Admin: wants to check feliks&sons purchaseHistory 
+Admin ->Service: getStorePurchaseHistory("admin", "Feliks&Sons")
+Service->StoreFacade:getStorePurchaseHistory("admin", "Feliks&Sons")
+StoreFacade->StoreFacade: self.admins.keys().__contains__(requesterID)
+StoreFacade-->Service: TransactionHistory
+Service-->Admin: Response

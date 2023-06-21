@@ -1,0 +1,33 @@
+title 2.6.2: Admin can ban a (permission free) Member and return him
+
+actor Admin
+actor Amiel
+participant Service
+participant StoreFacade
+
+note over Admin: Admin wants to ban Amiel.\n@pre: Amiel is part of Members AND has no permissions \n@post: Amiel is no longer part of Members \n             but BannedMembers
+Admin->Service: logIn("admin", "12341234")
+Amiel->Service: logIn("Amiel", "password111")
+Admin->Service: removePermissionFreeMember("admin", "Amiel")
+Service->StoreFacade: removePermissionFreeMember(username, memberName)
+StoreFacade->StoreFacade: logOut(memberName)
+StoreFacade->MessageController: sendNotificationToUser(memberName, "BAN", "You have been banned from the system", datetime.now())
+StoreFacade->StoreFacade: online_members.remove(memberName)
+StoreFacade->StoreFacade: banned_members[memberName] = banned_member
+StoreFacade->Service: banned_member
+Service->Admin: success_res
+Amiel->Service: logIn("Amiel", "password111")
+Service->StoreFacade: logIn(username, password)
+StoreFacade->StoreFacade:  self.members.isBanned(username)
+StoreFacade->Service: Exception
+Service->Amiel: fail_res
+note over Admin: Admin wants to cancel the ban.\n@pre: Amiel is part of BannedMembers \n@post: Amiel is no longer part of BannedMembers \n             but Members
+Admin->Service: returnPermissionFreeMember("admin", "Amiel")
+Service->StoreFacade: returnPermissionFreeMember(username, memberName)
+StoreFacade->MessageController: sendNotificationToUser(memberName, "UNBAN", "Your ban has been lifted", datetime.now())
+StoreFacade->StoreFacade: banned_members.remove(memberName)
+StoreFacade->StoreFacade: members[memberName] = returned_member
+StoreFacade->Service: returned_member
+Service->Admin: success_res
+Amiel->Service: logIn("Amiel", "password111")
+Service->Amiel: success_res

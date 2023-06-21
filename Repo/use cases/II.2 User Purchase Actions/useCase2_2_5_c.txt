@@ -1,0 +1,67 @@
+title member wants to purchase regular bid
+
+
+actor Amiel
+actor Admin
+actor Feliks
+actor Sona
+
+actor Sonb
+actor Sonc
+actor Sond
+
+
+
+participant Service
+
+participant StoreFacade
+
+
+participant Store
+
+participant basket
+participant messanger
+
+
+Amiel->Service:service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)
+Service->StoreFacade:service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)
+StoreFacade->StoreFacade: getOnlineMemberOnly(username)
+StoreFacade->Store:checkProductAvailability(product_id, quantity)
+Store-->StoreFacade: boolean response
+StoreFacade->basket:addBidToBasket(bid, store)
+StoreFacade->Store: requestBid(Bid)
+Store->Store: bid has been added to the store system
+StoreFacade->messanger: send_notification(username, "Bid request was placed", "", datetime.now())
+loop for staffmember in store.getAllStaffMmebers()
+StoreFacade->messanger: send_notification(staff_member, "Bid request was placed", "", datetime.now())
+end 
+StoreFacade-->Service: bid
+Service-->Amiel: Bid
+
+
+
+
+
+Feliks->Service:approveBid("Feliks", "Feliks&Sons", 3)
+Sona->Service:approveBid("Feliks", "Feliks&Sons", 3)
+Sonb->Service:approveBid("Feliks", "Feliks&Sons", 3)
+Sonc->Service:approveBid("Feliks", "Feliks&Sons", 3)
+Sond->Service:rejectBid("Feliks", "Feliks&Sons", 3)
+Service->StoreFacade:rejectBid("Feliks", "Feliks&Sons", 3)
+StoreFacade->Store:rejectBid(username, bid_id)
+Store->Store: bid gets rejected
+loop for user_name in self.__bids_requests.keys_in_store(self.__store_name)
+Store->Store:if self.__bids_requests.contains_bid_for_user(bid_id, user_name):self.__bis_requests.delete_bid_from_user(user_name, bid_id)
+end
+Store->Messanger:send_notification(cur_bid.get_username(), "Bid request was rejected",f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now()) 
+loop for staff_member in self.getAllStaffMembers():
+Store->Messanger:send_notification(staff_member, "Bid request was rejected",f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. rejecting member: {username}",datetime.datetime.now())
+end 
+Store-->StoreFacade: rejected bid
+StoreFacade-->Service: rejected bid
+Service-->Sond: response
+
+
+
+
+
