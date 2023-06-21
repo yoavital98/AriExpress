@@ -73,3 +73,9 @@ class GuestRepository(Repository):
     def clear(self):
         for entry in self.model.select():
             entry.delete_instance()
+
+    def get_highest_id(self):
+        highest_id = self.model.select(fn.Max(self.model.entrance_id)).scalar()
+        if highest_id is None:
+            return 0
+        return int(highest_id)+1

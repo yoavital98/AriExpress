@@ -7,7 +7,10 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from ariExpressDjango import settings
 
 
+
+
 app_name = "mainApp"
+
 
 urlpatterns = [
     path(r'', views.mainpage, name="mainpage"),
@@ -59,6 +62,7 @@ urlpatterns = [
     path(r'searchpage/', views.searchpage, name='searchpage'),
     path(r'filter_search', views.filtersearchpage, name='filtersearchpage'),
     path(r'userPurchaseHistory/', views.userPurchaseHistory, name='userPurchaseHistory'),
+    path('404/', views.custom_404_view, name='custom_404_view'),
     
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

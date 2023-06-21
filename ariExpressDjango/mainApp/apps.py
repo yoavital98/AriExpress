@@ -12,8 +12,9 @@ class MainappConfig(AppConfig):
         # config = "../config_shahaf.json"
         # load_file = "../load_shahaf.json"
         # ---------------------------------
+        load_file = None
         config = "../default_config.json"
-        load_file = "../load.json"
+        # load_file = "../load.json"
         # load_file = "../load_ban.json"
         # load_file = "../load_purchaseCart.json"
         # load_file = "../load_withDiscounts.json"

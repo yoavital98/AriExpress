@@ -14,6 +14,7 @@ class Bid:
         self._left_to_approval -= 1
 
     def increment_left_to_approve(self):
+        print("ok1")
         self._left_to_approval += 1
 
     def get_left_to_approval(self):

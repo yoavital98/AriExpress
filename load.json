@@ -12,6 +12,9 @@
     "createStore": {"args": ["bbb", "TESTSTORE"]}
   },
   {
+    "addNewProductToStore": {"args": ["bbb", "TESTSTORE", "janana", "50", "9", "fruit"]}
+  },
+  {
     "logOut": {"args": ["bbb"]}
   },
   {
@@ -31,6 +34,12 @@
   },
   {
     "addNewProductToStore": {"args": ["aaa", "store123", "headphones", "10", "700", "electronics"]}
+  },
+  {
+    "addToBasket": {"args": ["aaa", "store123", "3", "1"]}
+  },
+  {
+    "addToBasket": {"args": ["aaa", "TESTSTORE", "1", "1"]}
   },
   {
     "logOut": {"args": ["aaa"]}
