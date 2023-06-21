@@ -391,15 +391,13 @@ class Test_Use_Case_2_2(TestCase):
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
-        with self.assertRaises(Exception):
-            self.service.editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 2, 7)
+        self.assertFalse(self.service.editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 2, 7).getStatus())
 
     def test_guest_editBasket_BasketDoesntExists_fail(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
-        with self.assertRaises(Exception):
-            self.service.editBasketQuantity(guest0_entrance_id, "Robin&Daughters", 1, 7)
+        self.assertFalse(self.service.editBasketQuantity(guest0_entrance_id, "Robin&Daughters", 1, 7).getStatus())
 
     # Use Case 2.2.5.a
 
@@ -407,80 +405,109 @@ class Test_Use_Case_2_2(TestCase):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 2, 5)  # "Cabbage_K", "30", "8", "Vegetables"
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
-        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"].__len__() == 2)
+        self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 2, 5)  # "Ketchup", "30", "15", "Sauces"
+        guest0_cart_baskets = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
+        self.assertTrue(guest0_cart_baskets.__len__() == 2)
         feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         robin_notification_count = self.service.getAllNotifications("Robin").getReturnValue().__len__()
-        feliks_item1_count = self.service.getStoreInfo("Feliks&Sons").getReturnValue()["items"][0]["quantity"]
-        robin_item1_count = self.service.getStoreInfo("Robin&Daughters").getReturnValue()["items"][0]["quantity"]
+        feliks_inventory = ast.literal_eval(self.service.getProductsByStore("Feliks&Sons", "Feliks").getReturnValue())
+        feliks_item1_count = feliks_inventory["1"]["quantity"]
+        feliks_item2_count = feliks_inventory["2"]["quantity"]
+        robin_inventory = ast.literal_eval(self.service.getProductsByStore("Robin&Daughters", "Robin").getReturnValue())
+        robin_item1_count = robin_inventory["1"]["quantity"]
+        robin_item2_count = robin_inventory["2"]["quantity"]
         self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                   "be'er sheva", "beer sheva", "israel", "1234152")
         feliks_notification_count_after = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
         robin_notification_count_after = self.service.getAllNotifications("Robin").getReturnValue().__len__()
-        feliks_item1_count_after = self.service.getStoreInfo("Feliks&Sons").getReturnValue()["items"][0]["quantity"]
-        robin_item1_count_after = self.service.getStoreInfo("Robin&Daughters").getReturnValue()["items"][0]["quantity"]
+        feliks_inventory = ast.literal_eval(self.service.getProductsByStore("Feliks&Sons", "Feliks").getReturnValue())
+        feliks_item1_count_after = feliks_inventory["1"]["quantity"]
+        feliks_item2_count_after = feliks_inventory["2"]["quantity"]
+        robin_inventory = ast.literal_eval(self.service.getProductsByStore("Robin&Daughters", "Robin").getReturnValue())
+        robin_item1_count_after = robin_inventory["1"]["quantity"]
+        robin_item2_count_after = robin_inventory["2"]["quantity"]
         self.assertTrue(feliks_notification_count_after == feliks_notification_count + 1)
         self.assertTrue(robin_notification_count_after == robin_notification_count + 1)
+        #   check that the items were removed from the inventory
         self.assertTrue(feliks_item1_count_after == feliks_item1_count - 5)
+        self.assertTrue(feliks_item2_count_after == feliks_item2_count - 5)
         self.assertTrue(robin_item1_count_after == robin_item1_count - 5)
-        # check amount of the products
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(0).get_quantity() == 25)
-        self.assertTrue(
-            self.service.store_facade.getStores()["Robin&Daughters"].getProducts().get(0).get_quantity() == 25)
+        self.assertTrue(robin_item2_count_after == robin_item2_count - 5)
+        #  check that the cart is empty
+        guest0_cart = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
+        self.assertTrue(guest0_cart == {})
+
 
     def test_guest_purchaseCart_withAddedDiscount_success(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 5,
-                                 5)  # "Tomato_K", "30", "8", "Vegetables" simple discount 25
-        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9,
-                                 5)  # "Mango_K", "30", "20", "Fruits" all Fruits 25 simple discount
-        self.assertTrue(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"].__len__() == 1)
-        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket(
-            "Feliks&Sons").calculateBasketPrice()
+        self.service.logIn("Feliks", "password333")
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", percent=25, level="Product", level_name=5)
+        self.service.addDiscount("Feliks&Sons", "Feliks", "Simple", percent=25, level="Category", level_name="Fruits")
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 5, 5)  # "Tomato_K", "30", "8", "Vegetables" simple discount 25
+        self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 9, 5)  # "Mango_K", "30", "20", "Fruits" all Fruits 25 simple discount
+        guest0_cart = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
+        self.assertTrue(guest0_cart.__len__() == 1)
+        basket_price = self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons").calculateBasketPrice()
         self.assertTrue(basket_price == 5 * 8 * 0.75 + 5 * 20 * 0.75)
         self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel Saad", "555", "123456789",
                                   "be'er sheva", "beer sheva", "israel", "1234152")
         with self.assertRaises(Exception):
             self.service.store_facade.getCart(guest0_entrance_id).get_Basket("Feliks&Sons")
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(4).get_quantity() == 25)
+        feliks_inventory = ast.literal_eval(self.service.getProductsByStore("Feliks&Sons", "Feliks").getReturnValue())
+        feliks_item5_count_after = feliks_inventory["5"]["quantity"]
+        feliks_item9_count_after = feliks_inventory["9"]["quantity"]
+        self.assertTrue(feliks_item5_count_after == 25)
+        self.assertTrue(feliks_item9_count_after == 25)
 
     def test_guest_purchaseCart_CardDateFail_fail(self):
         res = self.service.loginAsGuest()
         guest0_entrance_id = int(ast.literal_eval(res.getReturnValue())["entrance_id"])
         self.service.addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)  # "Cauliflower_K", "30", "8", "Vegetables"
         self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)  # "BBQ_Sauce", "30", "15", "Sauces"
-        with self.assertRaises(Exception):
-            self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/20", "Amiel Saad", "986", "123456789",
-                                      "be'er sheva", "beer sheva", "israel", "1234152")
-        self.assertTrue(self.service.store_facade.getStores()["Feliks&Sons"].getProducts().get(0).get_quantity() == 30)
+        self.assertFalse(self.service.purchaseCart(guest0_entrance_id, "4580020345672134", "12/20", "Amiel Saad", "986", "123456789",
+                                      "be'er sheva", "beer sheva", "israel", "1234152").getStatus())
+        feliks_inventory = ast.literal_eval(self.service.getProductsByStore("Feliks&Sons", "Feliks").getReturnValue())
+        feliks_item1_count_after = feliks_inventory["1"]["quantity"]
+        robin_inventory = ast.literal_eval(self.service.getProductsByStore("Robin&Daughters", "Robin").getReturnValue())
+        robin_item1_count_after = robin_inventory["1"]["quantity"]
+        self.assertTrue(feliks_item1_count_after == 30)
+        self.assertTrue(robin_item1_count_after == 30)
 
     # Use Case 2.2.5.b,c (guests cant participate in bids)
     def test_member_BidPurchaseRegular_success(self):
         self.service.logIn("Amiel", "password111")
+        self.service.logIn("Feliks", "password333")
+        self.service.logIn("Son_A", "passwordAAA")
+        self.service.logIn("Son_B", "passwordBBB")
+        self.service.logIn("Son_C", "passwordCCC")
+        self.service.logIn("Son_D", "passwordDDD")
         feliks_notifications_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.service.placeBid("Amiel", "Feliks&Sons", 25, 3, 4)  # "Broccoli_K", "30", "8", "Vegetables", 4K = 32 ins
         self.service.placeBid("Amiel", "Feliks&Sons", 25, 4, 4)  # "Carrot_K", "30", "8", "Vegetables"  , 4K = 32 ins
         # ////////////
         feliks_notifications_count_afterplace = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count_afterplace = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afterplace = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afterplace = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afterplace = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count_afterplace = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afterplace = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afterplace = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afterplace = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afterplace = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
-        basket = self.service.getBasket("Amiel", "Feliks&Sons")
-        feliks_store = self.service.store_facade.getStores().get("Feliks&Sons")
-        bid1: Bid = basket.get_bids().get(0)
-        bid2: Bid = basket.get_bids().get(1)
-        self.assertTrue(len(list(basket.get_bids().values())) == 2)
-        self.assertTrue(len(list(feliks_store.get_bids().values())) == 2)
-        self.assertTrue(bid1.get_product_id() == 0)
-        self.assertTrue(bid2.get_product_id() == 1)
+        feliks_store_bids = self.service.store_facade.getAllBidsFromStore("Feliks&Sons")
+        amiel_store_bids = self.service.store_facade.getAllBidsFromUser("Amiel")
+        bid1: Bid = feliks_store_bids.get(0)
+        bid2: Bid = feliks_store_bids.get(1)
+        Amiel_cart = ast.literal_eval(self.service.getCart("Amiel").getReturnValue()["baskets"])
+        self.assertTrue(len(feliks_store_bids.get()) == 2)
+        self.assertTrue(len(amiel_store_bids) == 2)
+        self.assertTrue(bid1.get_product_id() == 3)
+        self.assertTrue(bid2.get_product_id() == 4)
         self.assertTrue(bid1.get_quantity() == 4)
         self.assertTrue(bid2.get_quantity() == 4)
         self.assertTrue(bid1.get_storename() == "Feliks&Sons")
@@ -495,17 +522,17 @@ class Test_Use_Case_2_2(TestCase):
         self.assertTrue(amiel_notifications_count_afterplace == amiel_notifications_count + 2)
         # ========= approve all =========
         self.service.approveBid("Feliks", "Feliks&Sons", 3)
-        self.service.approveBid("SonA", "Feliks&Sons", 3)
-        self.service.approveBid("SonB", "Feliks&Sons", 3)
-        self.service.approveBid("SonC", "Feliks&Sons", 3)
-        self.service.approveBid("SonD", "Feliks&Sons", 3)
+        self.service.approveBid("Son_A", "Feliks&Sons", 3)
+        self.service.approveBid("Son_B", "Feliks&Sons", 3)
+        self.service.approveBid("Son_C", "Feliks&Sons", 3)
+        self.service.approveBid("Son_D", "Feliks&Sons", 3)
         self.service.approveBid("Feliks", "Feliks&Sons", 4)
-        self.service.approveBid("SonA", "Feliks&Sons", 4)
+        self.service.approveBid("Son_A", "Feliks&Sons", 4)
         feliks_notifications_count_afterapprove = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count_afterapprove = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afterapprove = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afterapprove = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afterapprove = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count_afterapprove = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afterapprove = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afterapprove = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afterapprove = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afterapprove = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.assertTrue(feliks_notifications_count_afterapprove == feliks_notifications_count_afterplace + 1)
         self.assertTrue(sona_notifications_count_afterapprove == sona_notifications_count_afterplace + 1)
@@ -519,10 +546,10 @@ class Test_Use_Case_2_2(TestCase):
                                           "123456789",
                                           "be'er sheva", "beer sheva", "israel", "1234152")
         feliks_notifications_count_afterpurchase = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count_afterpurchase = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afterpurchase = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afterpurchase = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afterpurchase = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count_afterpurchase = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afterpurchase = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afterpurchase = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afterpurchase = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afterpurchase = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.assertTrue(feliks_notifications_count_afterpurchase == feliks_notifications_count_afterapprove + 1)
         self.assertTrue(sona_notifications_count_afterpurchase == sona_notifications_count_afterapprove + 1)
@@ -549,23 +576,23 @@ class Test_Use_Case_2_2(TestCase):
         bid2: Bid = basket.get_bids().get(1)
         # ========= one rejects all =========
         feliks_notifications_count_afterplace = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count_afterplace = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afterplace = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afterplace = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afterplace = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count_afterplace = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afterplace = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afterplace = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afterplace = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afterplace = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.service.approveBid("Feliks", "Feliks&Sons", 3)
-        self.service.approveBid("SonA", "Feliks&Sons", 3)
-        self.service.approveBid("SonB", "Feliks&Sons", 3)
-        self.service.approveBid("SonC", "Feliks&Sons", 3)
-        self.service.rejectBid("SonD", "Feliks&Sons", 3)
+        self.service.approveBid("Son_A", "Feliks&Sons", 3)
+        self.service.approveBid("Son_B", "Feliks&Sons", 3)
+        self.service.approveBid("Son_C", "Feliks&Sons", 3)
+        self.service.rejectBid("Son_D", "Feliks&Sons", 3)
         self.service.approveBid("Feliks", "Feliks&Sons", 4)
         self.service.approveBid("SonA", "Feliks&Sons", 4)
         feliks_notifications_count_afterreject = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count_afterreject = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afterreject = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afterreject = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afterreject = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count_afterreject = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afterreject = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afterreject = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afterreject = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afterreject = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.assertTrue(feliks_notifications_count_afterreject == feliks_notifications_count_afterplace + 1)
         self.assertTrue(sona_notifications_count_afterreject == sona_notifications_count_afterplace + 1)
@@ -598,21 +625,20 @@ class Test_Use_Case_2_2(TestCase):
         bid2: Bid = basket.get_bids().get(1)
         # ========= one rejects all =========
         feliks_notifications_count_afterplace = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        sona_notifications_count_afterplace = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afterplace = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afterplace = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afterplace = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        sona_notifications_count_afterplace = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afterplace = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afterplace = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afterplace = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afterplace = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.service.approveBid("Feliks", "Feliks&Sons", 3)
-        self.service.sendAlternativeOffer("SonD", "Feliks&Sons", 3, 30)
+        self.service.sendAlternativeOffer("Son_D", "Feliks&Sons", 3, 30)
         self.service.approveBid("Feliks", "Feliks&Sons", 4)
-        self.service.approveBid("SonA", "Feliks&Sons", 4)
-        feliks_notifications_count_afteralternate = self.service.getAllNotifications(
-            "Feliks").getReturnValue().__len__()
-        sona_notifications_count_afteralternate = self.service.getAllNotifications("Sona").getReturnValue().__len__()
-        sonb_notifications_count_afteralternate = self.service.getAllNotifications("Sonb").getReturnValue().__len__()
-        sonc_notifications_count_afteralternate = self.service.getAllNotifications("Sonc").getReturnValue().__len__()
-        sond_notifications_count_afteralternate = self.service.getAllNotifications("Sond").getReturnValue().__len__()
+        self.service.approveBid("Son_A", "Feliks&Sons", 4)
+        feliks_notifications_count_afteralternate = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
+        sona_notifications_count_afteralternate = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
+        sonb_notifications_count_afteralternate = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
+        sonc_notifications_count_afteralternate = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
+        sond_notifications_count_afteralternate = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         amiel_notifications_count_afteralternate = self.service.getAllNotifications("Amiel").getReturnValue().__len__()
         self.assertTrue(feliks_notifications_count_afteralternate == feliks_notifications_count_afterplace + 1)
         self.assertTrue(sona_notifications_count_afteralternate == sona_notifications_count_afterplace + 1)
@@ -674,7 +700,7 @@ class Test_Use_Case_2_3_members(TestCase):
         amiels_store: Store = self.service.store_facade.getStores()["Amiel&sons"]
         self.assertTrue(self.service.store_facade.getStores().__len__() == 3)
         self.assertTrue(amiels_store.getFounder().get_username() == "Amiel")
-        self.assertTrue(amiels_store.getAllStaffMembersNames("Amiel&Sons", "Amiel").__len__() == 1)
+        self.assertTrue(amiels_store.getAllStaffMembers("Amiel&Sons", "Amiel").__len__() == 1)
 
     def test_createShop_exists_failure(self):
         # a member creates a shop but the name is already taken
@@ -1476,7 +1502,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         sond_notification_count = self.service.getAllNotifications("Son_D").getReturnValue().__len__()
         sone_notification_count = self.service.getAllNotifications("Son_E").getReturnValue().__len__()
         feliks_notification_count = self.service.getAllNotifications("Feliks").getReturnValue().__len__()
-        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        self.service.nominateStoreOwner("Son_A", "Son_E", "Feliks&Sons")
         sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
         sonb_notification_count_after = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
         sonc_notification_count_after = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
@@ -1530,7 +1556,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_C", "passwordCCC")
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
-        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        self.service.nominateStoreOwner("Son_A", "Son_E", "Feliks&Sons")
         staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         self.service.removeAccess("Feliks", "Son_B", "Feliks&Sons")
@@ -1565,7 +1591,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_C", "passwordCCC")
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
-        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        self.service.nominateStoreOwner("Son_A", "Son_E", "Feliks&Sons")
         staff_list = self.service.getAllStaffMembersNames("Feliks&Sons", "Feliks")
         self.assertFalse("Son_E" in staff_list)
         sona_notification_count_after = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
@@ -1635,7 +1661,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_C", "passwordCCC")
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
-        self.service.nominateStoreOwner("SonA", "SonE", "Feliks&Sons")
+        self.service.nominateStoreOwner("Son_A", "Son_E", "Feliks&Sons")
         self.service.approveNomination("Feliks", "Son_E", "Feliks&Sons")
         self.service.approveNomination("Son_B", "Son_E", "Feliks&Sons")
         sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
@@ -1793,7 +1819,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_C", "passwordCCC")
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
-        self.service.nominateStoreManager("SonA", "SonE", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_E", "Feliks&Sons")
         sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
         sonb_notification_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
         sonc_notification_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
@@ -1825,7 +1851,7 @@ class Test_Use_Case_2_4_Management(TestCase):
         self.service.logIn("Son_C", "passwordCCC")
         self.service.logIn("Son_D", "passwordDDD")
         self.service.logIn("Son_E", "passwordEEE")
-        self.service.nominateStoreManager("SonA", "SonE", "Feliks&Sons")
+        self.service.nominateStoreManager("Son_A", "Son_E", "Feliks&Sons")
         sona_notification_count = self.service.getAllNotifications("Son_A").getReturnValue().__len__()
         sonb_notification_count = self.service.getAllNotifications("Son_B").getReturnValue().__len__()
         sonc_notification_count = self.service.getAllNotifications("Son_C").getReturnValue().__len__()
