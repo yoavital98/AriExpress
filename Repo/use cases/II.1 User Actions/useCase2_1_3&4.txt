@@ -1,0 +1,22 @@
+title 2.3 & 2.4: Register to the System & Login
+
+actor Guest1
+participant Service
+participant StoreFacade
+participant User1
+
+note over Guest1: Guest register to the system. \n@pre: no such user 'username22'\n@post: 'username22' exists in the system
+Guest1->Service:logIn("username22", "password1")
+Service->Guest1: error_res
+Guest1->Service:register("username22", "password1", "email")
+Service->StoreFacade:register(user_name, password, email)
+StoreFacade->MemberModel:addNewMemberuser_name, password, email)
+MemberModel->StoreFacade:success_res
+StoreFacade->Service: success_res
+note over Guest1: now he can log in to his new member
+Guest1->Service:logIn("username22", "password1")
+Service->StoreFacade:logInAsMember(username, password)
+StoreFacade->MemberModel:logInAsMember(username, password)
+MemberModel->StoreFacade: Member
+StoreFacade->Service: Member
+Service->Guest1: Member_res (and entering the homescreen as member)

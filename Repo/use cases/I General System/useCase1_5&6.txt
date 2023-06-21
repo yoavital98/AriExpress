@@ -1,0 +1,25 @@
+title 1.5 & 1.6: notification to Founder & User 
+
+actor Amiel
+actor Feliks
+participant Service
+participant StoreFacade
+
+note over Amiel: Amiel wants to purchase an item. \nHe will get a purchase success message\n in a real-time notification as he logged in\n@post_notification_count = @pre_notification_count + 1
+note over Feliks: Feliks has a store "Feliks&Sons". \nAmiel will purchase from his store. he will be logged out, and we \nwant that feliks will have his suspended notification when he\ngets in (real-time alert can be shown in server)\n@post_notification_count = @pre_notification_count + 1
+Amiel->Service:logIn("Amiel", "password111")
+Amiel->Service:addToBasket('Amiel', "Feliks&Sons", 1, 5)
+Amiel->Service:purchaseCart(payment details)
+Service->StoreFacade: purchaseCart(payment details)
+StoreFacade->Amiel_Cart: purchaseCart(payment details)
+Amiel_Cart->PaymentService: pay(payment details)
+PaymentService->Amiel_Cart:transactionID
+Amiel_Cart->SupplyService: dispatch_supply(supply details)
+SupplyService->Amiel_Cart:supply_id
+
+Amiel_Cart->MessageController: send_notification(founders_usernames[index], message_header, purchase.toJson(), datetime.now())
+Amiel_Cart->MessageController: send_notification(user_name, buyer_message_header,message+purchaseReportsString, datetime.now())
+MessageController->Amiel: Notify (using django)
+Feliks->Service:logIn("Feliks", "password333")
+Service->MessageController:getNotifications()
+MessageController->Feliks: Notify (using django)

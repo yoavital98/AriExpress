@@ -1,0 +1,46 @@
+        
+getCart \ getCartProducts
+	self.service.addToBasket(guest0_entrance_id, "Robin&Daughters", 2, 5)
+        guest0_cart = ast.literal_eval(self.service.getCart(guest0_entrance_id).getReturnValue()["baskets"])
+        guest0_products_Robin = ast.literal_eval(guest0_cart["Robin&Daughters"]["products"])
+        self.assertTrue(guest0_products_Robin["2"]["product"]['name'] == "Ketchup")
+        self.assertTrue(guest0_products_Robin["2"]["quantity"] == 5)
+        self.assertTrue(guest0_products_Robin["2"]["price"] == 15)
+
+getMemberInfo:
+	member_info = ast.literal_eval(ast.literal_eval(self.service.getMemberInfo("admin", "username22").getReturnValue())["member"])
+        self.assertTrue(member_info["username"] == "username22")
+        self.assertTrue(member_info["email"] == "email")
+        self.assertTrue(member_info["cart"]["baskets"] == '{}')
+
+getStoresBasicInfo:
+	stores_info = ast.literal_eval(self.service.getStoresBasicInfo().getReturnValue())
+        store_count = stores_info.__len__()
+        self.assertTrue(store_count == 2)
+
+getStoreProductsInfo:
+	feliks_products = ast.literal_eval(self.service.getStoreProductsInfo("Feliks&Sons").getReturnValue()["products"])
+        self.assertTrue(feliks_products.__len__() == 12)
+
+
+productSearchByName:
+	products_res = self.service.productSearchByName("Ca", guest0_entrance_id).getReturnValue()
+        self.assertTrue(products_res["Feliks&Sons"].__len__() == 3)  # Cabbage, Cauliflower, Carrot
+
+productSearchByFeatures:
+	res_products_below10 = ast.literal_eval(self.service.productFilterByFeatures({"min_price": 0, "max_price": 10},guest0_entrance_id).getReturnValue())
+        res_products_below5 = ast.literal_eval(self.service.productFilterByFeatures({"min_price": 0, "max_price": 5}, guest0_entrance_id).getReturnValue())
+        self.assertTrue(res_products_below10["Feliks&Sons"].__len__() == 10)  # All products except cherry and mango
+        self.assertTrue(res_products_below10["Robin&Daugthers"].__len__() == 3)  # just seasoning
+        self.assertTrue(res_products_below5["Robin&Daugthers"].__len__() == 3)  # just seasoning
+
+getProduct:
+        prod = self.service.getProduct("Robin&Daughters", 2, "Robin").getReturnValue()
+
+products amount:
+        feliks_inventory = ast.literal_eval(self.service.getProductsByStore("Feliks&Sons", "Feliks").getReturnValue())
+        feliks_item1_count_after = feliks_inventory["1"]["quantity"]
+        feliks_item2_count_after = feliks_inventory["2"]["quantity"]
+        robin_inventory = ast.literal_eval(self.service.getProductsByStore("Robin&Daughters", "Robin").getReturnValue())
+        robin_item1_count_after = robin_inventory["1"]["quantity"]
+        robin_item2_count_after = robin_inventory["2"]["quantity"]

@@ -1,0 +1,43 @@
+title 2.2.5.a: Guest can purchase his cart according to Discount and Purchase Policies - Normal Purchase
+
+actor Guest1
+participant Service
+participant StoreFacade
+
+note over Guest1: Guest logs in as guest. \nWith his login he receives a cart to hold his proucts
+Guest1->Service:logInAsGuest
+note over Guest1: Guest can add products from several stores. \nHe can edit the quantity and remove the items For this to happen he needs to communicate with Supply and Purchase services
+Guest1->Service:addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Guest1->Service:addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Guest1->Service:editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 1, 8)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+note over Guest1: Now he can add purchase details and supply address. \nand purchase the cart
+
+Guest1->Service:purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789","some_address", "be'er sheva", "Israel", "1234567")
+Service->StoreFacade:purchaseCart(payment details)
+StoreFacade->Cart1:purchaseCart(payment details)
+note over Cart1: now for each store need to calculate\ndiscounts and policies
+loop for basket in cart1.getbaskets()
+Cart1->basket:calculateTotalPriceDiscounts()
+basket->Store:calculateTotalPriceDiscounts()
+Store->Policies:calculateDiscountForProduct(product, product_quantity_dict, overall_price)
+alt case 1: not enough Quantity
+Policies-->Cart1:Exception
+else case 2: Policies conflict
+Policies-->Cart1:Exception
+else case 3: Discounts found or not
+Policies-->Cart1:basket_price
+end
+end
+Cart1->PaymentService: pay(card_number, exp_month, exp_year, card_user_full_name, ccv, card_holder_id)
+PaymentService->Cart1:transactionID
+Cart1->SupplyService: dispatch_supply(card_user_full_name, address, city, country, zipcode)
+SupplyService->Cart1:supply_id
+Cart1->StoreFacade: res
+StoreFacade->Service: res
+Service->Guest1: info_msg and real time notification

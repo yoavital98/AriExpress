@@ -572,7 +572,7 @@ class Store:
                 cur_bid.set_status(2)
                 self.__bids.set_status(bid_id, 2)
                 MessageController().send_notification(cur_bid.get_username(), "Bid request was rejected",f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
-                for staff_member in self.getAllStaffMembersNames(username):
+                for staff_member in self.getAllStaffMembers():
                     MessageController().send_notification(staff_member, "Bid request was rejected",f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. rejecting member: {username}",datetime.datetime.now())
                 return cur_bid
             else:
@@ -604,7 +604,7 @@ class Store:
                 self.__bids.set_status(bid_id, 3)
                 cur_bid.set_status(3)
                 MessageController().send_notification(cur_bid.get_username(), "Alternative offer was sent for your bid",  f"Bid ID: {bid_id}. From store: {self.get_store_name()}", datetime.datetime.now())
-                for staff_member in self.getAllStaffMembersNames(username):
+                for staff_member in self.getAllStaffMembers():
                     MessageController().send_notification(staff_member, "Alternative offer was sent for a bid",    f"Bid ID: {bid_id}. For user: {cur_bid.get_username()}. sending member: {username}", datetime.datetime.now())
                 return cur_bid
             else:

@@ -1,0 +1,24 @@
+title 2.2.4: Guest can visit the system, have a cart, add prodcuts, and purchase them
+
+actor Guest1
+participant Service
+participant StoreFacade
+
+Guest1->Service:logInAsGuest()
+note over Guest1: Guest can add products from several stores. \nHe can edit the quantity and remove the items For this to happen he needs to communicate with Supply and Purchase services
+Guest1->Service:addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Cart1-->Guest1:success_res
+Guest1->Service:addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Cart1-->Guest1:success_res
+Guest1->Service:editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 1, 8)
+Service->StoreFacade:editBasketQuantity(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:editBasketQuantity(username, store, productID, product, quantity)
+Cart1-->Guest1:success_res
+Guest1->Service:removeFromBasket(guest0_entrance_id, "Feliks&Sons", 1)
+Service->StoreFacade:removeFromBasket(username, storename, int(productID))
+StoreFacade->Cart1:removeFromBasket(username, store, productID, product)
+Cart1-->Guest1:success_res
