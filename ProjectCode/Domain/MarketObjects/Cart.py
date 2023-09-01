@@ -53,7 +53,7 @@ class Cart:
             answer: bool = basket.remove_Product(product_id)  # answer = true if item is successfully removed
             if (basket.getBasketSize() == 0) and (basket.getBasketBidSize() == 0):
                 del self.baskets[store_name]
-            return answer
+            return bool(answer)
         else:
             raise Exception("Basket was not found")
 

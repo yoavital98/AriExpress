@@ -96,10 +96,11 @@
                               <i class="fas fa-shopping-cart"></i>
                           </a>
                         </li>
-                        
+                        {% if user.is_superuser%}
                         <li class="nav-item">
                             <a class="nav-link admin-tag" href="{% url 'mainApp:adminPage' %}">ADMIN</a>
                         </li>
+                        {% endif %}
                         
                     </ul>
                     <form class="d-flex" method="POST" role="search" action="{% url 'mainApp:searchpage' %}">

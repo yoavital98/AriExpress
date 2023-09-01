@@ -247,6 +247,9 @@ class StoreFacade:
             # else:
             #     raise Exception("this member is banned")
         else:
+            # guestUsername = str(user_name).replace("GuestUser", "")
+            # if self.onlineGuests.keys().__contains__(guestUsername ):
+            #     return self.onlineGuests.get(guestUsername )
             if self.onlineGuests.keys().__contains__(str(user_name)):
                 return self.onlineGuests.get(str(user_name))
             else:
@@ -379,7 +382,9 @@ class StoreFacade:
     def removeFromBasket(self, username, store_name, product_id):
         with self.db.atomic():
             user: User = self.getUserOrMember(username)
-            remove_success = user.removeFromBasket(store_name, product_id)
+            print(user)
+            remove_success: bool = user.removeFromBasket(store_name, product_id)
+            print(remove_success)
             if remove_success:
                 return remove_success
             else:

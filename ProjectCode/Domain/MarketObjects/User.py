@@ -12,6 +12,8 @@ class User(ABC):
         return self.cart
 
     def add_to_cart(self, username, store, productID, product, quantity):
+        # if("GuestUser" in str(username)):
+        #     username =str(username).replace("GuestUser", "")   
         return self.cart.add_Product(username, store, productID, product, quantity)
 
     def get_Basket(self, storename):
