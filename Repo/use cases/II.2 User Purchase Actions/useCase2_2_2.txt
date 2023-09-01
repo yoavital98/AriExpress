@@ -1,0 +1,32 @@
+title 2.2.2: product search
+
+actor Guest1
+participant Service
+participant StoreFacade
+
+note over Guest1: Guests and members can search for products \nby deatils like: name, Category or price range
+Guest1->Service:loginAsGuest()
+Guest1->Service:productSearchByName("Ca", guest0_entrance_id)
+Service->StoreFacade:productSearchByName(productName)
+loop for store in StoreFacade.getStores()
+StoreFacade->Store:searchProductByName(keyword)
+Store->StoreFacade:product_list
+end
+StoreFacade->Service: product_list
+Service->Guest1: product_list_res
+Guest1->Service:productSearchByCategory("Sauces", guest0_entrance_id)
+Service->StoreFacade: productSearchByCategory(categoryName)
+loop for store in StoreFacade.getStores()
+StoreFacade->Store:searchProductByCategory(category)
+Store->StoreFacade:product_list
+end
+StoreFacade->Service: product_list
+Service->Guest1: product_list_res
+Guest1->Service: productFilterByFeatures({"min price": 0, "max price": 10},guest0_entrance_id)
+Service->StoreFacade: productFilterByFeatures(featuresDict, username)
+loop for store in StoreFacade.getStores()
+StoreFacade->Store:filterProductByFeatures(featuresDict, username)
+Store->StoreFacade:product_list
+end
+StoreFacade->Service: product_list
+Service->Guest1: product_list_res

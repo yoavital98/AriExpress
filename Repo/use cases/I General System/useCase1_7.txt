@@ -1,0 +1,27 @@
+title 1.7: notification to User at success and fail
+
+actor Amiel
+participant Service
+participant StoreFacade
+
+note over Amiel: Amiel wants to purchase an item. \nHe will purchase with wrong details first\nHe will get a fail message and will try again, succeed \nand will get a success message
+Amiel->Service:logIn("Amiel", "password111")
+Amiel->Service:addToBasket('Amiel', "Feliks&Sons", 1, 5)
+Amiel->Service:purchaseCart(wrong payment details)
+Service->StoreFacade: purchaseCart(wrong payment details)
+StoreFacade->Amiel_Cart: purchaseCart(wrong payment details)
+Amiel_Cart->PaymentService: pay(wrong payment details)
+PaymentService->Amiel_Cart:fail respond
+Amiel_Cart->StoreFacade: fail respond
+StoreFacade->Service: fail respond
+Service->Amiel: fail message in Django
+Amiel->Service:purchaseCart(right payment details)
+Service->StoreFacade: purchaseCart(right payment details)
+StoreFacade->Amiel_Cart: purchaseCart(right payment details)
+Amiel_Cart->PaymentService: pay(payment details)
+PaymentService->Amiel_Cart:transactionID
+Amiel_Cart->SupplyService: dispatch_supply(supply details)
+SupplyService->Amiel_Cart:supply_id
+Amiel_Cart->StoreFacade: success respond
+StoreFacade->Service: success respond
+Service->Amiel: success message in Django

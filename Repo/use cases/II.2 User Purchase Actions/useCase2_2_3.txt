@@ -1,0 +1,30 @@
+title 2.2.3: product search
+
+actor Guest1
+actor Amiel
+participant Service
+participant StoreFacade
+
+note over Guest1: Guests and members can save products in their cart \nleaving guest will lose his cart, memeber will keep it
+Guest1->Service:logInAsGuest()
+Guest1->Service:addToBasket(guest1_entrance_id, "Robin&Daughters", 2, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Amiel->Service:logInAsMember("Amiel","password111")
+Amiel->Service:addToBasket("Amiel", "Robin&Daughters", 2, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart_amiel:add_Product(username, store, productID, product, quantity)
+
+Guest1->Service:logOutAsGuest()
+Guest1->Service:logInAsGuest()
+Guest1->Service:getBasket(guest1_entrance_id, "Robin&Daughters")
+Service->Guest1: fail_res
+
+Amiel->Service:logOut("Amiel")
+Amiel->Service:logInAsMember("Amiel","password111")
+Amiel->Service:getBasket("Amiel", "Robin&Daughters")
+Service->StoreFacade:getBasket(username,storename)
+StoreFacade->Cart_amiel:getBasket(storename)
+Cart_amiel->StoreFacade: basket
+StoreFacade->Service: basket
+Service->Amiel: basket_res

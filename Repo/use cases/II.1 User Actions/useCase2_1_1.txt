@@ -1,0 +1,32 @@
+title 2.1: Guest can visit the system, have a cart, add prodcuts, and purchase them
+
+actor Guest1
+participant Service
+participant StoreFacade
+
+note over Guest1: Guest logs in as guest. \nWith his login he receives a cart to hold his proucts
+Guest1->Service:logInAsGuest
+Guest1->Service:getCart(guest1_ID)
+Service->StoreFacade:User1 = getUser(guest1_ID)
+StoreFacade->User1:getCart(guest1_ID)
+User1->StoreFacade:Cart
+StoreFacade->Service:Cart
+Service->Guest1:Success_res
+note over Guest1: Guest can add products from several stores. \nHe can edit the quantity and remove the items For this to happen he needs to communicate with Supply and Purchase services
+Guest1->Service:addToBasket(guest0_entrance_id, "Feliks&Sons", 1, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Guest1->Service:addToBasket(guest0_entrance_id, "Robin&Daughters", 1, 5)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+Guest1->Service:editBasketQuantity(guest0_entrance_id, "Feliks&Sons", 1, 8)
+Service->StoreFacade:addToBasket(username, storename, int(productID), int(quantity))
+StoreFacade->Cart1:add_Product(username, store, productID, product, quantity)
+note over Guest1: Now he can add purchase details and supply address. \nand purchase the cart
+
+Guest1->Service:purchaseCart(guest0_entrance_id, "4580020345672134", "12/26", "Amiel saad", "555", "123456789","some_address", "be'er sheva", "Israel", "1234567")
+Service->StoreFacade:purchaseCart(payment details)
+StoreFacade->Cart1:purchaseCart(payment details)
+Cart1->StoreFacade: success_res
+StoreFacade->Service: success_res
+Service->Guest1: success_msg and real time notification

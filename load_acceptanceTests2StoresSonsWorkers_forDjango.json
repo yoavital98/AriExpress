@@ -9,11 +9,7 @@
 },{
   "logIn": {"args": ["Feliks", "password333"]}
 },{
-  "logIn": {"args": ["Robin", "password444"]}
-},{
   "createStore": {"args": ["Feliks", "Feliks&Sons"]}
-},{
-  "createStore": {"args": ["Robin", "Robin&Daughters"]}
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cauliflower_K", "30", "8", "Vegetables"]}
 },{
@@ -38,6 +34,12 @@
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Melon_K", "30", "8", "Fruits"]}
 },{
   "addNewProductToStore": {"args": ["Feliks", "Feliks&Sons", "Cherry_K", "30", "20", "Fruits"]}
+},{
+  "logOut": {"args": ["Feliks"]}
+},{
+  "logIn": {"args": ["Robin", "password444"]}
+},{
+  "createStore": {"args": ["Robin", "Robin&Daughters"]}
 },{
   "addNewProductToStore": {"args": ["Robin", "Robin&Daughters", "BBQ_Sauce", "30", "15", "Sauces"]}
 },{
@@ -67,7 +69,9 @@
 },{
   "register": {"args": ["Son_F", "passwordFFF", "sonf@gmail.com"]}
 },{
-  "logIn": {"args": ["Son_A", "passwordAAA"]}
+  "logOut": {"args": ["Robin"]}
+},{
+  "logIn": {"args": ["Feliks", "password333"]}
 },{
   "nominateStoreOwner": {"args": ["Feliks", "Son_A", "Feliks&Sons"]}
 },{
@@ -75,5 +79,11 @@
 },{
   "nominateStoreManager": {"args": ["Feliks", "Son_C", "Feliks&Sons"]}
 },{
+  "logOut": {"args": ["Feliks"]}
+},{
+  "logIn": {"args": ["Son_A", "passwordAAA"]}
+},{
   "nominateStoreManager": {"args": ["Son_A", "Son_D", "Feliks&Sons"]}
+},{
+  "logOut": {"args": ["Son_A"]}
 }]
